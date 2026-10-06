@@ -169,6 +169,17 @@ export const CORRECTION_SPECS = {
     section: "3.2500",
     select: [LANES_OPENING],
   },
+  "bilateral-both-sides": {
+    citation: "38 CFR § 4.26",
+    section: "4.26",
+    select: [
+      {
+        start:
+          "Except as provided in paragraph (d) of this section, when a partial",
+        firstSentences: 1,
+      },
+    ],
+  },
   "ratings-combined": {
     citation: "38 CFR § 4.25",
     section: "4.25",

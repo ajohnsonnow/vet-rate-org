@@ -192,6 +192,14 @@
         "retrieved": "2026-07-10"
       }
     },
+    "bilateral-both-sides": {
+      "citation": "38 CFR § 4.26",
+      "text": "Except as provided in paragraph (d) of this section, when a partial disability results from disease or injury of both arms, or of both legs, or of paired skeletal muscles, the ratings for the disabilities of the right and left sides will be combined as usual, and 10 percent of this value will be added (i.e., not combined) before proceeding with further combinations, or converting to degree of disability.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
     "ratings-combined": {
       "citation": "38 CFR § 4.25",
       "text": "Thus, a person having a 60 percent disability is considered 40 percent efficient. Proceeding from this 40 percent efficiency, the effect of a further 30 percent disability is to leave only 70 percent of the efficiency remaining after consideration of the first disability, or 28 percent efficiency altogether. The individual is thus 72 percent disabled, as shown in table I opposite 60 percent and under 30 percent.",

@@ -20,6 +20,8 @@ import { detectReferenceTopics } from "./verifiedReference";
 import {
   citesIntentParagraphForSupplementalClaim,
   givesTdiuThresholdsWithoutForty,
+  putsBilateralOnOneSide,
+  givesNewAndMaterialAsAdvice,
   saysAppealNeedsNewEvidence,
   takesHigherOfTwoAsCombined,
   wrongSingleDisabilityThreshold,
@@ -129,6 +131,9 @@ const NEW_AND_MATERIAL = /\bnew and material\b/i;
 const FORMER_STANDARD =
   /\b(?:previous|former|formerly|old|older|legacy|replaced|no longer|used to|lower bar|higher (?:bar|threshold))\b/i;
 
+// "Made in a previous year" is about when, not about the former standard.
+const PREVIOUS_YEAR = /\bprevious years?\b/gi;
+
 const INTENT_TO_FILE = /\bintent to file\b|\bITF\b/i;
 const FOR_PENDING_CLAIMS = /\bfor (?:\w+ ){0,5}(?:pending|existing) claims?\b/i;
 const FOR_CLAIMS_ALREADY_FILED =
@@ -138,6 +143,8 @@ const BY_ADDING_RATINGS =
   /\bby (?:simply )?adding (?:up )?(?:all )?(?:of )?(?:the |your )?(?:individual |separate )?ratings\b/i;
 const ADD_RATINGS_TOGETHER =
   /\badd(?:s|ed|ing)? (?:up )?(?:the |your |all )?(?:individual )?ratings (?:of [^.]{0,40} )?together\b/i;
+const SOMETHING_ADDS_THE_RATINGS =
+  /\b(?:that|which|table|formula|va) adds (?:up )?the (?:percentage |individual |separate )?ratings\b/i;
 const RATINGS_ARE_ADDED =
   /\bratings (?:are|get) (?:simply |just )?added (?:together|up)\b/i;
 // An answer that explains combining, or says adding is wrong, uses the same
@@ -198,10 +205,18 @@ const RULES = [
         BY_ADDING_RATINGS,
         ADD_RATINGS_TOGETHER,
         RATINGS_ARE_ADDED,
+        SOMETHING_ADDS_THE_RATINGS,
       ) ||
         showsRatingsSummed(sentence)),
     says: "adds VA ratings together",
     correction: () => "ratings-combined",
+  },
+  {
+    id: "bilateral-same-side",
+    topics: EVERY_ANSWER,
+    matches: putsBilateralOnOneSide,
+    says: "puts the bilateral factor on conditions on the same side of the body, but it is for the right and left sides together",
+    correction: () => "bilateral-both-sides",
   },
   {
     id: "ratings-higher-of-two",
@@ -412,16 +427,24 @@ const RULES = [
     correction: () => "review-period-start",
   },
   {
+    // On a review question, as before. On any other answer only where the
+    // sentence gives it to the reader as today's test: answers about older
+    // decisions recount them in these words and are right to.
     id: "new-and-material-standard",
-    topics: REVIEW_TOPICS,
-    matches: (sentence) =>
-      NEW_AND_MATERIAL.test(sentence) && !FORMER_STANDARD.test(sentence),
+    topics: EVERY_ANSWER,
+    matches: (sentence, { topics }) =>
+      NEW_AND_MATERIAL.test(sentence) &&
+      !FORMER_STANDARD.test(sentence.replace(PREVIOUS_YEAR, "")) &&
+      (REVIEW_TOPICS.some((topic) => topics.includes(topic)) ||
+        givesNewAndMaterialAsAdvice(sentence)),
     says: 'gives "new and material" evidence as the test, which is the previous standard',
     correction: () => "new-and-relevant",
   },
   {
+    // Runs on every answer, like the form notice: the sentence pairs a filing
+    // with a form number, and the table settles it whatever was asked.
     id: "form-for-another-filing",
-    topics: FILING_TOPICS,
+    topics: EVERY_ANSWER,
     matches: (sentence) => findFormMismatch(sentence) !== null,
     describe: (sentence) => {
       const { label, number, quote } = findFormMismatch(sentence);
@@ -469,7 +492,12 @@ export function findContradictions(
   { topics = [], hasConditions = false, question = "" } = {},
 ) {
   const sentences = sentencesOf(text);
-  const context = { hasConditions, question, text: String(text ?? "") };
+  const context = {
+    hasConditions,
+    question,
+    topics,
+    text: String(text ?? ""),
+  };
   const hits = [];
   for (const rule of RULES) {
     const applies =

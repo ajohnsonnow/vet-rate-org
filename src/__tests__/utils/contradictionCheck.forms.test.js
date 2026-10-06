@@ -98,8 +98,9 @@ describe("a filing paired with another filing's form", () => {
     );
   });
 
-  it("is not applied to a question about something other than filing", () => {
-    expect(rules(RUN_C_A26, ["secondary"])).toEqual([]);
+  it("applies whatever was asked, since the forms table settles it", () => {
+    expect(rules(RUN_C_A26, ["secondary"])).toEqual([RULE]);
+    expect(rules(RUN_C_A26, [])).toEqual([RULE]);
   });
 });
 

@@ -49,6 +49,39 @@ export function saysAppealNeedsNewEvidence(sentence) {
   );
 }
 
+// The bilateral factor is for the right and left sides together (38 CFR
+// 4.26). "Not conditions on the same side" says so and is left alone.
+const BILATERAL = /\bbilateral\b/i;
+const SAME_SIDE = /\bsame side\b/i;
+const SAYS_OTHERWISE = /\bnot\b|n't\b|\bnever\b|\brather than\b/i;
+
+export function putsBilateralOnOneSide(sentence) {
+  return (
+    BILATERAL.test(sentence) &&
+    SAME_SIDE.test(sentence) &&
+    !SAYS_OTHERWISE.test(sentence)
+  );
+}
+
+// A Board order or a veteran's own history uses "new and material" rightly:
+// it was the test when those decisions were made.
+const QUOTED_DECISION =
+  /\bBVA\b|\bBoard\b|\bORDER\b|\bhaving been (?:received|submitted|presented)\b|\bpreviously denied\b/i;
+const OWN_HISTORY = /\b(?:I|[Mm]y)\b|\b(?:19\d\d|200\d|201[0-8])\b/;
+// Outside a review question the phrase counts only where the sentence tells
+// the reader what to do or what is required now. "New and material evidence
+// was submitted" and "the Veteran did not submit new and material evidence"
+// recount a decision.
+const TELLS_THE_READER = /\byou\b|\bmust\b|\bis only appropriate\b/i;
+
+export function givesNewAndMaterialAsAdvice(sentence) {
+  return (
+    TELLS_THE_READER.test(sentence) &&
+    !QUOTED_DECISION.test(sentence) &&
+    !OWN_HISTORY.test(sentence)
+  );
+}
+
 const INTENT_PARAGRAPH = /\b3\.155\(b\)/;
 const SUPPLEMENTAL_CLAIM_CALLED_FOR =
   /\bsupplemental claims?\b[^.;]{0,20}\b(?:is|are) required\b|\b(?:should|must|need to|have to) (?:file|submit) a supplemental claim\b/i;
