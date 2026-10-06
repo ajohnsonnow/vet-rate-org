@@ -37,6 +37,41 @@ const deniedJustBefore = (text) =>
     .some((word) => DENIAL.test(word));
 const ANOTHER_LANE = /\bsupplemental\b|\binstead\b|\brather than\b|\bboard\b/i;
 
+// "If the Higher-Level Review is denied ...", "... of the Higher-Level Review
+// decision": the review is the decision being appealed, not the lane in use.
+const REVIEW_ALREADY_DECIDED = new RegExp(
+  String.raw`\b${REVIEW} (?:is|was|gets|has been) (?:denied|decided|unsuccessful|unfavou?rable)\b|\b${REVIEW} (?:decision|denial|result|outcome)\b|\bafter (?:the|a|your) ${REVIEW}\b`,
+  "gi",
+);
+const ANY_REVIEW = new RegExp(String.raw`\b${REVIEW}\b`, "gi");
+const A_LANE_THAT_TAKES_EVIDENCE =
+  /\bboard\b|\bnotices? of disagreement\b|\bNOD\b|\b10182\b|\bsupplemental claims?\b|\b20-0995\b/gi;
+const THE_EVIDENCE = /\b(?:new|additional) (?:evidence|medical opinion)\b/i;
+
+const lastStart = (text, pattern) =>
+  [...text.matchAll(pattern)].reduce((last, match) => match.index, -1);
+
+/**
+ * Whether the new evidence in a sentence that names a Higher-Level Review
+ * goes somewhere else: the review is only the decision being appealed, or
+ * the lane named last before the evidence is a Board appeal or a
+ * Supplemental Claim. "In the Higher-Level Review, request a Board hearing
+ * to submit additional evidence" puts it all inside the review and is not
+ * that.
+ */
+export function evidenceGoesToAnotherLane(sentence) {
+  const reviewInUse = sentence.replace(REVIEW_ALREADY_DECIDED, "");
+  if (lastStart(reviewInUse, ANY_REVIEW) < 0) return true;
+  if (PLACED_IN_REVIEW.test(reviewInUse)) return false;
+  const evidence = THE_EVIDENCE.exec(sentence);
+  if (!evidence) return false;
+  const before = sentence.slice(0, evidence.index);
+  return (
+    lastStart(before, A_LANE_THAT_TAKES_EVIDENCE) >
+    lastStart(before, ANY_REVIEW)
+  );
+}
+
 export function submitsNewMaterialInReview(sentence) {
   if (ANOTHER_LANE.test(sentence)) return false;
   const placed = PLACED_IN_REVIEW.exec(sentence);

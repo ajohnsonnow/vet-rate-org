@@ -204,7 +204,7 @@ describe("t08 with the deadline the 22:16 graded run gave", () => {
     });
     expect(notes).toHaveLength(1);
     expect(notes[0].textContent).toContain(
-      "this reads as if it puts a deadline on filing a Supplemental Claim",
+      "reads as if it puts a deadline on filing a Supplemental Claim",
     );
     expect(notes[0].textContent).toContain("At any time after VA issues");
   });

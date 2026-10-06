@@ -173,3 +173,66 @@ describe("the Decision Decoder fields from runs B and C", () => {
     ]);
   });
 });
+
+// Run D4 (2026-10-06 07:08, 4B) t08. The second step is right: the evidence
+// goes with the Board appeal, and the Higher-Level Review is only the
+// decision being appealed. It drew a note.
+const RUN_D4_PLAN = [
+  "File a Higher-Level Review (VA Form 20-0996) within one year of the decision date to request the Regional Office reconsider their denial of the knee strain.",
+  "If the Higher-Level Review is denied, file a Notice of Disagreement (VA Form 10182) with the Board of Veterans' Appeals within one year of the Higher-Level Review decision, indicating a request for a Board hearing or additional evidence.",
+  "When submitting additional evidence or requesting a hearing, submit a new medical opinion from a qualified provider (VA or private) that explicitly connects the current left knee strain to the service training march, addressing the VA's finding that the condition is 'less likely than not' related to service.",
+];
+
+describe("evidence that goes with another lane", () => {
+  it("draws no note on run D4's plan", () => {
+    expect(
+      withVerifiedReviewOptions({ action_plan: RUN_D4_PLAN })
+        .review_corrections,
+    ).toBeUndefined();
+  });
+
+  it.each([
+    RUN_D4_PLAN[1],
+    "After the Higher-Level Review, you can appeal to the Board and submit additional evidence there.",
+    "If the Higher-Level Review decision is unfavorable, a Board appeal lets you send new evidence.",
+    "Request a Higher-Level Review, or file a Notice of Disagreement (VA Form 10182) with additional evidence.",
+  ])("leaves alone: %s", (sentence) => {
+    expect(rules(sentence)).not.toContain("higher-level-review-new-evidence");
+  });
+
+  it.each([
+    RUN_B_STEP_2,
+    RUN_D2_STEP_2,
+    "- Gather new evidence and request a HLR.",
+    "File a Higher-Level Review and include additional evidence with the Higher-Level Review request.",
+  ])("still flags: %s", (sentence) => {
+    expect(rules(sentence)).toContain("higher-level-review-new-evidence");
+  });
+});
+
+describe("the note beside a Decision Decoder field", () => {
+  it("quotes the item it is about", () => {
+    const out = withVerifiedReviewOptions({
+      action_plan: [
+        "File a Higher-Level Review (VA Form 20-0996) within one year.",
+        RUN_D2_STEP_2,
+      ],
+    });
+    expect(out.review_corrections).toHaveLength(1);
+    expect(out.review_corrections[0].note).toBe(
+      `Vet-Rate check: "${RUN_D2_STEP_2.slice(0, 200).trimEnd()}..." reads as if it has you send new evidence with a higher-level review. Compare it with 38 CFR § 3.2601(f): "${quotes.corrections["higher-level-review-evidence"].text}" This check is automatic and can be wrong; confirm the point with a Veterans Service Officer. Until you have checked, do not act on that sentence.`,
+    );
+  });
+
+  it("goes through the same guard as the chat block", () => {
+    expect(
+      withVerifiedReviewOptions({
+        action_plan: [
+          "Myth: you can add new evidence in a Higher-Level Review.",
+          "A common mistake is sending new evidence with a Higher-Level Review.",
+          "Is new evidence allowed with a Higher-Level Review?",
+        ],
+      }).review_corrections,
+    ).toBeUndefined();
+  });
+});
