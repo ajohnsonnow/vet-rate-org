@@ -427,7 +427,10 @@ export const _compileStatementWithAI = async (
     // interview answers (their own words about the veteran), not a document
     // upload; PII redaction is handled separately at the ADR-008 boundary.
     const response = await generateAI(
-      buildPassagePrompt(sent.map((passage) => passage.text)),
+      buildPassagePrompt(
+        sent.map((passage) => passage.text),
+        plan.voice,
+      ),
       {
         dataClass: AI_DATA_CLASS.CONTEXT,
         toolId: "buddy-statement",

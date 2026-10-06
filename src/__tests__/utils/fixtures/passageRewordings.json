@@ -1,0 +1,142 @@
+{
+  "runs": [
+    "run_2026-10-05_221648_Qwen3.5-4B-q4f16_1-MLC",
+    "run_2026-10-05_230321_Qwen3.5-4B-q4f16_1-MLC",
+    "run_2026-10-05_231514_Qwen3.5-2B-q4f16_1-MLC",
+    "run_2026-10-06_000014_Qwen3.5-2B-q4f16_1-MLC",
+    "run_2026-10-06_000820_Qwen3.5-4B-q4f16_1-MLC",
+    "run_2026-10-06_002046_Qwen3.5-4B-q4f16_1-MLC"
+  ],
+  "rewordings": [
+    {
+      "run": "run_2026-10-05_221648_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t02",
+      "number": 2,
+      "before": "Startle at engine noise, Broken sleep",
+      "after": "I startle at engine noise and I have broken sleep.",
+      "judgement": "faithful",
+      "note": "fragments made into sentences; nothing added",
+      "expected": "accepted"
+    },
+    {
+      "run": "run_2026-10-05_221648_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 2,
+      "before": "They leave the room when the fireworks start and do not come back for the evening.",
+      "after": "When the fireworks start, they leave the room and do not return for the evening.",
+      "judgement": "faithful",
+      "note": "same facts, reordered or one verb changed",
+      "expected": "accepted"
+    },
+    {
+      "run": "run_2026-10-05_230321_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t02",
+      "number": 2,
+      "before": "Startle at engine noise, Broken sleep",
+      "after": "I startle at engine noise. I have broken sleep.",
+      "judgement": "faithful",
+      "note": "fragments made into sentences; nothing added",
+      "expected": "accepted"
+    },
+    {
+      "run": "run_2026-10-05_230321_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 2,
+      "before": "They leave the room when the fireworks start and do not come back for the evening.",
+      "after": "When fireworks start, they leave the room and do not return for the evening.",
+      "judgement": "faithful",
+      "note": "same facts, reordered or one verb changed",
+      "expected": "accepted"
+    },
+    {
+      "run": "run_2026-10-05_230321_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 3,
+      "before": "They no longer drive at night, so I do all of the evening driving.",
+      "after": "They no longer drive at night, so I perform all of the evening driving.",
+      "judgement": "faithful",
+      "note": "same facts, reordered or one verb changed",
+      "expected": "accepted"
+    },
+    {
+      "run": "run_2026-10-06_000820_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t02",
+      "number": 2,
+      "before": "Startle at engine noise, Broken sleep",
+      "after": "I startle at engine noise and have broken sleep.",
+      "judgement": "faithful",
+      "note": "fragments made into sentences; nothing added",
+      "expected": "accepted"
+    },
+    {
+      "run": "run_2026-10-06_000820_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 2,
+      "before": "They leave the room when the fireworks start and do not come back for the evening.",
+      "after": "The veteran leaves the room when the fireworks start and does not return for the evening.",
+      "judgement": "faithful",
+      "note": "\"They\" became \"The veteran\": no fact changed, but the statement would then call the same person both",
+      "expected": "rejected"
+    },
+    {
+      "run": "run_2026-10-06_000820_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 3,
+      "before": "They no longer drive at night, so I do all of the evening driving.",
+      "after": "The veteran no longer drives at night, so I perform all of the evening driving.",
+      "judgement": "faithful",
+      "note": "\"They\" became \"The veteran\": no fact changed, but the statement would then call the same person both",
+      "expected": "rejected"
+    },
+    {
+      "run": "run_2026-10-06_000820_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 4,
+      "before": "They check the door locks three or four times before bed.",
+      "after": "The veteran checks the door locks three or four times before bed.",
+      "judgement": "faithful",
+      "note": "\"They\" became \"The veteran\": no fact changed, but the statement would then call the same person both",
+      "expected": "rejected"
+    },
+    {
+      "run": "run_2026-10-06_002046_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t02",
+      "number": 2,
+      "before": "Startle at engine noise, Broken sleep",
+      "after": "I startle at engine noise and have broken sleep.",
+      "judgement": "faithful",
+      "note": "fragments made into sentences; nothing added",
+      "expected": "accepted"
+    },
+    {
+      "run": "run_2026-10-06_002046_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 2,
+      "before": "They leave the room when the fireworks start and do not come back for the evening.",
+      "after": "When fireworks start, the veteran leaves the room and does not return for the evening.",
+      "judgement": "faithful",
+      "note": "\"They\" became \"The veteran\": no fact changed, but the statement would then call the same person both",
+      "expected": "rejected"
+    },
+    {
+      "run": "run_2026-10-06_002046_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 3,
+      "before": "They no longer drive at night, so I do all of the evening driving.",
+      "after": "The veteran no longer drives at night, so I perform all of the evening driving.",
+      "judgement": "faithful",
+      "note": "\"They\" became \"The veteran\": no fact changed, but the statement would then call the same person both",
+      "expected": "rejected"
+    },
+    {
+      "run": "run_2026-10-06_002046_Qwen3.5-4B-q4f16_1-MLC",
+      "id": "t04",
+      "number": 4,
+      "before": "They check the door locks three or four times before bed.",
+      "after": "The veteran checks the door locks three or four times before bed.",
+      "judgement": "faithful",
+      "note": "\"They\" became \"The veteran\": no fact changed, but the statement would then call the same person both",
+      "expected": "rejected"
+    }
+  ]
+}

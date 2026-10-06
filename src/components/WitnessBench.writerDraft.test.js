@@ -46,7 +46,8 @@ describe("WitnessBench._compileStatementWithAI", () => {
     await compile();
 
     const [prompt, options] = generateAI.mock.calls[0];
-    expect(prompt).toBe(buildPassagePrompt(TYPED));
+    expect(prompt).toBe(buildPassagePrompt(TYPED, "witness"));
+    expect(prompt).toContain('"they" for the person the writer is describing');
     expect(prompt).not.toMatch(/VA FORM|Witness Type|ATTESTATION|\[Veteran\]/);
     expect(options).toMatchObject({
       toolId: "buddy-statement",

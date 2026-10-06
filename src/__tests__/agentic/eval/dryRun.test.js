@@ -184,6 +184,25 @@ describe("dry run tool cases", () => {
     });
     expect(byId.get("t05").draftRejectReasons.join(" ")).toMatch(/2021/);
     expect(byId.get("t05").response).not.toMatch(/2021/);
+    expect(byId.get("t05").passageOutcomes[0]).toMatchObject({
+      number: 1,
+      before:
+        "The decision did not consider the headache log I kept, which shows attacks that put me in bed",
+      verdict: "rejected",
+    });
+    expect(byId.get("t05").passageOutcomes[0].after).toMatch(
+      /This was decided on March 3, 2021\.$/,
+    );
+    expect(byId.get("t05").passageOutcomes[0].reasons.join(" ")).toMatch(
+      /2021/,
+    );
+    expect(byId.get("t04").passageOutcomes.map((p) => p.verdict)).toEqual([
+      "accepted",
+      "unchanged",
+      "unchanged",
+      "unchanged",
+    ]);
+    expect(byId.get("t07").passageOutcomes).toEqual([]);
     expect(byId.get("t07")).toMatchObject({
       draftPath: "template",
       engineRequests: 0,
@@ -200,6 +219,23 @@ describe("dry run tool cases", () => {
     expect(assertDryRunDraftPaths(flipped)).toEqual([
       "t03 draft path: expected template, got model",
     ]);
+  });
+});
+
+describe("dry run fragment cases", () => {
+  it("records t09 reworded throughout and t10 echoed", () => {
+    const run = dryRun(makeTmp());
+    const byId = new Map(run.cases.map((c) => [c.id, c]));
+    expect(byId.get("t09").passages).toEqual({
+      sent: 5,
+      accepted: 5,
+      unchanged: 0,
+      rejected: 0,
+    });
+    expect(byId.get("t10")).toMatchObject({
+      draftPath: "template",
+      passages: { sent: 3, accepted: 0, unchanged: 3, rejected: 0 },
+    });
   });
 });
 

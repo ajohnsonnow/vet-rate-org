@@ -540,12 +540,15 @@ export const standardDraftNote = (draft) =>
  *   answers          what the form supplied
  *   passageKeys      the answers that are free-text passages
  *   keep             phrases a rewording must not lose (condition names)
+ *   voice            who is writing: "veteran" (their own statement) or
+ *                    "witness" (someone describing the veteran)
  */
-const plan = (build, answers, passageKeys, keep = []) => ({
+const plan = (build, answers, passageKeys, keep = [], voice = "veteran") => ({
   build,
   answers: answers ?? {},
   passageKeys,
   keep: keep.map(text).filter(Boolean),
+  voice,
 });
 
 export const personalStatementPlan = (
@@ -582,6 +585,7 @@ export const buddyStatementPlan = (answers, conditionName) =>
     answers,
     ["observations", "changesNoticed", "dailyImpact"],
     [conditionName],
+    "witness",
   );
 
 export const appealStatementPlan = (answers) =>
@@ -607,6 +611,7 @@ export const witnessStatementPlan = (relationship, condition, answers) =>
     answers,
     Object.keys(answers ?? {}),
     [condition],
+    "witness",
   );
 
 /** The plan for a Forms Helper form, or null when it has no wording step. */
@@ -647,8 +652,18 @@ export function selectPassages({ build, answers, passageKeys }) {
     );
 }
 
-/** The request sent to the model: reword these passages, add nothing. */
-export function buildPassagePrompt(passages) {
+// The subject a fragment is to be given, by who is writing.
+const SUBJECT_FOR_VOICE = {
+  veteran: 'beginning with its subject, for example "I".',
+  witness:
+    'beginning with its subject: "I" for what the writer did or saw, "they" for the person the writer is describing.',
+};
+
+/**
+ * The request sent to the model: reword these passages, add nothing.
+ * `voice` is the plan's: it sets the subject a fragment should be given.
+ */
+export function buildPassagePrompt(passages, voice = "veteran") {
   const numbered = passages
     .map((passage, i) => `${i + 1}. ${passage}`)
     .join("\n");
@@ -657,8 +672,9 @@ export function buildPassagePrompt(passages) {
 Rules:
 - Say only what the passage says. Do not add any fact, number, date, place, name, unit, diagnosis, rating, cause, feeling or detail that is not in it.
 - Keep every number, date and name exactly as written.
-- Keep who is speaking, and who is spoken about, the same.
-- If a passage is already clear, complete sentences, return it unchanged.
+- Keep who is speaking, and who is spoken about, the same. Keep "I", "they", "he" and "she" exactly as the writer used them. Do not replace one with a name or with a description such as "the veteran", or the other way round.
+- A passage that is not a full sentence (a list, a phrase with no subject or no verb) must be rewritten as one or more full sentences ${SUBJECT_FOR_VOICE[voice] ?? SUBJECT_FOR_VOICE.veteran}
+- Return a passage unchanged only if every part of it is already a full sentence.
 - Do not use square brackets. Do not ask questions, give advice, or add a heading, a greeting, a closing or a certification.
 - Reply with the same numbers, one rewritten passage after each number, and nothing else.
 

@@ -533,7 +533,10 @@ async function draftWithModel(plan, { toolId, userInput = null }) {
     return { success: true, ...settled(standardDraft(plan)) };
 
   const result = await callGeminiAPI(
-    buildPassagePrompt(sent.map((passage) => passage.text)),
+    buildPassagePrompt(
+      sent.map((passage) => passage.text),
+      plan.voice,
+    ),
     userInput,
     toolId,
     { temperature: REWORD_TEMPERATURE },

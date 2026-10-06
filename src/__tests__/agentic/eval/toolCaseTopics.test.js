@@ -68,7 +68,7 @@ beforeEach(() => {
 });
 
 describe("topics raised by what the tools really send", () => {
-  it("covers the eight tool cases", () => {
+  it("covers the ten tool cases", () => {
     expect(TOOL_CASES.map((c) => c.id)).toEqual([
       "t01",
       "t02",
@@ -78,10 +78,12 @@ describe("topics raised by what the tools really send", () => {
       "t06",
       "t07",
       "t08",
+      "t09",
+      "t10",
     ]);
   });
 
-  it.each(TOOL_CASES.filter((c) => /^t0[1-6]$/.test(c.id)))(
+  it.each(TOOL_CASES.filter((c) => /^t(?:0[1-6]|09|10)$/.test(c.id)))(
     "$id ($toolId): a rewording request raises no topic",
     async (caseDef) => {
       const requests = await requestsSentBy(caseDef);

@@ -43,6 +43,8 @@ function guardOutcome(flags) {
  * `draftPath` "model" (at least one typed passage was reworded by the model
  * and accepted) or "template" (the app-built draft was returned as it is).
  * `passages` counts the passages sent, accepted, unchanged and rejected,
+ * `passageOutcomes` lists each one (the passage, what the model returned for
+ * it, the verdict and the reasons) so a rejected rewording can be read,
  * `draftRejectReasons` says why each rejected one was, and
  * `draftErrorReason` is set when the model could not answer at all.
  * `calculatorLead` ({ expected, commentaryKept }) says the answer leads with
@@ -83,6 +85,7 @@ function toolFields(caseDef, outcome, own) {
     draftRejectReasons: outcome.tool?.draftRejectReasons ?? [],
     draftErrorReason: outcome.tool?.draftErrorReason ?? null,
     passages: outcome.tool?.passages ?? null,
+    passageOutcomes: outcome.tool?.passageOutcomes ?? [],
     ...ownSystemPromptSeen(caseDef, own),
   };
 }

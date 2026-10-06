@@ -19,7 +19,9 @@
  *      redaction marker: an invented fact in brackets is still invented;
  *   5. it is not much longer or much newer than the passage. This is what
  *      catches an invented account that happens to contain no number, name
- *      or diagnosis.
+ *      or diagnosis;
+ *   6. it refers to people the way the passage does: the same pronouns, no
+ *      "the veteran" for "they", no first person turned into third.
  *
  * A rewording that fails keeps the writer's own words. The check errs
  * toward rejecting: a rejected good rewording costs some polish, an
@@ -545,10 +547,46 @@ const STOP_WORDS = new Set(
   ),
 );
 
-const contentWords = (value) =>
-  [...wordSet(value)].filter(
-    (word) => word.length >= 4 && !STOP_WORDS.has(word),
-  );
+/*
+ * Words that carry no fact of their own in a statement about a veteran. A
+ * rewording that turns "They leave" into "The veteran leaves ... and does
+ * not" adds "veteran" and "does" and has said nothing new: every statement
+ * here is by or about the veteran, and "does" only carries the tense.
+ */
+const NO_FACT_WORDS = new Set(
+  "veteran veterans does doing done didn't doesn't".split(" "),
+);
+
+/*
+ * A word's stem, so that a change of form is not a change of wording:
+ * "leave" and "leaves", "drive", "drives" and "driving", "stop" and
+ * "stopped" compare equal. Deliberately crude. It only has to make
+ * inflections of one word meet; two different words that happen to share a
+ * stem are still two words the passage did or did not use.
+ */
+function stemOf(word) {
+  const base = word
+    .replace(/ies$/, "y")
+    .replace(/(?:ing|ed|es|s)$/, (ending, at) => (at >= 3 ? "" : ending));
+  const undoubled = /([b-df-hj-np-tv-z])\1$/.test(base)
+    ? base.slice(0, -1)
+    : base;
+  return undoubled.length > 3 ? undoubled.replace(/e$/, "") : undoubled;
+}
+
+const stemSet = (value) => new Set([...wordSet(value)].map(stemOf));
+
+/** The stems of the words that carry a passage's content. */
+const contentWords = (value) => [
+  ...new Set(
+    [...wordSet(value)]
+      .filter(
+        (word) =>
+          word.length >= 4 && !STOP_WORDS.has(word) && !NO_FACT_WORDS.has(word),
+      )
+      .map(stemOf),
+  ),
+];
 
 /**
  * What the veteran supplied that the draft no longer has: numbers, phrases
@@ -572,7 +610,7 @@ export function findMissingFacts(draft, inputs = [], keep = []) {
   }
   const words = [...new Set(supplied.flatMap(contentWords))];
   if (words.length > 0) {
-    const bodyWords = wordSet(body);
+    const bodyWords = stemSet(body);
     const kept = words.filter((word) => bodyWords.has(word)).length;
     const share = kept / words.length;
     if (share < MIN_WORDING_KEPT) {
@@ -607,11 +645,25 @@ const PASSAGE_NUMBER = /^(?:\*\*|__)?(\d{1,2})[.):](?:\*\*|__)?/;
 const stripWrapping = (value) =>
   trimTo(String(value ?? "").trim(), /[^\s"'“”*_`]/);
 
+/*
+ * The smaller model drops the numbers and returns one line per passage.
+ * Taken in order, but only when the line count matches exactly: a refusal
+ * or a preamble does not. Null when it does not match.
+ */
+function onePerLine(reply, count) {
+  const lines = straighten(reply)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return lines.length === count ? lines.map(stripWrapping) : null;
+}
+
 /**
  * The reworded passages in a model reply, by number: an array of `count`
  * entries, each the text after "N." up to the next number or blank line, or
  * null when that number is missing. Anything before the first number is
- * ignored. A reply to a single passage may come back with no number.
+ * ignored. A reply to a single passage may come back with no number, and
+ * so may a reply to several when it has exactly one line for each.
  */
 export function parsePassageReply(reply, count) {
   const found = new Array(count).fill(null);
@@ -636,6 +688,9 @@ export function parsePassageReply(reply, count) {
       .trim()
       .split(/\n\s*\n/)[0];
   }
+  if (count > 1 && found.every((value) => value === null)) {
+    return onePerLine(reply, count) ?? found;
+  }
   return found.map((value) => (value ? stripWrapping(value) : null));
 }
 
@@ -652,11 +707,77 @@ const MAX_PASSAGE_GROWTH = 1.75;
 const PASSAGE_GROWTH_ALLOWANCE = 40;
 const MIN_NEW_WORDS_ALLOWED = 2;
 
-function passageProblems(original, rewrite, keep) {
+const PRONOUN_FAMILIES = {
+  I: "i me my mine myself i'm i've i'd i'll we us our ours".split(" "),
+  they: "they them their theirs themselves they're they've they'd they'll".split(
+    " ",
+  ),
+  he: "he him his himself he's he'd he'll".split(" "),
+  she: "she her hers herself she's she'd she'll".split(" "),
+};
+const THIRD_PERSON = ["they", "he", "she"];
+const PERSON_NOUNS =
+  "veteran husband wife spouse partner son daughter brother sister father mother dad mom friend buddy coworker supervisor patient claimant soldier".split(
+    " ",
+  );
+
+/** How a text refers to people: which pronoun families and person nouns it uses. */
+function peopleIn(value) {
+  const words = wordSet(value);
+  const has = (list) => list.some((word) => words.has(word));
+  return {
+    pronouns: Object.keys(PRONOUN_FAMILIES).filter((family) =>
+      has(PRONOUN_FAMILIES[family]),
+    ),
+    nouns: PERSON_NOUNS.filter((noun) => words.has(noun)),
+  };
+}
+
+/**
+ * A rewording has to refer to people the way its passage does, so one
+ * statement does not call the same person "they" in one sentence and "the
+ * veteran" in the next, or slip from "I" to "they". It may not drop a
+ * pronoun the passage used, swap one pronoun for another, bring in or leave
+ * out a noun for a person ("the veteran", "my wife"), or turn first person
+ * into third or third into first.
+ *
+ * One thing is allowed: a passage with no subject at all ("Startle at
+ * engine noise") may be given the writer's. That is "I" for anyone, and for
+ * a witness also "they", the person they are describing.
+ */
+function peopleProblems(original, rewrite, voice) {
+  const before = peopleIn(original);
+  const after = peopleIn(rewrite);
+  const noOneNamed = before.pronouns.length === 0 && before.nouns.length === 0;
+  const changes = [
+    ...before.pronouns
+      .filter((family) => !after.pronouns.includes(family))
+      .map((family) => `"${family}" is gone`),
+    ...before.nouns
+      .filter((noun) => !after.nouns.includes(noun))
+      .map((noun) => `"${noun}" is gone`),
+    ...after.nouns
+      .filter((noun) => !before.nouns.includes(noun))
+      .map((noun) => `"${noun}" is new`),
+    ...after.pronouns
+      .filter(
+        (family) =>
+          THIRD_PERSON.includes(family) &&
+          !before.pronouns.includes(family) &&
+          !(noOneNamed && voice === "witness"),
+      )
+      .map((family) => `"${family}" is new`),
+  ];
+  return changes.length > 0
+    ? [`refers to people differently from the passage: ${changes.join(", ")}`]
+    : [];
+}
+
+function passageProblems(original, rewrite, keep, voice) {
   const kind = classifyReplyKind(rewrite);
   if (kind !== "rewording") return [`not a rewording: ${kind}`];
 
-  const problems = [];
+  const problems = peopleProblems(original, rewrite, voice);
   if (REDACTION_MARKER.test(rewrite))
     problems.push("contains a redaction marker");
   const brackets = (rewrite.match(BRACKETED) ?? []).filter(
@@ -684,7 +805,7 @@ function passageProblems(original, rewrite, keep) {
   ) {
     problems.push("much longer than the passage");
   }
-  const known = wordSet(original);
+  const known = stemSet(original);
   const words = contentWords(rewrite);
   const added = words.filter((word) => !known.has(word));
   if (
@@ -709,9 +830,16 @@ function passageProblems(original, rewrite, keep) {
  * certification wording; every number and required phrase of the passage
  * kept, and most of its wording. On top of those: no bracketed text the
  * passage did not have (an invented fact in brackets is still invented), no
- * redaction marker, and not much longer or much newer than the passage.
+ * redaction marker, not much longer or much newer than the passage, and the
+ * same way of referring to people (see peopleProblems). `voice` is the
+ * plan's: who is writing.
  */
-export function checkPassageRewrite({ original, rewrite, keep = [] }) {
+export function checkPassageRewrite({
+  original,
+  rewrite,
+  keep = [],
+  voice = "veteran",
+}) {
   const source = String(original ?? "").trim();
   const text = String(rewrite ?? "").trim();
   if (text === "") {
@@ -724,7 +852,7 @@ export function checkPassageRewrite({ original, rewrite, keep = [] }) {
   if (sameWording(source, text)) {
     return { status: "unchanged", text: source, reasons: [] };
   }
-  const reasons = passageProblems(source, text, keep);
+  const reasons = passageProblems(source, text, keep, voice);
   return reasons.length > 0
     ? { status: "rejected", text: source, reasons }
     : { status: "accepted", text, reasons: [] };
@@ -744,6 +872,7 @@ export function standardDraft(plan, extra = {}) {
     draftNote: standardDraftNote(content),
     draftRejectReasons: [],
     passages: NO_PASSAGES,
+    passageOutcomes: [],
     ...extra,
   };
 }
@@ -764,7 +893,8 @@ export const draftAfterModelError = (plan, sent, error) =>
  * by selectPassages, in the order they were numbered). The draft is built
  * again with each accepted rewording in its passage's place. `draftPath` is
  * "model" only when at least one passage was reworded and accepted;
- * `passages` counts how each one fared.
+ * `passages` counts how each one fared and `passageOutcomes` lists them:
+ * the passage, what the model returned for it, the verdict and the reasons.
  */
 export function resolvePassageDraft({ plan, sent, reply }) {
   const rewrites = parsePassageReply(reply, sent.length);
@@ -775,6 +905,7 @@ export function resolvePassageDraft({ plan, sent, reply }) {
       original: passage.text,
       rewrite: rewrites[i],
       keep: plan.keep,
+      voice: plan.voice,
     }),
   }));
   const count = (status) =>
@@ -791,8 +922,22 @@ export function resolvePassageDraft({ plan, sent, reply }) {
       (outcome) => `passage ${outcome.number}: ${outcome.reasons.join("; ")}`,
     );
 
+  // What was asked and what came back, passage by passage, so a transcript
+  // shows the rewording that was turned down and not only that one was.
+  const passageOutcomes = outcomes.map((outcome, i) => ({
+    number: outcome.number,
+    before: sent[i].text,
+    after: rewrites[i],
+    verdict: outcome.status,
+    reasons: outcome.reasons,
+  }));
+
   if (passages.accepted === 0) {
-    return standardDraft(plan, { passages, draftRejectReasons });
+    return standardDraft(plan, {
+      passages,
+      draftRejectReasons,
+      passageOutcomes,
+    });
   }
   const reworded = Object.fromEntries(
     outcomes
@@ -805,5 +950,6 @@ export function resolvePassageDraft({ plan, sent, reply }) {
     draftNote: null,
     draftRejectReasons,
     passages,
+    passageOutcomes,
   };
 }

@@ -14,6 +14,7 @@ import {
   STANDARD_DRAFT_NOTE,
   STANDARD_DRAFT_NOTE_NO_BLANKS,
   appealStatementPlan,
+  buddyStatementPlan,
   buildPassagePrompt,
   buildPTSDStressorTemplate,
   nexusRequestPlan,
@@ -234,6 +235,40 @@ describe("buildPassagePrompt", () => {
     expect(prompt).toMatch(/Say only what the passage says/);
     expect(prompt).not.toMatch(/VA Form|Dear|\[/);
   });
+
+  it("tells the model a fragment must become a full sentence", () => {
+    const prompt = buildPassagePrompt([FRAGMENT]);
+    expect(prompt).toContain(
+      "A passage that is not a full sentence (a list, a phrase with no subject or no verb) must be rewritten as one or more full sentences beginning with its subject",
+    );
+    expect(prompt).toContain(
+      "Return a passage unchanged only if every part of it is already a full sentence.",
+    );
+    expect(prompt).not.toMatch(/already clear, complete sentences/);
+  });
+
+  it('gives a veteran\'s own statement "I" as the subject', () => {
+    const prompt = buildPassagePrompt([FRAGMENT], "veteran");
+    expect(prompt).toContain('beginning with its subject, for example "I".');
+    expect(buildPassagePrompt([FRAGMENT])).toBe(prompt);
+  });
+
+  it('gives a witness "I" for themselves and "they" for the veteran', () => {
+    const prompt = buildPassagePrompt([FRAGMENT], "witness");
+    expect(prompt).toContain(
+      'beginning with its subject: "I" for what the writer did or saw, "they" for the person the writer is describing.',
+    );
+    expect(prompt).not.toContain('for example "I".');
+  });
+
+  it("each plan names who is writing", () => {
+    expect(ptsdStatementPlan({}).voice).toBe("veteran");
+    expect(personalStatementPlan({}, "Tinnitus").voice).toBe("veteran");
+    expect(appealStatementPlan({}).voice).toBe("veteran");
+    expect(nexusRequestPlan({}).voice).toBe("veteran");
+    expect(buddyStatementPlan({}, "PTSD").voice).toBe("witness");
+    expect(witnessStatementPlan("spouse", "PTSD", {}).voice).toBe("witness");
+  });
 });
 
 describe("resolvePassageDraft", () => {
@@ -362,6 +397,225 @@ describe("standardDraft", () => {
       draftNote: STANDARD_DRAFT_NOTE,
       draftRejectReasons: [],
       passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+      passageOutcomes: [],
     });
+  });
+});
+
+describe("rewordings the real model produced (Witness Bench, t04)", () => {
+  const original =
+    "They leave the room when the fireworks start and do not come back for the evening.";
+
+  it("accepts a change of verb and word order that keeps 'they'", () => {
+    const rewrite =
+      "When the fireworks start, they leave the room and do not return for the evening.";
+    expect(
+      checkPassageRewrite({ original, rewrite, voice: "witness" }),
+    ).toEqual({ status: "accepted", text: rewrite, reasons: [] });
+  });
+
+  it.each([
+    "The veteran leaves the room when the fireworks start and does not return for the evening.",
+    "When fireworks start, the veteran leaves the room and does not return for the evening.",
+  ])(
+    "rejects 'they' turned into 'the veteran', and for that alone: %s",
+    (rewrite) => {
+      expect(
+        checkPassageRewrite({ original, rewrite, voice: "witness" }),
+      ).toEqual({
+        status: "rejected",
+        text: original,
+        reasons: [
+          'refers to people differently from the passage: "they" is gone, "veteran" is new',
+        ],
+      });
+    },
+  );
+
+  it.each([
+    [
+      "a different place and a new act",
+      "The veteran leaves the house when the fireworks start and sleeps in the garage for the evening.",
+    ],
+    [
+      "an added cause",
+      "The veteran leaves the room when the fireworks start because the explosions remind them of mortar attacks, and does not return for the evening.",
+    ],
+    ["a dropped half", "The veteran leaves the room when the fireworks start."],
+  ])("still rejects %s", (_what, rewrite) => {
+    expect(checkPassageRewrite({ original, rewrite }).status).toBe("rejected");
+  });
+});
+
+describe("parsePassageReply with no numbers", () => {
+  it("takes one line per passage, in order, when the count matches", () => {
+    expect(
+      parsePassageReply(
+        "I see them wake up shouting several nights a week.\nThey used to host game nights.",
+        2,
+      ),
+    ).toEqual([
+      "I see them wake up shouting several nights a week.",
+      "They used to host game nights.",
+    ]);
+  });
+
+  it("does not guess when the line count does not match", () => {
+    expect(
+      parsePassageReply("I need more details before I can help.", 2),
+    ).toEqual([null, null]);
+    expect(parsePassageReply("One.\nTwo.\nThree.", 2)).toEqual([null, null]);
+  });
+});
+
+describe("resolvePassageDraft records each passage", () => {
+  it("before, after, verdict and reasons, in the order sent", () => {
+    const plan = ptsdStatementPlan({
+      eventDescription: "A vehicle rolled over beside me on the range",
+      currentSymptoms: FRAGMENT,
+    });
+    const result = resolvePassageDraft({
+      plan,
+      sent: selectPassages(plan),
+      reply: `1. In 2009 a vehicle rolled over beside me on the range.\n2. ${SENTENCES}`,
+    });
+    expect(result.passageOutcomes).toEqual([
+      {
+        number: 1,
+        before: "A vehicle rolled over beside me on the range",
+        after: "In 2009 a vehicle rolled over beside me on the range.",
+        verdict: "rejected",
+        reasons: ['adds number "2009"'],
+      },
+      {
+        number: 2,
+        before: FRAGMENT,
+        after: SENTENCES,
+        verdict: "accepted",
+        reasons: [],
+      },
+    ]);
+    expect(standardDraft(plan).passageOutcomes).toEqual([]);
+  });
+});
+
+describe("a rewording refers to people the way its passage does", () => {
+  const reject = (args) => {
+    const result = checkPassageRewrite(args);
+    expect(result.status).toBe("rejected");
+    expect(result.text).toBe(args.original);
+    return result.reasons.join("; ");
+  };
+
+  it.each([
+    [
+      "They check the door locks three or four times before bed.",
+      "The veteran checks the door locks three or four times before bed.",
+    ],
+    [
+      "They no longer drive at night, so I do all of the evening driving.",
+      "The veteran no longer drives at night, so I perform all of the evening driving.",
+    ],
+    [
+      "They leave the room when the fireworks start and do not come back for the evening.",
+      "When fireworks start, the veteran leaves the room and does not return for the evening.",
+    ],
+  ])("rejects a pronoun replaced by a noun: %s", (original, rewrite) => {
+    expect(reject({ original, rewrite, voice: "witness" })).toMatch(
+      /refers to people differently/,
+    );
+  });
+
+  it("rejects a noun replaced by a pronoun", () => {
+    expect(
+      reject({
+        original:
+          "The veteran checks the door locks three or four times before bed",
+        rewrite: "They check the door locks three or four times before bed.",
+        voice: "witness",
+      }),
+    ).toMatch(/refers to people differently/);
+  });
+
+  it("rejects one pronoun swapped for another", () => {
+    expect(
+      reject({
+        original: "They leave the room when the fireworks start",
+        rewrite: "He leaves the room when the fireworks start.",
+        voice: "witness",
+      }),
+    ).toMatch(/refers to people differently/);
+  });
+
+  it("rejects first person turned into third, and the reverse", () => {
+    expect(
+      reject({
+        original: "I miss about two shifts a month at the warehouse",
+        rewrite: "They miss about two shifts a month at the warehouse.",
+      }),
+    ).toMatch(/refers to people differently/);
+    expect(
+      reject({
+        original: "They miss about two shifts a month at the warehouse",
+        rewrite: "I miss about two shifts a month at the warehouse.",
+        voice: "witness",
+      }),
+    ).toMatch(/refers to people differently/);
+  });
+
+  it("rejects a veteran's own fragment turned into third person", () => {
+    expect(
+      reject({
+        original: FRAGMENT,
+        rewrite: "They startle at engine noise and have broken sleep.",
+        voice: "veteran",
+      }),
+    ).toMatch(/refers to people differently/);
+  });
+});
+
+describe("a rewording that keeps the passage's way of referring to people", () => {
+  it("lets a fragment with no subject take the writer's own", () => {
+    expect(
+      checkPassageRewrite({
+        original: FRAGMENT,
+        rewrite: SENTENCES,
+        voice: "veteran",
+      }).status,
+    ).toBe("accepted");
+    expect(
+      checkPassageRewrite({
+        original:
+          "Lights off at the desk, sunglasses indoors, head down on the bench",
+        rewrite:
+          "They keep the lights off at the desk, wear sunglasses indoors and put their head down on the bench.",
+        voice: "witness",
+      }).status,
+    ).toBe("accepted");
+  });
+
+  it("accepts a rewording that keeps every pronoun the writer used", () => {
+    expect(
+      checkPassageRewrite({
+        original:
+          "They leave the room when the fireworks start and do not come back for the evening.",
+        rewrite:
+          "When the fireworks start, they leave the room and do not return for the evening.",
+        voice: "witness",
+      }).status,
+    ).toBe("accepted");
+    expect(
+      checkPassageRewrite({
+        original: "I see them wake up shouting several nights a week",
+        rewrite: "Several nights a week, I see them wake up shouting.",
+        voice: "witness",
+      }).status,
+    ).toBe("accepted");
+  });
+
+  it("the request tells the model to keep the writer's pronouns", () => {
+    expect(buildPassagePrompt([FRAGMENT])).toContain(
+      'Keep "I", "they", "he" and "she" exactly as the writer used them. Do not replace one with a name or with a description such as "the veteran", or the other way round.',
+    );
   });
 });
