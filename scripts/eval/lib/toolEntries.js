@@ -59,7 +59,8 @@ function planDraft(plan) {
   return {
     template: plan.build(plan.answers),
     passages,
-    prompt: sent.length > 0 ? buildPassagePrompt(passages) : null,
+    prompt: sent.length > 0 ? buildPassagePrompt(passages, plan.voice) : null,
+    voice: plan.voice,
     resolve: (reply) =>
       sent.length > 0
         ? resolvePassageDraft({ plan, sent, reply })

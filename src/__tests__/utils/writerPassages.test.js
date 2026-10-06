@@ -14,6 +14,7 @@ import {
   STANDARD_DRAFT_NOTE,
   STANDARD_DRAFT_NOTE_NO_BLANKS,
   appealStatementPlan,
+  buddyStatementPlan,
   buildPassagePrompt,
   buildPTSDStressorTemplate,
   nexusRequestPlan,
@@ -233,6 +234,40 @@ describe("buildPassagePrompt", () => {
     expect(prompt).toContain(`1. ${FRAGMENT}\n2. Second passage here`);
     expect(prompt).toMatch(/Say only what the passage says/);
     expect(prompt).not.toMatch(/VA Form|Dear|\[/);
+  });
+
+  it("tells the model a fragment must become a full sentence", () => {
+    const prompt = buildPassagePrompt([FRAGMENT]);
+    expect(prompt).toContain(
+      "A passage that is not a full sentence (a list, a phrase with no subject or no verb) must be rewritten as one or more full sentences beginning with its subject",
+    );
+    expect(prompt).toContain(
+      "Return a passage unchanged only if every part of it is already a full sentence.",
+    );
+    expect(prompt).not.toMatch(/already clear, complete sentences/);
+  });
+
+  it('gives a veteran\'s own statement "I" as the subject', () => {
+    const prompt = buildPassagePrompt([FRAGMENT], "veteran");
+    expect(prompt).toContain('beginning with its subject, for example "I".');
+    expect(buildPassagePrompt([FRAGMENT])).toBe(prompt);
+  });
+
+  it('gives a witness "I" for themselves and "they" for the veteran', () => {
+    const prompt = buildPassagePrompt([FRAGMENT], "witness");
+    expect(prompt).toContain(
+      'beginning with its subject: "I" for what the writer did or saw, "they" for the person the writer is describing.',
+    );
+    expect(prompt).not.toContain('for example "I".');
+  });
+
+  it("each plan names who is writing", () => {
+    expect(ptsdStatementPlan({}).voice).toBe("veteran");
+    expect(personalStatementPlan({}, "Tinnitus").voice).toBe("veteran");
+    expect(appealStatementPlan({}).voice).toBe("veteran");
+    expect(nexusRequestPlan({}).voice).toBe("veteran");
+    expect(buddyStatementPlan({}, "PTSD").voice).toBe("witness");
+    expect(witnessStatementPlan("spouse", "PTSD", {}).voice).toBe("witness");
   });
 });
 

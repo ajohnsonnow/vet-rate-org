@@ -137,7 +137,12 @@ describe.each(TOOLS)("%s", (_name, run, plan, toolId) => {
     expect(generateAI).toHaveBeenCalledTimes(1);
     const [prompt, options] = generateAI.mock.calls[0];
     expect(sent.length).toBeGreaterThan(0);
-    expect(prompt).toBe(buildPassagePrompt(sent.map((p) => p.text)));
+    expect(prompt).toBe(
+      buildPassagePrompt(
+        sent.map((p) => p.text),
+        plan.voice,
+      ),
+    );
     expect(prompt).not.toMatch(/VA Form|Dear Doctor|38 CFR|\[/);
     expect(options.toolId).toBe(toolId);
     expect(options.dataClass).toBe("context");
