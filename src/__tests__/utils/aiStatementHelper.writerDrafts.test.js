@@ -379,19 +379,28 @@ describe("fixed text never comes back altered", () => {
 });
 
 describe("enhanceFormStatement", () => {
-  it("does not claim VA treatment the veteran did not state", async () => {
+  it("prints the treatment answer as typed and claims none of its own", async () => {
     const treated = await enhanceFormStatement("personal-statement", {
       conditionName: "Tinnitus",
       currentTreatment: "Hearing aids from a private audiologist",
     });
-    expect(treated.content).toContain("receiving treatment for this condition");
-    expect(treated.content).not.toMatch(/from the VA|audiologist/);
+    expect(treated.content).toContain(
+      "Current treatment: Hearing aids from a private audiologist.",
+    );
+    expect(treated.content).not.toMatch(/from the VA|receiving treatment/);
+
+    const none = await enhanceFormStatement("personal-statement", {
+      conditionName: "Tinnitus",
+      currentTreatment: "None right now",
+    });
+    expect(none.content).toContain("Current treatment: None right now.");
+    expect(none.content).not.toMatch(/receiving treatment/);
 
     const blank = await enhanceFormStatement("personal-statement", {
       conditionName: "Tinnitus",
     });
     expect(blank.content).toContain(
-      "[whether you are being treated for this condition, and where]",
+      "Current treatment: [the treatment you are getting now, or none]",
     );
     expect(generateAI).not.toHaveBeenCalled();
   });

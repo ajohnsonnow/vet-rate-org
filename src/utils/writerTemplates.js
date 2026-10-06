@@ -57,17 +57,27 @@ const said = (value, description) =>
   text(value) ? sentence(value) : blank(description);
 const paragraphs = (parts) => parts.filter(Boolean).join("\n\n");
 
+// The Nexus Builder asks "Have you sought medical treatment for this
+// condition?". Each sentence says what that one answer supports, no more.
 const TREATMENT = {
-  "yes-va": "I am currently receiving treatment from the VA.",
-  "yes-private": "I am currently receiving treatment from a private provider.",
-  both: "I am currently receiving treatment from both the VA and a private provider.",
-  yes: "I am currently receiving treatment for this condition.",
-  no: "I am not currently in formal treatment for this condition.",
+  "yes-va":
+    "I have sought medical treatment for this condition through the VA.",
+  "yes-private":
+    "I have sought medical treatment for this condition through private healthcare.",
+  both: "I have sought medical treatment for this condition through both the VA and private healthcare.",
+  no: "I have not yet had formal treatment for this condition.",
 };
 
-const treatmentLine = (hasTreatment) =>
-  TREATMENT[hasTreatment] ??
-  blank("whether you are being treated for this condition, and where");
+// The Forms Helper asks what treatment the veteran is receiving and takes a
+// typed answer, which is printed as typed ("None right now" included).
+function treatmentLine(answers) {
+  if (Object.hasOwn(answers, "currentTreatment")) {
+    return `Current treatment: ${said(answers.currentTreatment, "the treatment you are getting now, or none")}`;
+  }
+  return Object.hasOwn(TREATMENT, answers.hasTreatment ?? "")
+    ? TREATMENT[answers.hasTreatment]
+    : blank("whether you have sought treatment for this condition, and where");
+}
 
 function secondaryLink(answers) {
   const mechanism = text(answers.aggravationMechanism);
@@ -106,7 +116,7 @@ const impactLines = (answers) =>
     ),
     `Effect on my work: ${said(answers.workImpact, "how this condition affects your work")}`,
     `Effect on my family and social life: ${said(answers.socialImpact, "how this condition affects your family and social life")}`,
-    treatmentLine(answers.hasTreatment),
+    treatmentLine(answers),
   ].join("\n");
 
 /**
@@ -446,9 +456,7 @@ export function formStatementInputs(formType, formData = {}) {
           workImpact: formData.workImpact,
           socialImpact: formData.socialImpact,
           symptomOnsetDate: formData.onsetDate,
-          // The form asks what treatment, not where: say only that there is
-          // some, and leave a blank when the field was left empty.
-          hasTreatment: text(formData.currentTreatment) ? "yes" : undefined,
+          currentTreatment: formData.currentTreatment ?? "",
         },
         condition: formData.conditionName,
         // The primary-condition field is optional and shown for every claim

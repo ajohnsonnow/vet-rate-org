@@ -11,6 +11,7 @@ import {
   buildWitnessStatementBody,
   buildWitnessStatementTemplate,
   formStatementInputs,
+  formStatementPlan,
   listPlaceholders,
   witnessRelationshipLabel,
   tdiuAnalysisText,
@@ -75,7 +76,7 @@ describe("writer templates with nothing supplied", () => {
       "[date the symptoms began]",
     );
     expect(buildPersonalStatementTemplate({}, "Tinnitus")).toContain(
-      "[whether you are being treated for this condition, and where]",
+      "[whether you have sought treatment for this condition, and where]",
     );
     expect(buildAppealStatementTemplate({})).toContain(
       "[date of the decision you are appealing]",
@@ -93,7 +94,7 @@ describe("personal statement template", () => {
       PERSONAL.socialImpact,
       "March 2011",
       "Lumbar strain",
-      "from a private provider",
+      "through private healthcare",
       "VA Form 21-4138",
       "Compensation and Pension (C&P) examination",
     ]) {
@@ -104,13 +105,39 @@ describe("personal statement template", () => {
     ]);
   });
 
-  it("states the treatment the veteran selected, including both", () => {
-    const draft = (hasTreatment) =>
-      buildPersonalStatementTemplate({ hasTreatment }, "Tinnitus");
-    expect(draft("yes-va")).toContain("treatment from the VA.");
-    expect(draft("both")).toContain("both the VA and a private provider");
-    expect(draft("yes")).toContain("receiving treatment for this condition");
-    expect(draft("no")).toContain("not currently in formal treatment");
+  // The question is "Have you sought medical treatment for this condition?"
+  it.each([
+    [
+      "yes-va",
+      "I have sought medical treatment for this condition through the VA.",
+    ],
+    [
+      "yes-private",
+      "I have sought medical treatment for this condition through private healthcare.",
+    ],
+    [
+      "both",
+      "I have sought medical treatment for this condition through both the VA and private healthcare.",
+    ],
+    ["no", "I have not yet had formal treatment for this condition."],
+  ])("treatment answer %s says only what was asked", (hasTreatment, line) => {
+    const draft = buildPersonalStatementTemplate({ hasTreatment }, "Tinnitus");
+    expect(draft).toContain(line);
+    expect(draft).not.toMatch(/currently receiving/);
+    expect(listPlaceholders(draft).join(" ")).not.toMatch(/being treated/);
+  });
+
+  it("leaves a blank, not a claim, for a treatment answer it does not know", () => {
+    for (const hasTreatment of ["", undefined, "yes", "none"]) {
+      const draft = buildPersonalStatementTemplate(
+        { hasTreatment },
+        "Tinnitus",
+      );
+      expect(draft).toContain(
+        "[whether you have sought treatment for this condition, and where]",
+      );
+      expect(draft).not.toMatch(/I have (not yet had|sought)/);
+    }
   });
 
   it("frames a secondary claim and leaves out the onset date, as before", () => {
@@ -545,5 +572,31 @@ describe("Forms Helper personal statement and the claim type", () => {
     expect(draft("secondary")).toContain(
       "Sleep apnea as secondary to my service-connected Tinnitus",
     );
+  });
+});
+
+describe("Forms Helper personal statement: current treatment", () => {
+  const draftFor = (currentTreatment) => {
+    const plan = formStatementPlan("personal-statement", {
+      conditionName: "Tinnitus",
+      claimType: "initial",
+      currentTreatment,
+    });
+    return plan.build(plan.answers);
+  };
+
+  it.each(["None right now", "none", "No", "Physical therapy twice a month"])(
+    "prints the answer %s as typed and claims no treatment of its own",
+    (answer) => {
+      const draft = draftFor(answer);
+      expect(draft).toContain(`Current treatment: ${answer}.`);
+      expect(draft).not.toMatch(/receiving treatment|sought medical treatment/);
+    },
+  );
+
+  it("leaves a blank when the question was not answered", () => {
+    const draft = draftFor("");
+    expect(draft).toContain("Current treatment: [the treatment you are");
+    expect(draft).not.toMatch(/receiving treatment|sought medical treatment/);
   });
 });
