@@ -135,9 +135,9 @@ export function buildPersonalStatementTemplate(
     return paragraphs([
       "PERSONAL STATEMENT IN SUPPORT OF CLAIM (VA Form 21-4138)",
       `I am submitting this statement in support of my claim for ${claimed} as secondary to my service-connected ${primary}.`,
-      `My service-connected condition\nI have a service-connected condition: ${primary}.`,
+      `When my symptoms began: ${orBlank(answers.symptomOnsetDate, "date the symptoms began")}`,
       `My symptoms now\n${impactLines(answers)}`,
-      `How my ${primary} causes or worsens my ${claimed}\n${secondaryLink(answers)}`,
+      `How my service-connected condition causes or worsens this one\n${secondaryLink(answers)}`,
       "I respectfully request a Compensation and Pension (C&P) examination to evaluate this condition and its connection to my service-connected disability.",
     ]);
   }

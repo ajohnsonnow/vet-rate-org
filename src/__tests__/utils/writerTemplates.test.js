@@ -138,25 +138,6 @@ describe("personal statement template", () => {
     }
   });
 
-  it("frames a secondary claim and leaves out the onset date, as before", () => {
-    const draft = buildPersonalStatementTemplate(
-      {
-        ...PERSONAL,
-        aggravationMechanism: "sleep",
-        aggravationExplanation: "Knee pain wakes me most nights",
-      },
-      "Insomnia",
-      "Left knee strain",
-    );
-    expect(draft).toContain(
-      "Insomnia as secondary to my service-connected Left knee strain",
-    );
-    expect(draft).toContain("Sleep disruption from primary condition.");
-    expect(draft).toContain("Knee pain wakes me most nights.");
-    expect(draft).not.toContain("March 2011");
-    expect(draft).not.toContain(PERSONAL.inServiceEvent);
-  });
-
   it("reads only the fields the tool already sent to the model", () => {
     const draft = buildPersonalStatementTemplate(
       { ...PERSONAL, treatmentType: "SENTINEL-A", witnessName: "SENTINEL-B" },
@@ -504,5 +485,43 @@ describe("appeal statement follows the review lane", () => {
       "Evidence that supports my appeal\n[the evidence that supports a different decision]",
     );
     expect(draft).not.toMatch(/new evidence/i);
+  });
+});
+
+describe("secondary personal statement", () => {
+  it("frames a secondary claim, naming the primary condition once", () => {
+    const draft = buildPersonalStatementTemplate(
+      {
+        ...PERSONAL,
+        aggravationMechanism: "sleep",
+        aggravationExplanation: "Knee pain wakes me most nights",
+      },
+      "Insomnia",
+      "Left knee strain",
+    );
+    expect(draft).toContain(
+      "Insomnia as secondary to my service-connected Left knee strain",
+    );
+    expect(draft.split("Left knee strain")).toHaveLength(2);
+    expect(draft.split("Insomnia")).toHaveLength(2);
+    expect(draft).toContain(
+      "How my service-connected condition causes or worsens this one",
+    );
+    expect(draft).toContain("Sleep disruption from primary condition.");
+    expect(draft).toContain("Knee pain wakes me most nights.");
+    expect(draft).not.toContain(PERSONAL.inServiceEvent);
+  });
+
+  it("prints when the symptoms began for a secondary claim too", () => {
+    const draft = (symptomOnsetDate) =>
+      buildPersonalStatementTemplate(
+        { symptomOnsetDate },
+        "Insomnia",
+        "Left knee strain",
+      );
+    expect(draft("March 2011")).toContain("When my symptoms began: March 2011");
+    expect(draft("")).toContain(
+      "When my symptoms began: [date the symptoms began]",
+    );
   });
 });
