@@ -379,21 +379,60 @@ describe("fixed text never comes back altered", () => {
 });
 
 describe("enhanceFormStatement", () => {
-  it("does not claim VA treatment the veteran did not state", async () => {
+  it("prints the treatment answer as typed, without asking the model", async () => {
     const treated = await enhanceFormStatement("personal-statement", {
       conditionName: "Tinnitus",
       currentTreatment: "Hearing aids from a private audiologist",
     });
-    expect(treated.content).toContain("receiving treatment for this condition");
-    expect(treated.content).not.toMatch(/from the VA|audiologist/);
-
-    const blank = await enhanceFormStatement("personal-statement", {
-      conditionName: "Tinnitus",
-    });
-    expect(blank.content).toContain(
-      "[whether you are being treated for this condition, and where]",
+    expect(treated.content).toContain(
+      "A. Current treatment:\nHearing aids from a private audiologist.",
     );
+    expect(treated.content).not.toMatch(/from the VA|receiving treatment/);
+
+    const none = await enhanceFormStatement("personal-statement", {
+      conditionName: "Tinnitus",
+      currentTreatment: "None right now",
+    });
+    expect(none.content).toContain("A. Current treatment:\nNone right now.");
+    expect(none.content).not.toMatch(/receiving treatment/);
     expect(generateAI).not.toHaveBeenCalled();
+  });
+
+  it("sends the model the typed passages and nothing else the form holds", async () => {
+    const formData = {
+      witnessName: "Sam Placeholder",
+      witnessPhone: "555-0100",
+      witnessEmail: "sam@example.invalid",
+      veteranName: "Jordan Placeholder",
+      conditionName: "Migraines",
+      witnessRelation: "coworker",
+      knownSince: "since 2016",
+      howKnown: "We worked the same line at the Placeholder plant",
+      whatObserved: "Lights off at the desk, sunglasses indoors",
+      whenObserved: "Spring 2022",
+      whereObserved: "The Placeholder plant",
+      workImpact: "Fewer shifts and no overtime",
+      additionalInfo: "Happy to answer questions",
+    };
+    generateAI.mockResolvedValue({
+      text: "1. They sat at the desk with the lights off and wore sunglasses indoors.",
+      mode: "swarm",
+    });
+    const result = await enhanceFormStatement("buddy-statement", formData);
+
+    const [prompt, options] = generateAI.mock.calls[0];
+    expect(prompt).toContain("1. Lights off at the desk, sunglasses indoors");
+    expect(prompt).not.toMatch(
+      /Placeholder|555-0100|example\.invalid|2016|Spring 2022|Fewer shifts|Happy to answer/,
+    );
+    expect(options.toolId).toBe("buddy-statement");
+
+    expect(result.draftPath).toBe("model");
+    expect(result.content).toContain(
+      "They sat at the desk with the lights off and wore sunglasses indoors.",
+    );
+    expect(result.content).toContain("Veteran's Full Name: Jordan Placeholder");
+    expect(result.content).toContain("Contact Phone: 555-0100");
   });
 
   it("refuses a form with no wording step", async () => {

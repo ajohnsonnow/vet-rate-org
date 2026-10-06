@@ -3,8 +3,7 @@ import ReportBugLink from "../../components/ReportBugLink";
 import ResponsiveModal from "../../components/common/ResponsiveModal";
 import HeaderCloseSlot from "../../components/common/HeaderCloseSlot";
 import {
-  saveStatement,
-  getSavedClaims,
+  saveStatementForCondition,
   getStatement,
 } from "../../utils/claimsStorage";
 
@@ -173,26 +172,6 @@ function SecondaryScoutLauncherModal({ onLaunch, onClose, onReportBug }) {
   );
 }
 
-function findMatchingClaim(statementData) {
-  const savedClaims = getSavedClaims();
-  return savedClaims.find(
-    (c) =>
-      c.conditionName === statementData.condition &&
-      c.parentCondition === (statementData.primaryCondition || null),
-  );
-}
-
-function saveStatementOrAlert(statementData) {
-  const matchingClaim = findMatchingClaim(statementData);
-  if (matchingClaim) {
-    saveStatement(matchingClaim.id, statementData);
-  } else {
-    alert(
-      "Error: Could not find matching claim. Please save the claim first from Secondary Scout.",
-    );
-  }
-}
-
 function DiscoverNexusBuilderModal({
   data,
   onClose,
@@ -282,9 +261,12 @@ export default function DiscoverCluster({ userConditions, setUserConditions }) {
   };
 
   const handleSaveStatement = (statementData) => {
-    saveStatementOrAlert(statementData);
-    setShowNexusBuilder(false);
-    window.dispatchEvent(new CustomEvent("openMyPacket"));
+    const saved = saveStatementForCondition(statementData);
+    if (saved) {
+      setShowNexusBuilder(false);
+      window.dispatchEvent(new CustomEvent("openMyPacket"));
+    }
+    return saved;
   };
 
   return (

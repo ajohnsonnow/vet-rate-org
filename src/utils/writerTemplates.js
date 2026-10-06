@@ -16,6 +16,12 @@
  * app swaps for the real name locally after generation (ADR-008).
  */
 
+export {
+  STRESSOR_TYPE_LABELS,
+  WITNESS_RELATION_LABELS,
+  formStatementPlan,
+} from "./formStatementDrafts.js";
+
 export const STANDARD_DRAFT_NOTE =
   "This is the standard draft with blanks to fill in: replace each [bracketed] item with your own details.";
 
@@ -57,17 +63,21 @@ const said = (value, description) =>
   text(value) ? sentence(value) : blank(description);
 const paragraphs = (parts) => parts.filter(Boolean).join("\n\n");
 
+// The Nexus Builder asks "Have you sought medical treatment for this
+// condition?". Each sentence says what that one answer supports, no more.
 const TREATMENT = {
-  "yes-va": "I am currently receiving treatment from the VA.",
-  "yes-private": "I am currently receiving treatment from a private provider.",
-  both: "I am currently receiving treatment from both the VA and a private provider.",
-  yes: "I am currently receiving treatment for this condition.",
-  no: "I am not currently in formal treatment for this condition.",
+  "yes-va":
+    "I have sought medical treatment for this condition through the VA.",
+  "yes-private":
+    "I have sought medical treatment for this condition through private healthcare.",
+  both: "I have sought medical treatment for this condition through both the VA and private healthcare.",
+  no: "I have not yet had formal treatment for this condition.",
 };
 
 const treatmentLine = (hasTreatment) =>
-  TREATMENT[hasTreatment] ??
-  blank("whether you are being treated for this condition, and where");
+  Object.hasOwn(TREATMENT, hasTreatment ?? "")
+    ? TREATMENT[hasTreatment]
+    : blank("whether you have sought treatment for this condition, and where");
 
 function secondaryLink(answers) {
   const mechanism = text(answers.aggravationMechanism);
@@ -125,9 +135,9 @@ export function buildPersonalStatementTemplate(
     return paragraphs([
       "PERSONAL STATEMENT IN SUPPORT OF CLAIM (VA Form 21-4138)",
       `I am submitting this statement in support of my claim for ${claimed} as secondary to my service-connected ${primary}.`,
-      `My service-connected condition\nI have a service-connected condition: ${primary}.`,
+      `When my symptoms began: ${orBlank(answers.symptomOnsetDate, "date the symptoms began")}`,
       `My symptoms now\n${impactLines(answers)}`,
-      `How my ${primary} causes or worsens my ${claimed}\n${secondaryLink(answers)}`,
+      `How my service-connected condition causes or worsens this one\n${secondaryLink(answers)}`,
       "I respectfully request a Compensation and Pension (C&P) examination to evaluate this condition and its connection to my service-connected disability.",
     ]);
   }
@@ -181,8 +191,7 @@ export function buildBuddyStatementTemplate(answers = {}, conditionName = "") {
  * answers, in the order given. `relationship_context` leads; every other
  * answered question follows as an observation.
  */
-export function buildWitnessStatementBody(condition = "", answers = {}) {
-  const claimed = orBlank(condition, "the veteran's condition");
+export function buildWitnessStatementBody(answers = {}) {
   const context = text(answers.relationship_context);
   const observations = Object.entries(answers)
     .filter(([key, value]) => key !== "relationship_context" && text(value))
@@ -190,7 +199,7 @@ export function buildWitnessStatementBody(condition = "", answers = {}) {
 
   return paragraphs([
     context,
-    `I am writing to provide my personal observations regarding [Veteran]'s ${claimed}.`,
+    "I am writing to provide my personal observations of [Veteran].",
     "Based on my direct observations:",
     ...(observations.length > 0
       ? observations
@@ -218,7 +227,7 @@ export function buildWitnessStatementTemplate(
       `Witness Type: ${orBlank(relationshipLabel, "your relationship to the veteran")}`,
       `Regarding: ${orBlank(condition, "the veteran's condition")}`,
     ].join("\n"),
-    buildWitnessStatementBody(condition, answers),
+    buildWitnessStatementBody(answers),
   ]);
 }
 
@@ -373,32 +382,6 @@ export const tdiuAnalysisText = (analysis) =>
     .filter((part) => typeof part === "string")
     .join("\n");
 
-/*
- * A form stores a select's code ("fellow-service-member"); a statement
- * prints its label. These are the labels the Forms Helper's own statements
- * print, and the Witness Bench's English relationship labels.
- */
-export const WITNESS_RELATION_LABELS = {
-  "fellow-service-member": "Fellow Service Member",
-  supervisor: "Military Supervisor/NCO/Officer",
-  spouse: "Spouse",
-  family: "Family Member",
-  friend: "Friend",
-  coworker: "Civilian Coworker",
-  caregiver: "Caregiver",
-  other: "Other",
-};
-
-export const STRESSOR_TYPE_LABELS = {
-  combat: "Combat-Related Trauma",
-  mst: "Military Sexual Trauma (MST)",
-  "personal-assault": "Personal Assault",
-  accident: "Serious Accident/Injury",
-  death: "Witnessing Death or Serious Injury",
-  "fear-hostile": "Fear of Hostile Military/Terrorist Activity",
-  other: "Other Traumatic Event",
-};
-
 const WITNESS_BENCH_RELATIONSHIP_LABELS = {
   spouse: "Spouse / Partner",
   parent: "Parent",
@@ -415,65 +398,6 @@ const labelFor = (labels, value) =>
 
 export const witnessRelationshipLabel = (value) =>
   labelFor(WITNESS_BENCH_RELATIONSHIP_LABELS, value);
-
-/**
- * The Forms Helper's field names mapped to the answers each statement
- * builder reads, or null for a form with no AI wording step.
- */
-export function formStatementInputs(formType, formData = {}) {
-  switch (formType) {
-    case "buddy-statement":
-      return {
-        kind: "buddy",
-        answers: {
-          relationship: labelFor(
-            WITNESS_RELATION_LABELS,
-            formData.witnessRelation,
-          ),
-          knownDuration: formData.knownSince,
-          observations: formData.whatObserved,
-          changesNoticed: formData.specificExamples,
-          dailyImpact: formData.dailyImpact,
-        },
-        condition: formData.conditionName,
-      };
-    case "personal-statement":
-      return {
-        kind: "personal",
-        answers: {
-          inServiceEvent: formData.inServiceEvent,
-          specificExamples: formData.worstDays,
-          workImpact: formData.workImpact,
-          socialImpact: formData.socialImpact,
-          symptomOnsetDate: formData.onsetDate,
-          // The form asks what treatment, not where: say only that there is
-          // some, and leave a blank when the field was left empty.
-          hasTreatment: text(formData.currentTreatment) ? "yes" : undefined,
-        },
-        condition: formData.conditionName,
-        // The primary-condition field is optional and shown for every claim
-        // type; it makes the claim secondary only when the veteran said so.
-        primaryCondition:
-          formData.claimType === "secondary"
-            ? (formData.primaryCondition ?? null)
-            : null,
-      };
-    case "ptsd-stressor":
-      return {
-        kind: "ptsd",
-        answers: {
-          stressorType: labelFor(STRESSOR_TYPE_LABELS, formData.stressorType),
-          eventDescription: formData.eventDescription,
-          currentSymptoms: Array.isArray(formData.symptoms)
-            ? formData.symptoms.join(", ")
-            : formData.symptomDetails,
-          dailyImpact: formData.symptomDetails,
-        },
-      };
-    default:
-      return null;
-  }
-}
 
 /**
  * Every bracketed blank still standing in the text of a TDIU analysis, one
@@ -613,25 +537,6 @@ export const witnessStatementPlan = (relationship, condition, answers) =>
     [condition],
     "witness",
   );
-
-/** The plan for a Forms Helper form, or null when it has no wording step. */
-export function formStatementPlan(formType, formData) {
-  const mapped = formStatementInputs(formType, formData);
-  switch (mapped?.kind) {
-    case "buddy":
-      return buddyStatementPlan(mapped.answers, mapped.condition);
-    case "personal":
-      return personalStatementPlan(
-        mapped.answers,
-        mapped.condition,
-        mapped.primaryCondition,
-      );
-    case "ptsd":
-      return ptsdStatementPlan(mapped.answers);
-    default:
-      return null;
-  }
-}
 
 // A passage this short ("None", "Daily") has nothing to reword.
 const MIN_PASSAGE_WORDS = 3;

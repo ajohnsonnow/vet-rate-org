@@ -10,7 +10,6 @@ import {
   buildTdiuAnalysisTemplate,
   buildWitnessStatementBody,
   buildWitnessStatementTemplate,
-  formStatementInputs,
   listPlaceholders,
   witnessRelationshipLabel,
   tdiuAnalysisText,
@@ -75,7 +74,7 @@ describe("writer templates with nothing supplied", () => {
       "[date the symptoms began]",
     );
     expect(buildPersonalStatementTemplate({}, "Tinnitus")).toContain(
-      "[whether you are being treated for this condition, and where]",
+      "[whether you have sought treatment for this condition, and where]",
     );
     expect(buildAppealStatementTemplate({})).toContain(
       "[date of the decision you are appealing]",
@@ -93,7 +92,7 @@ describe("personal statement template", () => {
       PERSONAL.socialImpact,
       "March 2011",
       "Lumbar strain",
-      "from a private provider",
+      "through private healthcare",
       "VA Form 21-4138",
       "Compensation and Pension (C&P) examination",
     ]) {
@@ -104,32 +103,39 @@ describe("personal statement template", () => {
     ]);
   });
 
-  it("states the treatment the veteran selected, including both", () => {
-    const draft = (hasTreatment) =>
-      buildPersonalStatementTemplate({ hasTreatment }, "Tinnitus");
-    expect(draft("yes-va")).toContain("treatment from the VA.");
-    expect(draft("both")).toContain("both the VA and a private provider");
-    expect(draft("yes")).toContain("receiving treatment for this condition");
-    expect(draft("no")).toContain("not currently in formal treatment");
+  // The question is "Have you sought medical treatment for this condition?"
+  it.each([
+    [
+      "yes-va",
+      "I have sought medical treatment for this condition through the VA.",
+    ],
+    [
+      "yes-private",
+      "I have sought medical treatment for this condition through private healthcare.",
+    ],
+    [
+      "both",
+      "I have sought medical treatment for this condition through both the VA and private healthcare.",
+    ],
+    ["no", "I have not yet had formal treatment for this condition."],
+  ])("treatment answer %s says only what was asked", (hasTreatment, line) => {
+    const draft = buildPersonalStatementTemplate({ hasTreatment }, "Tinnitus");
+    expect(draft).toContain(line);
+    expect(draft).not.toMatch(/currently receiving/);
+    expect(listPlaceholders(draft).join(" ")).not.toMatch(/being treated/);
   });
 
-  it("frames a secondary claim and leaves out the onset date, as before", () => {
-    const draft = buildPersonalStatementTemplate(
-      {
-        ...PERSONAL,
-        aggravationMechanism: "sleep",
-        aggravationExplanation: "Knee pain wakes me most nights",
-      },
-      "Insomnia",
-      "Left knee strain",
-    );
-    expect(draft).toContain(
-      "Insomnia as secondary to my service-connected Left knee strain",
-    );
-    expect(draft).toContain("Sleep disruption from primary condition.");
-    expect(draft).toContain("Knee pain wakes me most nights.");
-    expect(draft).not.toContain("March 2011");
-    expect(draft).not.toContain(PERSONAL.inServiceEvent);
+  it("leaves a blank, not a claim, for a treatment answer it does not know", () => {
+    for (const hasTreatment of ["", undefined, "yes", "none"]) {
+      const draft = buildPersonalStatementTemplate(
+        { hasTreatment },
+        "Tinnitus",
+      );
+      expect(draft).toContain(
+        "[whether you have sought treatment for this condition, and where]",
+      );
+      expect(draft).not.toMatch(/I have (not yet had|sought)/);
+    }
   });
 
   it("reads only the fields the tool already sent to the model", () => {
@@ -178,11 +184,11 @@ describe("other statement templates", () => {
       q2: "   ",
       q3: "They no longer drive at night.",
     };
-    const body = buildWitnessStatementBody("PTSD", answers);
+    const body = buildWitnessStatementBody(answers);
     expect(body).toBe(
       [
         "I have been married to the veteran since 2012.",
-        "I am writing to provide my personal observations regarding [Veteran]'s PTSD.",
+        "I am writing to provide my personal observations of [Veteran].",
         "Based on my direct observations:",
         "They leave the room when fireworks start.",
         "They no longer drive at night.",
@@ -276,42 +282,6 @@ describe("standard draft note", () => {
 });
 
 describe("stored codes are printed as the form's own labels", () => {
-  it("Forms Helper witness relationship", () => {
-    const { answers, condition } = formStatementInputs("buddy-statement", {
-      witnessRelation: "fellow-service-member",
-      conditionName: "PTSD",
-    });
-    const draft = buildBuddyStatementTemplate(answers, condition);
-    expect(draft).toContain(
-      "My relationship to [Veteran]: Fellow Service Member",
-    );
-    expect(draft).not.toContain("fellow-service-member");
-  });
-
-  it("Forms Helper stressor type", () => {
-    const { answers } = formStatementInputs("ptsd-stressor", {
-      stressorType: "fear-hostile",
-    });
-    const draft = buildPTSDStressorTemplate(answers);
-    expect(draft).toContain(
-      "Type of stressor: Fear of Hostile Military/Terrorist Activity",
-    );
-    expect(draft).not.toContain("fear-hostile");
-  });
-
-  it("a value with no label, and an empty one, are left as they are", () => {
-    expect(
-      formStatementInputs("buddy-statement", { witnessRelation: "godparent" })
-        .answers.relationship,
-    ).toBe("godparent");
-    expect(
-      buildBuddyStatementTemplate(
-        formStatementInputs("buddy-statement", {}).answers,
-        "",
-      ),
-    ).toContain("[your relationship to the veteran]");
-  });
-
   it("Witness Bench relationship, in the app's English wording", () => {
     const draft = buildWitnessStatementTemplate("buddy", "PTSD", {});
     expect(draft).toContain("Witness Type: Battle Buddy / Fellow Veteran");
@@ -518,32 +488,40 @@ describe("appeal statement follows the review lane", () => {
   });
 });
 
-describe("Forms Helper personal statement and the claim type", () => {
-  const form = (claimType) =>
-    formStatementInputs("personal-statement", {
-      claimType,
-      conditionName: "Sleep apnea",
-      primaryCondition: "Tinnitus",
-    });
-  const draft = (claimType) => {
-    const { answers, condition, primaryCondition } = form(claimType);
-    return buildPersonalStatementTemplate(answers, condition, primaryCondition);
-  };
+describe("secondary personal statement", () => {
+  it("frames a secondary claim, naming the primary condition once", () => {
+    const draft = buildPersonalStatementTemplate(
+      {
+        ...PERSONAL,
+        aggravationMechanism: "sleep",
+        aggravationExplanation: "Knee pain wakes me most nights",
+      },
+      "Insomnia",
+      "Left knee strain",
+    );
+    expect(draft).toContain(
+      "Insomnia as secondary to my service-connected Left knee strain",
+    );
+    expect(draft.split("Left knee strain")).toHaveLength(2);
+    expect(draft.split("Insomnia")).toHaveLength(2);
+    expect(draft).toContain(
+      "How my service-connected condition causes or worsens this one",
+    );
+    expect(draft).toContain("Sleep disruption from primary condition.");
+    expect(draft).toContain("Knee pain wakes me most nights.");
+    expect(draft).not.toContain(PERSONAL.inServiceEvent);
+  });
 
-  it.each(["initial", "increase", "reopened", "", undefined])(
-    "claim type %s is not written as secondary, whatever the optional field holds",
-    (claimType) => {
-      expect(form(claimType).primaryCondition).toBeNull();
-      expect(draft(claimType)).not.toMatch(/secondary|Tinnitus/);
-      expect(draft(claimType)).toContain(
-        "my claim for service connection for Sleep apnea.",
+  it("prints when the symptoms began for a secondary claim too", () => {
+    const draft = (symptomOnsetDate) =>
+      buildPersonalStatementTemplate(
+        { symptomOnsetDate },
+        "Insomnia",
+        "Left knee strain",
       );
-    },
-  );
-
-  it("a secondary claim names its primary condition", () => {
-    expect(draft("secondary")).toContain(
-      "Sleep apnea as secondary to my service-connected Tinnitus",
+    expect(draft("March 2011")).toContain("When my symptoms began: March 2011");
+    expect(draft("")).toContain(
+      "When my symptoms began: [date the symptoms began]",
     );
   });
 });

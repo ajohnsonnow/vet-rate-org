@@ -20,15 +20,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  AlignmentType,
-} from "docx";
-import jsPDF from "jspdf";
+import { downloadDraft } from "../utils/draftExport";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import {
   STANDARD_DRAFT_NOTE,
@@ -262,6 +254,24 @@ export const _generateVocationalImpact = (disabilities) => ({
   passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
 });
 
+const WORK_HISTORY_LABELS = [
+  ["lastWorked", "Last worked"],
+  ["lastOccupation", "Last occupation"],
+  ["reasonLeft", "Why I stopped working"],
+  ["education", "Education"],
+  ["triedToWork", "Attempts to work since"],
+];
+
+/** The work-history answers given, as [label, answer] pairs. */
+const workHistoryEntries = (workHistory) =>
+  WORK_HISTORY_LABELS.map(([key, label]) => [
+    label,
+    (workHistory?.[key] ?? "").trim(),
+  ]).filter(([, answer]) => answer);
+
+const DOWNLOAD_FAILED =
+  "The download did not work. Your analysis is still here. Try the other format, or copy the text.";
+
 /**
  * Build the full statement text from analysis + work history
  */
@@ -294,95 +304,16 @@ function buildFullStatement(vocationalAnalysis, workHistory) {
   statement += `STATEMENT FOR BOX 18 (Copy this):\n\n`;
   statement += `"${vocationalAnalysis.summary_argument}"`;
 
-  if (workHistory.lastWorked || workHistory.reasonLeft) {
+  const history = workHistoryEntries(workHistory);
+  if (history.length > 0) {
     statement += `\n\n${"=".repeat(50)}\n`;
     statement += `ADDITIONAL WORK HISTORY CONTEXT:\n\n`;
-    if (workHistory.lastWorked)
-      statement += `Last Worked: ${workHistory.lastWorked}\n`;
-    if (workHistory.lastOccupation)
-      statement += `Last Occupation: ${workHistory.lastOccupation}\n`;
-    if (workHistory.reasonLeft)
-      statement += `Reason Left: ${workHistory.reasonLeft}\n`;
-    if (workHistory.education)
-      statement += `Education Level: ${workHistory.education}\n`;
-    if (workHistory.triedToWork)
-      statement += `Attempts to Work: ${workHistory.triedToWork}\n`;
+    statement += history
+      .map(([label, answer]) => `${label}: ${answer}`)
+      .join("\n");
   }
 
   return statement;
-}
-
-/**
- * Download the statement as PDF
- */
-function downloadStatementAsPDF(statement) {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  const maxWidth = pageWidth - margin * 2;
-
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("Statement of Unemployability - VA Form 21-8940", margin, 20);
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-
-  const lines = doc.splitTextToSize(statement, maxWidth);
-  let yPosition = 35;
-
-  lines.forEach((line) => {
-    if (yPosition > 280) {
-      doc.addPage();
-      yPosition = 20;
-    }
-    doc.text(line, margin, yPosition);
-    yPosition += 5;
-  });
-
-  doc.save("TDIU_Vocational_Statement.pdf");
-}
-
-/**
- * Download the statement as DOCX
- */
-async function downloadStatementAsDOCX(statement) {
-  const doc = new Document({
-    sections: [
-      {
-        properties: {},
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "Statement of Unemployability - VA Form 21-8940",
-                bold: true,
-                size: 28,
-              }),
-            ],
-            heading: HeadingLevel.HEADING_1,
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({ text: "" }),
-          ...statement.split("\n").map(
-            (line) =>
-              new Paragraph({
-                children: [new TextRun({ text: line, size: 24 })],
-                spacing: { after: 120 },
-              }),
-          ),
-        ],
-      },
-    ],
-  });
-
-  const blob = await Packer.toBlob(doc);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "TDIU_Vocational_Statement.docx";
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 /**
@@ -506,6 +437,7 @@ function useTdiuResults(workHistory) {
   const [draftNote, setDraftNote] = useState(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [saveState, setSaveState] = useState(null);
+  const [downloadError, setDownloadError] = useState(null);
 
   const setVocationalAnalysis = (next) => {
     setAnalysis(next);
@@ -523,8 +455,19 @@ function useTdiuResults(workHistory) {
         setSaveState("failed");
       },
     );
-  const getFullStatement = () =>
-    buildFullStatement(vocationalAnalysis, workHistory);
+  const download = async (format) => {
+    setDownloadError(null);
+    try {
+      await downloadDraft(
+        buildFullStatement(vocationalAnalysis, workHistory),
+        "TDIU_Vocational_Statement",
+        format,
+      );
+    } catch (error) {
+      console.error("TDIU Builder download failed:", error);
+      setDownloadError(DOWNLOAD_FAILED);
+    }
+  };
 
   return {
     vocationalAnalysis,
@@ -536,8 +479,10 @@ function useTdiuResults(workHistory) {
     saveState,
     showDownloadMenu,
     setShowDownloadMenu,
-    downloadPDF: () => downloadStatementAsPDF(getFullStatement()),
-    downloadDOCX: () => downloadStatementAsDOCX(getFullStatement()),
+    workHistory,
+    downloadError,
+    downloadPDF: () => download("pdf"),
+    downloadDOCX: () => download("docx"),
     copyToClipboard: () => copyBox18Statement(vocationalAnalysis),
   };
 }
@@ -1191,11 +1136,14 @@ function DisabilityStep({
 function LastWorkedField({ workHistory, setWorkHistory }) {
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        htmlFor="tdiu-last-worked"
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+      >
         When did you last work?
       </label>
       <input
+        id="tdiu-last-worked"
         type="text"
         value={workHistory.lastWorked}
         onChange={(e) =>
@@ -1214,11 +1162,14 @@ function LastWorkedField({ workHistory, setWorkHistory }) {
 function LastOccupationField({ workHistory, setWorkHistory }) {
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        htmlFor="tdiu-last-occupation"
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+      >
         What was your last occupation?
       </label>
       <input
+        id="tdiu-last-occupation"
         type="text"
         value={workHistory.lastOccupation}
         onChange={(e) =>
@@ -1237,12 +1188,15 @@ function LastOccupationField({ workHistory, setWorkHistory }) {
 function ReasonLeftField({ workHistory, setWorkHistory }) {
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        htmlFor="tdiu-reason-left"
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+      >
         Why did you stop working?
       </label>
       <div className="relative">
         <textarea
+          id="tdiu-reason-left"
           value={workHistory.reasonLeft}
           onChange={(e) =>
             setWorkHistory((prev) => ({
@@ -1322,12 +1276,15 @@ function TriedToWorkField({
 }) {
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        htmlFor="tdiu-tried-to-work"
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+      >
         Have you tried to work since leaving your last job? What happened?
       </label>
       <div className="relative">
         <textarea
+          id="tdiu-tried-to-work"
           value={workHistory.triedToWork}
           onChange={(e) =>
             setWorkHistory((prev) => ({
@@ -1472,6 +1429,38 @@ function ResultsBanner() {
   );
 }
 
+// The work-history answers as given, shown beside the analysis so nothing
+// the veteran typed is seen only in the download.
+function WorkHistorySummary({ workHistory }) {
+  const entries = workHistoryEntries(workHistory);
+  if (entries.length === 0) return null;
+  return (
+    <section
+      aria-labelledby="tdiu-work-history-heading"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
+    >
+      <h3
+        id="tdiu-work-history-heading"
+        className="font-bold text-gray-800 dark:text-gray-100 mb-1"
+      >
+        Your work history
+      </h3>
+      <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+        These answers go in the downloaded report as you typed them. Use Start
+        Over to change them.
+      </p>
+      <dl className="space-y-2 text-sm text-gray-800 dark:text-gray-200">
+        {entries.map(([label, answer]) => (
+          <div key={label}>
+            <dt className="font-semibold">{label}</dt>
+            <dd className="whitespace-pre-wrap break-words">{answer}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 function DownloadOptions({
   showDownloadMenu,
   setShowDownloadMenu,
@@ -1572,6 +1561,8 @@ function ResultsStep({
   setShowDownloadMenu,
   downloadPDF,
   downloadDOCX,
+  downloadError,
+  workHistory,
   onStartOver,
 }) {
   return (
@@ -1584,6 +1575,15 @@ function ResultsStep({
         onSave={saveToPacket}
         saveState={saveState}
       />
+      <WorkHistorySummary workHistory={workHistory} />
+      {downloadError && (
+        <p
+          role="alert"
+          className="p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm text-red-900 dark:text-red-100"
+        >
+          {downloadError}
+        </p>
+      )}
       <DownloadOptions
         showDownloadMenu={showDownloadMenu}
         setShowDownloadMenu={setShowDownloadMenu}

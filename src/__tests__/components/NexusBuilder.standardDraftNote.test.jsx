@@ -95,7 +95,7 @@ describe("NexusBuilder standard draft, no AI set up", () => {
     expect(text).not.toMatch(/persisted and worsened|significantly affects/);
     expect(text).not.toContain("**");
     expect(text).toContain(
-      "[whether you are being treated for this condition, and where]",
+      "[whether you have sought treatment for this condition, and where]",
     );
   });
 

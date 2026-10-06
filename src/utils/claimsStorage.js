@@ -179,6 +179,25 @@ export const saveStatement = (claimId, statementData) => {
   }
 };
 
+// Save a statement under the claim for its condition, creating that claim
+// when the veteran typed a condition that was never saved from another tool.
+export const saveStatementForCondition = (statementData) => {
+  const target = {
+    conditionName: statementData.condition,
+    parentCondition: statementData.primaryCondition || null,
+  };
+  const matches = (c) =>
+    c.conditionName === target.conditionName &&
+    (c.parentCondition || null) === target.parentCondition;
+
+  let claim = getSavedClaims().find(matches);
+  if (!claim) {
+    if (!saveClaim(target)) return false;
+    claim = getSavedClaims().find(matches);
+  }
+  return claim ? saveStatement(claim.id, statementData) : false;
+};
+
 // Get statement for a claim
 export const getStatement = (claimId) => {
   try {

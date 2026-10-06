@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { triggerBlobDownload } from "../utils/sanitize";
-import { Document, Packer, Paragraph, TextRun } from "docx";
-import jsPDF from "jspdf";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import AIConsentModal from "./AIConsentModal";
@@ -12,17 +10,12 @@ import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import StandardDraftNotice from "./common/StandardDraftNotice";
 import {
   AI_NO_CHANGE_NOTE,
-  STRESSOR_TYPE_LABELS,
-  WITNESS_RELATION_LABELS,
   formStatementPlan,
   standardDraftNote,
 } from "../utils/writerTemplates";
+import { downloadDraft } from "../utils/draftExport";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
-import {
-  enhanceFormStatement,
-  substituteVeteranNamePlaceholder,
-  resolveVeteranDisplayName,
-} from "../utils/aiStatementHelper";
+import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -4178,14 +4171,19 @@ function ChecklistField({ field, formData, handleChecklistChange }) {
 }
 
 function TextareaField({ field, formData, handleFieldChange }) {
+  const id = `forms-helper-field-${field.name}`;
   return (
     <div key={field.name} className="mb-4">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        htmlFor={id}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+      >
         {field.label}{" "}
         {field.required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
         <textarea
+          id={id}
           value={formData[field.name] || ""}
           onChange={(e) => handleFieldChange(field.name, e.target.value)}
           placeholder={field.placeholder}
@@ -4299,11 +4297,15 @@ function FormField({
 
   return (
     <div key={field.name} className="mb-4">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        htmlFor={`forms-helper-field-${field.name}`}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+      >
         {field.label}{" "}
         {field.required && <span className="text-red-500">*</span>}
       </label>
       <input
+        id={`forms-helper-field-${field.name}`}
         type={field.type}
         value={formData[field.name] || ""}
         onChange={(e) => handleFieldChange(field.name, e.target.value)}
@@ -4315,7 +4317,8 @@ function FormField({
   );
 }
 
-function _getFormStepsForForm(selectedForm) {
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export function _getFormStepsForForm(selectedForm) {
   switch (selectedForm?.id) {
     case "buddy-statement":
       return buddyStatementSteps;
@@ -4641,19 +4644,27 @@ function WizardStepPanel({
   );
 }
 
-// The app-built draft, as opposed to the full form text ("Original") and to
-// a draft the AI reworded.
 const STANDARD_DRAFT_LABEL = "Standard draft";
+const DOWNLOAD_FAILED =
+  "The download did not work. Your statement is still here. Try another format, or copy the text.";
+const SAVE_FAILED =
+  "This could not be saved on this device. Download it or copy the text so you do not lose it, then try saving again.";
 
-/** The label for the version on screen, or "" for the full form text. */
-function draftVersionLabel({
-  showAIVersion,
+/*
+ * The one draft a statement form has on screen: the draft the AI reworded
+ * when there is one and it is chosen, otherwise the app-built draft, with
+ * the veteran's edits to whichever it is. Downloads and Save to Packet take
+ * `text`. An edit belongs to the draft it was made on.
+ */
+function shownDraft({
+  generatedContent,
   aiEnhancedContent,
-  aiDraftNote,
-  t,
+  showAIVersion,
+  draftEdit,
 }) {
-  if (!showAIVersion || !aiEnhancedContent) return "";
-  return aiDraftNote ? STANDARD_DRAFT_LABEL : t("formsHelper", "aiEnhanced");
+  const base =
+    showAIVersion && aiEnhancedContent ? aiEnhancedContent : generatedContent;
+  return { base, text: draftEdit?.base === base ? draftEdit.text : base };
 }
 
 function AIUnavailableNotice({ onOpenAISettings, t }) {
@@ -4733,7 +4744,6 @@ function AIEnhanceButtonLabel({ isEnhancingWithAI, t }) {
 
 function AIEnhanceControls({
   aiReady,
-  aiEnhancedContent,
   isModelDraft,
   handleAIEnhanceClick,
   isEnhancingWithAI,
@@ -4759,25 +4769,23 @@ function AIEnhanceControls({
           <AIEnhanceButtonLabel isEnhancingWithAI={isEnhancingWithAI} t={t} />
         </button>
       )}
-      {aiEnhancedContent && (
+      {isModelDraft && (
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={toggleAIVersion}
+            onClick={showAIVersion ? undefined : toggleAIVersion}
             aria-pressed={Boolean(showAIVersion)}
             className={versionClass(showAIVersion)}
           >
-            {isModelDraft
-              ? `✨ ${t("formsHelper", "aiVersion")}`
-              : STANDARD_DRAFT_LABEL}
+            ✨ {t("formsHelper", "aiVersion")}
           </button>
           <button
             type="button"
-            onClick={toggleAIVersion}
+            onClick={showAIVersion ? toggleAIVersion : undefined}
             aria-pressed={!showAIVersion}
             className={versionClass(!showAIVersion)}
           >
-            📝 {t("formsHelper", "original")}
+            {STANDARD_DRAFT_LABEL}
           </button>
         </div>
       )}
@@ -4822,23 +4830,15 @@ function AIEnhancementHeader({ aiStatus, t }) {
   );
 }
 
-// Which version is on screen. When the AI's wording was not usable the "AI
-// version" is the app-built draft, and the note says so in place of the label.
-function AIVersionIndicator({
-  aiEnhancedContent,
-  showAIVersion,
-  aiDraftNote,
-  t,
-}) {
-  if (!aiEnhancedContent) return null;
-  if (showAIVersion && aiDraftNote) {
+// Which draft is on screen: the standard-draft notice for the app-built
+// draft, the AI line for a draft the AI reworded.
+function AIVersionIndicator({ aiDraftNote, t }) {
+  if (aiDraftNote) {
     return <StandardDraftNotice note={aiDraftNote} className="mt-3" />;
   }
   return (
     <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
-      {showAIVersion
-        ? `✨ ${t("formsHelper", "viewingAIVersion")}`
-        : `📝 ${t("formsHelper", "viewingOriginal")}`}
+      ✨ {t("formsHelper", "viewingAIVersion")}
     </div>
   );
 }
@@ -4872,8 +4872,7 @@ function AIEnhancementSection({
         <div className="flex flex-col gap-2">
           <AIEnhanceControls
             aiReady={aiReady}
-            aiEnhancedContent={aiEnhancedContent}
-            isModelDraft={Boolean(aiEnhancedContent) && !aiDraftNote}
+            isModelDraft={Boolean(aiEnhancedContent)}
             handleAIEnhanceClick={handleAIEnhanceClick}
             isEnhancingWithAI={isEnhancingWithAI}
             toggleAIVersion={toggleAIVersion}
@@ -4887,24 +4886,17 @@ function AIEnhancementSection({
       {aiError && (
         <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
           ⚠️ {aiError}
-          {aiEnhancedContent && (
-            <button
-              type="button"
-              onClick={handleAIEnhanceClick}
-              className="block mt-2 min-h-[44px] px-3 underline font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded"
-            >
-              Try the AI again
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleAIEnhanceClick}
+            className="block mt-2 min-h-[44px] px-3 underline font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded"
+          >
+            Try the AI again
+          </button>
         </div>
       )}
 
-      <AIVersionIndicator
-        aiEnhancedContent={aiEnhancedContent}
-        showAIVersion={showAIVersion}
-        aiDraftNote={aiDraftNote}
-        t={t}
-      />
+      <AIVersionIndicator aiDraftNote={aiDraftNote} t={t} />
     </div>
   );
 }
@@ -5032,6 +5024,7 @@ function ReviewDownloadSection({
       {/* Import Status Message */}
       {importStatus && (
         <div
+          role="status"
           className={`p-3 rounded-lg text-center font-medium ${
             importStatus.type === "success"
               ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700"
@@ -5045,26 +5038,41 @@ function ReviewDownloadSection({
   );
 }
 
-function ReviewPreviewSection({
-  showAIVersion,
-  aiEnhancedContent,
-  aiDraftNote,
-  displayContent,
-  t,
-}) {
-  const versionLabel = draftVersionLabel({
-    showAIVersion,
-    aiEnhancedContent,
-    aiDraftNote,
-    t,
-  });
+function StatementDraftEditor({ versionLabel, value, onChange }) {
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      <details className="group" open={showAIVersion && aiEnhancedContent}>
+      <label
+        htmlFor="forms-helper-draft"
+        className="block bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 font-medium text-gray-700 dark:text-gray-300"
+      >
+        Your statement ({versionLabel})
+      </label>
+      <p
+        id="forms-helper-draft-hint"
+        className="px-4 pt-3 text-sm text-gray-700 dark:text-gray-300"
+      >
+        You can edit the text here. Downloads and Save to Packet use exactly
+        what this box shows.
+      </p>
+      <textarea
+        id="forms-helper-draft"
+        aria-describedby="forms-helper-draft-hint"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={18}
+        className="block w-full p-4 text-sm text-gray-800 dark:text-gray-200 dark:bg-gray-800 font-mono border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600"
+      />
+    </div>
+  );
+}
+
+function ReviewPreviewSection({ displayContent, t }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <details className="group">
         <summary className="bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 cursor-pointer flex items-center justify-between">
           <span className="font-medium text-gray-700 dark:text-gray-300">
-            📄 {t("formsHelper", "textPreview")}{" "}
-            {versionLabel ? `(${versionLabel})` : ""} (
+            📄 {t("formsHelper", "textPreview")} (
             {t("formsHelper", "clickToExpand")})
           </span>
           <svg
@@ -6107,237 +6115,6 @@ function QuickLinksSection({ t }) {
       </div>
     </div>
   );
-}
-
-function downloadAsTxt(content, fileName) {
-  const blob = new Blob([content], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  if (!url.startsWith("blob:")) return; // Validate blob URL
-  // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${fileName}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-async function downloadAsDocx(content, fileName) {
-  try {
-    const lines = content.split("\n");
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: lines.map((line) => {
-            if (line.startsWith("═")) {
-              return new Paragraph({ text: "" });
-            }
-            if (/^[A-Z]{2,}/.test(line) && line.endsWith(":")) {
-              return new Paragraph({
-                children: [new TextRun({ text: line, bold: true })],
-                spacing: { before: 200, after: 100 },
-              });
-            }
-            return new Paragraph({
-              children: [new TextRun(line)],
-              spacing: { after: 50 },
-            });
-          }),
-        },
-      ],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    const url = URL.createObjectURL(blob);
-    if (!url.startsWith("blob:")) return; // Validate blob URL
-    // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}.docx`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Error generating DOCX:", error);
-    alert("Error generating Word document. Please try TXT format.");
-  }
-}
-
-function downloadAsPdf(content, fileName) {
-  try {
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 15;
-    const maxWidth = pageWidth - margin * 2;
-    let yPosition = 20;
-
-    pdf.setFontSize(10);
-    const lines = pdf.splitTextToSize(content, maxWidth);
-
-    lines.forEach((line) => {
-      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      pdf.text(line, margin, yPosition);
-      yPosition += 5;
-    });
-
-    pdf.save(`${fileName}.pdf`);
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert("Error generating PDF. Please try TXT format.");
-  }
-}
-
-function _buildBuddyDailyLifeImpactSection(formData) {
-  if (
-    !formData.dailyImpact &&
-    !formData.workImpact &&
-    !formData.specificExamples
-  ) {
-    return "";
-  }
-  let section = `
-D. Impact of Condition on Veteran's Daily Life:
-
-`;
-  if (formData.dailyImpact) {
-    section += `Impact on Daily Activities:
-${formData.dailyImpact}
-
-`;
-  }
-  if (formData.workImpact) {
-    section += `Impact on Employment/Work:
-${formData.workImpact}
-
-`;
-  }
-  if (formData.specificExamples) {
-    section += `Specific Examples/Incidents:
-${formData.specificExamples}
-
-`;
-  }
-  return section;
-}
-
-function _buildBuddyAdditionalInfoSection(formData) {
-  if (!formData.additionalInfo) return "";
-  return `
-E. Additional Information:
-
-${formData.additionalInfo}
-
-`;
-}
-
-function _buildPersonalStatementTreatmentHistorySection(formData) {
-  if (
-    !formData.currentTreatment &&
-    !formData.medications &&
-    !formData.treatmentEffectiveness
-  ) {
-    return "";
-  }
-  const currentTreatmentSection = formData.currentTreatment
-    ? `
-A. Current Treatment:
-
-${formData.currentTreatment}
-`
-    : "";
-  const medicationsSection = formData.medications
-    ? `
-B. Current Medications:
-
-${formData.medications}
-`
-    : "";
-  const treatmentEffectivenessSection = formData.treatmentEffectiveness
-    ? `
-C. Treatment Effectiveness:
-
-${formData.treatmentEffectiveness}
-`
-    : "";
-  return `
-SECTION V - TREATMENT HISTORY
-${currentTreatmentSection}${medicationsSection}${treatmentEffectivenessSection}
---------------------------------------------------------------------------------
-`;
-}
-
-function _buildPersonalStatementSecondaryConditionSection(formData) {
-  return formData.claimType === "secondary" && formData.primaryCondition
-    ? `
-Secondary to (Primary Condition): ${formData.primaryCondition}
-`
-    : "";
-}
-
-function _buildPersonalStatementFirstTreatmentSection(formData) {
-  return formData.firstTreatment
-    ? `
-C. First Treatment Sought:
-
-${formData.firstTreatment}
-`
-    : "";
-}
-
-function _buildPersonalStatementFlareUpsSection(formData) {
-  return formData.flareUps
-    ? `
-C. Flare-Ups:
-
-${formData.flareUps}
-`
-    : "";
-}
-
-function _buildPersonalStatementSocialImpactSection(formData) {
-  return formData.socialImpact
-    ? `
-C. Impact on Relationships and Social Activities:
-
-${formData.socialImpact}
-`
-    : "";
-}
-
-function _buildPTSDSymptomsChecklist(formData) {
-  return Array.isArray(formData.symptoms) && formData.symptoms.length > 0
-    ? formData.symptoms.map((s) => `[X] ${s}`).join("\n")
-    : `[ ] Nightmares or disturbing dreams
-[ ] Flashbacks (reliving the event)
-[ ] Intrusive thoughts or memories
-[ ] Avoiding reminders of the trauma
-[ ] Difficulty sleeping
-[ ] Hypervigilance (always on alert)
-[ ] Exaggerated startle response
-[ ] Difficulty concentrating
-[ ] Irritability or anger outbursts
-[ ] Emotional numbness
-[ ] Feeling detached from others
-[ ] Negative thoughts about self or world
-[ ] Memory problems
-[ ] Loss of interest in activities
-[ ] Difficulty feeling positive emotions`;
-}
-
-function _buildPTSDSymptomDetailsSection(formData) {
-  return formData.symptomDetails
-    ? `
-Detailed Description of Symptoms:
-
-${formData.symptomDetails}
-`
-    : "";
 }
 
 function buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow) {
@@ -7429,326 +7206,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 `;
 }
 
-function generateBuddyStatement(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const relationLabels = WITNESS_RELATION_LABELS;
-
-  // Clean, official format that works as an attachment to VA Form 21-10210
-  let statement = `STATEMENT IN SUPPORT OF CLAIM
-(To Be Submitted with VA Form 21-10210)
-
---------------------------------------------------------------------------------
-
-SECTION I - PERSON PROVIDING STATEMENT (WITNESS/AFFIANT)
-
-Full Name: ${formData.witnessName || "________________________________________"}
-
-Relationship to Veteran: ${relationLabels[formData.witnessRelation] || formData.witnessRelation || "____________________"}
-
-Contact Phone: ${formData.witnessPhone || "________________________________________"}
-
-Contact Email: ${formData.witnessEmail || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION II - VETERAN INFORMATION
-
-Veteran's Full Name: ${formData.veteranName || "________________________________________"}
-
-Branch of Service: ${formData.veteranBranch || "________________________________________"}
-
-Condition/Disability Claimed: ${formData.conditionName || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION III - STATEMENT
-
-A. How I Know the Veteran:
-
-${formData.howKnown || "[Describe how you came to know the veteran]"}
-
-Length of Acquaintance: ${formData.knownSince || "________________________________________"}
-
-
-B. What I Personally Witnessed or Observed:
-
-${formData.whatObserved || "[Describe what you personally witnessed regarding the veteran's condition, injury, or symptoms]"}
-
-
-C. When and Where These Observations Occurred:
-
-Timeframe: ${formData.whenObserved || "________________________________________"}
-
-Location: ${formData.whereObserved || "________________________________________"}
-
-`;
-
-  statement += _buildBuddyDailyLifeImpactSection(formData);
-  statement += _buildBuddyAdditionalInfoSection(formData);
-
-  statement += `--------------------------------------------------------------------------------
-
-SECTION IV - CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001 (making false statements to a federal agency).
-
-${formData.willingToTestify ? "[X] I am willing to provide additional testimony or clarification if requested.\n" : "[ ] I am willing to provide additional testimony or clarification if requested.\n"}
-
-Signature: ________________________________________
-
-Printed Name: ${formData.witnessName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. The witness should review this statement for accuracy, then print and sign it.
-
-2. This statement should be submitted as an attachment to VA Form 21-10210
-   (Lay/Witness Statement).
-
-3. Submit online at: https://www.va.gov/supporting-forms-for-claims/lay-witness-statement-form-21-10210/
-   Or mail to your VA Regional Office.
-
-4. Retain a copy of this signed statement for your records.
-
-5. The veteran should include this statement with their VA disability claim.
-`;
-
-  return statement;
-}
-
-function generatePersonalStatement(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const claimTypeLabels = {
-    initial: "Initial Service Connection",
-    increase: "Claim for Increased Rating",
-    secondary: "Secondary Service Connection",
-    reopened: "Reopened Claim",
-  };
-
-  const statement = `STATEMENT IN SUPPORT OF CLAIM
-(To Be Submitted with VA Form 21-4138)
-
---------------------------------------------------------------------------------
-
-SECTION I - CLAIMANT INFORMATION
-
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Claim Type: ${claimTypeLabels[formData.claimType] || formData.claimType || "____________________"}
-
-Condition Claimed: ${formData.conditionName || "________________________________________"}
-${_buildPersonalStatementSecondaryConditionSection(formData)}
---------------------------------------------------------------------------------
-
-SECTION II - IN-SERVICE EVENT/INJURY/ONSET
-
-A. When Symptoms First Began:
-
-${formData.onsetDate || "[Date or timeframe when symptoms first appeared]"}
-
-
-B. In-Service Event, Injury, or Exposure:
-
-${formData.inServiceEvent || "[Describe the specific event, injury, training accident, exposure, or circumstances that led to or caused this condition]"}
-
-${_buildPersonalStatementFirstTreatmentSection(formData)}
---------------------------------------------------------------------------------
-
-SECTION III - CURRENT SYMPTOMS AND SEVERITY
-
-A. Description of Symptoms:
-
-${formData.symptoms || "[Describe your current symptoms in detail - include frequency, severity, triggers, and physical/mental effects]"}
-
-
-B. Description of Worst Days:
-
-${formData.worstDays || "[Describe what your worst days look like - this helps the VA understand the full impact of your condition]"}
-
-${_buildPersonalStatementFlareUpsSection(formData)}
---------------------------------------------------------------------------------
-
-SECTION IV - FUNCTIONAL IMPACT
-
-A. Impact on Employment:
-
-${formData.workImpact || "[Describe how this condition affects your ability to work - missed days, limitations, accommodations needed, etc.]"}
-
-
-B. Impact on Daily Activities:
-
-${formData.dailyImpact || "[Describe how this condition affects daily life - self-care, household tasks, hobbies, driving, etc.]"}
-
-${_buildPersonalStatementSocialImpactSection(formData)}
---------------------------------------------------------------------------------
-${_buildPersonalStatementTreatmentHistorySection(formData)}
-CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
-
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. Review this statement for accuracy and completeness.
-
-2. Print and sign where indicated.
-
-3. Submit with VA Form 21-4138 or as an attachment to your VA disability claim.
-
-4. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
-   Or mail to your VA Regional Office.
-
-5. Retain a copy for your records.
-`;
-
-  return statement;
-}
-
-function generatePTSDStatement(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const stressorLabels = STRESSOR_TYPE_LABELS;
-
-  const statement = `STATEMENT IN SUPPORT OF CLAIM FOR PTSD
-(To Be Submitted with VA Form 21-0781)
-
---------------------------------------------------------------------------------
-
-SECTION I - VETERAN IDENTIFICATION
-
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Branch of Service: ${formData.branch || "________________________________________"}
-
-Dates of Military Service: ${formData.serviceDates || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION II - STRESSOR EVENT INFORMATION
-
-Type of Stressor: ${stressorLabels[formData.stressorType] || formData.stressorType || "____________________"}
-
-Date of Incident: ${formData.eventDate || "________________________________________"}
-(Provide as specific a date as possible - month/year minimum)
-
-Location of Incident: ${formData.eventLocation || "________________________________________"}
-(City/Base/Country or geographic location)
-
-${formData.unitInfo ? `Unit Assignment at Time of Event: ${formData.unitInfo}` : "Unit Assignment at Time of Event: ________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION III - DETAILED DESCRIPTION OF STRESSOR EVENT
-
-${formData.eventDescription || "[Provide a detailed description of the traumatic event. Include: what happened before, during, and after the event; who was involved; what you saw, heard, and felt; how you responded; and the immediate aftermath.]"}
-
---------------------------------------------------------------------------------
-
-SECTION IV - CORROBORATING EVIDENCE
-
-A. Witnesses to Event:
-${formData.witnesses || "None identified / Unknown"}
-
-B. Supporting Documentation:
-${formData.documentation || "None identified"}
-
-C. Was This Event Reported? To Whom?
-${formData.reportedTo || "Not reported / Unknown"}
-
---------------------------------------------------------------------------------
-
-SECTION V - CURRENT PTSD SYMPTOMS
-
-Check all symptoms you currently experience:
-
-${_buildPTSDSymptomsChecklist(formData)}
-
-${_buildPTSDSymptomDetailsSection(formData)}
---------------------------------------------------------------------------------
-
-CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and recollection. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
-
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. This statement should accompany VA Form 21-0781 (Statement in Support of
-   Claim for Service Connection for PTSD).
-
-2. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
-   Or mail to your VA Regional Office.
-
-3. Retain a copy for your records.
-
-IMPORTANT NOTES:
-
-- Combat veterans may have reduced evidentiary requirements under 38 CFR 3.304(f)(2)
-- MST claims have special evidence provisions under 38 CFR 3.304(f)(5)
-- Fear of hostile activity claims: 38 CFR 3.304(f)(3)
-
-CRISIS RESOURCES:
-
-- Veterans Crisis Line: Dial 988, Press 1
-- Crisis Text Line: Text 838255
-- VA PTSD Resources: https://www.ptsd.va.gov/
-`;
-
-  return statement;
-}
-
 function generateIntentToFile(formData) {
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -7898,8 +7355,11 @@ function useFormsHelperAIState() {
   const [showAIVersion, setShowAIVersion] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [aiDraftNote, setAiDraftNote] = useState(null);
+  const [draftEdit, setDraftEdit] = useState(null);
 
   return {
+    draftEdit,
+    setDraftEdit,
     aiDraftNote,
     setAiDraftNote,
     showAIConsent,
@@ -8192,13 +7652,7 @@ function _buildFormsHelperProfileHandlers(ctx) {
 }
 
 function _buildFormsHelperFormDataHandlers(ctx) {
-  const {
-    setFormData,
-    formData,
-    selectedForm,
-    generatedContent,
-    setImportStatus,
-  } = ctx;
+  const { setFormData, formData, selectedForm, setImportStatus } = ctx;
 
   const handleFieldChange = (fieldName, value) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
@@ -8230,13 +7684,15 @@ function _buildFormsHelperFormDataHandlers(ctx) {
       formName: selectedForm?.name,
       title: formData.conditionName || selectedForm?.name,
       formData: formData,
-      generatedContent: generatedContent,
+      generatedContent: shownDraft(ctx).text,
       status: "Draft",
     });
 
     if (formId) {
       setImportStatus({ type: "success", message: "Form saved to My Packet!" });
       setTimeout(() => setImportStatus(null), 3000);
+    } else {
+      setImportStatus({ type: "error", message: SAVE_FAILED });
     }
   };
 
@@ -8245,13 +7701,9 @@ function _buildFormsHelperFormDataHandlers(ctx) {
 
 // Exported (test-only, per this codebase's underscore-prefix convention).
 export function _generateFormsHelperContent(selectedForm, formData) {
+  const plan = formStatementPlan(selectedForm?.id, formData);
+  if (plan) return plan.build(plan.answers);
   switch (selectedForm?.id) {
-    case "buddy-statement":
-      return generateBuddyStatement(formData);
-    case "personal-statement":
-      return generatePersonalStatement(formData);
-    case "ptsd-stressor":
-      return generatePTSDStatement(formData);
     case "intent-to-file":
       return generateIntentToFile(formData);
     case "medical-release":
@@ -8306,36 +7758,12 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     generateContent();
     setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
     setAiError(null);
-    // A form with a wording step shows its app-built draft straight away,
-    // AI set up or not. The AI, when asked, only rewords typed passages.
-    const plan = formStatementPlan(selectedForm?.id, formData);
-    if (!plan) {
-      setAiEnhancedContent(null);
-      setShowAIVersion(false);
-      setAiDraftNote(null);
-      return;
-    }
-    const draft = plan.build(plan.answers);
-    setAiEnhancedContent(draft);
-    setAiDraftNote(standardDraftNote(draft));
-    setShowAIVersion(true);
-    resolveVeteranDisplayName().then((name) =>
-      setAiEnhancedContent((shown) =>
-        shown === draft ? substituteVeteranNamePlaceholder(draft, name) : shown,
-      ),
-    );
+    setAiEnhancedContent(null);
+    setShowAIVersion(false);
+    setAiDraftNote(null);
   };
 
   return { generateContent, handleFinishWizard };
-}
-
-// The note beside the draft after the AI was asked: none for a reworded
-// draft; the standard note when the AI failed (the error is shown apart);
-// and, when it answered but changed nothing usable, a line saying so.
-function aiOutcomeNote(result) {
-  if (result.draftPath === "model") return null;
-  const note = result.draftNote ?? standardDraftNote(result.content);
-  return result.draftErrorReason ? note : `${AI_NO_CHANGE_NOTE} ${note}`;
 }
 
 function _buildFormsHelperAIHandlers(ctx) {
@@ -8349,8 +7777,7 @@ function _buildFormsHelperAIHandlers(ctx) {
     setAiEnhancedContent,
     setShowAIVersion,
     showAIVersion,
-    aiEnhancedContent,
-    generatedContent,
+    setDraftEdit,
   } = ctx;
 
   // Check if current form type supports AI enhancement
@@ -8388,18 +7815,15 @@ function _buildFormsHelperAIHandlers(ctx) {
       const result = await enhanceFormStatement(selectedForm?.id, formData);
 
       if (result.success) {
-        // ADR-008 / owner decision D: aiStatementHelper's buddy/personal/
-        // ptsd-stressor prompts all instruct the model to write "[Veteran]"
-        // (or "[Veteran Name]"/"[Veteran's Name]") instead of the veteran's
-        // real name - this swaps it back in LOCALLY, after generation,
-        // never sent to the AI.
-        const veteranName = await resolveVeteranDisplayName();
-        setAiEnhancedContent(
-          substituteVeteranNamePlaceholder(result.content, veteranName),
+        // Only a draft the AI reworded is an AI version. Otherwise the
+        // app-built draft stays on screen, with the reason beside it.
+        const reworded = result.draftPath === "model";
+        setAiEnhancedContent(reworded ? result.content : null);
+        setShowAIVersion(reworded);
+        setAiDraftNote(
+          reworded || result.draftErrorReason ? null : AI_NO_CHANGE_NOTE,
         );
-        setAiDraftNote(aiOutcomeNote(result));
         setAiError(result.draftErrorReason ?? null);
-        setShowAIVersion(true);
       } else {
         setAiError(result.error || "Failed to enhance statement with AI.");
       }
@@ -8419,11 +7843,10 @@ function _buildFormsHelperAIHandlers(ctx) {
     setShowAIVersion(!showAIVersion);
   };
 
-  const getDisplayContent = () => {
-    return showAIVersion && aiEnhancedContent
-      ? aiEnhancedContent
-      : generatedContent;
-  };
+  const getDisplayContent = () => shownDraft(ctx).text;
+
+  const editDraft = (text) =>
+    setDraftEdit({ base: shownDraft(ctx).base, text });
 
   return {
     isAIEnabledFormType,
@@ -8433,6 +7856,7 @@ function _buildFormsHelperAIHandlers(ctx) {
     handleAICancel,
     toggleAIVersion,
     getDisplayContent,
+    editDraft,
   };
 }
 
@@ -8440,29 +7864,24 @@ function _buildFormsHelperDownloadHandlers(ctx) {
   const {
     selectedForm,
     formData,
-    generatedContent,
     generateContent,
     setShowDownloadMenu,
+    setImportStatus,
   } = ctx;
 
-  const handleDownload = (format) => {
-    const content = generatedContent || generateContent();
-    const fileName = `VA-${selectedForm?.formNumber?.replace(/\s+/g, "-")}-${formData.conditionName?.replace(/\s+/g, "-") || "Statement"}`;
-
-    switch (format) {
-      case "txt":
-        downloadAsTxt(content, fileName);
-        break;
-      case "docx":
-        downloadAsDocx(content, fileName);
-        break;
-      case "pdf":
-        downloadAsPdf(content, fileName);
-        break;
-      default:
-        downloadAsTxt(content, fileName);
-    }
+  const handleDownload = async (format) => {
     setShowDownloadMenu(false);
+    const fileName = `VA-${selectedForm?.formNumber?.replace(/\s+/g, "-")}-${formData.conditionName?.replace(/\s+/g, "-") || "Statement"}`;
+    try {
+      await downloadDraft(
+        shownDraft(ctx).text || generateContent(),
+        fileName,
+        format,
+      );
+    } catch (error) {
+      console.error("Forms Helper download failed:", error);
+      setImportStatus({ type: "error", message: DOWNLOAD_FAILED });
+    }
   };
 
   const handleDownloadOfficialPdf = async () => {
@@ -8593,38 +8012,28 @@ function ReviewSuccessMessage({ t }) {
 }
 
 function FormsHelperReviewStep({ state, handlers }) {
-  const {
-    generatedContent,
-    t,
-    aiStatus,
-    aiEnhancedContent,
-    isEnhancingWithAI,
-    showAIVersion,
-    aiError,
-    aiDraftNote,
-  } = state;
-  const { onOpenAISettings, importStatus, selectedForm } = state;
-  const {
-    setCurrentStep,
-    setGeneratedContent,
-    setAiEnhancedContent,
-    setShowAIVersion,
-    setSelectedForm,
-    setFormData,
-  } = state;
+  const { generatedContent, t, aiEnhancedContent, showAIVersion } = state;
   const {
     isAIEnabledFormType,
-    handleAIEnhanceClick,
-    toggleAIVersion,
     handleDownloadOfficialPdf,
     handleDownload,
     handleSaveToPacket,
     getDisplayContent,
+    editDraft,
   } = handlers;
 
   if (!generatedContent) return null;
 
   const displayContent = getDisplayContent();
+  const isStatement = isAIEnabledFormType();
+  const showingAIDraft = Boolean(showAIVersion && aiEnhancedContent);
+  // The notice follows the text on screen: it stops asking for blanks to be
+  // filled once the veteran has filled them.
+  const draftNote = showingAIDraft
+    ? null
+    : [state.aiDraftNote, standardDraftNote(displayContent)]
+        .filter(Boolean)
+        .join(" ");
 
   return (
     <div className="space-y-6">
@@ -8634,44 +8043,52 @@ function FormsHelperReviewStep({ state, handlers }) {
 
       <AIEnhancementSection
         isAIEnabledFormType={isAIEnabledFormType}
-        aiStatus={aiStatus}
+        aiStatus={state.aiStatus}
         aiEnhancedContent={aiEnhancedContent}
-        handleAIEnhanceClick={handleAIEnhanceClick}
-        isEnhancingWithAI={isEnhancingWithAI}
-        toggleAIVersion={toggleAIVersion}
+        handleAIEnhanceClick={handlers.handleAIEnhanceClick}
+        isEnhancingWithAI={state.isEnhancingWithAI}
+        toggleAIVersion={handlers.toggleAIVersion}
         showAIVersion={showAIVersion}
-        aiError={aiError}
-        aiDraftNote={aiDraftNote}
-        onOpenAISettings={onOpenAISettings}
+        aiError={state.aiError}
+        aiDraftNote={draftNote}
+        onOpenAISettings={state.onOpenAISettings}
         t={t}
       />
+
+      {isStatement && (
+        <StatementDraftEditor
+          versionLabel={
+            showingAIDraft
+              ? t("formsHelper", "aiEnhanced")
+              : STANDARD_DRAFT_LABEL
+          }
+          value={displayContent}
+          onChange={editDraft}
+        />
+      )}
 
       <ReviewDownloadSection
         t={t}
         handleDownloadOfficialPdf={handleDownloadOfficialPdf}
         handleDownload={handleDownload}
         handleSaveToPacket={handleSaveToPacket}
-        importStatus={importStatus}
+        importStatus={state.importStatus}
       />
 
-      <ReviewPreviewSection
-        showAIVersion={showAIVersion}
-        aiEnhancedContent={aiEnhancedContent}
-        aiDraftNote={aiDraftNote}
-        displayContent={displayContent}
-        t={t}
-      />
+      {!isStatement && (
+        <ReviewPreviewSection displayContent={displayContent} t={t} />
+      )}
 
-      <ReviewNextSteps selectedForm={selectedForm} t={t} />
+      <ReviewNextSteps selectedForm={state.selectedForm} t={t} />
 
       <ReviewActionButtons
-        selectedForm={selectedForm}
-        setCurrentStep={setCurrentStep}
-        setGeneratedContent={setGeneratedContent}
-        setAiEnhancedContent={setAiEnhancedContent}
-        setShowAIVersion={setShowAIVersion}
-        setSelectedForm={setSelectedForm}
-        setFormData={setFormData}
+        selectedForm={state.selectedForm}
+        setCurrentStep={state.setCurrentStep}
+        setGeneratedContent={state.setGeneratedContent}
+        setAiEnhancedContent={state.setAiEnhancedContent}
+        setShowAIVersion={state.setShowAIVersion}
+        setSelectedForm={state.setSelectedForm}
+        setFormData={state.setFormData}
         t={t}
       />
     </div>

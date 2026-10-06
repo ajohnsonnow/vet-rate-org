@@ -72,7 +72,8 @@ describe("WitnessBench._compileStatementWithAI", () => {
     expect(result.statement).toContain(Q1_REWORDED);
     expect(result.statement).not.toContain(ANSWERS.q1);
     expect(result.statement).toContain("Witness Type: Spouse / Partner");
-    expect(result.statement).toContain("[Veteran]'s PTSD");
+    expect(result.statement).toContain("observations of [Veteran].");
+    expect(result.statement).toContain("Regarding: PTSD");
     expect(result.statement).toContain(
       "WITNESS ATTESTATION (read before you sign)",
     );
