@@ -4146,6 +4146,12 @@ ${limitationsText}`;
 
 const fieldId = (name) => `forms-helper-field-${name}`;
 
+// index.css sets `appearance: none` on every input, which leaves a check
+// box with no box at all. These give it back on the box itself: the native
+// box and tick, a fixed size, and a focus ring.
+const TICK_BOX =
+  "[appearance:auto] h-5 w-5 shrink-0 accent-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
+
 // A required answer is missing when it is empty, blank, unticked or has
 // nothing chosen.
 function isMissing(value) {
@@ -4200,7 +4206,7 @@ function ChecklistField({ field, formData, handleChecklistChange, hasError }) {
         {field.options.map((option, optionIndex) => (
           <label
             key={option}
-            className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+            className="flex items-center gap-3 min-h-[44px] p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
           >
             <input
               id={optionIndex === 0 ? fieldId(field.name) : undefined}
@@ -4209,7 +4215,7 @@ function ChecklistField({ field, formData, handleChecklistChange, hasError }) {
               onChange={(e) =>
                 handleChecklistChange(field.name, option, e.target.checked)
               }
-              className="mt-1 rounded border-gray-300 text-va-blue focus:ring-va-blue"
+              className={TICK_BOX}
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">
               {option}
@@ -4318,13 +4324,13 @@ function FormField({
   if (field.type === "checkbox") {
     return (
       <div key={field.name} className="mb-4">
-        <label className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer">
+        <label className="flex items-center gap-3 min-h-[44px] p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer">
           <input
             id={fieldId(field.name)}
             type="checkbox"
             checked={formData[field.name] || false}
             onChange={(e) => handleFieldChange(field.name, e.target.checked)}
-            className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
+            className={TICK_BOX}
             {...invalidProps(field.name, hasError)}
           />
           <span className="text-gray-700 dark:text-gray-300">
