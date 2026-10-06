@@ -31,7 +31,6 @@ describe("savedRatingsGrounding", () => {
   ])("grounds a combined-rating question: %s", (question) => {
     expect(savedRatingsGrounding(question, SAVED)).toEqual({
       toolId: "rating-calculator",
-      conditionsOnDeviceOnly: true,
       conditions: [
         { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
         { name: "Left knee", rating: 10, side: "left", bodyPart: "knee" },

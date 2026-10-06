@@ -16,6 +16,7 @@ export const DRY_RUN_LEGAL_SECTIONS = new Set([
   "3.304",
   "3.310",
   "3.400",
+  "4.16",
   "4.25",
   "4.26",
   "4.130",
@@ -33,7 +34,6 @@ const GOOD_AUDITOR =
   "Under 38 CFR § 3.304(f) the stressor must be corroborated. Missing evidence: no nexus letter is in the file. DBQ results should be attached.";
 const GOOD_WRITER =
   "I served in Iraq, and since then my sleep has suffered. I wake several times a night and it affects my work and my family.";
-const GOOD_RATER_PREFIX = "Using the VA combined ratings method, my result: ";
 
 /**
  * Canned responses that deliberately fail one automated check each, plus a
@@ -56,23 +56,13 @@ const FAILING_OVERRIDES = {
     rawReply:
       "<think>\nStarting with the sleep problems, then work, then family, and",
   },
-  a11: { raterOffset: 10 },
-  a12: {
-    response:
-      "Both knees combine with the bilateral factor. The combined rating is 45%.",
+  a11: {
+    modelCalled: true,
+    response: "Using the VA combined ratings method, my result: 75%.",
   },
   a14: { timeout: true },
   a20: { agentOverride: "rater", response: "Combined rating: 50%." },
-  a24: {
-    replacedDraft: "The combined rating is 90%.",
-    response:
-      "VA combines ratings one at a time. The combined rating is 100% (38 CFR § 4.25).",
-  },
   a22: { error: "AI_TIMEOUT: simulated engine timeout" },
-  a25: {
-    response:
-      "The combined rating is 60%. Some calculators show a combined rating of 70% instead.",
-  },
   a30: { noCapture: true },
   t01: { reword: "all" },
   t02: { toolError: "WebGPU inference timed out after 300s" },
@@ -110,6 +100,13 @@ const TOOL_SETTINGS = { max_tokens: 2048, temperature: 0.3 };
  * that has to FAIL it; the dry run exits non-zero when any expectation is not
  * met, so a check that stops detecting its failure cannot pass silently.
  */
+const CALCULATOR_ANSWERED = {
+  routing: NOT_APPLICABLE,
+  "calc-match": AUTO_PASS,
+  "cfr-in-index": AUTO_PASS,
+  rubric: { R3: AUTO_PASS },
+};
+
 export const DRY_RUN_EXPECTATIONS = {
   a01: {
     routing: AUTO_PASS,
@@ -127,9 +124,13 @@ export const DRY_RUN_EXPECTATIONS = {
     "no-new-pii": NOT_APPLICABLE,
     "draft-returned": NOT_APPLICABLE,
   },
-  a11: { "calc-match": AUTO_FAIL },
-  a12: { "calc-match": AUTO_FAIL, rubric: { R3: AUTO_FAIL } },
-  a13: { "calc-match": AUTO_PASS, rubric: { R3: AUTO_PASS } },
+  a11: {
+    routing: AUTO_FAIL,
+    "calc-match": AUTO_FAIL,
+    rubric: { R3: AUTO_FAIL },
+  },
+  a12: CALCULATOR_ANSWERED,
+  a13: CALCULATOR_ANSWERED,
   a14: { routing: AUTO_PASS, "calc-match": NOT_APPLICABLE },
   a15: { routing: AUTO_PASS },
   a20: { routing: AUTO_FAIL },
@@ -140,8 +141,8 @@ export const DRY_RUN_EXPECTATIONS = {
     "no-spotlight-echo": NOT_APPLICABLE,
     "no-new-pii": NOT_APPLICABLE,
   },
-  a24: { "calc-match": AUTO_PASS },
-  a25: { "calc-match": NEEDS_HUMAN },
+  a24: CALCULATOR_ANSWERED,
+  a25: CALCULATOR_ANSWERED,
   a30: { routing: NEEDS_HUMAN },
   t01: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   t02: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
@@ -173,15 +174,10 @@ export const DRY_RUN_DRAFT_PATHS = {
   t10: "template",
 };
 
-function cannedResponse(caseDef, override, calculateVARating) {
+function cannedResponse(caseDef, override) {
   if (override.response) return override.response;
   if (caseDef.expectedAgent === "writer") return GOOD_WRITER;
   if (caseDef.expectedAgent === "auditor") return GOOD_AUDITOR;
-  if (caseDef.conditions && calculateVARating) {
-    const expected = calculateVARating(caseDef.conditions).combinedRating;
-    const stated = Math.min(100, expected + (override.raterOffset ?? 0));
-    return `${GOOD_RATER_PREFIX}the combined rating is ${stated}%.`;
-  }
   return "I can only calculate and explain ratings; I will not draft statements.";
 }
 
@@ -298,8 +294,12 @@ function rawReplyOutcome(rawReply) {
 
 /**
  * Stand-in for the in-browser engine: builds the chat request the real engine
- * would receive (persona system prompt, user turn with optional computed
- * block) and returns a canned outcome. No browser, no GPU, no model.
+ * would receive (persona system prompt and user turn) and returns a canned
+ * outcome. No browser, no GPU, no model.
+ *
+ * A rater case with structured conditions gets what production gives it: the
+ * calculator's own answer, with no engine request. `modelCalled` on a case's
+ * override stands in for a regression where a model was called instead.
  *
  * A case marked `timeout` fails the way a real timeout does, and its request
  * keeps arriving after the case has ended: it shows up, after the next case's
@@ -310,6 +310,7 @@ export function createStubEngine({
   personaPrompts,
   resolveAgentForTool,
   calculateVARating,
+  buildCalculatorAnswer,
   settings,
 }) {
   let lateRequest = null;
@@ -320,10 +321,6 @@ export function createStubEngine({
       override.agentOverride ?? resolveAgentForTool(caseDef.toolId);
     let userText = caseDef.input;
     if (caseDef.expectedAgent === "auditor") userText += DKB_BLOCK;
-    if (caseDef.conditions) {
-      userText +=
-        "\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 - dry-run stub) ===\n";
-    }
     return {
       messages: [
         { role: "system", content: personaPrompts[routedAgent] },
@@ -347,25 +344,35 @@ export function createStubEngine({
     }
     return {
       ok: true,
-      text: cannedResponse(caseDef, override, calculateVARating),
+      text: cannedResponse(caseDef, override),
       latencyMs: 5,
-      resultFlags: override.replacedDraft
-        ? { calculatorLead: { expected: 100, commentaryKept: false } }
-        : {},
-      ...(override.replacedDraft
-        ? {
-            calculatorReplacement: {
-              reason: "stated 90% but the calculator's combined rating is 100%",
-              draft: override.replacedDraft,
-            },
-          }
-        : {}),
+      resultFlags: {},
+    };
+  }
+
+  function calculatorOutcome(caseDef) {
+    const calc = calculateVARating(caseDef.conditions);
+    return {
+      ok: true,
+      text: buildCalculatorAnswer(calc, caseDef.input),
+      latencyMs: 1,
+      resultFlags: {
+        onDevice: true,
+        modelCalled: false,
+        calculatorLead: { expected: calc.combinedRating },
+      },
+      captured: [lateRequest].filter(Boolean),
     };
   }
 
   return function run(caseDef) {
     const override = FAILING_OVERRIDES[caseDef.id] ?? {};
     if (caseDef.entry) return toolOutcome(caseDef, override, personas);
+    if (caseDef.conditions && !override.modelCalled) {
+      const outcome = calculatorOutcome(caseDef);
+      lateRequest = null;
+      return outcome;
+    }
     const outcome = replyOutcome(caseDef, override);
     const own =
       override.error || override.noCapture
@@ -382,12 +389,14 @@ export function buildDryRunTranscript({
   personaPrompts,
   resolveAgentForTool,
   calculateVARating,
+  buildCalculatorAnswer,
   settings,
 }) {
   const engine = createStubEngine({
     personaPrompts,
     resolveAgentForTool,
     calculateVARating,
+    buildCalculatorAnswer,
     settings,
   });
   const run = {

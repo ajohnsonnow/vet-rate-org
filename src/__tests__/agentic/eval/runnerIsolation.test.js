@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { calculateVARating } from "../../../utils/vaCalculator";
 import { resolveAgentForTool } from "../../../utils/agentBoundaries";
 import { SWARM_AGENTS } from "../../../utils/diamondSwarm";
+import { buildCalculatorAnswer } from "../../../utils/raterGrounding";
 import { buildDryRunTranscript } from "../../../../scripts/eval/lib/dryRun.js";
 import { loadGoldenSet } from "../../../../scripts/eval/lib/goldenSet.js";
 import { fingerprintPersonas } from "../../../../scripts/eval/lib/goldenRecord.js";
@@ -28,6 +29,7 @@ const records = (settings = { temperature: 0, maxTokens: 1024 }) => {
     personaPrompts,
     resolveAgentForTool,
     calculateVARating,
+    buildCalculatorAnswer,
     settings,
   });
   return { meta, byId: new Map(cases.map((r) => [r.id, r])) };
@@ -126,18 +128,6 @@ describe("assembleCaseRecord", () => {
     expect(record.rawResponse).toBe(raw);
   });
 
-  it("keeps the replacement reason and the replaced draft", () => {
-    const record = build(
-      ok({
-        calculatorReplacement: { reason: "stated 70%", draft: "It is 70%." },
-      }),
-    );
-    expect(record.calculatorReplacement).toEqual({
-      reason: "stated 70%",
-      draft: "It is 70%.",
-    });
-  });
-
   it("keeps the citations the answer check could not verify", () => {
     const record = build(ok({ citationsUnverified: { sections: ["4.37"] } }));
     expect(record.citationsUnverified).toEqual({ sections: ["4.37"] });
@@ -174,7 +164,7 @@ describe("assembleCaseRecord", () => {
 });
 
 describe("assembleCaseRecord: what the guards did to the answer", () => {
-  it("records what the calculator guard and the validator did to the answer", () => {
+  it("records the calculator's lead and what the validator did to the answer", () => {
     const untouched = build(ok({ resultFlags: { mode: "swarm" } }));
     expect(untouched).toMatchObject({
       validatorBlocked: false,
@@ -184,10 +174,12 @@ describe("assembleCaseRecord: what the guards did to the answer", () => {
 
     const led = build(
       ok({
-        resultFlags: { calculatorLead: { expected: 80, commentaryKept: true } },
+        resultFlags: { modelCalled: false, calculatorLead: { expected: 80 } },
       }),
     );
-    expect(led.calculatorLead).toEqual({ expected: 80, commentaryKept: true });
+    expect(led.calculatorLead).toEqual({ expected: 80 });
+    expect(led.modelCalled).toBe(false);
+    expect(untouched).not.toHaveProperty("modelCalled");
   });
 
   it("records a blocked answer: the flag and the text the veteran did not see", () => {
@@ -230,7 +222,7 @@ describe("assembleCaseRecord: what the guards did to the answer", () => {
   });
 });
 
-describe("dry run: reasoning, replacement and timeout isolation", () => {
+describe("dry run: reasoning and timeout isolation", () => {
   const { byId } = records();
 
   it("a reasoning-prefixed reply: visible text has no tag, raw keeps the reasoning", () => {
@@ -248,18 +240,6 @@ describe("dry run: reasoning, replacement and timeout isolation", () => {
     expect(a07.response).toBe("");
     expect(a07.rawResponse).toMatch(/^<think>/);
     expect(a07.actualAgent).toBe("writer");
-  });
-
-  it("a replaced answer records the reason and the replaced draft", () => {
-    const a24 = byId.get("a24");
-    expect(a24.calculatorReplacement.reason).toEqual(expect.any(String));
-    expect(a24.calculatorReplacement.draft).toBe("The combined rating is 90%.");
-    expect(a24.response).toContain("100%");
-    expect(a24.response).not.toBe(a24.calculatorReplacement.draft);
-    expect(a24.calculatorLead).toEqual({
-      expected: 100,
-      commentaryKept: false,
-    });
   });
 
   it("a canned answer records validatorBlocked false, a timeout null", () => {

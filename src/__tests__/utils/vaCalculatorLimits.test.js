@@ -6,7 +6,6 @@ import {
 } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
-  buildComputedResultBlock,
   formatCalculatorWorking,
 } from "../../utils/raterGrounding";
 
@@ -40,7 +39,6 @@ describe("the bilateral group with its factor never exceeds 100", () => {
   it("never prints a value above 100%", () => {
     const texts = [
       formatCalculatorWorking(calc).join("\n"),
-      buildComputedResultBlock(calc),
       buildCalculatorExplanation(calc),
     ];
     for (const text of texts) {

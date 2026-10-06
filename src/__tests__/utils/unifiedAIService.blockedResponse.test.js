@@ -51,7 +51,6 @@ import {
   registerSwarmEngine,
   resetAICircuitBreaker,
   BLOCKED_RESPONSE_MESSAGE,
-  CALCULATOR_COMMENTARY_LEAD,
 } from "../../utils/unifiedAIService";
 import * as diamondSwarm from "../../utils/diamondSwarm";
 import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
@@ -131,20 +130,4 @@ describe("a blocked answer", () => {
       expect(result.validationErrors).toContain(BLOCK_ERROR);
     },
   );
-
-  it("on a rating question the calculator's working still leads, followed by the message", async () => {
-    const result = await ask(BLOCKED_DRAFT, {
-      toolId: "rating-calculator",
-      conditions: [
-        { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
-        { name: "Tinnitus", rating: 10, side: "none", bodyPart: "ear" },
-      ],
-    });
-    expect(result.text.startsWith("Your combined rating is 60%.")).toBe(true);
-    expect(result.text.endsWith(BLOCKED_RESPONSE_MESSAGE)).toBe(true);
-    expect(result.text).not.toContain(CALCULATOR_COMMENTARY_LEAD);
-    expect(result.text).not.toContain("diagnose");
-    expect(result.blockedText).toBe(BLOCKED_DRAFT);
-    expect(result.calculatorLead.commentaryKept).toBe(false);
-  });
 });

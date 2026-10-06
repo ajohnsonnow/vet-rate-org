@@ -218,21 +218,6 @@ describe("combined-rating text follows the request, not the tool", () => {
 
     expect(sentToSwarm()).not.toContain(VERIFIED_MARKER);
   });
-
-  it("is added when the call carries structured conditions", async () => {
-    await generateAI(
-      "Explain this to me.",
-      callOptions({
-        toolId: "rating-calculator",
-        conditions: [
-          { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
-          { name: "Tinnitus", rating: 10, side: "none", bodyPart: "ear" },
-        ],
-      }),
-    );
-
-    expect(sentToSwarm()).toContain(entryText("cfr-4.25-b"));
-  });
 });
 
 describe("verified reference for the Decision Decoder", () => {

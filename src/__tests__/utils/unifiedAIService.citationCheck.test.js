@@ -122,25 +122,6 @@ describe("generateAI citation check", () => {
     expect(result.text).toBe(json);
     expect(result.citationsUnverified).toBeUndefined();
   });
-
-  it("checks a rater answer after the calculator guard has run", async () => {
-    modelSays("The table is in 38 CFR § 4.25 and 38 CFR § 4.99.");
-
-    const result = await generateAI(
-      "Calculate my combined rating.",
-      callOptions({
-        toolId: "rating-calculator",
-        useDKB: false,
-        conditions: [
-          { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
-        ],
-      }),
-    );
-
-    expect(result.citationsUnverified).toEqual({ sections: ["4.99"] });
-    expect(result.text).toContain("Your combined rating is 50%.");
-    expect(result.text.endsWith(buildCitationNotice(["4.99"]))).toBe(true);
-  });
 });
 
 describe("generateAI form check", () => {

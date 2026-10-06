@@ -2,10 +2,6 @@ import { describe, it, expect } from "vitest";
 import { calculateVARating } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
-  buildComputedResultBlock,
-  checkRaterResponse,
-  findDeniedBilateralClaims,
-  findInventedBilateralClaims,
   formatCalculatorWorking,
 } from "../../utils/raterGrounding";
 
@@ -116,18 +112,12 @@ describe("explanation of the group the calculator formed", () => {
     expect(text).toContain(
       "Bilateral pes planus is one evaluation that covers both sides, and by itself it takes no bilateral factor",
     );
-    expect(buildComputedResultBlock(BOTH_SIDES_ALONE)).toContain(
-      "by itself it takes no bilateral factor",
-    );
   });
 
   it("names an entry whose limb it could not determine", () => {
     const text = buildCalculatorExplanation(LIMB_UNKNOWN);
     expect(text).toContain(
       "Vet-Rate could not tell whether Neuropathy is an arm or a leg condition",
-    );
-    expect(buildComputedResultBlock(LIMB_UNKNOWN)).toContain(
-      "could not tell whether Neuropathy",
     );
   });
 });
@@ -150,59 +140,5 @@ describe("38 CFR 4.26(d) in the working and the explanation", () => {
     expect(text).not.toContain("No bilateral pair applies");
     expect(text).toContain("Left knee (10%) and Right knee (10%)");
     expect(text).toContain("38 CFR § 4.26(d)");
-    const block = buildComputedResultBlock(ALL_REMOVED);
-    expect(block).toContain("Bilateral pair: none");
-    expect(block).toContain("38 CFR § 4.26(d)");
-  });
-
-  it("does not treat a disability left out under (d) as an invented pairing", () => {
-    expect(
-      findInventedBilateralClaims(
-        "Left knee, Left ankle and Right knee are bilateral disabilities.",
-        ONE_REMOVED,
-      ),
-    ).toEqual([]);
-    expect(
-      findInventedBilateralClaims(
-        "Left knee and Right knee are a bilateral pair.",
-        ALL_REMOVED,
-      ),
-    ).toEqual([]);
-    expect(
-      findInventedBilateralClaims(
-        "Back and Left knee are a bilateral pair.",
-        ALL_REMOVED,
-      ),
-    ).toHaveLength(1);
-  });
-
-  it("does not call it a denial when the answer says no factor applies after (d) removed it", () => {
-    expect(
-      findDeniedBilateralClaims(
-        "The bilateral factor does not apply.",
-        ALL_REMOVED,
-      ),
-    ).toEqual([]);
-  });
-});
-
-describe("the calculator's own explanation passes its own check", () => {
-  it.each([
-    ["four extremities", FOUR_LIMBS],
-    ["both-sides evaluation with a leg", BOTH_SIDES_WITH_LEG],
-    ["both-sides evaluation alone", BOTH_SIDES_ALONE],
-    ["one disability removed under (d)", ONE_REMOVED],
-    ["every disability removed under (d)", ALL_REMOVED],
-    ["an entry of unknown limb", LIMB_UNKNOWN],
-    ["two on the left and one on the right", TWO_LEFT_ONE_RIGHT],
-    ["two both-sides evaluations", TWO_BOTH_SIDES],
-  ])("%s", (_label, calc) => {
-    const check = checkRaterResponse(buildCalculatorExplanation(calc), calc);
-    expect(check).toMatchObject({
-      ok: true,
-      wrongFigures: [],
-      inventedPairs: [],
-      deniedPairs: [],
-    });
   });
 });

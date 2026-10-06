@@ -24,28 +24,22 @@ const reservedOutputTokens = (requested) =>
   Math.min(requested, OUTPUT_RESERVE_TOKENS);
 
 /**
- * How much reference material a request has room for. `fixedChars` is what
- * must be sent whatever happens (the system message, the default prompt and
- * the question). The computed block is charged first, so the keyword block
- * and then the verified block give way before it does; it is dropped only
- * when it cannot fit even with no reference material at all.
+ * How many characters of reference material a request has room for.
+ * `fixedChars` is what must be sent whatever happens (the system message,
+ * the default prompt and the question). The verified block is sized first and
+ * the keyword block gets what is left, so the keyword block gives way first.
  */
 export function planPromptFit({
   contextWindow,
   requestedOutputTokens,
   fixedChars,
-  computedChars = 0,
 }) {
   const room =
     (contextWindow - reservedOutputTokens(requestedOutputTokens)) *
       CHARS_PER_TOKEN -
     fixedChars -
     SAFETY_CHARS;
-  const keepComputed = computedChars <= room;
-  return {
-    keepComputed,
-    referenceChars: Math.max(0, keepComputed ? room - computedChars : room),
-  };
+  return { referenceChars: Math.max(0, room) };
 }
 
 /**

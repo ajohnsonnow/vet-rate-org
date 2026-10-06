@@ -1,7 +1,7 @@
 /**
  * Grounds an assistant question about the veteran's combined rating or TDIU
- * in the ratings saved in My Ratings, so the answer leads with the
- * calculator's working (unifiedAIService enforceCalculatorOnResult).
+ * in the ratings saved in My Ratings, so the answer is the calculator's
+ * working (unifiedAIService _answerFromCalculator).
  */
 
 import { mentionsUnemployability } from "./raterGrounding";
@@ -28,8 +28,8 @@ const isUsable = (r) =>
 
 /**
  * generateAI options for a question the saved ratings can answer, or null.
- * conditionsOnDeviceOnly keeps the ratings out of any request that leaves the
- * device; the calculator's working is added to the answer locally either way.
+ * generateAI answers such a call from the calculator without calling a model,
+ * so the ratings never leave the device.
  */
 export function savedRatingsGrounding(question, ratings = getMyRatings()) {
   const text = String(question ?? "");
@@ -43,7 +43,6 @@ export function savedRatingsGrounding(question, ratings = getMyRatings()) {
   return {
     toolId: asksTdiu ? "tdiu-builder" : "rating-calculator",
     conditions,
-    conditionsOnDeviceOnly: true,
   };
 }
 

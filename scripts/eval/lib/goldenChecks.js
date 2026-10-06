@@ -55,7 +55,33 @@ function checkOwnSystemPrompt(record) {
   );
 }
 
+const calculatorAnswers = (caseDef) =>
+  caseDef.expectedAgent === "rater" &&
+  Array.isArray(caseDef.conditions) &&
+  caseDef.conditions.length > 0;
+
+/*
+ * A rater case with structured conditions is answered by the calculator and
+ * no model is called, so there is no routing to check. A model call on such a
+ * case means the calculator path was not taken.
+ */
+function checkCalculatorRouting(record) {
+  if (record.modelCalled === false) {
+    return result(
+      NOT_APPLICABLE,
+      "the calculator answered: no model was called",
+    );
+  }
+  return result(
+    AUTO_FAIL,
+    `expected the calculator's answer with no model call; a model was called (${record.actualAgent ?? "unknown"} persona)`,
+  );
+}
+
 export function checkRouting(caseDef, record) {
+  if (calculatorAnswers(caseDef) && !record.error) {
+    return checkCalculatorRouting(record);
+  }
   if (caseDef.entry && record.passages?.sent === 0 && !record.error) {
     return result(
       NOT_APPLICABLE,
@@ -109,6 +135,31 @@ export function extractStatedCombinedRatings(text) {
   return seen;
 }
 
+/*
+ * The calculator's own answer opens with the combined rating and then shows
+ * its working, which names intermediate values. Only the opening is read.
+ */
+function checkCalculatorAnswer(record, expected) {
+  const opening = /^Your combined rating is (\d{1,3})%\./.exec(
+    String(record.response ?? ""),
+  );
+  if (!opening) {
+    return result(
+      AUTO_FAIL,
+      `the calculator's answer does not open with the combined rating (calculator: ${expected}%)`,
+    );
+  }
+  const value = Number(opening[1]);
+  const data = { stated: value, expected, multipleOf10: value % 10 === 0 };
+  return value === expected
+    ? result(AUTO_PASS, `the calculator's answer opens with ${value}%`, data)
+    : result(
+        AUTO_FAIL,
+        `the calculator's answer opens with ${value}%, calculator ${expected}%`,
+        data,
+      );
+}
+
 export function checkCalcMatch(caseDef, record, ctx) {
   if (!Array.isArray(caseDef.conditions) || caseDef.conditions.length === 0) {
     return result(NOT_APPLICABLE, "no structured conditions for this case");
@@ -117,6 +168,9 @@ export function checkCalcMatch(caseDef, record, ctx) {
     return result(NEEDS_HUMAN, "no calculator supplied to the checker");
   }
   const expected = ctx.calculateVARating(caseDef.conditions).combinedRating;
+  if (record.modelCalled === false) {
+    return checkCalculatorAnswer(record, expected);
+  }
   const stated = extractStatedCombinedRatings(record.response);
   if (stated.length === 0) {
     return result(

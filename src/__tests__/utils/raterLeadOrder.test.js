@@ -7,11 +7,8 @@ import { describe, it, expect } from "vitest";
 import { calculateVARating } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
-  buildReplacementNotice,
   buildTdiuThresholdParagraph,
-  checkRaterResponse,
 } from "../../utils/raterGrounding";
-import { enforceCalculatorOnResult } from "../../utils/unifiedAIService";
 import { GOLDEN, gradedIntegratedCase } from "./recordedAnswers";
 
 const calcOf = (id) => calculateVARating(GOLDEN[id].conditions);
@@ -109,78 +106,5 @@ describe("the bilateral factor is mentioned only when it is relevant", () => {
     expect(buildCalculatorExplanation(calcOf("a11"))).toContain(
       'No bilateral pair applies. The bilateral factor needs "partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles" (38 CFR § 4.26(c)), that is both arms or both legs, one on each side. "Arms" and "legs" mean the upper and lower extremities as a whole, so a right thigh and a left foot are a pair (38 CFR § 4.26(a)). Two conditions on the same side are not a pair, and the two highest ratings are not automatically a pair.',
     );
-  });
-});
-
-describe("the notice opens the text only when a check failed", () => {
-  it("with no failed check the text starts at the combined rating", () => {
-    const calc = calcOf("a11");
-    const text = buildCalculatorExplanation(calc);
-    expect(text.startsWith("Your combined rating is 80%.")).toBe(true);
-    const check = checkRaterResponse("Your combined rating is 70%.", calc);
-    expect(buildCalculatorExplanation(calc, { check })).toBe(
-      `${buildReplacementNotice(check)}\n\n${text}`,
-    );
-  });
-
-  it.each(["a11", "a12", "a13", "a24", "a25"])(
-    "the reordered text for %s still passes the calculator check",
-    (id) => {
-      const calc = calcOf(id);
-      const text = buildCalculatorExplanation(calc, {
-        tdiu: true,
-        question: GOLDEN[id].input,
-      });
-      expect(checkRaterResponse(text, calc).ok).toBe(true);
-    },
-  );
-});
-
-describe("through the guard", () => {
-  it("a13: the veteran's question decides the order and what is left out", () => {
-    const out = enforceCalculatorOnResult(
-      { text: "" },
-      { conditions: GOLDEN.a13.conditions },
-      GOLDEN.a13.input,
-    );
-    expect(
-      ascending(
-        order(out.text, "Your combined rating is 80%.", TDIU_LEAD, METHOD),
-      ),
-    ).toBe(true);
-    expect(out.text).not.toContain(NO_PAIR);
-  });
-
-  it("a replaced draft gets the same order under its notice", () => {
-    const out = enforceCalculatorOnResult(
-      { text: "You are not eligible for TDIU. Your combined rating is 80%." },
-      { conditions: GOLDEN.a13.conditions },
-      GOLDEN.a13.input,
-    );
-    expect(
-      out.text.startsWith("The AI's draft answer gave a TDIU conclusion"),
-    ).toBe(true);
-    expect(
-      ascending(
-        order(out.text, "Your combined rating is 80%.", TDIU_LEAD, METHOD),
-      ),
-    ).toBe(true);
-    expect(out.text).not.toContain(NO_PAIR);
-  });
-});
-
-describe("a draft that got the pairing wrong", () => {
-  it("is answered with the no-pair finding even when the question did not ask", () => {
-    const out = enforceCalculatorOnResult(
-      {
-        text: "PTSD (Left Brain) + Tinnitus (Right Ear) is a valid bilateral pair.",
-      },
-      { conditions: GOLDEN.a11.conditions },
-      "What is my combined rating?",
-    );
-    expect(out.text).toContain(
-      "described a bilateral pairing that did not match",
-    );
-    expect(out.text).toContain(NO_PAIR);
   });
 });

@@ -108,8 +108,10 @@ describe("flagContradictions for a20 in the final-build run", () => {
   it("still leaves structured output and calculator text alone", () => {
     const json = { text: `{"note": "${ANSWER}"}` };
     expect(flagContradictions(json, {}, QUESTION)).toBe(json);
-    const replaced = { text: ANSWER, calculatorReplacement: { reason: "x" } };
-    expect(flagContradictions(replaced, {}, QUESTION)).toBe(replaced);
+    const calculatorText = { text: ANSWER, modelCalled: false };
+    expect(flagContradictions(calculatorText, {}, QUESTION)).toBe(
+      calculatorText,
+    );
   });
 });
 

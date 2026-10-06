@@ -1,8 +1,8 @@
 /**
  * Prompt assembly against the context window the on-device engine was loaded
  * with: reference material is sized to what the window has left, the keyword
- * block gives way before the verified block and that before the computed
- * block, and the output limit sent always fits beside the prompt.
+ * block gives way before the verified block, and the output limit sent always
+ * fits beside the prompt.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -67,19 +67,12 @@ import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
 import { CHARS_PER_TOKEN } from "../../utils/promptBudget";
 
 const VERIFIED = "=== VERIFIED REFERENCE ===";
-const COMPUTED = "=== COMPUTED RESULT";
 const KEYWORD = "=== REFERENCE MATERIAL ===";
 const PERSONA_CHARS = 2906;
 
 const SECONDARY_QUESTION =
   "Can sleep apnea be service connected as secondary to my PTSD?";
 const TDIU_QUESTION = "Can I qualify for TDIU with only one 60% rating?";
-const RATING_QUESTION = "What is my combined rating?";
-const CONDITIONS = [
-  { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
-  { name: "Left knee", rating: 10, side: "left", bodyPart: "knee" },
-  { name: "Right knee", rating: 10, side: "right", bodyPart: "knee" },
-];
 
 const callOptions = (overrides = {}) => ({
   dataClass: AI_DATA_CLASS.CONTEXT,
@@ -152,51 +145,20 @@ describe("reference material is sized to the window", () => {
 
 describe("what gives way first", () => {
   it("the keyword block goes before the verified block", async () => {
-    await generateAI(
-      TDIU_QUESTION,
-      callOptions({ toolId: "tdiu-builder", conditions: CONDITIONS }),
-    );
+    await generateAI(TDIU_QUESTION, callOptions({ toolId: "tdiu-builder" }));
     const { text } = swarmCall();
     expect(text).toContain(VERIFIED);
-    expect(text).toContain(COMPUTED);
     expect(text).not.toContain(KEYWORD);
     expect(sentTokens() + 2048).toBeLessThanOrEqual(8192);
   });
 
-  it("the verified block goes before the computed block", async () => {
-    deviceProfile.contextWindowSize = 7500;
-    await generateAI(
-      TDIU_QUESTION,
-      callOptions({ toolId: "tdiu-builder", conditions: CONDITIONS }),
-    );
-    const { text } = swarmCall();
-    expect(text).toContain(COMPUTED);
-    expect(text).not.toContain(VERIFIED);
-    expect(text).not.toContain(KEYWORD);
-    expect(sentTokens() + 2048).toBeLessThanOrEqual(7500);
-  });
-
-  it("the computed block goes last, and the question is always sent", async () => {
+  it("the verified block goes next, and the question is always sent", async () => {
     deviceProfile.contextWindowSize = 7150;
-    await generateAI(
-      RATING_QUESTION,
-      callOptions({ toolId: "rating-calculator", conditions: CONDITIONS }),
-    );
+    await generateAI(TDIU_QUESTION, callOptions({ toolId: "tdiu-builder" }));
     const { text, prompt } = swarmCall();
-    expect(text).not.toContain(COMPUTED);
     expect(text).not.toContain(VERIFIED);
     expect(text).not.toContain(KEYWORD);
-    expect(prompt.endsWith(RATING_QUESTION)).toBe(true);
-  });
-
-  it("the answer still leads with the calculator's working when the block could not be sent", async () => {
-    deviceProfile.contextWindowSize = 7150;
-    const result = await generateAI(
-      RATING_QUESTION,
-      callOptions({ toolId: "rating-calculator", conditions: CONDITIONS }),
-    );
-    expect(result.calculatorLead.expected).toBe(60);
-    expect(result.text.startsWith("Your combined rating is 60%.")).toBe(true);
+    expect(prompt.endsWith(TDIU_QUESTION)).toBe(true);
   });
 });
 
@@ -228,7 +190,6 @@ describe("the output limit sent fits beside the prompt", () => {
         TDIU_QUESTION,
         callOptions({
           toolId: "tdiu-builder",
-          conditions: CONDITIONS,
           maxTokens,
         }),
       );

@@ -1,34 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 import { calculateVARating } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
-  buildComputedResultBlock,
   buildTdiuThresholdParagraph,
   mentionsUnemployability,
   TDIU_REGULATION_QUOTES,
-  checkRaterResponse,
-  extractStatedCombinedRatings,
-  findInventedBilateralClaims,
   formatCalculatorWorking,
 } from "../../utils/raterGrounding";
-
-const here = dirname(fileURLToPath(import.meta.url));
-const FIXTURE = JSON.parse(
-  readFileSync(
-    join(
-      here,
-      "..",
-      "agentic",
-      "eval",
-      "fixtures",
-      "statedCombinedRatings.json",
-    ),
-    "utf8",
-  ),
-);
 
 const cond = (name, rating, side = "none", bodyPart = name.toLowerCase()) => ({
   name,
@@ -48,100 +27,6 @@ const KNEES = [
   cond("Left knee strain", 30, "left", "knee"),
   cond("Right knee strain", 20, "right", "knee"),
 ];
-
-describe("extractStatedCombinedRatings (shared fixture with scripts/eval/lib/goldenChecks.js)", () => {
-  it.each(FIXTURE)("$name", ({ text, stated }) => {
-    expect(extractStatedCombinedRatings(text)).toEqual(stated);
-  });
-});
-
-const GOLDEN = Object.fromEntries(
-  readFileSync(join(here, "..", "agentic", "golden-set.jsonl"), "utf8")
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => JSON.parse(line))
-    .map((c) => [c.id, c]),
-);
-const TRANSCRIPT_ENTRIES = FIXTURE.filter((entry) => entry.expected);
-// The fixture's labels describe what the answer says, as the evaluation
-// grader reads it. The guard reads less on purpose: a figure counts as the
-// stated rating only when a sentence presents it as such, so these three are
-// not read at all (a rating given in a cap sentence, and two bare labels).
-const NOT_READ_BY_THE_GUARD = [
-  "run_2026-10-05_071859 a13",
-  "run_2026-10-05_071859 a24",
-  "run_2026-10-05_071859 a25",
-];
-const notRead = (entry) =>
-  NOT_READ_BY_THE_GUARD.some((name) => entry.name.startsWith(name));
-describe("Rater responses recorded in the five golden-set transcripts", () => {
-  it("covers cases a11, a12, a13, a24 and a25 in each of the five transcripts", () => {
-    expect(TRANSCRIPT_ENTRIES).toHaveLength(25);
-    expect(new Set(TRANSCRIPT_ENTRIES.map((e) => e.transcript)).size).toBe(5);
-    expect(new Set(TRANSCRIPT_ENTRIES.map((e) => e.caseId))).toEqual(
-      new Set(["a11", "a12", "a13", "a24", "a25"]),
-    );
-  });
-
-  it.each(TRANSCRIPT_ENTRIES)("$name", (entry) => {
-    const calc = calculateVARating(GOLDEN[entry.caseId].conditions);
-    expect(calc.combinedRating).toBe(entry.calculator);
-    const check = checkRaterResponse(entry.text, calc);
-    let outcome = "no final figure stated";
-    if (check.wrongFigures.length > 0) outcome = "contradicts calculator";
-    else if (check.stated.includes(calc.combinedRating))
-      outcome = "matches calculator";
-    expect(outcome).toBe(
-      entry.knownMiss || notRead(entry)
-        ? "no final figure stated"
-        : entry.expected,
-    );
-  });
-});
-
-describe("extractStatedCombinedRatings phrasings and exclusions", () => {
-  it.each([
-    [
-      "subject phrase before the verb, bold figure",
-      "The combined rating for the veteran, considering the bilateral factor and the highest-rated condition, is **52%**.",
-      [52],
-    ],
-    ["label then bold figure", "**Final Result:** 52%", [52]],
-    ["bold figure after a colon", "Final combined rating: **60%**", [60]],
-    [
-      "hedge after the verb",
-      "Your combined rating is approximately 99%.",
-      [99],
-    ],
-    [
-      "TeX escaped percent sign",
-      String.raw`\text{Final Combined Rating} = 58\%`,
-      [58],
-    ],
-  ])("finds the figure: %s", (_label, text, stated) => {
-    expect(extractStatedCombinedRatings(text)).toEqual(stated);
-  });
-
-  it.each([
-    ["group value", "Total Group Rating: 22%"],
-    ["operand of a sum", "Combined Rating: 10% + 10% = 20%"],
-    ["step value", "Final step: 72% combined with 10% = 75%"],
-    [
-      "condition rating after a clause word",
-      "The combined rating applies when the knee is 10%.",
-    ],
-    [
-      "input listed before the verb",
-      "Your combined rating uses 50% PTSD and 30% tinnitus.",
-    ],
-    [
-      "total of something else",
-      "Total possible rating without any pairing = 100%",
-    ],
-  ])("does not count: %s", (_label, text) => {
-    expect(extractStatedCombinedRatings(text)).toEqual([]);
-  });
-});
 
 describe("formatCalculatorWorking", () => {
   it("shows every step, the raw value and the single final rounding for 50/30/20/10", () => {
@@ -173,146 +58,12 @@ describe("formatCalculatorWorking", () => {
   });
 });
 
-describe("buildComputedResultBlock", () => {
-  it("keeps the markers and the existing lines the evaluation runner and tests read", () => {
-    const block = buildComputedResultBlock(calculateVARating(KNEES));
-    expect(block).toContain(
-      "=== COMPUTED RESULT (38 CFR § 4.25/4.26 - already calculated, do not recompute) ===",
-    );
-    expect(block).toContain("=== END COMPUTED RESULT ===");
-    expect(block).toContain(
-      "Bilateral pair: Left knee strain (left, 30%), Right knee strain (right, 20%)",
-    );
-    expect(block).toContain("Bilateral group rating: 48");
-    expect(block).toContain("Combined rating: 70%");
-    expect(block).toContain("This result is final. Restate it exactly");
-    expect(block).toContain("Never recompute it");
-  });
-});
-
-describe("checkRaterResponse", () => {
-  const four = calculateVARating(FOUR);
-
-  it("accepts a response that restates the calculator's figure", () => {
-    expect(checkRaterResponse("Your combined rating is 80%.", four).ok).toBe(
-      true,
-    );
-  });
-
-  it("accepts a response that states no combined figure", () => {
-    expect(
-      checkRaterResponse("Here is how VA combines ratings.", four).ok,
-    ).toBe(true);
-  });
-
-  it("flags a different final rating (baseline a11: 80 restated, then 70)", () => {
-    const out = checkRaterResponse(
-      "Your combined disability rating is 80%. ... The final combined disability rating is **70%**.",
-      four,
-    );
-    expect(out.ok).toBe(false);
-    expect(out.wrongFigures).toEqual([70]);
-  });
-
-  it("flags a final rating phrased as a calculation result (baseline a13)", () => {
-    const rated = calculateVARating([
-      cond("Condition 1", 60),
-      cond("Condition 2", 20),
-      cond("Condition 3", 20),
-      cond("Condition 4", 20),
-    ]);
-    expect(rated.combinedRating).toBe(80);
-    const out = checkRaterResponse(
-      "Given that the combined rating calculation results in 100%, you are eligible.",
-      rated,
-    );
-    expect(out.ok).toBe(false);
-    expect(out.wrongFigures).toEqual([100]);
-  });
-
-  it("flags an unrounded figure that is not part of the working", () => {
-    const out = checkRaterResponse("The final combined rating is 73.2%.", four);
-    expect(out.wrongFigures).toEqual([73.2]);
-    expect(out.ok).toBe(false);
-  });
-
-  it("does not call the calculator's own unrounded step a wrong rating", () => {
-    const out = checkRaterResponse("The final combined rating is 74.8%.", four);
-    expect(out.wrongFigures).toEqual([]);
-  });
-
-  it("does not treat the calculator's own intermediate values as final claims", () => {
-    expect(
-      checkRaterResponse(
-        "The combined value before rounding is 75%. The final rating is 80%.",
-        four,
-      ).ok,
-    ).toBe(true);
-  });
-
-  it("flags a wrong multiple of 10 even when it equals no working value", () => {
-    const sixty = calculateVARating([cond("A", 40), cond("B", 30)]);
-    expect(sixty.combinedRating).toBe(60);
-    expect(checkRaterResponse("The final rating is 60%.", sixty).ok).toBe(true);
-    expect(checkRaterResponse("The final rating is 50%.", sixty).ok).toBe(
-      false,
-    );
-  });
-
-  it("ignores a sentence that only states a cap", () => {
-    expect(
-      checkRaterResponse(
-        "Your combined rating is 80%. The maximum combined rating is 100%.",
-        four,
-      ).ok,
-    ).toBe(true);
-  });
-});
-
-describe("checkRaterResponse bilateral claims", () => {
-  const four = calculateVARating(FOUR);
-
-  it("flags an invented bilateral pair when the calculator found none (baseline a11)", () => {
-    const out = checkRaterResponse(
-      "Your combined rating is 80%.\n- **PTSD (Left Brain) + Tinnitus (Right Ear):** This would be a valid bilateral pair.",
-      four,
-    );
-    expect(out.ok).toBe(false);
-    expect(out.inventedPairs).toHaveLength(1);
-    expect(out.wrongFigures).toEqual([]);
-  });
-
-  it("does not flag statements that no bilateral pair exists", () => {
-    const text = [
-      "Bilateral pair: none",
-      "Since none of the conditions are paired bilaterally, the bilateral factor does not apply.",
-      "The bilateral factor is not applicable to PTSD or Tinnitus.",
-      "Bilateral means the same body part on both sides.",
-      "Your combined rating is 80%.",
-    ].join("\n");
-    expect(findInventedBilateralClaims(text, four)).toEqual([]);
-    expect(checkRaterResponse(text, four).ok).toBe(true);
-  });
-
-  it("accepts the real pair and flags a pair built from other conditions", () => {
-    const knees = calculateVARating(KNEES);
-    const good =
-      "The bilateral pair is Left knee strain and Right knee strain, giving 48%. Combined rating: 70%.";
-    expect(checkRaterResponse(good, knees).ok).toBe(true);
-    const bad =
-      "The bilateral pair is Lumbar strain and the knees. Combined rating: 70%.";
-    expect(checkRaterResponse(bad, knees).ok).toBe(false);
-  });
-});
-
 describe("buildCalculatorExplanation", () => {
-  it("states the calculator's figure and working, and says the draft was not shown", () => {
+  it("states the calculator's figure and working, and nothing about a draft or a model", () => {
     const calc = calculateVARating(FOUR);
-    const text = buildCalculatorExplanation(calc, {
-      check: checkRaterResponse("Your combined rating is 70%.", calc),
-    });
-    expect(text).toContain("did not match Vet-Rate's calculator");
-    expect(text).toContain("Your combined rating is 80%.");
+    const text = buildCalculatorExplanation(calc);
+    expect(text.startsWith("Your combined rating is 80%.")).toBe(true);
+    expect(text).not.toMatch(/draft|AI|model/);
     expect(text).toContain("Step 3: 72% combined with 10% = 75%");
     expect(text).toContain("No bilateral pair applies");
   });
@@ -346,15 +97,6 @@ describe("buildCalculatorExplanation", () => {
       "applies to Left knee strain (left, 30%), Right knee strain (right, 20%)",
     );
     expect(text).toContain("Your combined rating is 70%.");
-  });
-
-  it("is itself consistent with the check, so it is never replaced again", () => {
-    for (const set of [FOUR, KNEES, [cond("PTSD", 100)]]) {
-      const calc = calculateVARating(set);
-      expect(
-        checkRaterResponse(buildCalculatorExplanation(calc), calc).ok,
-      ).toBe(true);
-    }
   });
 });
 
@@ -452,20 +194,6 @@ describe("buildTdiuThresholdParagraph", () => {
     expect(buildTdiuThresholdParagraph(calc)).toContain(
       `your combined rating is ${calc.combinedRating} percent`,
     );
-  });
-
-  it("states no rating figure the check would read as a different combined rating", () => {
-    for (const ratings of [
-      [60],
-      [60, 20, 20, 20],
-      [60, 10],
-      [50, 30, 20],
-      [40, 30],
-    ]) {
-      const calc = calculateVARating(set(...ratings));
-      const text = buildCalculatorExplanation(calc, { tdiu: true });
-      expect(checkRaterResponse(text, calc).ok).toBe(true);
-    }
   });
 });
 
