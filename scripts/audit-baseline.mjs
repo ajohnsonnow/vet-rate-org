@@ -62,8 +62,8 @@ if (
   projectTypes.push("python");
 if (projectTypes.length === 0) projectTypes.push("unknown");
 
-console.log(`\nProject type: ${projectTypes.join(", ")}`);
-console.log("Gathering baseline metrics...\n");
+process.stdout.write(`\nProject type: ${projectTypes.join(", ")}` + "\n");
+process.stdout.write("Gathering baseline metrics...\n" + "\n");
 
 const metrics = {};
 
@@ -142,13 +142,21 @@ const tableData = [
 
 const colW = tableData.reduce((max, [k]) => Math.max(max, k.length), 0) + 2;
 const valW = tableData.reduce((max, [, v]) => Math.max(max, v.length), 0) + 2;
-console.log("┌" + "─".repeat(colW) + "┬" + "─".repeat(valW) + "┐");
+process.stdout.write(
+  "┌" + "─".repeat(colW) + "┬" + "─".repeat(valW) + "┐" + "\n",
+);
 for (const [k, v] of tableData) {
-  console.log("│ " + k.padEnd(colW - 2) + " │ " + v.padEnd(valW - 2) + " │");
+  process.stdout.write(
+    "│ " + k.padEnd(colW - 2) + " │ " + v.padEnd(valW - 2) + " │" + "\n",
+  );
   if (k === "Metric")
-    console.log("├" + "─".repeat(colW) + "┼" + "─".repeat(valW) + "┤");
+    process.stdout.write(
+      "├" + "─".repeat(colW) + "┼" + "─".repeat(valW) + "┤" + "\n",
+    );
 }
-console.log("└" + "─".repeat(colW) + "┴" + "─".repeat(valW) + "┘");
+process.stdout.write(
+  "└" + "─".repeat(colW) + "┴" + "─".repeat(valW) + "┘" + "\n",
+);
 
 // Write baseline markdown
 mkdirSync(outDir, { recursive: true });
@@ -189,4 +197,4 @@ ${metrics.recentCommits}
 `;
 
 writeFileSync(outFile, md, "utf8");
-console.log(`\nBaseline written to: ${outFile}`);
+process.stdout.write(`\nBaseline written to: ${outFile}` + "\n");
