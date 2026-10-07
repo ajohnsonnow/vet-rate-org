@@ -3,6 +3,7 @@ import { APP_TRANSLATIONS } from "../i18n/translations";
 import { useOptionalLanguage } from "../contexts/LanguageContext";
 import { smallModelAnswering } from "../utils/smallModelAnswering";
 import { getAIStatus } from "../utils/unifiedAIService";
+import { useModelFallback } from "../utils/modelFallback";
 
 const POLL_MS = 1000;
 
@@ -23,6 +24,7 @@ export default function SmallModelCaveat({ className = "" }) {
     return () => clearInterval(timer);
   }, []);
   const language = useOptionalLanguage();
+  const fallback = useModelFallback();
   if (!active) return null;
 
   const text = (key) =>
@@ -42,6 +44,7 @@ export default function SmallModelCaveat({ className = "" }) {
       </span>
       <p className="min-w-0">
         <strong>{title}.</strong> {text("body")}
+        {fallback && ` ${fallback.couldNotLoad}`}
       </p>
     </div>
   );

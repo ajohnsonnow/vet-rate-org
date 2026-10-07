@@ -23,9 +23,11 @@ export function describeModelFallback(status, profile) {
   const weaker = isGradedWeaker(loadedId)
     ? `${loaded.displayName} is an older model, and its answers were weaker in our tests.`
     : `${loaded.displayName} is an older model and has not been tested here.`;
+  const couldNotLoad = `Vet-Rate meant to load ${intended.displayName}, but it could not be loaded.`;
   return {
     intended,
     loaded,
+    couldNotLoad,
     text: `Vet-Rate meant to load ${intended.displayName} on this device, but it could not be loaded. ${loaded.displayName} is loaded instead. ${weaker}`,
   };
 }
