@@ -120,3 +120,29 @@ describe("Witness Bench start screen", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("Witness Bench title bar", () => {
+  const recommendation = () =>
+    screen.queryByRole("button", {
+      name: "View AI model recommendations for this tool",
+    });
+  const aiBadge = () =>
+    screen.queryByRole("button", { name: /^Warrant Council/ });
+
+  it("shows no AI badge or model button on a small on-device model", () => {
+    ai.status = onDevice(SMALL);
+    openStartScreen();
+
+    expect(recommendation()).not.toBeInTheDocument();
+    expect(aiBadge()).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+  });
+
+  it("shows both on a larger on-device model", () => {
+    ai.status = onDevice(LARGER);
+    openStartScreen();
+
+    expect(recommendation()).toBeInTheDocument();
+    expect(aiBadge()).toBeInTheDocument();
+  });
+});
