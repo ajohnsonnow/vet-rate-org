@@ -8,6 +8,8 @@ import {
   isAnyAIAvailable,
 } from "../utils/unifiedAIService";
 import { smallModelAnswering } from "../utils/smallModelAnswering";
+import ModelAnswerCaveat from "./ModelAnswerCaveat";
+import { onDeviceModelAnswering } from "../utils/modelAnswerCaveat";
 import {
   REGULATION_SEARCH_DISCLOSURE,
   SEARCH_RESULTS_LABEL,
@@ -177,6 +179,7 @@ function AskTheRegsResult({ aiAvailable, error, result }) {
           <p className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">
             {result.answer}
           </p>
+          {result.modelWritten && <ModelAnswerCaveat />}
           <LegalCitationList citations={result.citations} />
         </div>
       )}
@@ -210,9 +213,15 @@ export default function AskTheRegs({ onClose }) {
     setError(null);
     setResult(null);
     try {
-      const res = smallModelAnswering(getAIStatus())
+      const status = getAIStatus();
+      const res = smallModelAnswering(status)
         ? { passages: await retrieveRegulationText(trimmed) }
-        : await answerLegalQuestion(trimmed, { generateAI: generateAIText });
+        : {
+            ...(await answerLegalQuestion(trimmed, {
+              generateAI: generateAIText,
+            })),
+            modelWritten: onDeviceModelAnswering(status),
+          };
       setResult(res);
     } catch (err) {
       console.error("Ask the Regs error:", err);

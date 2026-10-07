@@ -14,9 +14,11 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { generateAI } from "../utils/unifiedAIService";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { mapAssistantErrorMessage } from "../utils/assistantErrorMessage";
 import AssistantMarkdown from "./AssistantMarkdown";
+import ModelAnswerCaveat from "./ModelAnswerCaveat";
+import { isModelWrittenOnDevice } from "../utils/modelAnswerCaveat";
 import SmallModelCaveat from "./SmallModelCaveat";
 import { OPEN_ADVICE_HELD_MESSAGE } from "../utils/openAdviceHold";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
@@ -179,6 +181,7 @@ async function sendMessage({
       }),
       timestamp: new Date(),
       mode: result.mode,
+      modelWritten: isModelWrittenOnDevice(result, getAIStatus()),
     };
 
     setMessages((prev) => [...prev, assistantMessage]);
@@ -717,6 +720,7 @@ function MessageBubble({
             spacingClass={v.textSpacing}
           />
         </div>
+        {msg.modelWritten && <ModelAnswerCaveat />}
 
         <div className={v.footerClass}>
           <span className="text-xs">

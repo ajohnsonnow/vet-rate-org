@@ -2072,6 +2072,15 @@ export const APP_TRANSLATIONS = {
   },
 
   // Neural Engine / AI
+  modelAnswerCaveat: {
+    line: {
+      en: "Written by an AI model on your device. It can be wrong about VA law and about your case. Check anything you will act on with an accredited Veterans Service Officer.",
+      es: "Escrito por un modelo de IA en su dispositivo. Puede equivocarse sobre la ley de VA y sobre su caso. Verifique con un Oficial de Servicios para Veteranos acreditado todo lo que vaya a usar.",
+      tl: "Isinulat ng isang AI model sa iyong device. Maaari itong magkamali tungkol sa batas ng VA at sa iyong kaso. Ipasuri sa isang accredited na Veterans Service Officer ang anumang gagamitin mo.",
+      vi: "Do một mô hình AI trên thiết bị của bạn viết. Có thể sai về luật VA và về hồ sơ của bạn. Hãy nhờ một Nhân viên Dịch vụ Cựu chiến binh được công nhận kiểm tra mọi điều bạn sẽ dựa vào.",
+      ko: "기기에서 AI 모델이 작성했습니다. VA 법과 귀하의 사례에 대해 틀릴 수 있습니다. 실행하기 전에 공인 재향군인 서비스 담당관과 확인하세요.",
+    },
+  },
   smallModelCaveat: {
     title: {
       en: "This device runs a smaller AI model",
