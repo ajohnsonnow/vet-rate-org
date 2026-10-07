@@ -29,6 +29,8 @@ import {
   givesTdiuThresholdsWithoutForty,
   putsBilateralOnOneSide,
   saysAppealNeedsNewEvidence,
+  saysSecondaryIsBarred,
+  statesARealSecondaryLimit,
   takesHigherOfTwoAsCombined,
   wrongSingleDisabilityThreshold,
 } from "./wrongLawPatterns";
@@ -291,7 +293,9 @@ const RULES = [
         NO_VALID_OPINION,
       ) ||
       (anyMatch(sentence, CANNOT_CONNECT, SECONDARY_NOT_ALLOWED) &&
-        !UNLESS_EVIDENCE.test(sentence)),
+        !UNLESS_EVIDENCE.test(sentence) &&
+        !statesARealSecondaryLimit(sentence)) ||
+      saysSecondaryIsBarred(sentence),
     says: "says a secondary connection cannot be made",
     correction: () => "secondary",
   },

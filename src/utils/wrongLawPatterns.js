@@ -189,3 +189,49 @@ export function takesHigherOfTwoAsCombined(sentence) {
     !WITHIN_ONE_DISABILITY.test(sentence)
   );
 }
+
+// "Sleep apnea cannot be rated as secondary to PTSD", as a statement of what
+// the regulations allow. 38 CFR 3.310(a) bars no pairing of conditions; a
+// secondary claim turns on medical evidence. The gap between the verb and
+// "secondary to" is kept short and free of figures, so "cannot be rated
+// higher than 10 percent, whether direct or secondary to ..." is not this.
+const SHORT_GAP = String.raw`(?:(?!higher|more than|percent|%)[^.;]){0,30}?`;
+const BARRED_AS_SECONDARY = [
+  new RegExp(
+    String.raw`\b(?:cannot|can't|can not|may not) be (?:rated|service[- ]connected|claimed|granted|awarded|approved|compensated)\b${SHORT_GAP}\bsecondary to\b`,
+    "i",
+  ),
+  new RegExp(
+    String.raw`\b(?:cannot|can't|can not|may not) (?:claim|file for|get|receive)\b${SHORT_GAP}\bsecondary to\b`,
+    "i",
+  ),
+  new RegExp(
+    String.raw`\b(?:does|do) not (?:allow|permit|recognize)\b${SHORT_GAP}\bsecondary to\b`,
+    "i",
+  ),
+  /\b(?:cannot|can't|can not) be secondary to\b/i,
+  /\b(?:does|do) not qualify (?:as|for) secondary\b/i,
+];
+
+// Limits that do exist: the primary condition has to be service connected,
+// and the same symptoms are not rated twice.
+const A_REAL_LIMIT =
+  /\bnon-?service[- ]connected\b|\b(?:not|n't) (?:yet )?service[- ]connected\b|\bpyramiding\b|\btwice\b|\bsame symptoms?\b|\balready rated\b|\bseparately\b/i;
+// A statement about the proof in a case, or about what is still needed.
+const ABOUT_THE_PROOF =
+  /\bwithout\b|\bunless\b|\buntil\b|\byet\b|\bevidence\b|\brecords?\b|\bnexus\b|\bmedical opinion\b|\bin your (?:case|file)\b/i;
+
+const statesARealLimitOrProof = (sentence) =>
+  A_REAL_LIMIT.test(sentence) || ABOUT_THE_PROOF.test(sentence);
+
+export function saysSecondaryIsBarred(sentence) {
+  return (
+    BARRED_AS_SECONDARY.some((pattern) => pattern.test(sentence)) &&
+    !statesARealLimitOrProof(sentence)
+  );
+}
+
+/** For the rule's older patterns, which share the same true exceptions. */
+export function statesARealSecondaryLimit(sentence) {
+  return A_REAL_LIMIT.test(sentence);
+}

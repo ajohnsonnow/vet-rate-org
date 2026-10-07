@@ -271,6 +271,28 @@ describe("generateAI contradiction check", () => {
     ).toBe(true);
   });
 
+  it("corrects the answer the live site gave, as the assistant chat calls it", async () => {
+    const answer =
+      "The short answer is: Generally, no. Under current VA regulations, sleep apnea cannot be rated as secondary to PTSD.";
+    modelSays(answer);
+
+    const result = await generateAI(
+      "Can I get service connection for sleep apnea secondary to PTSD?",
+      callOptions({ taskType: "assistant" }),
+    );
+
+    expect(result.onDevice).toBe(true);
+    expect(result.contradictionsFound).toEqual([
+      {
+        rule: "secondary-barred",
+        sentence:
+          "Under current VA regulations, sleep apnea cannot be rated as secondary to PTSD.",
+      },
+    ]);
+    expect(result.text.indexOf("Vet-Rate check:")).toBe(0);
+    expect(result.text.endsWith(answer)).toBe(true);
+  });
+
   it("does not add it inside the Nexus Builder, where the text is a draft", async () => {
     modelSays(WRONG);
 
