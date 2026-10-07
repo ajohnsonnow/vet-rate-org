@@ -99,3 +99,27 @@ describe("default model list when a profile lists none", () => {
     expect(DESKTOP_HIGH_MODELS[0]).toBe("Qwen3.5-4B-q4f16_1-MLC");
   });
 });
+
+describe("when every model fails", () => {
+  it("returns false and tells onError which model failed with which reason", async () => {
+    engineApi.profile.mockResolvedValue({
+      ...TIER_PROFILE,
+      recommendedModels: ["model-a", "model-b"],
+    });
+    engineApi.create.mockRejectedValue(
+      new Error("UnknownError: Failed to execute 'open' on 'CacheStorage'"),
+    );
+    const onError = vi.fn();
+
+    await expect(
+      initializeSwarm({ modelId: "auditor", onError }),
+    ).resolves.toBe(false);
+
+    const error = onError.mock.calls[0][0];
+    expect(error.failures.map((f) => f.modelId)).toEqual([
+      "model-a",
+      "model-b",
+    ]);
+    expect(error.failures[0].reason).toMatch(/CacheStorage/);
+  });
+});
