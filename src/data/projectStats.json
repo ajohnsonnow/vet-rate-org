@@ -1,5 +1,5 @@
 {
-  "total_files": "2,510",
+  "total_files": "2,966",
   "loc_count": "428,891",
   "component_count": "273",
   "major_tools": "45",
@@ -31,7 +31,7 @@
   },
   "days_dev": "264",
   "productivity_multiplier": "344",
-  "total_commits": "1945",
+  "total_commits": "1934",
   "ai_tools": {
     "planning": "Gemini 3",
     "coding": ["Claude 4.5 Opus", "Claude 4.5 Sonnet", "Claude 4.5 Haiku"],
@@ -52,7 +52,7 @@
   "productivity_multiplier_numeric": 344,
   "component_hours_numeric": 11380,
   "live": {
-    "totalFiles": 2510,
+    "totalFiles": 2966,
     "linesOfCode": 428891,
     "componentCount": 273,
     "toolCount": 45,
@@ -64,7 +64,7 @@
     "secondaryCount": 410,
     "vaFormsCount": 94,
     "localAIModels": 6,
-    "appSizeMB": 209.25,
+    "appSizeMB": 483.7,
     "calculatedAt": "2026-10-07"
   }
 }
