@@ -1071,7 +1071,7 @@ function DockedHeaderIconButton({ onClick, label, d }) {
 function DockedHeader({ onOpenAISettings, onExpand, onMinimize, onClose, t }) {
   return (
     <div className="drag-handle bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 sm:p-4 gap-2 rounded-t-xl flex items-center justify-between cursor-move select-none">
-      <div className="flex min-w-0 items-center gap-3 pointer-events-none">
+      <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden pointer-events-none">
         <div className="hidden sm:flex w-10 h-10 shrink-0 bg-white/20 rounded-lg items-center justify-center">
           <span className="text-2xl">🧭</span>
         </div>
@@ -1079,11 +1079,15 @@ function DockedHeader({ onOpenAISettings, onExpand, onMinimize, onClose, t }) {
           <h3 className="font-bold text-lg truncate">
             {t("aiAssistant", "title")}
           </h3>
-          <p className="hidden text-xs text-blue-100 sm:flex items-center gap-1">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <p className="hidden min-w-0 truncate text-xs text-blue-100 sm:flex items-center gap-1">
+            <svg
+              className="h-3 w-3 shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
             </svg>
-            {t("aiAssistant", "dragToMove")}
+            <span className="truncate">{t("aiAssistant", "dragToMove")}</span>
           </p>
         </div>
       </div>

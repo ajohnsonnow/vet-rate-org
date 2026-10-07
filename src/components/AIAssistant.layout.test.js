@@ -29,3 +29,26 @@ describe("assistant layout at 390px (class and rule checks; not a render)", () =
     );
   });
 });
+
+describe("assistant header at 1280 (class checks; not a render)", () => {
+  const assistant = read("src", "components", "AIAssistant.jsx");
+  const header = assistant.slice(
+    assistant.indexOf("function DockedHeader("),
+    assistant.indexOf("function ExpandedFooter("),
+  );
+
+  it("the title block takes the space left and clips, so it cannot run under the status badge", () => {
+    expect(header).toMatch(
+      /flex min-w-0 flex-1 items-center gap-3 overflow-hidden/,
+    );
+  });
+
+  it("the drag hint truncates instead of overflowing", () => {
+    expect(header).toMatch(/min-w-0 truncate/);
+    expect(header).toMatch(/<span className="truncate">/);
+  });
+
+  it("the status badge and buttons keep their size", () => {
+    expect(header).toMatch(/flex shrink-0 items-center/);
+  });
+});
