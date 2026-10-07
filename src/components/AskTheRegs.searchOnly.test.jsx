@@ -49,6 +49,7 @@ vi.mock("../services/legalAnswerer", () => ({
 }));
 
 import AskTheRegs from "./AskTheRegs";
+import { MODEL_ANSWER_CAVEAT } from "../utils/modelAnswerCaveat";
 import {
   SEARCH_RESULTS_LABEL,
   REGULATION_SEARCH_DISCLOSURE,
@@ -90,6 +91,12 @@ describe("Ask the Regs on a small-class model: a search the veteran asked for", 
     ).toBeTruthy();
   });
 
+  it("shows no model-written line on search results: no model wrote them", async () => {
+    await ask();
+    await screen.findByText(/Chronic diseases/);
+    expect(document.body.textContent).not.toContain(MODEL_ANSWER_CAVEAT);
+  });
+
   it("never shows a [Reserved] section", async () => {
     await ask();
     await screen.findByText(/Chronic diseases/);
@@ -126,5 +133,12 @@ describe("Ask the Regs when a larger model answers", () => {
     await screen.findByText("A model answer.");
     expect(document.body.textContent).toContain("38 CFR § 4.25");
     expect(document.body.textContent).not.toContain(SEARCH_RESULTS_LABEL);
+  });
+
+  it("adds the fixed line that an on-device model wrote the answer", async () => {
+    ai.small = false;
+    await ask();
+    await screen.findByText("A model answer.");
+    expect(screen.getByText(MODEL_ANSWER_CAVEAT)).toBeTruthy();
   });
 });

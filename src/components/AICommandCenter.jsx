@@ -20,6 +20,7 @@ import {
 } from "../utils/useDeviceCapability";
 import DeviceCapabilityCard from "./DeviceCapabilityCard";
 import FallbackModelNotice from "./FallbackModelNotice";
+import { describeLoadFailure } from "../utils/localLoadFailure";
 import GeminiApiKeyForm from "./GeminiApiKeyForm";
 import TokenLimitConfig from "./TokenLimitConfig";
 import PresetSelector from "./PresetSelector";
@@ -182,10 +183,12 @@ async function initializeLocalEngine({
   setLoadedModelId,
   setInstalledModels,
   setAIStatus,
+  setLoadError,
 }) {
   if (!webGPUStatus.supported || isLoading) return;
 
   setIsLoading(true);
+  setLoadError(null);
   setLoadProgress({ progress: 0, text: "Starting..." });
 
   try {
@@ -193,9 +196,14 @@ async function initializeLocalEngine({
     const { initializeSwarm, generateWithSwarm, isSwarmReady, getSwarmStatus } =
       await import("../utils/diamondSwarm");
 
-    // Initialize with selected model
-    await initializeSwarm({
+    // Initialize with selected model. It returns false, and does not throw,
+    // when every candidate model failed to load.
+    let failure = null;
+    const loaded = await initializeSwarm({
       modelId: selectedModel.id,
+      onError: (error) => {
+        failure = error;
+      },
       onProgress: (report) => {
         // diamondSwarm passes { stage, message, progress } object
         const progressValue =
@@ -211,6 +219,13 @@ async function initializeLocalEngine({
       },
     });
 
+    if (!loaded) {
+      setLoadError(describeLoadFailure(failure?.failures));
+      setLoadProgress({ progress: 0, text: "Ready" });
+      setAIStatus(getAIStatus());
+      return;
+    }
+
     // Register with unified AI service
     registerLocalAIEngine({
       generate: async (prompt, options) => {
@@ -221,13 +236,16 @@ async function initializeLocalEngine({
       getStatus: getSwarmStatus,
     });
 
-    setIsReady(true);
-    setLoadedModelId(selectedModel.id);
+    // Loaded means a model is loaded and answering, as the header reads it.
+    const status = getAIStatus();
+    setIsReady(isLocalReady(status));
+    setLoadedModelId(status.swarmStatus?.model ?? null);
     setInstalledModels((prev) => new Set([...prev, selectedModel.id]));
-    setAIStatus(getAIStatus());
+    setAIStatus(status);
   } catch (err) {
     console.error("Failed to initialize AI:", err);
-    setLoadProgress({ progress: 0, text: `Error: ${err.message}` });
+    setLoadError(describeLoadFailure([{ reason: err?.message }]));
+    setLoadProgress({ progress: 0, text: "Ready" });
   } finally {
     setIsLoading(false);
   }
@@ -249,6 +267,7 @@ function useLocalAIEngine(webGPUStatus, selectedModel) {
   });
   const [, setLoadedModelId] = useState(null);
   const [, setInstalledModels] = useState(new Set());
+  const [loadError, setLoadError] = useState(null);
 
   // Check if AI is already ready
   useEffect(() => {
@@ -262,8 +281,8 @@ function useLocalAIEngine(webGPUStatus, selectedModel) {
     const interval = setInterval(() => {
       const status = getAIStatus();
       setAIStatus(status);
-      if (isLocalReady(status) && !isReady) {
-        setIsReady(true);
+      if (isLocalReady(status) !== isReady) {
+        setIsReady(isLocalReady(status));
       }
     }, 500);
     return () => clearInterval(interval);
@@ -295,16 +314,19 @@ function useLocalAIEngine(webGPUStatus, selectedModel) {
       setLoadedModelId,
       setInstalledModels,
       setAIStatus,
+      setLoadError,
     });
 
   return {
     aiStatus,
+    loadError,
     isReady,
     isUnloading,
     isLoading,
     loadProgress,
-    handleUnloadLocalAI,
-    initializeEngine,
+    loadError,
+    onUnload: handleUnloadLocalAI,
+    onInitialize: initializeEngine,
   };
 }
 
@@ -485,11 +507,32 @@ function ModelPickerButton({ model, isSelected, onSelect }) {
   );
 }
 
+function LoadFailureNotice({ error, onRetry }) {
+  return (
+    <div
+      role="alert"
+      className="space-y-2 rounded-lg border-2 border-red-700 bg-red-50 p-3 text-sm text-red-950 dark:border-red-400 dark:bg-red-950 dark:text-red-50"
+    >
+      <p className="font-bold">{error.title}</p>
+      <p>{error.reason}</p>
+      <p>{error.stillWorks}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="min-h-[44px] rounded-lg bg-red-700 px-4 py-2 font-semibold text-white hover:bg-red-800"
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
+
 function ModelSelectionPanel({
   selectedModel,
   setSelectedModel,
   isLoading,
   loadProgress,
+  loadError,
   onInitialize,
 }) {
   const deviceModel = useDeviceModel();
@@ -515,6 +558,10 @@ function ModelSelectionPanel({
           />
         ))}
       </div>
+
+      {loadError && !isLoading && (
+        <LoadFailureNotice error={loadError} onRetry={onInitialize} />
+      )}
 
       <button
         onClick={onInitialize}
@@ -704,6 +751,7 @@ function LocalAICard({
   isReady,
   isLoading,
   loadProgress,
+  loadError,
   isUnloading,
   onInitialize,
   onUnload,
@@ -755,6 +803,7 @@ function LocalAICard({
               setSelectedModel={setSelectedModel}
               isLoading={isLoading}
               loadProgress={loadProgress}
+              loadError={loadError}
               onInitialize={onInitialize}
             />
           )}
@@ -876,6 +925,7 @@ function SetupTab({
   isReady,
   isLoading,
   loadProgress,
+  loadError,
   isUnloading,
   onInitialize,
   onUnload,
@@ -909,6 +959,7 @@ function SetupTab({
           isReady={isReady}
           isLoading={isLoading}
           loadProgress={loadProgress}
+          loadError={loadError}
           isUnloading={isUnloading}
           onInitialize={onInitialize}
           onUnload={onUnload}
@@ -1025,15 +1076,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
   // Local AI state
   const webGPUStatus = useWebGPUStatus();
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
-  const {
-    aiStatus,
-    isReady,
-    isUnloading,
-    isLoading,
-    loadProgress,
-    handleUnloadLocalAI,
-    initializeEngine,
-  } = useLocalAIEngine(webGPUStatus, selectedModel);
+  const engine = useLocalAIEngine(webGPUStatus, selectedModel);
 
   // API Key
   const {
@@ -1057,7 +1100,7 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
 
   const header = (
     <AICommandCenterHeader
-      aiStatus={aiStatus}
+      aiStatus={engine.aiStatus}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       onClose={onClose}
@@ -1079,17 +1122,11 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
       <div className="space-y-6">
         {activeTab === "setup" && (
           <SetupTab
-            aiStatus={aiStatus}
+            {...engine}
             webGPUStatus={webGPUStatus}
             deviceCapability={deviceCapability}
             selectedModel={selectedModel}
             setSelectedModel={setSelectedModel}
-            isReady={isReady}
-            isLoading={isLoading}
-            loadProgress={loadProgress}
-            isUnloading={isUnloading}
-            onInitialize={initializeEngine}
-            onUnload={handleUnloadLocalAI}
             testBox={testBox}
             apiKey={apiKey}
             setApiKey={setApiKey}

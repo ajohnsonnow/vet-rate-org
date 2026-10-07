@@ -464,6 +464,7 @@ async function _loadModelFromList(
   contextWindowSize,
   tier,
   onProgress,
+  failures = [],
 ) {
   for (const modelId of modelList) {
     let worker = null;
@@ -518,6 +519,7 @@ async function _loadModelFromList(
       if (modelError instanceof EngineLoadStalledError) throw modelError;
       const reason = _describeThrown(modelError);
       console.warn(`💎 Failed to load ${modelId}:`, reason);
+      failures.push({ modelId, reason });
 
       // If cache error, try to clear and retry once
       if (reason.includes("Cache") && modelId === modelList[0]) {
@@ -593,12 +595,14 @@ export const initializeSwarm = async (
     }
 
     // Load real WebLLM model for inference - try models in device-optimal order
+    const failures = [];
     const loadResult = await _loadModelFromList(
       modelList,
       agentInfo,
       contextWindowSize,
       deviceProfile.tier,
       onProgress,
+      failures,
     );
 
     if (!loadResult) {
@@ -606,6 +610,7 @@ export const initializeSwarm = async (
       const loadErr = new Error(
         "All WebLLM models failed to load. Check the browser console for details (GPU limits, network, or cache errors).",
       );
+      loadErr.failures = failures;
       onError?.(loadErr);
       return false;
     }

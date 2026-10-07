@@ -14,9 +14,11 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { generateAI } from "../utils/unifiedAIService";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { mapAssistantErrorMessage } from "../utils/assistantErrorMessage";
 import AssistantMarkdown from "./AssistantMarkdown";
+import ModelAnswerCaveat from "./ModelAnswerCaveat";
+import { isModelWrittenOnDevice } from "../utils/modelAnswerCaveat";
 import SmallModelCaveat from "./SmallModelCaveat";
 import { OPEN_ADVICE_HELD_MESSAGE } from "../utils/openAdviceHold";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
@@ -179,6 +181,7 @@ async function sendMessage({
       }),
       timestamp: new Date(),
       mode: result.mode,
+      modelWritten: isModelWrittenOnDevice(result, getAIStatus()),
     };
 
     setMessages((prev) => [...prev, assistantMessage]);
@@ -717,6 +720,7 @@ function MessageBubble({
             spacingClass={v.textSpacing}
           />
         </div>
+        {msg.modelWritten && <ModelAnswerCaveat />}
 
         <div className={v.footerClass}>
           <span className="text-xs">
@@ -1067,37 +1071,44 @@ function DockedHeaderIconButton({ onClick, label, d }) {
 function DockedHeader({ onOpenAISettings, onExpand, onMinimize, onClose, t }) {
   return (
     <div className="drag-handle bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 sm:p-4 gap-2 rounded-t-xl flex items-center justify-between cursor-move select-none">
-      <div className="flex min-w-0 items-center gap-3 pointer-events-none">
-        <div className="hidden sm:flex w-10 h-10 shrink-0 bg-white/20 rounded-lg items-center justify-center">
+      <div className="flex shrink-0 items-center gap-2">
+        <div className="pointer-events-none flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
           <span className="text-2xl">🧭</span>
         </div>
-        <div className="min-w-0">
-          <h3 className="font-bold text-lg truncate">
+        <div>
+          <h3 className="pointer-events-none whitespace-nowrap text-lg font-bold">
             {t("aiAssistant", "title")}
           </h3>
-          <p className="hidden text-xs text-blue-100 sm:flex items-center gap-1">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-            {t("aiAssistant", "dragToMove")}
-          </p>
+          {onOpenAISettings ? (
+            // The status sits under the title as an icon, so it never takes
+            // the title's room; its accessible name is the full status. The
+            // drag hint is dropped when this is shown.
+            <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+              className="pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <AIStatusBadge
+                onClick={onOpenAISettings}
+                className="text-xs"
+                compact
+              />
+            </div>
+          ) : (
+            <p className="pointer-events-none flex items-center gap-1 text-xs text-blue-100">
+              <svg
+                className="h-3 w-3 shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+              </svg>
+              {t("aiAssistant", "dragToMove")}
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 sm:gap-2 pointer-events-auto">
-        {/* AI Status Button */}
-        {onOpenAISettings && (
-          <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-            className="pointer-events-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <AIStatusBadge
-              onClick={onOpenAISettings}
-              className="text-xs"
-              showLabel={false}
-            />
-          </div>
-        )}
+      <div className="flex shrink-0 items-center gap-1 pointer-events-auto">
         <DockedHeaderIconButton
           onClick={onExpand}
           label={t("aiAssistant", "expandTooltip")}

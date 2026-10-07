@@ -156,7 +156,7 @@ function AIStatusBadgeContent({ status }) {
 /**
  * Compact AI Mode Indicator (for headers/toolbars)
  */
-export const AIStatusBadge = ({ onClick, className = "" }) => {
+export const AIStatusBadge = ({ onClick, className = "", compact = false }) => {
   const [status] = useAIStatus(1000);
   const { badgeStyle, tooltip } = useAIStatusBadgeMeta(status);
 
@@ -164,7 +164,7 @@ export const AIStatusBadge = ({ onClick, className = "" }) => {
     <Tooltip content={tooltip} placement="bottom">
       <button
         onClick={onClick}
-        className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${badgeStyle} ${className}`}
+        className={`inline-flex items-center gap-2 ${compact ? "px-2 py-1 [&>span:nth-child(n+2)]:hidden" : "px-4 py-2"} text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${badgeStyle} ${className}`}
         aria-label={tooltip}
         data-testid="ai-status-badge"
       >
