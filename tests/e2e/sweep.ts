@@ -459,6 +459,30 @@ export const STATES: { name: string; reach: (page: Page) => Promise<void> }[] =
             : `the assistant title is covered by <${hit?.tagName.toLowerCase()} class="${String(hit?.className).slice(0, 80)}">`;
         });
         if (problem) throw new Error(problem);
+        const statusProblem = await page.evaluate(() => {
+          const win = document.querySelector("#tour-ai-navigator-expanded");
+          const button = win?.querySelector('[data-testid="ai-status-badge"]');
+          const label = button?.querySelector("span");
+          if (!button || !label)
+            return "the assistant status button is missing";
+          const text = (label.textContent ?? "").trim();
+          if (!text) return "the assistant status has no visible text";
+          const box = label.getBoundingClientRect();
+          const outer = win.getBoundingClientRect();
+          if (box.width < 20)
+            return `the status label is ${Math.round(box.width)}px wide`;
+          if (label.scrollWidth > label.clientWidth + 1) {
+            return `the status label "${text}" is clipped`;
+          }
+          if (box.right > Math.min(outer.right, window.innerWidth) + 1) {
+            return `the status label "${text}" runs past the window`;
+          }
+          if (button.getBoundingClientRect().height < 44) {
+            return "the status button is under 44px tall";
+          }
+          return null;
+        });
+        if (statusProblem) throw new Error(statusProblem);
       },
     },
   ];

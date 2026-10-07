@@ -28,6 +28,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { getTotalToolCount } from "../data/toolkitData";
 import { getConditionCount as getDisabilityCount } from "../services/knowledgeQuery";
 import { AIStatusBadge } from "./AIModeSelector";
+import AssistantStatusButton from "./AssistantStatusButton";
 import VoiceInputButton from "./VoiceInput";
 import IdentifierSourceNotice from "./IdentifierSourceNotice";
 import { useRedditClipboard } from "../hooks/useRedditClipboard";
@@ -1070,63 +1071,59 @@ function DockedHeaderIconButton({ onClick, label, d }) {
 
 function DockedHeader({ onOpenAISettings, onExpand, onMinimize, onClose, t }) {
   return (
-    <div className="drag-handle bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 sm:p-4 gap-2 rounded-t-xl flex items-center justify-between cursor-move select-none">
-      <div className="flex shrink-0 items-center gap-2">
-        <div className="pointer-events-none flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
-          <span className="text-2xl">🧭</span>
-        </div>
-        <div>
+    <div className="drag-handle flex cursor-move select-none flex-col gap-2 rounded-t-xl bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white sm:p-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="pointer-events-none flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
+            <span className="text-2xl">🧭</span>
+          </div>
           <h3 className="pointer-events-none whitespace-nowrap text-lg font-bold">
             {t("aiAssistant", "title")}
           </h3>
-          {onOpenAISettings ? (
-            // The status sits under the title as an icon, so it never takes
-            // the title's room; its accessible name is the full status. The
-            // drag hint is dropped when this is shown.
-            <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-              className="pointer-events-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <AIStatusBadge
-                onClick={onOpenAISettings}
-                className="text-xs"
-                compact
-              />
-            </div>
-          ) : (
-            <p className="pointer-events-none flex items-center gap-1 text-xs text-blue-100">
-              <svg
-                className="h-3 w-3 shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-              </svg>
-              {t("aiAssistant", "dragToMove")}
-            </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1 pointer-events-auto">
+          <DockedHeaderIconButton
+            onClick={onExpand}
+            label={t("aiAssistant", "expandTooltip")}
+            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+          />
+          <DockedHeaderIconButton
+            onClick={onMinimize}
+            label={t("aiAssistant", "minimizeTooltip")}
+            d="M19 9l-7 7-7-7"
+          />
+          {onClose && (
+            <DockedHeaderIconButton
+              onClick={onClose}
+              label={t("common", "close")}
+              d="M6 18L18 6M6 6l12 12"
+            />
           )}
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 pointer-events-auto">
-        <DockedHeaderIconButton
-          onClick={onExpand}
-          label={t("aiAssistant", "expandTooltip")}
-          d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-        />
-        <DockedHeaderIconButton
-          onClick={onMinimize}
-          label={t("aiAssistant", "minimizeTooltip")}
-          d="M19 9l-7 7-7-7"
-        />
-        {onClose && (
-          <DockedHeaderIconButton
-            onClick={onClose}
-            label={t("common", "close")}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        )}
-      </div>
+      {onOpenAISettings ? (
+        // The status is its own row, a visible label in one 44px button, so it
+        // never takes the title's room. The drag hint is dropped with it.
+        <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+          className="pointer-events-auto flex"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <AssistantStatusButton onClick={onOpenAISettings} />
+        </div>
+      ) : (
+        <p className="pointer-events-none flex items-center gap-1 text-xs text-blue-100">
+          <svg
+            className="h-3 w-3 shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+          </svg>
+          {t("aiAssistant", "dragToMove")}
+        </p>
+      )}
     </div>
   );
 }

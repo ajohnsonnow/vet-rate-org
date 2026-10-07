@@ -2072,6 +2072,78 @@ export const APP_TRANSLATIONS = {
   },
 
   // Neural Engine / AI
+  assistantStatus: {
+    labelNone: {
+      en: "No AI set up",
+      es: "Sin IA configurada",
+      tl: "Walang AI na naka-set up",
+      vi: "Chưa thiết lập AI",
+      ko: "AI 미설정",
+    },
+    labelOnDevice: {
+      en: "On-device AI",
+      es: "IA en el dispositivo",
+      tl: "AI sa device",
+      vi: "AI trên thiết bị",
+      ko: "기기 내 AI",
+    },
+    labelOnDeviceLimited: {
+      en: "On-device AI (limited)",
+      es: "IA en el dispositivo (limitada)",
+      tl: "AI sa device (limitado)",
+      vi: "AI trên thiết bị (hạn chế)",
+      ko: "기기 내 AI (제한)",
+    },
+    labelCloud: {
+      en: "Cloud AI",
+      es: "IA en la nube",
+      tl: "Cloud AI",
+      vi: "AI đám mây",
+      ko: "클라우드 AI",
+    },
+    labelStarting: {
+      en: "Starting AI",
+      es: "Iniciando IA",
+      tl: "Sinisimulan ang AI",
+      vi: "Đang khởi động AI",
+      ko: "AI 시작 중",
+    },
+    nameNone: {
+      en: "AI status: no AI set up. Open AI settings.",
+      es: "Estado de la IA: no hay IA configurada. Abrir configuración de IA.",
+      tl: "Katayuan ng AI: walang AI na naka-set up. Buksan ang mga setting ng AI.",
+      vi: "Trạng thái AI: chưa thiết lập AI. Mở cài đặt AI.",
+      ko: "AI 상태: AI가 설정되지 않았습니다. AI 설정 열기.",
+    },
+    nameOnDevice: {
+      en: "AI status: on-device model {model} loaded. Open AI settings.",
+      es: "Estado de la IA: modelo {model} cargado en el dispositivo. Abrir configuración de IA.",
+      tl: "Katayuan ng AI: naka-load ang model na {model} sa device. Buksan ang mga setting ng AI.",
+      vi: "Trạng thái AI: mô hình {model} đã được tải trên thiết bị. Mở cài đặt AI.",
+      ko: "AI 상태: 기기 내 모델 {model} 로드됨. AI 설정 열기.",
+    },
+    nameOnDeviceLimited: {
+      en: "AI status: on-device model {model} loaded, a smaller model with limits. Open AI settings.",
+      es: "Estado de la IA: modelo {model} cargado en el dispositivo, un modelo más pequeño con limitaciones. Abrir configuración de IA.",
+      tl: "Katayuan ng AI: naka-load ang model na {model} sa device, isang mas maliit na model na may mga limitasyon. Buksan ang mga setting ng AI.",
+      vi: "Trạng thái AI: mô hình {model} đã được tải trên thiết bị, là mô hình nhỏ hơn và có hạn chế. Mở cài đặt AI.",
+      ko: "AI 상태: 기기 내 모델 {model} 로드됨, 제한이 있는 더 작은 모델. AI 설정 열기.",
+    },
+    nameCloud: {
+      en: "AI status: cloud AI. Open AI settings.",
+      es: "Estado de la IA: IA en la nube. Abrir configuración de IA.",
+      tl: "Katayuan ng AI: cloud AI. Buksan ang mga setting ng AI.",
+      vi: "Trạng thái AI: AI đám mây. Mở cài đặt AI.",
+      ko: "AI 상태: 클라우드 AI. AI 설정 열기.",
+    },
+    nameStarting: {
+      en: "AI status: starting. Open AI settings.",
+      es: "Estado de la IA: iniciando. Abrir configuración de IA.",
+      tl: "Katayuan ng AI: sinisimulan. Buksan ang mga setting ng AI.",
+      vi: "Trạng thái AI: đang khởi động. Mở cài đặt AI.",
+      ko: "AI 상태: 시작 중. AI 설정 열기.",
+    },
+  },
   modelAnswerCaveat: {
     line: {
       en: "Written by an AI model on your device. It can be wrong about VA law and about your case. Check anything you will act on with an accredited Veterans Service Officer.",

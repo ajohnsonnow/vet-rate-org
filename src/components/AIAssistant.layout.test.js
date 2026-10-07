@@ -51,7 +51,7 @@ describe("assistant header keeps its title (class checks; not a render)", () => 
     );
   });
 
-  it("the status badge collapses to its icon so it never takes the title's room", () => {
-    expect(header.slice(header.indexOf("<AIStatusBadge"))).toContain("compact");
+  it("the status is a labelled button on its own row", () => {
+    expect(header).toContain("<AssistantStatusButton");
   });
 });
