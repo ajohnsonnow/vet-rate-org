@@ -4007,6 +4007,13 @@ export const APP_TRANSLATIONS = {
 
   // My Packet
   myPacketSection: {
+    ratingPercent: {
+      en: "Rating percent",
+      es: "Porcentaje de calificación",
+      tl: "Porsiyento ng rating",
+      vi: "Phần trăm xếp hạng",
+      ko: "등급 퍼센트",
+    },
     title: {
       en: "My Packet",
       es: "Mi Paquete",
