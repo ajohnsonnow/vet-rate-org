@@ -68,7 +68,7 @@ export default function AssistantStatusButton({ onClick, className = "" }) {
       onClick={onClick}
       aria-label={text(`name${kind}`, { model })}
       data-testid="ai-status-badge"
-      className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border-2 border-white/70 bg-white/15 px-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/25 ${className}`}
+      className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border-2 border-white/80 bg-black/30 px-2.5 text-sm font-semibold text-white transition-colors hover:bg-black/40 ${className}`}
     >
       <Icon
         aria-hidden="true"

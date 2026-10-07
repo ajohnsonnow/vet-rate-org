@@ -480,6 +480,45 @@ export const STATES: { name: string; reach: (page: Page) => Promise<void> }[] =
           if (button.getBoundingClientRect().height < 44) {
             return "the status button is under 44px tall";
           }
+          // axe cannot judge text over a gradient, so compute the contrast
+          // here: the label against the button's backing laid over each end
+          // of the header gradient.
+          const nums = (css: string) =>
+            (css.match(/[0-9.]+/g) ?? []).map(Number);
+          const lum = (rgb: number[]) => {
+            const [r, g, bl] = rgb.map((v) => {
+              const c = v / 255;
+              return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+          };
+          const ratio = (x: number[], y: number[]) => {
+            const [hi, lo] = [lum(x), lum(y)].sort((m, n) => n - m);
+            return (hi + 0.05) / (lo + 0.05);
+          };
+          const labelRgb = nums(getComputedStyle(label).color).slice(0, 3);
+          const backing = nums(getComputedStyle(button).backgroundColor);
+          const alpha = backing.length > 3 ? backing[3] : 1;
+          const header = button.closest(".drag-handle");
+          const ends = [
+            ...(header
+              ? getComputedStyle(header).backgroundImage.matchAll(
+                  /rgba?[(][^)]*[)]/g,
+                )
+              : []),
+          ].map((m) => nums(m[0]).slice(0, 3));
+          if (labelRgb.length < 3 || backing.length < 3 || ends.length < 2) {
+            return "could not read the status label's colours";
+          }
+          for (const end of ends) {
+            const behind = backing
+              .slice(0, 3)
+              .map((v, i) => v * alpha + end[i] * (1 - alpha));
+            const found = ratio(labelRgb, behind);
+            if (found < 4.5) {
+              return `the status label is ${found.toFixed(2)}:1 over the header gradient (needs 4.5:1)`;
+            }
+          }
           return null;
         });
         if (statusProblem) throw new Error(statusProblem);

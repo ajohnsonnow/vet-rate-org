@@ -149,3 +149,64 @@ describe("translations", () => {
     }
   });
 });
+
+describe("the label's contrast over the header gradient", () => {
+  // The header runs from-blue-600 to-purple-600 (Tailwind 3 palette).
+  const ENDS = { blue: [37, 99, 235], purple: [147, 51, 234] };
+  const WHITE = [255, 255, 255];
+  const lum = (rgb) => {
+    const [r, g, b] = rgb
+      .map((v) => v / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => {
+    const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  const over = (top, alpha, under) =>
+    top.map((v, i) => v * alpha + under[i] * (1 - alpha));
+  const layer = (className, prefix) => {
+    const match = new RegExp(String.raw`${prefix}-(black|white)/(\d+)`).exec(
+      className,
+    );
+    return match
+      ? {
+          rgb: match[1] === "black" ? [0, 0, 0] : WHITE,
+          alpha: Number(match[2]) / 100,
+        }
+      : null;
+  };
+
+  it.each([
+    ["no AI", NONE],
+    ["on-device", swarm("Qwen3.5-4B-q4f16_1-MLC")],
+    ["limited", swarm("Qwen3.5-2B-q4f16_1-MLC")],
+    ["cloud", CLOUD],
+  ])("%s: white text is at least 4.5:1 at both gradient ends", (_n, status) => {
+    ai.status = status;
+    render(<AssistantStatusButton onClick={() => {}} />);
+    const { className } = screen.getByRole("button");
+    expect(className).toMatch(/\btext-white\b/);
+    const backing = layer(className, "bg");
+    for (const [end, rgb] of Object.entries(ENDS)) {
+      const behind = backing ? over(backing.rgb, backing.alpha, rgb) : rgb;
+      expect(ratio(WHITE, behind), `${end} end`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("keeps a visible border: at least 3:1 against its own backing at both ends", () => {
+    ai.status = NONE;
+    render(<AssistantStatusButton onClick={() => {}} />);
+    const { className } = screen.getByRole("button");
+    const border = layer(className, "border");
+    const backing = layer(className, "bg");
+    expect(border).toBeTruthy();
+    for (const rgb of Object.values(ENDS)) {
+      const behind = backing ? over(backing.rgb, backing.alpha, rgb) : rgb;
+      expect(
+        ratio(over(border.rgb, border.alpha, behind), behind),
+      ).toBeGreaterThanOrEqual(3);
+    }
+  });
+});
