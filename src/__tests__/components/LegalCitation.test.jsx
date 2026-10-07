@@ -55,6 +55,18 @@ describe("LegalCitation", () => {
     expect(screen.getByText(/2026/)).toBeInTheDocument();
   });
 
+  it("labels the date as when the text was fetched", () => {
+    render(<LegalCitation {...FIXTURE} />);
+    expect(screen.getByText(/text fetched .*May .*2026/i)).toBeInTheDocument();
+  });
+
+  it("shows no relevance number, visible or in a title: a bare score means nothing and did not separate good hits from bad", () => {
+    const { container } = render(<LegalCitation {...FIXTURE} />);
+    expect(container.textContent).not.toContain("0.82");
+    expect(container.textContent).not.toMatch(/· 0[.]/);
+    expect(container.innerHTML).not.toMatch(/Cosine|similarity/);
+  });
+
   it("passes axe-core", async () => {
     const { container } = render(<LegalCitation {...FIXTURE} />);
     const violations = await checkA11y(container);

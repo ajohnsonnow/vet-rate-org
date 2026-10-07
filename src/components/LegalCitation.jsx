@@ -27,13 +27,7 @@ function formatDate(iso) {
   });
 }
 
-export function LegalCitation({
-  citation,
-  title,
-  source_url,
-  fetched_at,
-  score,
-}) {
+export function LegalCitation({ citation, title, source_url, fetched_at }) {
   const sanitized = sanitizeUrl(source_url, { requireGov: true });
   const safeUrl = sanitized && sanitized !== "#" ? sanitized : "";
   const dateLabel = formatDate(fetched_at);
@@ -63,15 +57,7 @@ export function LegalCitation({
           className="text-slate-600 dark:text-slate-300"
           title="Last fetched"
         >
-          · {dateLabel}
-        </span>
-      ) : null}
-      {typeof score === "number" ? (
-        <span
-          className="text-slate-600 dark:text-slate-300"
-          title="Cosine similarity to query"
-        >
-          · {score.toFixed(2)}
+          · text fetched {dateLabel}
         </span>
       ) : null}
     </span>

@@ -59,10 +59,7 @@ describe("the source chip is readable in both themes", () => {
       const bg = surface(box, prefix) ?? surface(box, "");
       const link = container.querySelector("a");
       const date = container.querySelector('[title="Last fetched"]');
-      const score = container.querySelector(
-        '[title="Cosine similarity to query"]',
-      );
-      for (const el of [box, link, date, score]) {
+      for (const el of [box, link, date]) {
         const fg = colour(el, prefix) ?? colour(el, "");
         expect(
           ratio(fg, bg),
