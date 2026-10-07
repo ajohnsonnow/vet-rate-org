@@ -110,6 +110,10 @@ async function analyse(failRead) {
     { name: /Import Selected Fields/ },
     { timeout: 5000 },
   );
+  // The dialog commits its buttons first and its rows in a later effect.
+  // Every test here reads the rows, and two of its checks are that a value
+  // is absent, which an empty dialog would satisfy.
+  await screen.findAllByRole("checkbox");
 }
 
 const FAILING_READS = [
@@ -161,7 +165,7 @@ describe("with every store readable", () => {
 describe.each(FAILING_READS)("when the %s read rejects", (_store, failRead) => {
   it("drops every model-written date and all model text and says so plainly", async () => {
     await analyse(failRead);
-    expect(screen.getByText(STORE_READ_FAILED_NOTICE)).toBeTruthy();
+    expect(await screen.findByText(STORE_READ_FAILED_NOTICE)).toBeTruthy();
     expect(STORE_READ_FAILED_NOTICE).toContain(
       "only the values the app read itself are shown",
     );

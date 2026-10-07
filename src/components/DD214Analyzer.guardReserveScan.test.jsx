@@ -106,11 +106,24 @@ async function readScan() {
   await waitFor(() => expect(analyzeDocument).toHaveBeenCalledTimes(1));
   await waitFor(() => expect(analyze.disabled).toBe(false));
   fireEvent.click(analyze);
-  return screen.findByRole(
+  const importButton = await screen.findByRole(
     "button",
     { name: /Import Selected Fields/ },
     { timeout: 5000 },
   );
+  // The dialog commits its buttons first and its rows, with their ticks, in
+  // a later effect. Every test here goes on to use the rows.
+  await screen.findAllByRole("checkbox");
+  return importButton;
+}
+
+// Import is disabled until a row is ticked, and a click on a disabled button
+// does nothing. Wait for the button the click needs, then for the alert,
+// which the component raises only after every store write has finished.
+async function clickImportAndWaitForSave(importButton) {
+  await waitFor(() => expect(importButton.disabled).toBe(false));
+  fireEvent.click(importButton);
+  await waitFor(() => expect(window.alert).toHaveBeenCalled());
 }
 
 const rowOf = (name) =>
@@ -155,8 +168,7 @@ describe("the import dialog for a Guard/Reserve-era scan", () => {
 
   it("saves no component when Import is clicked without touching anything", async () => {
     const importButton = await readScan();
-    fireEvent.click(importButton);
-    await waitFor(() => expect(window.alert).toHaveBeenCalled());
+    await clickImportAndWaitForSave(importButton);
     const profile = getVeteranProfile();
     expect(profile.component).toBeFalsy();
     expect(profile.componentFull).toBeFalsy();

@@ -115,9 +115,10 @@ describe("D21-4: dropping a scan writes nothing until the veteran confirms", () 
     );
 
     await waitFor(() => expect(analyzeDocument).toHaveBeenCalledTimes(1));
-    await waitFor(() =>
-      expect(screen.queryByRole("button", { name: /run ocr/i })).toBeNull(),
-    );
+    // The file row turns to a tick once the scan has been read. The Run OCR
+    // button is no signal: it is also absent while the read is under way,
+    // when "nothing written" would be true whatever the reader did next.
+    await screen.findByText("✅");
     expectNothingWritten();
 
     fireEvent.click(screen.getAllByRole("button", { name: /close/i })[0]);
