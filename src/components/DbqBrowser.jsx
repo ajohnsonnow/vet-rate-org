@@ -14,7 +14,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   isDbqCached,
@@ -106,7 +105,7 @@ function filterDbqForms(forms, selectedCategory, searchQuery) {
       (f) =>
         f.title.toLowerCase().includes(query) ||
         f.id.toLowerCase().includes(query) ||
-        (f.category && f.category.toLowerCase().includes(query)),
+        f.category?.toLowerCase().includes(query),
     );
   }
 
@@ -240,7 +239,7 @@ async function exportCacheZip(deps) {
     a.download = `vet-rate-dbq-backup-${new Date().toISOString().split("T")[0]}.zip`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
 
     setStatus({ type: "success", message: "✅ DBQ backup downloaded!" });
@@ -808,8 +807,6 @@ function DbqLibraryModal({
  * @param {function} props.onClose - Callback when browser is closed
  */
 export default function DbqBrowser({ onClose }) {
-  const { _t } = useLanguage();
-
   // BuyMeCoffee state
   const [showBuyMeCoffee, setShowBuyMeCoffee] = useState(false);
   const [coffeeContext, setCoffeeContext] = useState({});
@@ -879,7 +876,7 @@ function PreFillModal({ form, formData, onDataChange, onClose, onComplete }) {
     onDataChange((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const hasAnyData = Object.values(formData).some((v) => v && v.trim());
+  const hasAnyData = Object.values(formData).some((v) => v?.trim());
 
   return (
     <ResponsiveModal

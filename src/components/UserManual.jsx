@@ -6,6 +6,7 @@ import { triggerTourRestart } from "./BootCampTour";
 import { getTotalToolCount } from "../data/toolkitData";
 import { getDisabilityCount } from "../utils/disabilityCount";
 import { sanitizeUrl, escapeHtml } from "../utils/sanitize";
+import ScrollRegion from "./common/ScrollRegion";
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
@@ -1645,7 +1646,7 @@ VA Form 21-0781 - describes the traumatic event(s) that caused your PTSD.
 ## Types of Stressors
 
 - Combat-related
-- Personal assault (MST) - use 21-0781a
+- Personal assault (MST) - also on VA Form 21-0781, which has its own section for it
 - Non-combat trauma
 - Fear of hostile activity
 
@@ -3272,7 +3273,7 @@ Configure AI to power your claims analysis.
 
 ### 🔒 Local AI (100% Private)
 Runs entirely in your browser using WebGPU. Your data NEVER leaves your device.
-- 3 specialized fine-tuned models plus fallback options
+- 3 specialized roles (Auditor, Writer, Rater): stock open models guided by role prompts and our knowledge base, plus fallback options
 - Works offline after initial download
 - Zero internet required during analysis
 
@@ -3303,7 +3304,7 @@ Run AI 100% on your device - your data never leaves your computer.
 
 Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browser:
 
-1. **Download Once**: Model downloads to your browser cache (one-time)
+1. **Download Once**: The model is a one-time download kept on your device in browser storage (about 2.4 GB for the desktop model)
 2. **Run Locally**: All processing happens on YOUR GPU
 3. **Stay Private**: Zero data transmission - no internet needed
 
@@ -3313,13 +3314,15 @@ Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browse
 - **GPU with VRAM**: 2-8 GB depending on model size
 - **Storage**: 0.3 GB to 4.8 GB per model
 
+Your device picks the on-device model for you: Qwen 3.5 4B on desktops (about 2.4 GB download) and Qwen 3.5 2B on laptops (about 1.1 GB download), with Qwen 2.5 models used if the first choice cannot load. Tablets use Qwen 2.5 1.5B (about 0.9 GB download). Download sizes are the published file sizes read on 2026-10-05. These are general-purpose open models, not trained on VA data.
+
 ## First Time Setup
 
 1. Click the 🤖 AI Settings button in the header
 2. Select "Local AI" mode
 3. Choose a model (start with VetRate models)
-4. Click "Initialize" - model downloads (~2 min)
-5. You're ready! Model stays cached for instant loading
+4. Click "Initialize" - the model downloads once; how long depends on its size and your connection
+5. You're ready! The model stays on your device, so it is not downloaded again
 
 ## GPU Selection (Dual-GPU Laptops)
 
@@ -3460,10 +3463,12 @@ Choose a model that fits your GPU memory.
 
 ### 4 GB VRAM (Entry Gaming GPU)
 - VetRate models ✓ (1.8 GB) - RECOMMENDED
-- Qwen 2.5 3B (2.0 GB)
+- Qwen 3.5 2B (laptops): about 2.2 GB GPU memory, about 1.1 GB download
+- Qwen 2.5 3B (fallback): about 2.5 GB GPU memory, about 1.8 GB download
 - VetRate models (2.3 GB)
 
 ### 6 GB VRAM (GTX 1060, RTX 3060)
+- Qwen 3.5 4B (desktops): about 3.9 GB GPU memory, about 2.4 GB download
 - VetRate Auditor ⭐ (3.5 GB) - BEST VALUE
 - VetRate Vision Phi 👁️ (3.5 GB)
 
@@ -3683,7 +3688,6 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **VA Form 20-0995** - Decision Review Request: Supplemental Claim - Used to submit new evidence on a denied claim
 - **VA Form 20-0996** - Decision Review Request: Higher-Level Review - Used to request senior reviewer look at your claim
 - **VA Form 21-0781** - Statement in Support of Claim for PTSD - Specialized form for describing PTSD stressors
-- **VA Form 21-0781a** - Statement in Support of Claim for PTSD Secondary to Personal Assault - Specialized form for PTSD from MST or personal...
 - **VA Form 21-0966** - Intent to File - Locks in your effective date for up to 1 year while you gather evidence
 - **VA Form 21-10210** - Lay/Witness Statement - Form for buddy statements from people who observed your condition
 - **VA Form 21-22** - Appointment of Veterans Service Organization as Claimant Representative
@@ -3865,11 +3869,13 @@ function _renderInline(text) {
   // Handle links - sanitize the href so a future contributor cannot land a
   // javascript: URL in the static manual content. sanitizeUrl returns '#'
   // for any non-http(s)/mailto/tel protocol.
-  // eslint-disable-next-line sonarjs/slow-regex -- runs on static, developer-authored manual content, not user input
-  text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
-    const safeUrl = sanitizeUrl(url);
-    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
-  });
+  text = text.replace(
+    /\[(.{1,2000}?)\]\((.{1,2000}?)\)/g,
+    (_match, label, url) => {
+      const safeUrl = sanitizeUrl(url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
+    },
+  );
 
   // Safe-by-construction: input is escapeHtml()'d first (above), then only a
   // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-
@@ -3886,7 +3892,7 @@ function _flushList(state) {
         className="list-disc pl-6 mb-4 space-y-1"
       >
         {state.listItems.map((item, i) => (
-          <li key={i} className="text-gray-700 dark:text-gray-300">
+          <li key={i} className="text-gray-700 dark:text-gray-300 max-w-prose">
             {_renderInline(item)}
           </li>
         ))}
@@ -3920,9 +3926,10 @@ function _flushTable(state) {
     const headers = state.tableRows[0];
     const dataRows = state.tableRows.slice(2); // Skip header separator
     state.elements.push(
-      <div
+      <ScrollRegion
         key={`table-${state.elements.length}`}
-        className="overflow-x-auto mb-4"
+        label={`Table: ${headers.join(", ")}`}
+        className="mb-4"
       >
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
@@ -3952,7 +3959,7 @@ function _flushTable(state) {
             ))}
           </tbody>
         </table>
-      </div>,
+      </ScrollRegion>,
     );
     state.tableRows = [];
   }
@@ -4081,8 +4088,8 @@ const renderContent = (content, onClose) => {
 
   // Resolve template variables embedded in markdown content strings
   const resolved = content
-    .replace(/\{getTotalToolCount\(\)\}/g, String(getTotalToolCount()))
-    .replace(/\{getDisabilityCount\(\)\}/g, String(getDisabilityCount()));
+    .replaceAll("{getTotalToolCount()}", String(getTotalToolCount()))
+    .replaceAll("{getDisabilityCount()}", String(getDisabilityCount()));
 
   const lines = resolved.trim().split("\n");
   const state = _createManualParserState();
@@ -4284,32 +4291,55 @@ function UserManualMobileHeader({ t, sidebarOpen, setSidebarOpen, onClose }) {
   );
 }
 
-function UserManualSidebarHeader({ t, onClose, searchQuery, setSearchQuery }) {
+/**
+ * Close control for the >=md two-pane layout, pinned to the whole dialog
+ * panel's own top end corner (`end-3` - RTL-safe logical inset, matching
+ * the language-switch direction, not the sidebar-scrollbar `dir="rtl"`
+ * trick two levels down in UserManualSidebar) rather than living inside
+ * the sidebar it used to share a header with - the sidebar is the LEFT
+ * pane, not the header, in this layout. `hidden md:flex`: below `md` the
+ * mobile header (above) already renders its own close-X.
+ *
+ * `top-3` (flush with the panel's own top corner, decision (1)'s "top end
+ * corner" placement): the panel itself now reserves the Quick Exit gutter
+ * via `md:mt-16` on its own margin (see the dialog panel's className
+ * comment), the same 64px this button used to carry on its own `top`
+ * offset - which floated it 64px down *inside* the panel, past the content
+ * pane's own top padding and into the section title's row (measured
+ * overlap at 768px). Clearing Quick Exit on the panel instead means
+ * nothing else ever renders above this button to collide with.
+ */
+function UserManualDesktopCloseButton({ onClose }) {
+  return (
+    <button
+      onClick={onClose}
+      className="hidden md:flex absolute top-3 end-3 z-20 h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+      aria-label="Close Field Manual"
+    >
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
+  );
+}
+
+function UserManualSidebarHeader({ t, searchQuery, setSearchQuery }) {
   return (
     <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
       <div className="flex items-center justify-between mb-3">
         <h1 className="text-lg font-bold flex items-center gap-2">
           {t("userManual", "title")}
         </h1>
-        <button
-          onClick={onClose}
-          className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded"
-          aria-label="Close Field Manual"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
       </div>
 
       {/* Search */}
@@ -4620,7 +4650,6 @@ function UserManualSidebar({ s }) {
         {/* Desktop header */}
         <UserManualSidebarHeader
           t={t}
-          onClose={onClose}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
@@ -4725,7 +4754,11 @@ function UserManualContentArea({ s }) {
           setCurrentSection={setCurrentSection}
         />
 
-        {/* Title */}
+        {/* Title. No end-edge reserve needed for UserManualDesktopCloseButton
+            (unlike the old `top-16` placement, that used to float down to
+            this row's own height): the panel's `md:mt-16` margin now clears
+            the close-X well above where this title (and the breadcrumb
+            above it) ever renders, on every section - verified live. */}
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
           {getNavTitle(currentSection, currentContent.title)}
         </h1>
@@ -4789,7 +4822,30 @@ const UserManual = ({ onClose, onReportBug }) => {
         role="dialog"
         aria-modal="true"
         aria-label={t("userManual", "title")}
-        className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 rounded-none md:rounded-xl overflow-hidden"
+        // pt-20 below `md` reserves the same Quick Exit gutter as
+        // ResponsiveModal.jsx (D3, 52a1edd8): this two-pane dialog stays
+        // hand-built (see the note above), so the mobile header's hamburger
+        // button and title need their own reserved space instead of
+        // ResponsiveModal's built-in one. `md:` (not `sm:`): the mobile
+        // header (below) stays mounted through 767px and this panel is
+        // still full-bleed (`m-0`) there too, so dropping the gutter to 0 at
+        // `sm:` left the 640-767px band with no clearance at all from Quick
+        // Exit, which moves to top-right at that same `sm:` breakpoint
+        // (measured at 640x800).
+        //
+        // `md:mt-16` (not the plain `md:m-4` this used to share on every
+        // side): at >=md the panel has no shared header row (see
+        // UserManualDesktopCloseButton below), so the close-X used to clear
+        // Quick Exit's box the same way this comment used to justify -
+        // sitting at a fixed `top-16` *inside* the panel, floating 64px down
+        // into the content pane and overlapping the section title (decision
+        // (1) violation - measured at 768px). Reserving that same 64px as
+        // the panel's own top margin instead moves the clearance to where
+        // ResponsiveModal.jsx puts it for every other dialog - on the panel,
+        // not the button - so the close-X can sit flush at the panel's own
+        // top corner (see UserManualDesktopCloseButton) with nothing ever
+        // rendering above it to overlap.
+        className="relative flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:mx-4 md:mb-4 md:mt-16 pt-20 md:pt-0 rounded-none md:rounded-xl overflow-hidden"
       >
         {/* Mobile header */}
         <UserManualMobileHeader
@@ -4798,6 +4854,12 @@ const UserManual = ({ onClose, onReportBug }) => {
           setSidebarOpen={setSidebarOpen}
           onClose={onClose}
         />
+
+        {/* Desktop close - the two-pane layout (>=md) has no single unified
+            top bar (title/search live in the LEFT sidebar), so the close-X
+            is pinned directly to the panel's own top end corner instead,
+            per decision (1)/HeaderCloseSlot's "last control" convention. */}
+        <UserManualDesktopCloseButton onClose={onClose} />
 
         {/* Sidebar - scrollbar on left using RTL */}
         <UserManualSidebar

@@ -17,13 +17,14 @@
  * - Data from O*NET, DoD COOL, Naval History, DA PAM 611-21
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
   MOS_DATABASE,
   searchMOS as searchMOSFromDB,
 } from "../data/mosDatabase";
+import { getVeteranProfile, getServicePeriods } from "../utils/veteranProfile";
 
 /**
  * Legacy MOS Database (for backwards compatibility)
@@ -1200,6 +1201,103 @@ const getBranchColor = (branch) => {
   }
 };
 
+// MOS code + branch from the veteran's own service record: the profile's
+// top-level mos/branch fields (kept current by DD214 import) win, falling
+// back to the most recently-ended service period that actually has an MOS
+// on file. Read once at mount (localStorage, synchronous) - not re-read on
+// every render.
+function getVeteranMOSDefault() {
+  const profile = getVeteranProfile();
+  if (profile.mos) {
+    return { mos: profile.mos, branch: profile.branch || "" };
+  }
+  const withMos = getServicePeriods().filter((p) => p.mos);
+  if (withMos.length === 0) return { mos: "", branch: "" };
+  const latest = withMos.reduce((a, b) =>
+    (b.serviceEndDate || "") > (a.serviceEndDate || "") ? b : a,
+  );
+  return { mos: latest.mos, branch: latest.branch || "" };
+}
+
+// DD214 Box 11 stores the code plus 1-3 skill-level digits, sometimes with
+// the job title trailing it ("11B10 Infantryman"), and a real scan
+// occasionally misreads a skill-level digit as the letter O ("11B1O" for
+// "11B10"). normalizeOcrText (dd214VisionParser.js) already corrects the
+// opposite confusion (a 0 that should be a letter O) using the same kind of
+// position rule; this corrects an O sitting where a digit belongs - right
+// after another digit - the one position real MOS skill-level digits occupy.
+function normalizeMOSQuery(raw) {
+  return raw
+    .trim()
+    .toUpperCase()
+    .replace(/(?<=\d)O(?=\d|$)/g, "0");
+}
+
+// MOSHazardMatcher's database keys on the base code only ("11B"), never the
+// full code+skill-level+title string a real service record carries, so an
+// exact string match against the veteran's raw saved value almost never
+// fires. The base code is always a prefix of that raw value in real DD214
+// data (skill level and title both come after it, never before), so this
+// looks for the longest candidate code - among what searchMOS already
+// considers relevant - that prefixes the normalized query.
+function findExactMOSCode(results, rawMos) {
+  const query = normalizeMOSQuery(rawMos);
+  let best = null;
+  for (const r of results) {
+    const code = r.code.toUpperCase();
+    if (query === code) return r;
+    if (query.startsWith(code) && (!best || code.length > best.code.length)) {
+      best = r;
+    }
+  }
+  return best;
+}
+
+// Auto-selects the veteran's own MOS on first open, the same way clicking a
+// "Popular searches" code does - but only on an exact code match (base code
+// prefixing the saved value, OCR digit confusion normalized). A fuzzy
+// title-only match risks picking the wrong job code, so an unrecognized
+// saved MOS is treated as "nothing on file" (search stays blank) rather
+// than guessing.
+function useMOSRecordsPrefill(
+  searchQuery,
+  selectedMOS,
+  setSearchQuery,
+  setSelectedMOS,
+) {
+  const [seeded, setSeeded] = useState(null);
+  const ranRef = useRef(false);
+
+  useEffect(() => {
+    if (ranRef.current) return;
+    ranRef.current = true;
+    if (searchQuery || selectedMOS) return;
+    const { mos, branch } = getVeteranMOSDefault();
+    if (!mos) return;
+    const results = searchMOS(mos);
+    const exact = findExactMOSCode(results, mos);
+    if (!exact) return;
+    setSelectedMOS(exact);
+    setSearchQuery(exact.code);
+    setSeeded({ code: exact.code, title: exact.title, branch });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return seeded;
+}
+
+function MOSRecordsPrefillBanner({ seeded }) {
+  if (!seeded) return null;
+
+  return (
+    <div className="bg-blue-900/30 border border-blue-700/50 rounded-xl p-3 text-sm text-blue-200">
+      📋 We filled this in from your service record — {seeded.code}
+      {seeded.branch ? ` (${seeded.branch})` : ""} — search above for a
+      different code to change it.
+    </div>
+  );
+}
+
 /**
  * MOSHazardMatcherHeader - Modal header with title and close button
  */
@@ -1409,9 +1507,9 @@ function MOSHazardsCard({ hazards }) {
         ⚠️ Job Hazards
       </h4>
       <div className="flex flex-wrap gap-2">
-        {(hazards || []).map((hazard, i) => (
+        {(hazards || []).map((hazard) => (
           <span
-            key={i}
+            key={hazard}
             className="px-3 py-2 bg-red-900/30 border border-red-700/50 rounded-lg text-red-200 text-sm"
           >
             {hazard}
@@ -1438,9 +1536,9 @@ function MOSCommonInjuriesCard({
         </p>
       </div>
       <div className="divide-y divide-slate-700">
-        {injuries.map((injury, i) => (
+        {injuries.map((injury) => (
           <button
-            key={i}
+            key={injury.condition}
             onClick={() => toggleCondition(injury.condition)}
             className={`w-full p-4 text-left transition-colors ${
               selectedConditions.includes(injury.condition)
@@ -1678,6 +1776,7 @@ function MOSHazardMatcherBody({
   toggleCondition,
   onAddToPathfinder,
   onClose,
+  seeded,
 }) {
   return (
     <div className="space-y-6">
@@ -1689,6 +1788,8 @@ function MOSHazardMatcherBody({
           bodies. Here&apos;s the proof.
         </p>
       </div>
+
+      <MOSRecordsPrefillBanner seeded={seeded} />
 
       {/* Search Box */}
       <div className="relative">
@@ -1756,6 +1857,12 @@ export default function MOSHazardMatcher({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMOS, setSelectedMOS] = useState(null);
   const [selectedConditions, setSelectedConditions] = useState([]);
+  const seeded = useMOSRecordsPrefill(
+    searchQuery,
+    selectedMOS,
+    setSearchQuery,
+    setSelectedMOS,
+  );
 
   // Search results
   const searchResults = useMemo(() => searchMOS(searchQuery), [searchQuery]);
@@ -1789,6 +1896,7 @@ export default function MOSHazardMatcher({
           toggleCondition={toggleCondition}
           onAddToPathfinder={onAddToPathfinder}
           onClose={onClose}
+          seeded={seeded}
         />
       </ResponsiveModal>
 

@@ -7,7 +7,6 @@
  * Kills skepticism by showing the human behind the tool
  */
 
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
@@ -204,8 +203,6 @@ const MissionSupportNote = () => (
 );
 
 const MissionProtocol = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   // Permanently dark themed (gray-900 + va-gold); override the shell's white
   // panel so the light-mode body doesn't break the dark content.
   const header = <MissionProtocolHeader />;

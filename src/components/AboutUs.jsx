@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import ReportBugLink from "./ReportBugLink";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
 import {
@@ -111,8 +112,8 @@ function ChangelogPanel({ version, changelog }) {
 
       {/* Changelog Items */}
       <div className="p-3 space-y-3">
-        {changelog.map((item, index) => (
-          <ChangelogItem key={index} item={item} />
+        {changelog.map((item) => (
+          <ChangelogItem key={item.title} item={item} />
         ))}
       </div>
 
@@ -198,16 +199,36 @@ const VersionDropUp = () => {
 function AboutUsHeader({ getColorClass, colors, onReportBug, onClose }) {
   const { t } = useLanguage();
   return (
+    // The close × always stays pinned to the header's top-right corner; the
+    // title and report-bug link wrap onto their own line inside their own
+    // wrapping column when they don't fit alongside it (HeaderCloseSlot).
+    // `data-modal-header`: this dialog predates ResponsiveModal (it renders
+    // its own backdrop directly, role="dialog" and all) so it never gets
+    // the shared shell's `.modal-header` class - without an equivalent
+    // landmark, e2e's header-region probe (mobile.spec.ts's
+    // `findProbeBundle`) fell back to the whole backdrop, whose own
+    // centering `p-4` padding it mistook for a header's.
     <div
-      className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}
+      data-modal-header
+      className={`sticky top-0 border-b px-6 py-4 rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}
     >
-      <h2
-        id="about-us-title"
-        className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className={`h-11 w-11 flex items-center justify-center rounded text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
+            aria-label="Close About Us"
+          >
+            ×
+          </button>
+        }
       >
-        ℹ️ {t("about", "aboutVetRate")}
-      </h2>
-      <div className="flex items-center gap-3">
+        <h2
+          id="about-us-title"
+          className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}
+        >
+          ℹ️ {t("about", "aboutVetRate")}
+        </h2>
         {onReportBug && (
           <ReportBugLink
             onClick={onReportBug}
@@ -215,14 +236,7 @@ function AboutUsHeader({ getColorClass, colors, onReportBug, onClose }) {
             moduleName="About Us"
           />
         )}
-        <button
-          onClick={onClose}
-          className={`h-11 w-11 flex items-center justify-center rounded text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
-          aria-label="Close About Us"
-        >
-          ×
-        </button>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -328,8 +342,8 @@ function ClaimsArsenalSection() {
               {category.emoji} {category.title} ({category.tools.length} tools)
             </h4>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-              {category.tools.map((tool, index) => (
-                <li key={index}>
+              {category.tools.map((tool) => (
+                <li key={tool.name}>
                   <strong>{tool.name}:</strong> {tool.description}
                   {tool.isNew && (
                     <span className="ml-1 px-1.5 py-0.5 bg-green-500 text-white text-xs rounded">
@@ -689,7 +703,8 @@ function LocalAIArsenalBlock() {
         Council agents
       </p>
       <p>
-        <strong>Base Models:</strong> Qwen 2.5 (fine-tuned for VA claims)
+        <strong>Base Models:</strong> Stock open models such as Qwen 3.5, guided
+        by role prompts and our knowledge base
       </p>
       <p>
         <strong>Privacy:</strong> 100% in-browser, zero data leaves device
@@ -735,7 +750,8 @@ function WarrantCouncilBlock() {
         </div>
       </div>
       <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-        🎖️ Fine-tuned on official VA regulations for Diamond Standard accuracy
+        🎖️ Stock open models guided by role prompts and a knowledge base of
+        official VA regulations
       </p>
     </div>
   );
@@ -1048,7 +1064,7 @@ function HowThisWasBuiltSection() {
               >
                 eCFR
               </a>
-              )
+              {")"}
             </span>
           </li>
           <li className="flex items-start gap-2">
@@ -1229,7 +1245,17 @@ const AboutUs = ({ onClose, onReportBug }) => {
   return (
     <div
       ref={dialogRef}
-      className={modalClasses.backdrop}
+      // pt-20 below `md` reserves the same Quick Exit gutter as
+      // ResponsiveModal.jsx (D3, 52a1edd8), applied on the backdrop (not the
+      // `.modal-content` panel) to avoid the legacy `@media (width<=768px)
+      // { .modal-content { margin: 0 } }` rule in index.css that panel
+      // already carries. `md:` (not `sm:`): this dialog's own header stays
+      // in its mobile layout through 767px (only its horizontal gutter
+      // narrows at `sm:`, via modalClasses/max-w-4xl), so dropping to pt-4
+      // at `sm:` left the 640-767px band with just 16px of clearance -
+      // Quick Exit moves to top-right at `sm:` too, and its ~48px box
+      // reached the header's close-X there (measured at 640x800).
+      className={`${modalClasses.backdrop} pt-20 md:pt-4`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="about-us-title"

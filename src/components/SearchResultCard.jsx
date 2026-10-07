@@ -1,9 +1,7 @@
 import { PACTActBadge } from "./PACTActIndicator";
 import StaleDataIndicator from "./StaleDataIndicator";
-import { useLanguage } from "../contexts/LanguageContext";
 
 function SearchResultCard({ result, onSelect, isSelected }) {
-  const { _t } = useLanguage();
   return (
     <button
       onClick={onSelect}
@@ -40,9 +38,9 @@ function SearchResultCard({ result, onSelect, isSelected }) {
             Also known as:
           </p>
           <div className="flex flex-wrap gap-1">
-            {result.aliases.slice(0, 2).map((alias, idx) => (
+            {result.aliases.slice(0, 2).map((alias) => (
               <span
-                key={idx}
+                key={alias}
                 className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded"
               >
                 {alias}

@@ -12,6 +12,7 @@
 
 import { exportData } from "./dataBackup";
 import { triggerBlobDownload, safeOpenBlobUrl } from "./sanitize";
+import { getServiceEntry, getServicePeriods } from "./veteranProfile";
 
 // Storage keys for different data types
 const DATA_SOURCES = {
@@ -20,6 +21,10 @@ const DATA_SOURCES = {
   profile: "vet_rate_veteran_profile",
   forms: "vet_rate_saved_forms",
   ratings: "vet_rate_my_ratings",
+  // Deployments live here, not on the profile object - profile.deployments
+  // was never a real field (see VALID_PROFILE_FIELDS, veteranProfile.js),
+  // so generateProfileSection's old check of it always read undefined.
+  serviceHistory: "vet_rate_service_history",
 };
 
 /**
@@ -46,7 +51,7 @@ function formatDate(dateValue) {
   if (!dateValue) return "N/A";
   try {
     const date = new Date(dateValue);
-    if (isNaN(date.getTime())) return String(dateValue);
+    if (Number.isNaN(date.getTime())) return String(dateValue);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -72,11 +77,58 @@ function escapeHtml(text) {
 }
 
 /**
- * Generate HTML for the veteran profile section
- * @param {Object} profile - Profile data
+ * Generate the "Service Dates" value: the SAME canonical entry date every
+ * other consumer (AI system prompt, VKB LLM context, Service tab summary)
+ * reads, not profile.serviceStartDate directly - a correction made through
+ * the VKB viewer or Muster Call review never touched that copy, so the
+ * dossier could show a stale, silently-still-"calculated" date otherwise.
+ *
+ * The end date comes from that SAME period (entry.periodId), not
+ * profile.serviceEndDate directly - otherwise a multi-document veteran
+ * could see the canonical start paired with whichever unrelated document
+ * last happened to write the flat profile field, a range no single source
+ * actually states. Only falls back to the flat field for the legacy
+ * (periodId: null) case, where no period backs the entry at all.
  * @returns {string} HTML string
  */
-function generateProfileSection(profile) {
+function generateServiceDatesValue(profile) {
+  const entry = getServiceEntry();
+  const period = entry.periodId
+    ? getServicePeriods().find((p) => p.id === entry.periodId)
+    : null;
+  const start = entry.date || profile?.serviceStartDate;
+  const derived = entry.date ? entry.derived : profile?.serviceStartDateDerived;
+  const end = period?.serviceEndDate || profile?.serviceEndDate;
+  const note = derived ? " (calculated from net service)" : "";
+  return `${escapeHtml(start || "?")}${note} - ${escapeHtml(end || "?")}`;
+}
+
+/**
+ * Generate HTML for a single deployment entry.
+ * @param {Object} dep - Deployment data (see veteranProfile.js's
+ *   _sanitizeDeployments for the stored shape)
+ * @returns {string} HTML string
+ */
+function generateDeploymentItem(dep) {
+  const dates = [dep.startDate, dep.endDate].filter(Boolean).join(" - ");
+  return `
+    <div class="profile-item">
+      <span class="label">Deployment:</span>
+      <span class="value">${escapeHtml(dep.location || dep.theater || "Unknown")}${
+        dates ? ` (${escapeHtml(dates)})` : ""
+      }${dep.combat ? " [Combat]" : ""}</span>
+    </div>
+  `;
+}
+
+/**
+ * Generate HTML for the veteran profile section
+ * @param {Object} profile - Profile data
+ * @param {Object} [serviceHistory] - vet_rate_service_history data, for
+ *   deployments (never stored on the profile object itself)
+ * @returns {string} HTML string
+ */
+function generateProfileSection(profile, serviceHistory) {
   if (!profile) {
     return `
       <section class="section">
@@ -86,13 +138,17 @@ function generateProfileSection(profile) {
     `;
   }
 
+  const deployments = Array.isArray(serviceHistory?.deployments)
+    ? serviceHistory.deployments
+    : [];
+
   return `
     <section class="section">
       <h2>📋 Veteran Profile</h2>
       <div class="profile-grid">
         <div class="profile-item">
           <span class="label">Name:</span>
-          <span class="value">${escapeHtml(profile.name || "Not provided")}</span>
+          <span class="value">${escapeHtml(profile.fullName || "Not provided")}</span>
         </div>
         <div class="profile-item">
           <span class="label">Branch:</span>
@@ -100,11 +156,11 @@ function generateProfileSection(profile) {
         </div>
         <div class="profile-item">
           <span class="label">Service Dates:</span>
-          <span class="value">${escapeHtml(profile.startDate || "?")} - ${escapeHtml(profile.endDate || "?")}</span>
+          <span class="value">${generateServiceDatesValue(profile)}</span>
         </div>
         <div class="profile-item">
           <span class="label">Current Combined Rating:</span>
-          <span class="value">${profile.currentRating || 0}%</span>
+          <span class="value">${profile.currentCombinedRating || 0}%</span>
         </div>
         ${
           profile.mos
@@ -116,16 +172,7 @@ function generateProfileSection(profile) {
         `
             : ""
         }
-        ${
-          profile.deployments
-            ? `
-        <div class="profile-item">
-          <span class="label">Deployments:</span>
-          <span class="value">${escapeHtml(profile.deployments)}</span>
-        </div>
-        `
-            : ""
-        }
+        ${deployments.map(generateDeploymentItem).join("")}
       </div>
       <p class="timestamp">Last updated: ${formatDate(profile.lastUpdated)}</p>
     </section>
@@ -249,7 +296,7 @@ function generateStatementsSection(statements) {
       <div class="statement-content">
         <h4>Statement Text:</h4>
         <div class="statement-text">
-          ${escapeHtml(stmt.statement || stmt.content || "No content").replace(/\n/g, "<br>")}
+          ${escapeHtml(stmt.statement || stmt.content || "No content").replaceAll("\n", "<br>")}
         </div>
       </div>
       ${
@@ -856,6 +903,7 @@ export function generateDossierHTML() {
   const statements = safeGetData(DATA_SOURCES.statements);
   const ratings = safeGetData(DATA_SOURCES.ratings);
   const forms = safeGetData(DATA_SOURCES.forms);
+  const serviceHistory = safeGetData(DATA_SOURCES.serviceHistory);
 
   // Get the full backup for raw data reference
   const fullBackup = exportData();
@@ -887,7 +935,7 @@ export function generateDossierHTML() {
     official VA sources and consult with an accredited VSO or attorney for legal advice.</p>
   </div>
   
-  ${generateProfileSection(profile)}
+  ${generateProfileSection(profile, serviceHistory)}
   ${generateRatingsSection(ratings)}
   ${generateClaimsSection(claims)}
   ${generateStatementsSection(statements)}

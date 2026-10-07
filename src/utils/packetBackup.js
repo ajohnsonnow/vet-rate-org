@@ -36,7 +36,7 @@ const VALID_STATEMENT_FIELDS = [
 ];
 
 // Valid status values
-const VALID_STATUSES = ["Drafting", "Statement Generated", "Filed"];
+const VALID_STATUSES = new Set(["Drafting", "Statement Generated", "Filed"]);
 
 // Max string lengths for security
 const MAX_STRING_LENGTH = 50000;
@@ -71,6 +71,22 @@ const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
   return sanitized;
 };
 
+// Validate/normalize a date-shaped field, defaulting to "now" when the
+// input doesn't parse as a real date.
+function _sanitizeDateField(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? new Date().toISOString()
+    : date.toISOString();
+}
+
+// Validate/normalize an integer-shaped field (diagnostic code, rating).
+// Returns undefined (field dropped) when out of the valid 0-99999 range.
+function _sanitizeIntegerField(value) {
+  const num = Number.parseInt(value, 10);
+  return !Number.isNaN(num) && num >= 0 && num <= 99999 ? num : undefined;
+}
+
 /**
  * Sanitize a single claim field value based on its expected type/format.
  * @param {string} field - The claim field name
@@ -86,19 +102,13 @@ const sanitizeClaimField = (field, value) => {
   }
   if (field === "status") {
     // Validate status is a valid value
-    return VALID_STATUSES.includes(value) ? value : "Drafting";
+    return VALID_STATUSES.has(value) ? value : "Drafting";
   }
   if (field === "dateSaved" || field === "dateUpdated") {
-    // Validate date format
-    const date = new Date(value);
-    return isNaN(date.getTime())
-      ? new Date().toISOString()
-      : date.toISOString();
+    return _sanitizeDateField(value);
   }
   if (field === "diagnosticCode" || field === "selectedRating") {
-    // Numbers only
-    const num = parseInt(value, 10);
-    return !isNaN(num) && num >= 0 && num <= 99999 ? num : undefined;
+    return _sanitizeIntegerField(value);
   }
   if (field === "notes") {
     return sanitizeString(String(value || ""), MAX_STRING_LENGTH);
@@ -168,7 +178,7 @@ const validateStatement = (statement) => {
 
       if (field === "savedDate") {
         const date = new Date(value);
-        sanitizedStatement[field] = isNaN(date.getTime())
+        sanitizedStatement[field] = Number.isNaN(date.getTime())
           ? new Date().toISOString()
           : date.toISOString();
       } else if (typeof value === "string") {

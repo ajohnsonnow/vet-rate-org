@@ -9,8 +9,8 @@ import {
   CheckCircle,
   X,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import ScrollRegion from "./common/ScrollRegion";
 
 /**
  * SecurityBadge - Prominent, always-visible proof of client-side security
@@ -22,16 +22,19 @@ import ResponsiveModal from "./common/ResponsiveModal";
  * - What skeptics should check
  */
 const SecurityBadge = () => {
-  const { _t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
     <>
-      {/* Floating Badge */}
+      {/* Floating Badge. `above-mobile-nav` (index.css) lifts it clear of the
+          70px MobileBottomNav's rightmost "Missions" item on phones - the
+          same rule the AI bubble / bug button use - and hides it while a
+          dialog is open (it would already be obscured underneath the
+          full-screen modal on phones, same as those buttons). */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-4 right-4 z-50 bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 font-semibold"
+        className="above-mobile-nav fixed bottom-4 right-4 z-50 bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 font-semibold"
         aria-label="View Security Proof"
       >
         <Shield className="w-5 h-5" />
@@ -182,8 +185,8 @@ const OverviewTab = () => (
           "Your rating calculations",
           "Your saved packets",
           "Everything you type or create",
-        ].map((item, i) => (
-          <li key={i} className="flex items-start gap-2 dark:text-gray-200">
+        ].map((item) => (
+          <li key={item} className="flex items-start gap-2 dark:text-gray-200">
             <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
             <span>{item}</span>
           </li>
@@ -231,78 +234,80 @@ const TechStackDiagram = () => (
 
 // Table of network requests the app can make
 const NetworkActivityTable = () => (
-  <table className="w-full text-sm border-collapse border border-gray-300 dark:border-gray-600 mt-2">
-    <thead className="bg-gray-100 dark:bg-gray-700">
-      <tr>
-        <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">
-          Request
-        </th>
-        <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">
-          Purpose
-        </th>
-        <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">
-          Your Data?
-        </th>
-      </tr>
-    </thead>
-    <tbody className="dark:bg-gray-800 dark:text-gray-200">
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          vet-rate.org/assets/...
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          Loading app files (JS/CSS)
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">
-          ❌ No
-        </td>
-      </tr>
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ecfr.gov/...
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          External link to VA regulations
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">
-          ❌ No
-        </td>
-      </tr>
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          generativelanguage.googleapis.com
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          AI feature (when you click &quot;Enhance&quot;)
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2 text-yellow-700 dark:text-yellow-400">
-          ⚠️ Symptoms only
-        </td>
-      </tr>
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          gc.zgo.at (GoatCounter)
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          Privacy-first page view analytics
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">
-          ❌ No PII
-        </td>
-      </tr>
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          <em>Anything else</em>
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2 font-bold">
-          Should NOT exist
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2 text-red-700 dark:text-red-400 font-bold">
-          🚨 Report it!
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <ScrollRegion label="Network requests the app can make">
+    <table className="w-full text-sm border-collapse border border-gray-300 dark:border-gray-600 mt-2">
+      <thead className="bg-gray-100 dark:bg-gray-700">
+        <tr>
+          <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">
+            Request
+          </th>
+          <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">
+            Purpose
+          </th>
+          <th className="border border-gray-300 dark:border-gray-600 p-2 text-left dark:text-gray-100">
+            Your Data?
+          </th>
+        </tr>
+      </thead>
+      <tbody className="dark:bg-gray-800 dark:text-gray-200">
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            vet-rate.org/assets/...
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            Loading app files (JS/CSS)
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">
+            ❌ No
+          </td>
+        </tr>
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ecfr.gov/...
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            External link to VA regulations
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">
+            ❌ No
+          </td>
+        </tr>
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            generativelanguage.googleapis.com
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            AI feature (when you click &quot;Enhance&quot;)
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2 text-yellow-700 dark:text-yellow-400">
+            ⚠️ Symptoms only
+          </td>
+        </tr>
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            gc.zgo.at (GoatCounter)
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            Privacy-first page view analytics
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2 text-green-700 dark:text-green-400 font-bold">
+            ❌ No PII
+          </td>
+        </tr>
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            <em>Anything else</em>
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2 font-bold">
+            Should NOT exist
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2 text-red-700 dark:text-red-400 font-bold">
+            🚨 Report it!
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </ScrollRegion>
 );
 
 const GoatCounterNotice = () => (
@@ -632,78 +637,80 @@ const FAQBreachAnswer = () => (
 
 // Comparison table used inside FAQComparisonAnswer
 const VetRateComparisonTable = () => (
-  <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 mt-2 text-xs">
-    <thead className="bg-gray-100 dark:bg-gray-700">
-      <tr>
-        <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">
-          Feature
-        </th>
-        <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">
-          Typical VA Tools
-        </th>
-        <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">
-          Vet-Rate.org
-        </th>
-      </tr>
-    </thead>
-    <tbody className="dark:bg-gray-800">
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          Account Required
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ✅ Yes
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ❌ No
-        </td>
-      </tr>
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          Email Collection
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ✅ Yes
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ❌ No
-        </td>
-      </tr>
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          Data Stored on Servers
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ✅ Yes
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ❌ No
-        </td>
-      </tr>
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          Open Source
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ❌ No
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ✅ Yes
-        </td>
-      </tr>
-      <tr>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          Verifiable
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ❌ No
-        </td>
-        <td className="border border-gray-300 dark:border-gray-600 p-2">
-          ✅ Yes (DevTools)
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <ScrollRegion label="How Vet-Rate compares">
+    <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 mt-2 text-xs">
+      <thead className="bg-gray-100 dark:bg-gray-700">
+        <tr>
+          <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">
+            Feature
+          </th>
+          <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">
+            Typical VA Tools
+          </th>
+          <th className="border border-gray-300 dark:border-gray-600 p-2 dark:text-gray-100">
+            Vet-Rate.org
+          </th>
+        </tr>
+      </thead>
+      <tbody className="dark:bg-gray-800">
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            Account Required
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ✅ Yes
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ❌ No
+          </td>
+        </tr>
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            Email Collection
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ✅ Yes
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ❌ No
+          </td>
+        </tr>
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            Data Stored on Servers
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ✅ Yes
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ❌ No
+          </td>
+        </tr>
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            Open Source
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ❌ No
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ✅ Yes
+          </td>
+        </tr>
+        <tr>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            Verifiable
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ❌ No
+          </td>
+          <td className="border border-gray-300 dark:border-gray-600 p-2">
+            ✅ Yes (DevTools)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </ScrollRegion>
 );
 
 const FAQComparisonAnswer = () => (
@@ -790,7 +797,7 @@ const VerificationStep = ({ number, title, steps }) => (
     </h4>
     <ul className="space-y-1 text-sm dark:text-gray-300">
       {steps.map((step, i) => (
-        <li key={i} className="flex items-start gap-2">
+        <li key={step} className="flex items-start gap-2">
           <span className="text-blue-600 dark:text-blue-400 font-bold flex-shrink-0">
             {i + 1}.
           </span>

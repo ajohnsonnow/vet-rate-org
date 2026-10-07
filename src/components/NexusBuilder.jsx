@@ -1,14 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  AlignmentType,
-} from "docx";
-import jsPDF from "jspdf";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import AIConsentModal from "./AIConsentModal";
@@ -20,6 +11,19 @@ import NexusDisclaimerFooter from "./NexusDisclaimerFooter";
 import CertificationCheckbox from "./CertificationCheckbox";
 import StatementAnalyzer from "./StatementAnalyzer";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import {
+  AGGRAVATION_OPTIONS,
+  AI_NO_CHANGE_NOTE,
+  rewordingOffNote,
+  buildPersonalStatementTemplate,
+  standardDraftNote,
+} from "../utils/writerTemplates";
+import StandardDraftNotice from "./common/StandardDraftNotice";
+import ChoiceDialog, { EditedDraftDialog } from "./common/ChoiceDialog";
+import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
+import { downloadDraft } from "../utils/draftExport";
+import { plainAIError } from "../utils/writerErrorMessage";
 import {
   isAIAvailable,
   enhancePersonalStatement,
@@ -27,105 +31,17 @@ import {
 } from "../utils/aiStatementHelper";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
-import { isAnyAIAvailable } from "../utils/unifiedAIService";
+import { getAIStatus, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
+import RewordingOffNote from "./common/RewordingOffNote";
 import SmartAILoadButton from "./SmartAILoadButton";
-
-const AGGRAVATION_OPTIONS = [
-  {
-    value: "stress",
-    label: "Stress and anxiety from primary condition causes flare-ups",
-  },
-  {
-    value: "medication",
-    label: "Medication side effects from treating primary condition",
-  },
-  {
-    value: "physical",
-    label: "Physical limitations or compensatory behaviors",
-  },
-  { value: "sleep", label: "Sleep disruption from primary condition" },
-  { value: "weight", label: "Weight gain or metabolic changes" },
-  {
-    value: "inflammation",
-    label: "Chronic inflammation or immune dysfunction",
-  },
-  { value: "other", label: "Other (please explain below)" },
-];
-
-// Pure statement generator, split out of NexusBuilder purely to keep its
-// function body under the line-count/complexity limits. Same logic, same
-// order of operations, same text.
-function generateStatement({
-  answers,
-  condition,
-  primaryCondition,
-  isSecondary,
-}) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  let statement = `To the Department of Veterans Affairs:\n\n`;
-
-  if (isSecondary) {
-    statement += `I am submitting a claim for **${condition}** as secondary to my service-connected **${primaryCondition}**.\n\n`;
-  } else {
-    statement += `I am submitting a claim for service connection of **${condition}**.\n\n`;
-  }
-
-  statement += `**Onset and Progression:**\n`;
-  statement += `I first noted symptoms of ${condition} around ${answers.symptomOnsetDate || new Date().toLocaleDateString()}. These symptoms have persisted and worsened over time. `;
-
-  if (answers.hasTreatment === "yes-va") {
-    statement += `I have sought treatment through the VA medical system for this condition.\n\n`;
-  } else if (answers.hasTreatment === "yes-private") {
-    statement += `I have sought treatment through private medical care for this condition.\n\n`;
-  } else if (answers.hasTreatment === "no") {
-    statement += `Due to the nature of my service-connected disabilities, I have not yet been able to seek formal treatment for this condition.\n\n`;
-  }
-
-  if (isSecondary) {
-    statement += `**Nexus (Connection to Service):**\n`;
-    const mechanismText =
-      AGGRAVATION_OPTIONS.find(
-        (opt) => opt.value === answers.aggravationMechanism,
-      )?.label || answers.aggravationMechanism;
-    statement += `My service-connected ${primaryCondition} directly causes or aggravates this condition through the following mechanism: ${mechanismText}. `;
-
-    if (answers.aggravationExplanation) {
-      statement += `${answers.aggravationExplanation} `;
-    }
-
-    if (answers.specificIncident) {
-      statement += `\n\nSpecifically, ${answers.specificIncident}`;
-    }
-    statement += `\n\n`;
-  }
-
-  statement += `**Severity and Impact:**\n`;
-  statement += `This condition significantly affects my daily life. `;
-
-  if (answers.workImpact) {
-    statement += `In terms of employment, ${answers.workImpact} `;
-  }
-
-  if (answers.socialImpact) {
-    statement += `Regarding my social and family life, ${answers.socialImpact} `;
-  }
-
-  if (answers.specificExamples) {
-    statement += `\n\nSpecific examples include: ${answers.specificExamples}`;
-  }
-
-  statement += `\n\n**Request:**\n`;
-  statement += `I respectfully request a Compensation & Pension (C&P) examination to evaluate this condition and its connection to my service${isSecondary ? "-connected disability" : ""}.\n\n`;
-  statement += `Respectfully submitted,\n\n`;
-  statement += `Date: ${currentDate}`;
-
-  return statement;
-}
+import { getMyRatings } from "../utils/veteranProfile";
+import {
+  getSavedClaims,
+  getStatement,
+  getStatementForCondition,
+} from "../utils/claimsStorage";
+import { normalizeConditionName } from "../utils/conditionName";
 
 // Pure doctor-note generator, split out of NexusBuilder purely to keep its
 // function body under the line-count/complexity limits. Same logic, same
@@ -152,157 +68,29 @@ Sincerely,
 [Your Name]`;
 }
 
-// Pure txt-download helper, split out of NexusBuilder purely to keep its
-// function body under the line-count/complexity limits.
-function downloadAsTxt(statement, doctorNote, fileName) {
-  const content =
-    statement + "\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n" + doctorNote;
-  const blob = new Blob([content], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${fileName}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
+const DOWNLOAD_FAILED =
+  "The download did not work. Your statement is still here. Try another format, or copy the text.";
 
-// Pure docx-download helper, split out of NexusBuilder purely to keep its
-// function body under the line-count/complexity limits.
-async function downloadAsDocx(statement, doctorNote, fileName) {
-  try {
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: [
-            new Paragraph({
-              text: "STATEMENT IN SUPPORT OF CLAIM",
-              heading: HeadingLevel.HEADING_1,
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-            new Paragraph({
-              text: `Condition: ${condition}`,
-              spacing: { after: 200 },
-            }),
-            ...statement.split("\n").map(
-              (line) =>
-                new Paragraph({
-                  children: [new TextRun(line)],
-                  spacing: { after: 100 },
-                }),
-            ),
-            new Paragraph({
-              text: "",
-              spacing: { after: 400 },
-            }),
-            new Paragraph({
-              text: "DOCTOR'S CHEAT SHEET",
-              heading: HeadingLevel.HEADING_1,
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-            ...doctorNote.split("\n").map(
-              (line) =>
-                new Paragraph({
-                  children: [new TextRun(line)],
-                  spacing: { after: 100 },
-                }),
-            ),
-          ],
-        },
-      ],
-    });
+const SAVE_FAILED =
+  "Your statement could not be saved on this device. It is still here. Download it or copy the text so you do not lose it, then try saving again.";
 
-    const blob = await Packer.toBlob(doc);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}.docx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Error generating DOCX:", error);
-    alert("Error generating Word document. Please try another format.");
-  }
-}
-
-// Pure pdf-download helper, split out of NexusBuilder purely to keep its
-// function body under the line-count/complexity limits.
-function downloadAsPdf(statement, doctorNote, fileName) {
-  try {
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 15;
-    const maxWidth = pageWidth - margin * 2;
-    let yPosition = 20;
-
-    // Title
-    pdf.setFontSize(16);
-    pdf.setFont(undefined, "bold");
-    pdf.text("STATEMENT IN SUPPORT OF CLAIM", pageWidth / 2, yPosition, {
-      align: "center",
-    });
-    yPosition += 15;
-
-    // Condition
-    pdf.setFontSize(11);
-    pdf.text(`Condition: ${condition}`, margin, yPosition);
-    yPosition += 10;
-
-    // Statement content
-    pdf.setFont(undefined, "normal");
-    pdf.setFontSize(10);
-    const statementLines = pdf.splitTextToSize(statement, maxWidth);
-    statementLines.forEach((line) => {
-      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      pdf.text(line, margin, yPosition);
-      yPosition += 5;
-    });
-
-    // Doctor's note section
-    yPosition += 10;
-    if (yPosition > pdf.internal.pageSize.getHeight() - 40) {
-      pdf.addPage();
-      yPosition = 20;
-    }
-
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, "bold");
-    pdf.text("DOCTOR'S CHEAT SHEET", pageWidth / 2, yPosition, {
-      align: "center",
-    });
-    yPosition += 10;
-
-    pdf.setFont(undefined, "normal");
-    pdf.setFontSize(10);
-    const doctorLines = pdf.splitTextToSize(doctorNote, maxWidth);
-    doctorLines.forEach((line) => {
-      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      pdf.text(line, margin, yPosition);
-      yPosition += 5;
-    });
-
-    pdf.save(`${fileName}.pdf`);
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert("Error generating PDF. Please try another format.");
-  }
-}
+const downloadText = (statement, doctorNote) =>
+  `${statement}\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n${doctorNote}`;
 
 // Reusable "AI Help" trigger button (with loading spinner), split out of the
 // per-field JSX blocks purely to keep the enclosing function bodies under
 // the line-count/complexity limits. Same markup, same behavior.
+// AI help writes a model's words into the veteran's own field. A small
+// on-device model is not asked to do that, so while one would answer the
+// button is not offered and one line near the first field says why.
+const smallModelWouldAnswer = () =>
+  isAIAvailable() && smallModelAnswering(getAIStatus());
+
+const FieldHelpOffNote = ({ t }) =>
+  smallModelWouldAnswer() ? (
+    <RewordingOffNote text={t("smallModelCaveat.rewordingOff")} />
+  ) : null;
+
 const AIHelpButton = ({ fieldName, fieldHelping, onClick, t }) => (
   <button
     type="button"
@@ -357,7 +145,7 @@ const NexusTextareaField = ({
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
       </label>
-      {isAIAvailable() && (
+      {isAIAvailable() && !smallModelWouldAnswer() && (
         <AIHelpButton
           fieldName={fieldName}
           fieldHelping={fieldHelping}
@@ -520,6 +308,7 @@ const NexusStepBridge = ({
     <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
       {t("nexusBuilder.connectionTitle")}
     </h3>
+    <FieldHelpOffNote t={t} />
 
     <NexusMechanismList
       answers={answers}
@@ -589,6 +378,7 @@ const NexusStepSeverity = ({
     <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
       {t("nexusBuilder.severityTitle")}
     </h3>
+    <FieldHelpOffNote t={t} />
 
     <NexusTextareaField
       label={t("nexusBuilder.howAffectsWork", { condition })}
@@ -638,11 +428,33 @@ const NexusHeaderBar = ({
   t,
 }) => (
   <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div className="flex-1 min-w-0 pr-10 sm:pr-0">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/20 transition-colors"
+          aria-label={t("nexusBuilder.close")}
+        >
+          <svg
+            className="w-6 h-6 sm:w-8 sm:h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
+      <div className="min-w-0">
         <h2
           id="nexus-builder-title"
-          className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate"
+          className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2"
         >
           {existingStatement
             ? t("nexusBuilder.editStatement")
@@ -664,7 +476,7 @@ const NexusHeaderBar = ({
           )}
         </p>
       </div>
-      <div className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 sm:gap-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
         <LLMRecommendationBadge toolId="nexus-builder" />
         <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         {onReportBug && (
@@ -674,27 +486,8 @@ const NexusHeaderBar = ({
             moduleName="Nexus Builder"
           />
         )}
-        <button
-          onClick={onClose}
-          className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-          aria-label={t("nexusBuilder.close")}
-        >
-          <svg
-            className="w-6 h-6 sm:w-8 sm:h-8"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
       </div>
-    </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -737,7 +530,7 @@ const NexusHeaderProgress = ({ existingStatement, step, totalSteps, t }) => (
       </div>
     )}
 
-    {!existingStatement && isAnyAIAvailable() && (
+    {!existingStatement && isAnyAIAvailable() && !smallModelWouldAnswer() && (
       <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3">
         <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
           <span>💡</span>
@@ -808,33 +601,42 @@ const NexusReviewEnhanceButton = ({
   isEnhancing,
   handleRequestAIEnhance,
   t,
-}) => (
-  <div className="flex items-center gap-2 flex-wrap">
-    {isAIAvailable() && <AIStatusBadge showLabel={true} className="text-xs" />}
+}) =>
+  // A small on-device model is not asked to reword, so rewording is not
+  // offered: no button, and so no consent dialog.
+  isAIAvailable() &&
+  !aiEnhancedStatement &&
+  smallModelAnswering(getAIStatus()) ? (
+    <RewordingOffNote text={t("smallModelCaveat.rewordingOff")} />
+  ) : (
+    <div className="flex items-center gap-2 flex-wrap">
+      {isAIAvailable() && (
+        <AIStatusBadge showLabel={true} className="text-xs" />
+      )}
 
-    {isAIAvailable() && !aiEnhancedStatement && !isEnhancing && (
-      <button
-        onClick={handleRequestAIEnhance}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {isAIAvailable() && !aiEnhancedStatement && !isEnhancing && (
+        <button
+          onClick={handleRequestAIEnhance}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-          />
-        </svg>
-        ✨ {t("nexusBuilder.enhanceWithAI")}
-      </button>
-    )}
-  </div>
-);
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            />
+          </svg>
+          ✨ {t("nexusBuilder.enhanceWithAI")}
+        </button>
+      )}
+    </div>
+  );
 
 // Review-step "enhancing spinner + standard/AI-version toggle" cluster.
 // Split out of NexusReviewControls purely to keep its function body under
@@ -940,6 +742,8 @@ const NexusReviewControls = ({
 // markup, same behavior.
 const NexusReviewBanners = ({
   aiError,
+  draftNote,
+  standardNote,
   useAIVersion,
   aiEnhancedStatement,
   handleRequestAIEnhance,
@@ -972,6 +776,13 @@ const NexusReviewBanners = ({
           </button>
         </div>
       </div>
+    )}
+
+    {!(useAIVersion && aiEnhancedStatement) && (
+      <>
+        <StandardDraftNotice note={standardNote} />
+        <StandardDraftNotice note={draftNote} label="AI result" />
+      </>
     )}
 
     {/* AI Success indicator */}
@@ -1008,6 +819,8 @@ const NexusStatementPanels = ({
   useAIVersion,
   aiEnhancedStatement,
   currentStatement,
+  editStatement,
+  editIsOutOfStep,
   currentDoctorNote,
   t,
 }) => (
@@ -1016,20 +829,38 @@ const NexusStatementPanels = ({
     <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
       <DraftWatermark variant="banner" />
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+        <label
+          htmlFor="nexus-statement-text"
+          className="font-semibold text-gray-900 dark:text-gray-100"
+        >
           {t("nexusBuilder.statementFormTitle")}
-        </h4>
+        </label>
         {useAIVersion && aiEnhancedStatement && (
           <span className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">
             ✨ {t("nexusBuilder.aiEnhanced")}
           </span>
         )}
       </div>
-      <div className="prose prose-sm max-w-none">
-        <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
-          {currentStatement}
-        </pre>
-      </div>
+      {editIsOutOfStep && (
+        <p
+          id="nexus-statement-out-of-step"
+          role="note"
+          aria-label="Statement and answers differ"
+          className="mb-3 p-3 text-sm rounded-lg border-2 border-amber-700 bg-amber-50 dark:bg-amber-900/30 text-gray-900 dark:text-gray-100"
+        >
+          {t("nexusBuilder.statementOutOfStep")}
+        </p>
+      )}
+      <textarea
+        id="nexus-statement-text"
+        aria-describedby={
+          editIsOutOfStep ? "nexus-statement-out-of-step" : undefined
+        }
+        value={currentStatement}
+        onChange={(e) => editStatement(e.target.value)}
+        rows={18}
+        className="w-full min-h-[18rem] p-3 text-sm border-2 border-gray-400 dark:border-gray-500 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-sans focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+      />
     </div>
 
     {/* Doctor's Cheat Sheet with Medical Disclaimer */}
@@ -1047,7 +878,10 @@ const NexusStatementPanels = ({
       </div>
 
       {/* Medical Disclaimer Footer */}
-      <NexusDisclaimerFooter className="mt-4" />
+      <NexusDisclaimerFooter
+        className="mt-4"
+        showCitationWarning={Boolean(useAIVersion && aiEnhancedStatement)}
+      />
     </div>
   </>
 );
@@ -1122,7 +956,10 @@ const NexusStepReview = ({
   handleRequestAIEnhance,
   toggleStatementVersion,
   aiError,
+  draftNote,
   currentStatement,
+  editStatement,
+  editIsOutOfStep,
   currentDoctorNote,
   isSecondary,
   primaryCondition,
@@ -1142,6 +979,8 @@ const NexusStepReview = ({
 
     <NexusReviewBanners
       aiError={aiError}
+      draftNote={draftNote}
+      standardNote={standardDraftNote(currentStatement)}
       useAIVersion={useAIVersion}
       aiEnhancedStatement={aiEnhancedStatement}
       handleRequestAIEnhance={handleRequestAIEnhance}
@@ -1152,6 +991,8 @@ const NexusStepReview = ({
       useAIVersion={useAIVersion}
       aiEnhancedStatement={aiEnhancedStatement}
       currentStatement={currentStatement}
+      editStatement={editStatement}
+      editIsOutOfStep={editIsOutOfStep}
       currentDoctorNote={currentDoctorNote}
       t={t}
     />
@@ -1218,12 +1059,17 @@ function createAIConsentHandler({
   setIsEnhancing,
   setAiError,
   setAiEnhancedStatement,
+  setDraftNote,
   setUseAIVersion,
+  t,
 }) {
-  return async () => {
+  // `boxText` is the statement as it stands on screen. The AI's accepted
+  // rewordings go into that text; a failure leaves it as it is.
+  return async (boxText) => {
     setShowAIConsent(false);
     setIsEnhancing(true);
     setAiError(null);
+    setDraftNote(null);
 
     try {
       const result = await enhancePersonalStatement(
@@ -1232,13 +1078,29 @@ function createAIConsentHandler({
         primaryCondition,
       );
 
-      if (result.success) {
-        setAiEnhancedStatement(
-          result.content.replace(/\[Date\]/g, new Date().toLocaleDateString()),
-        );
+      const reworded =
+        result.success && result.draftPath === "model"
+          ? applyAcceptedRewordings(boxText, result.passageOutcomes)
+          : { applied: 0 };
+      if (reworded.applied > 0) {
+        setAiEnhancedStatement(reworded.text);
         setUseAIVersion(true);
+      } else if (result.success) {
+        // Nothing was reworded, so the standard draft stays on screen under
+        // its own label. Say why: the AI failed, or changed nothing usable.
+        setAiError(
+          result.draftErrorReason
+            ? plainAIError(result.draftErrorReason, t)
+            : null,
+        );
+        setDraftNote(
+          result.draftErrorReason
+            ? null
+            : (rewordingOffNote(result, t("smallModelCaveat.rewordingOff")) ??
+                AI_NO_CHANGE_NOTE),
+        );
       } else {
-        setAiError(result.error);
+        setAiError(plainAIError(result.error, t));
       }
     } catch (error) {
       console.error("AI enhancement error:", error);
@@ -1269,6 +1131,8 @@ function createFieldHelpHandler({
       );
       return;
     }
+
+    if (smallModelWouldAnswer()) return;
 
     setFieldHelping(fieldName);
     setAiError(null);
@@ -1303,11 +1167,13 @@ function useNexusAIEnhancement({
   condition,
   primaryCondition,
   updateAnswer,
+  t,
 }) {
   const [showAIConsent, setShowAIConsent] = useState(false);
   const [aiEnhancedStatement, setAiEnhancedStatement] = useState(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [draftNote, setDraftNote] = useState(null);
   const [useAIVersion, setUseAIVersion] = useState(false);
   const [fieldHelping, setFieldHelping] = useState(null);
 
@@ -1323,7 +1189,9 @@ function useNexusAIEnhancement({
     setIsEnhancing,
     setAiError,
     setAiEnhancedStatement,
+    setDraftNote,
     setUseAIVersion,
+    t,
   });
 
   const handleAICancel = () => {
@@ -1348,6 +1216,7 @@ function useNexusAIEnhancement({
     aiEnhancedStatement,
     isEnhancing,
     aiError,
+    draftNote,
     useAIVersion,
     fieldHelping,
     handleRequestAIEnhance,
@@ -1483,7 +1352,15 @@ const NexusFinishControls = ({
 // its function body under the line-count/complexity limits. Same markup,
 // same behavior.
 const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
-  <div className="flex justify-between mt-8 pt-6 border-t dark:border-gray-700">
+  <div className="flex flex-wrap justify-between gap-y-3 mt-8 pt-6 border-t dark:border-gray-700">
+    {output.outputError && (
+      <p
+        role="alert"
+        className="w-full p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm text-red-900 dark:text-red-100"
+      >
+        {output.outputError}
+      </p>
+    )}
     <button
       onClick={wizard.handleBack}
       disabled={wizard.step === 1}
@@ -1502,6 +1379,26 @@ const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
         </button>
       )}
 
+      {wizard.step === wizard.totalSteps && output.editIsStale && (
+        <EditedDraftDialog
+          onKeep={output.keepEditedStatement}
+          onRebuild={output.rebuildStatement}
+          returnFocusTo="nexus-statement-text"
+        />
+      )}
+      {output.askReplace && (
+        <ChoiceDialog
+          title="Replace your saved statement?"
+          keepLabel="Keep my saved statement"
+          onKeep={output.keepSavedStatement}
+          replaceLabel="Replace it with this statement"
+          onReplace={output.saveStatementNow}
+          returnFocusTo="nexus-statement-text"
+        >
+          You already have a saved statement for this condition. Saving this one
+          replaces it. To keep both, download the statement on screen first.
+        </ChoiceDialog>
+      )}
       {wizard.step === wizard.totalSteps && (
         <NexusFinishControls
           isCertified={modalState.isCertified}
@@ -1577,6 +1474,56 @@ function useNexusModalState() {
   };
 }
 
+// The statement in the box. An edit is kept per version. When an answer
+// changes after the standard statement was edited, the edited statement
+// stays in the box and the veteran is asked whether to keep it or rebuild
+// from the answers. A kept edit no longer matches the answers, and the
+// screen says so until the statement is rebuilt.
+function useStatementEdits(baseStatement, standardStatement, savedText) {
+  const version = baseStatement === standardStatement ? "standard" : "ai";
+  // A statement being continued starts as the veteran saved it.
+  const [edits, setEdits] = useState(() =>
+    savedText && savedText !== standardStatement
+      ? { standard: { base: standardStatement, text: savedText } }
+      : {},
+  );
+  const edit = edits[version];
+  const isEdited = Boolean(edit) && edit.text !== edit.base;
+  const setEdit = (next) => setEdits((all) => ({ ...all, [version]: next }));
+  const editIsStale =
+    isEdited && edit.base !== baseStatement && version === "standard";
+  const kept = isEdited && Boolean(edit.kept);
+  return {
+    currentStatement: isEdited ? edit.text : baseStatement,
+    editIsStale,
+    editIsOutOfStep: kept && !editIsStale,
+    editStatement: (text) =>
+      setEdit({
+        base: baseStatement,
+        text,
+        kept: Boolean(edit?.kept) && edit.base === baseStatement,
+      }),
+    keepEditedStatement: () =>
+      setEdit({ base: baseStatement, text: edit.text, kept: true }),
+    rebuildStatement: () => setEdit(null),
+  };
+}
+
+// Saving the statement. A new statement for a condition that already has a
+// saved one asks before it replaces it.
+function useSaveStatement({ replacesSaved, onSave, setOutputError, build }) {
+  const [askReplace, setAskReplace] = useState(false);
+  const saveStatementNow = () => {
+    setAskReplace(false);
+    setOutputError(onSave(build()) === false ? SAVE_FAILED : "");
+  };
+  const handleFinish = () => {
+    if (replacesSaved) setAskReplace(true);
+    else saveStatementNow();
+  };
+  return { askReplace, setAskReplace, handleFinish, saveStatementNow };
+}
+
 // Owns the statement/doctor-note derivation and the finish/download
 // handlers. Split out of NexusBuilder purely to keep its function body
 // under the line-count/complexity limits. Same logic, same order of
@@ -1588,78 +1535,76 @@ function useNexusDocumentOutput({
   isSecondary,
   useAIVersion,
   aiEnhancedStatement,
+  savedText,
+  replacesSaved,
   onSave,
   setShowDownloadMenu,
   setNexusDownloaded,
 }) {
-  const getCurrentStatement = () => {
-    if (useAIVersion && aiEnhancedStatement) {
-      return aiEnhancedStatement;
-    }
-    return generateStatement({
-      answers,
-      condition,
-      primaryCondition,
-      isSecondary,
-    });
-  };
+  // What is on screen before any edit: the model-reworded draft when there
+  // is one and it is chosen, otherwise the app-built draft, which is the
+  // same draft the AI path starts from. An edit belongs to the draft it was
+  // made on, so switching version or changing an answer starts clean.
+  const standardStatement = buildPersonalStatementTemplate(
+    answers,
+    condition,
+    isSecondary ? primaryCondition : null,
+  );
+  const baseStatement =
+    useAIVersion && aiEnhancedStatement
+      ? aiEnhancedStatement
+      : standardStatement;
+  const edits = useStatementEdits(baseStatement, standardStatement, savedText);
+  const { currentStatement } = edits;
+  const [outputError, setOutputError] = useState("");
 
-  const handleFinish = () => {
-    const statement = getCurrentStatement();
-    const doctorNote = generateDoctorNote({
-      answers,
-      condition,
-      primaryCondition,
-      isSecondary,
-    });
-
-    onSave({
-      condition,
-      primaryCondition,
-      answers,
-      statement,
-      doctorNote,
-      generatedDate: new Date().toISOString(),
-    });
-  };
-
-  const handleDownload = (format = "txt") => {
-    const statement = getCurrentStatement();
-    const doctorNote = generateDoctorNote({
-      answers,
-      condition,
-      primaryCondition,
-      isSecondary,
-    });
-    const fileName = `VA-Statement-${condition.replace(/\s+/g, "-")}`;
-
-    switch (format) {
-      case "txt":
-        downloadAsTxt(statement, doctorNote, fileName);
-        break;
-      case "docx":
-        downloadAsDocx(statement, doctorNote, fileName);
-        break;
-      case "pdf":
-        downloadAsPdf(statement, doctorNote, fileName);
-        break;
-      default:
-        downloadAsTxt(statement, doctorNote, fileName);
-    }
-
-    setShowDownloadMenu(false);
-    setNexusDownloaded(true);
-  };
-
-  const currentStatement = getCurrentStatement();
   const currentDoctorNote = generateDoctorNote({
     answers,
     condition,
     primaryCondition,
     isSecondary,
   });
+  const { askReplace, setAskReplace, handleFinish, saveStatementNow } =
+    useSaveStatement({
+      replacesSaved,
+      onSave,
+      setOutputError,
+      build: () => ({
+        condition,
+        primaryCondition,
+        answers,
+        statement: currentStatement,
+        doctorNote: currentDoctorNote,
+        generatedDate: new Date().toISOString(),
+      }),
+    });
 
-  return { handleFinish, handleDownload, currentStatement, currentDoctorNote };
+  const handleDownload = async (format = "txt") => {
+    setShowDownloadMenu(false);
+    setOutputError("");
+    try {
+      await downloadDraft(
+        downloadText(currentStatement, currentDoctorNote),
+        `VA-Statement-${condition.replace(/\s+/g, "-")}`,
+        format,
+      );
+      setNexusDownloaded(true);
+    } catch (error) {
+      console.error("Nexus Builder download failed:", error);
+      setOutputError(DOWNLOAD_FAILED);
+    }
+  };
+
+  return {
+    askReplace,
+    keepSavedStatement: () => setAskReplace(false),
+    saveStatementNow,
+    ...edits,
+    outputError,
+    handleFinish,
+    handleDownload,
+    currentDoctorNote,
+  };
 }
 
 // Renders the active wizard step. Split out of NexusBuilder purely to keep
@@ -1720,7 +1665,10 @@ const NexusStepContent = ({
         handleRequestAIEnhance={ai.handleRequestAIEnhance}
         toggleStatementVersion={ai.toggleStatementVersion}
         aiError={ai.aiError}
+        draftNote={ai.draftNote}
         currentStatement={output.currentStatement}
+        editStatement={output.editStatement}
+        editIsOutOfStep={output.editIsOutOfStep}
         currentDoctorNote={output.currentDoctorNote}
         isSecondary={wizard.isSecondary}
         primaryCondition={primaryCondition}
@@ -1801,6 +1749,273 @@ const NexusBuilderView = ({
   </>
 );
 
+// Merges the veteran's rated conditions (My Ratings) and saved claims into
+// one deduped list of one-click choices for the cold-open condition picker
+// below. Read once on mount (localStorage, synchronous) - not re-read on
+// every render. My Ratings choices are always a direct claim (no
+// primaryCondition/existingStatement - mirrors the old DiscoverCluster
+// fallback's `first ? {...} : {condition:"", primaryCondition:null,
+// existingStatement:null}` only ever applying to saved claims). Saved-claim
+// choices carry parentCondition + the previously-generated statement (if
+// any) the same way that removed fallback did, so picking one still opens
+// the correct secondary vs. primary wizard length and resumes any draft.
+function useNexusConditionChoices() {
+  const [choices] = useState(() => {
+    const seen = new Set();
+    const list = [];
+    getMyRatings().forEach((r) => {
+      const key = normalizeConditionName(r.name);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      list.push({
+        key,
+        name: r.name,
+        rating: r.rating,
+        source: "rating",
+        parentCondition: null,
+        existingStatement: null,
+      });
+    });
+    getSavedClaims().forEach((c) => {
+      const key = normalizeConditionName(c.conditionName);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      list.push({
+        key,
+        name: c.conditionName,
+        rating: c.selectedRating ?? c.ratingPercent ?? null,
+        source: "claim",
+        parentCondition: c.parentCondition ?? null,
+        existingStatement: getStatement(c.id),
+      });
+    });
+    return list;
+  });
+  return choices;
+}
+
+// Shown instead of the wizard when NexusBuilder is opened cold (no
+// `condition` prop supplied - e.g. from the header nav, not from a specific
+// condition's card). Offers the veteran's rated conditions + saved claims as
+// one-click choices, or a manual text entry, and reports the pick back via
+// onSelect so NexusBuilder can proceed with the wizard.
+const NexusConditionPickerHeader = ({ onClose, onReportBug, t }) => (
+  <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+          aria-label={t("nexusBuilder.close")}
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
+      <h2
+        id="nexus-builder-picker-title"
+        className="min-w-0 text-xl sm:text-2xl font-bold"
+      >
+        📝 {t("nexusBuilder.pickerTitle")}
+      </h2>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="Nexus Builder"
+        />
+      )}
+    </HeaderCloseSlot>
+  </div>
+);
+
+const NexusConditionChoiceList = ({ choices, onSelect, t }) =>
+  choices.length > 0 ? (
+    <>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        {t("nexusBuilder.pickerHintChoices")}
+      </p>
+      <div className="flex flex-col gap-2">
+        {choices.map((choice) => (
+          <button
+            key={choice.key}
+            type="button"
+            onClick={() => onSelect(choice)}
+            className="w-full min-h-[44px] text-left px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 flex items-center justify-between gap-3"
+          >
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {choice.name}
+            </span>
+            {choice.rating !== null && choice.rating !== undefined && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {choice.rating}%
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </>
+  ) : (
+    <p className="text-sm text-gray-600 dark:text-gray-400">
+      {t("nexusBuilder.pickerHintEmpty")}
+    </p>
+  );
+
+const NexusManualConditionForm = ({ onSelect, t }) => {
+  const [manualCondition, setManualCondition] = useState("");
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (manualCondition.trim()) onSelect(manualCondition.trim());
+      }}
+      className="flex flex-col gap-2 pt-2 border-t border-gray-200 dark:border-gray-700"
+    >
+      <label
+        htmlFor="nexus-manual-condition"
+        className="text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t("nexusBuilder.pickerManualLabel")}
+      </label>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input
+          id="nexus-manual-condition"
+          type="text"
+          value={manualCondition}
+          onChange={(e) => setManualCondition(e.target.value)}
+          placeholder={t("nexusBuilder.pickerManualPlaceholder")}
+          className="flex-1 min-h-[44px] px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+        />
+        <button
+          type="submit"
+          disabled={!manualCondition.trim()}
+          className="min-h-[44px] px-6 py-2 bg-violet-600 text-white rounded-lg font-semibold hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {t("nexusBuilder.pickerContinue")}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const NexusConditionPicker = ({ onClose, onReportBug, onSelect }) => {
+  const { t } = useLanguage();
+  const choices = useNexusConditionChoices();
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="md"
+      labelledBy="nexus-builder-picker-title"
+      header={
+        <NexusConditionPickerHeader
+          onClose={onClose}
+          onReportBug={onReportBug}
+          t={t}
+        />
+      }
+    >
+      <div className="space-y-4">
+        <NexusConditionChoiceList choices={choices} onSelect={onSelect} t={t} />
+        <NexusManualConditionForm onSelect={onSelect} t={t} />
+      </div>
+    </ResponsiveModal>
+  );
+};
+
+// Owns the wizard's derived hook state (answers, AI enhancement, document
+// output) for a fully-resolved condition/primaryCondition/existingStatement.
+// Split out of NexusBuilder purely so it only ever mounts (and seeds
+// useNexusAnswers's initial `answers` from existingStatement) once those
+// values are final - a cold-open pick updates NexusBuilder's own state
+// first, so this component's first render already has the right
+// primaryCondition/existingStatement instead of the empty ones NexusBuilder
+// itself was called with. Same logic, same order of operations as the
+// wizard body this replaces.
+const NexusBuilderWizard = ({
+  condition,
+  primaryCondition,
+  existingStatement,
+  replacesSaved,
+  onClose,
+  onSave,
+  onReportBug,
+  onOpenAISettings,
+}) => {
+  const { t } = useLanguage();
+  const isSecondary = Boolean(primaryCondition);
+  const totalSteps = isSecondary ? 4 : 3;
+
+  const wizardState = useNexusAnswers(existingStatement, totalSteps);
+  const modalState = useNexusModalState();
+  const ai = useNexusAIEnhancement({
+    answers: wizardState.answers,
+    condition,
+    primaryCondition,
+    updateAnswer: wizardState.updateAnswer,
+    t,
+  });
+  const output = useNexusDocumentOutput({
+    answers: wizardState.answers,
+    condition,
+    primaryCondition,
+    isSecondary,
+    useAIVersion: ai.useAIVersion,
+    aiEnhancedStatement: ai.aiEnhancedStatement,
+    savedText: existingStatement?.statement,
+    replacesSaved,
+    onSave,
+    setShowDownloadMenu: modalState.setShowDownloadMenu,
+    setNexusDownloaded: modalState.setNexusDownloaded,
+  });
+
+  const wizard = { ...wizardState, totalSteps, isSecondary };
+  const aiOnBox = {
+    ...ai,
+    handleAIConsent: () => ai.handleAIConsent(output.currentStatement),
+  };
+
+  return (
+    <NexusBuilderView
+      condition={condition}
+      primaryCondition={primaryCondition}
+      onClose={onClose}
+      existingStatement={existingStatement}
+      onReportBug={onReportBug}
+      onOpenAISettings={onOpenAISettings}
+      wizard={wizard}
+      modalState={modalState}
+      ai={aiOnBox}
+      output={output}
+      t={t}
+    />
+  );
+};
+
+// A picker choice (object, from getMyRatings()/getSavedClaims()) carries its
+// own parentCondition/existingStatement; a manually-typed condition (plain
+// string, from NexusManualConditionForm) is always a direct/primary claim.
+function resolvePickedCondition(selection) {
+  if (typeof selection === "string") {
+    return { name: selection, parentCondition: null, existingStatement: null };
+  }
+  return selection;
+}
+
 /**
  * NexusBuilder Component
  * Dynamic wizard that generates a Statement in Support of Claim (VA Form 21-4138)
@@ -1816,46 +2031,66 @@ const NexusBuilder = ({
   onReportBug,
   onOpenAISettings,
 }) => {
-  const { t } = useLanguage();
+  const [picked, setPicked] = useState(null);
 
-  const isSecondary = Boolean(primaryCondition);
-  const totalSteps = isSecondary ? 4 : 3;
+  const effectiveCondition = condition || picked?.name || "";
+  const effectivePrimaryCondition =
+    primaryCondition ?? picked?.parentCondition ?? null;
+  // A statement already saved for this condition. Resumed from My Packet,
+  // it is continued. Found on opening the builder some other way, it is
+  // offered: continue from it, or start a new one (which then asks before
+  // replacing it on save).
+  const savedStatement = useMemo(
+    () =>
+      existingStatement ??
+      (effectiveCondition
+        ? getStatementForCondition(
+            effectiveCondition,
+            effectivePrimaryCondition,
+          )
+        : null),
+    [existingStatement, effectiveCondition, effectivePrimaryCondition],
+  );
+  const [savedChoice, setSavedChoice] = useState(null);
+  const continuing = Boolean(existingStatement) || savedChoice === "continue";
+  const effectiveExistingStatement = continuing ? savedStatement : null;
 
-  const wizardState = useNexusAnswers(existingStatement, totalSteps);
-  const modalState = useNexusModalState();
-  const ai = useNexusAIEnhancement({
-    answers: wizardState.answers,
-    condition,
-    primaryCondition,
-    updateAnswer: wizardState.updateAnswer,
-  });
-  const output = useNexusDocumentOutput({
-    answers: wizardState.answers,
-    condition,
-    primaryCondition,
-    isSecondary,
-    useAIVersion: ai.useAIVersion,
-    aiEnhancedStatement: ai.aiEnhancedStatement,
-    onSave,
-    setShowDownloadMenu: modalState.setShowDownloadMenu,
-    setNexusDownloaded: modalState.setNexusDownloaded,
-  });
+  if (!effectiveCondition) {
+    return (
+      <NexusConditionPicker
+        onClose={onClose}
+        onReportBug={onReportBug}
+        onSelect={(selection) => setPicked(resolvePickedCondition(selection))}
+      />
+    );
+  }
 
-  const wizard = { ...wizardState, totalSteps, isSecondary };
+  if (savedStatement?.statement && !continuing && savedChoice !== "new") {
+    return (
+      <ChoiceDialog
+        title={`You have a saved statement for ${effectiveCondition}`}
+        keepLabel="Continue from my saved statement"
+        onKeep={() => setSavedChoice("continue")}
+        replaceLabel="Start a new statement"
+        onReplace={() => setSavedChoice("new")}
+      >
+        Continuing opens your saved statement and answers so you can carry on.
+        Starting a new one leaves the saved statement as it is unless you choose
+        to replace it when you save.
+      </ChoiceDialog>
+    );
+  }
 
   return (
-    <NexusBuilderView
-      condition={condition}
-      primaryCondition={primaryCondition}
+    <NexusBuilderWizard
+      condition={effectiveCondition}
+      primaryCondition={effectivePrimaryCondition}
+      existingStatement={effectiveExistingStatement}
+      replacesSaved={savedChoice === "new" && Boolean(savedStatement)}
       onClose={onClose}
-      existingStatement={existingStatement}
+      onSave={onSave}
       onReportBug={onReportBug}
       onOpenAISettings={onOpenAISettings}
-      wizard={wizard}
-      modalState={modalState}
-      ai={ai}
-      output={output}
-      t={t}
     />
   );
 };

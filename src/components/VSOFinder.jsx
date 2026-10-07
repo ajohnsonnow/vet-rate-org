@@ -3,8 +3,10 @@ import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { searchVSOs } from "../utils/aiStatementHelper";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 
@@ -125,35 +127,12 @@ const VSOFinderHeader = ({ t, onClose, onReportBug, onToggleAISettings }) => (
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-3xl">🤝</span>
-        </div>
-        <div>
-          <h2 id="vso-finder-title" className="text-2xl sm:text-3xl font-bold">
-            {t("vsoFinder", "title")}{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-              {t("common", "beta")}
-            </span>
-          </h2>
-          <p className="text-blue-100 text-sm sm:text-base mt-1">
-            {t("vsoFinder", "subtitle")}
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <AIStatusBadge onClick={onToggleAISettings} />
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName={t("vsoFinder", "title")}
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label={t("vsoFinder", "close")}
         >
           <svg
@@ -170,8 +149,35 @@ const VSOFinderHeader = ({ t, onClose, onReportBug, onToggleAISettings }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-3xl">🤝</span>
+        </div>
+        <div className="min-w-0">
+          <h2 id="vso-finder-title" className="text-2xl sm:text-3xl font-bold">
+            {t("vsoFinder", "title")}{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              {t("common", "beta")}
+            </span>
+          </h2>
+          <p className="text-blue-100 text-sm sm:text-base mt-1">
+            {t("vsoFinder", "subtitle")}
+          </p>
+        </div>
       </div>
-    </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <AIStatusBadge onClick={onToggleAISettings} />
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName={t("vsoFinder", "title")}
+          />
+        )}
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -407,8 +413,8 @@ const LocalOrganizationsSection = ({ t, results }) => (
     </h3>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {results.organizations.map((org, index) => (
-        <OrganizationCard key={index} org={org} t={t} />
+      {results.organizations.map((org) => (
+        <OrganizationCard key={org.name} org={org} t={t} />
       ))}
     </div>
   </div>
@@ -464,8 +470,8 @@ const NationalResourcesSection = ({ t, resources }) => (
     </h3>
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {resources.map((resource, index) => (
-        <NationalResourceCard key={index} resource={resource} t={t} />
+      {resources.map((resource) => (
+        <NationalResourceCard key={resource.name} resource={resource} t={t} />
       ))}
     </div>
   </div>
@@ -768,7 +774,10 @@ function useVSOAIConsultation(t, setError) {
     setAIResponse(null);
 
     try {
-      const response = await generateAI(buildVSOAdvisorPrompt(aiQuestion));
+      // ADR-009: "context" - the veteran's own typed question only.
+      const response = await generateAI(buildVSOAdvisorPrompt(aiQuestion), {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
 
       // generateAI returns { text, mode } object - extract the text content
       const aiText = response?.text || response;

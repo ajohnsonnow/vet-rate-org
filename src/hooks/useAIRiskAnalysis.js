@@ -15,6 +15,7 @@ import {
   isAnyAIAvailable,
   getAIStatus,
 } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
 
 function buildRiskAnalysisPrompt({
@@ -128,7 +129,10 @@ export function useAIRiskAnalysis({
     });
 
     try {
+      // ADR-009: "context" - structured rating/condition data + the
+      // allow-listed veteran context, never a document upload.
       const response = await generateAI(prompt, {
+        dataClass: AI_DATA_CLASS.CONTEXT,
         temperature: 0.4,
         maxTokens: 1024,
         expectJSON: true,

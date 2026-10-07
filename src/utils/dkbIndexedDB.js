@@ -1,23 +1,30 @@
 /**
  * 💎 Diamond Knowledge Base IndexedDB Manager
  *
- * Handles caching of the full DKB (130K entries) in IndexedDB for:
- * - Desktop: Auto-loads full database on first visit
+ * Handles caching of the web-optimized DKB (~8K entries) in IndexedDB for:
+ * - Desktop: Auto-loads on first visit
  * - Mobile: Manual download button, cached forever after
+ *
+ * The 130K-entry "full" database (diamond_knowledge_full.json) is a Git LFS
+ * pointer on Render — this module never fetches it. See
+ * docs/adr/ADR-003-dkb-web-file-only.md for why.
  *
  * @file dkbIndexedDB.js
  */
 
+import { logger } from "./logger";
 import { MOBILE_MAX } from "./breakpoints";
 
 const DB_NAME = "VetRate_DKB";
 const DB_VERSION = 1;
 const STORE_NAME = "knowledge_base";
 const METADATA_KEY = "dkb_metadata";
-const FULL_DKB_URL = "/data/diamond_knowledge_full.json";
 const WEB_DKB_URL = "/data/diamond_knowledge.json";
 
-// Full database entry count (from scraping)
+// Size of the full (unfetchable, see file header) external knowledge corpus.
+// Kept for UI display ("you have X of Y entries") and to recognize a
+// genuine full cache an earlier build may have left in a returning user's
+// IndexedDB - isFullDKBCached() below still honors that if it's there.
 export const FULL_DATABASE_COUNT = 130508;
 export const WEB_DATABASE_COUNT = 7988;
 
@@ -76,14 +83,15 @@ export const getDKBMetadata = async () => {
 };
 
 /**
- * Check if full DKB is cached in IndexedDB
+ * Check if the DKB is already cached in IndexedDB, so callers can skip a
+ * redundant re-download. Name predates the web-file-only fix (see file
+ * header) - "full" here means "the dataset this module ever downloads",
+ * not the 130K-entry corpus. A pre-existing genuine full cache from before
+ * that fix (entryCount >= FULL_DATABASE_COUNT) still satisfies this too.
  */
 export const isFullDKBCached = async () => {
   const metadata = await getDKBMetadata();
-  return (
-    metadata?.fullDatabaseLoaded === true &&
-    metadata?.entryCount >= FULL_DATABASE_COUNT * 0.9
-  );
+  return (metadata?.entryCount ?? 0) >= WEB_DATABASE_COUNT * 0.9;
 };
 
 /**
@@ -109,31 +117,13 @@ export const getCachedEntryCount = async () => {
 };
 
 /**
- * Download and cache the full DKB
+ * Download and cache the DKB
  *
  * @param {function} onProgress - Progress callback (0-100)
  * @returns {Promise<{success: boolean, entryCount: number}>}
  */
-async function _fetchDKBEntries(onProgress) {
-  // First try to fetch the full database
-  let response;
-  let isFullDB = true;
-
-  try {
-    response = await fetch(FULL_DKB_URL);
-    if (!response.ok) {
-      console.warn(
-        "[DKB] Full database not available, using web-optimized version",
-      );
-      response = await fetch(WEB_DKB_URL);
-      isFullDB = false;
-    }
-  } catch (fetchError) {
-    console.warn("[DKB] Fetch error, trying web-optimized:", fetchError);
-    response = await fetch(WEB_DKB_URL);
-    isFullDB = false;
-  }
-
+async function _downloadDKBEntries(url, onProgress) {
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch DKB: ${response.status}`);
   }
@@ -142,7 +132,7 @@ async function _fetchDKBEntries(onProgress) {
 
   // Get total size for progress tracking
   const contentLength = response.headers.get("content-length");
-  const totalSize = contentLength ? parseInt(contentLength, 10) : 0;
+  const totalSize = contentLength ? Number.parseInt(contentLength, 10) : 0;
 
   // Read response as stream for progress
   const reader = response.body.getReader();
@@ -173,19 +163,14 @@ async function _fetchDKBEntries(onProgress) {
   }
 
   onProgress(75);
-  const jsonString = new TextDecoder().decode(allChunks);
-  const data = JSON.parse(jsonString);
+  const data = JSON.parse(new TextDecoder().decode(allChunks));
 
   const entries = data.entries || data || [];
-  // eslint-disable-next-line no-console
-  console.log(
-    `[DKB] Parsed ${entries.length} entries (${isFullDB ? "FULL" : "web-optimized"})`,
-  );
-
-  return { entries, isFullDB };
+  logger.info(`[DKB] Parsed ${entries.length} entries from ${url}`);
+  return entries;
 }
 
-async function _storeDKBEntries(entries, isFullDB, onProgress) {
+async function _storeDKBEntries(entries, onProgress) {
   const db = await openDB();
   const tx = db.transaction(STORE_NAME, "readwrite");
   const store = tx.objectStore(STORE_NAME);
@@ -214,7 +199,6 @@ async function _storeDKBEntries(entries, isFullDB, onProgress) {
   // Store metadata
   store.put({
     id: METADATA_KEY,
-    fullDatabaseLoaded: isFullDB,
     entryCount: entries.length,
     downloadedAt: new Date().toISOString(),
     version: "1.0.0",
@@ -235,14 +219,13 @@ async function _storeDKBEntries(entries, isFullDB, onProgress) {
 async function _downloadFullDKBImpl(onProgress) {
   try {
     onProgress(5);
-    // eslint-disable-next-line no-console
-    console.log("[DKB] Starting full database download...");
+    logger.info("[DKB] Starting database download...");
 
-    const { entries, isFullDB } = await _fetchDKBEntries(onProgress);
+    const entries = await _downloadDKBEntries(WEB_DKB_URL, onProgress);
 
     onProgress(80);
 
-    await _storeDKBEntries(entries, isFullDB, onProgress);
+    await _storeDKBEntries(entries, onProgress);
 
     onProgress(100);
     // eslint-disable-next-line no-console
@@ -251,11 +234,11 @@ async function _downloadFullDKBImpl(onProgress) {
     // Dispatch event for UI updates
     window.dispatchEvent(
       new CustomEvent("dkb-cache-updated", {
-        detail: { entryCount: entries.length, fullDatabase: isFullDB },
+        detail: { entryCount: entries.length },
       }),
     );
 
-    return { success: true, entryCount: entries.length, isFullDB };
+    return { success: true, entryCount: entries.length };
   } catch (err) {
     console.error("[DKB IndexedDB] Download failed:", err);
     return { success: false, entryCount: 0, error: err.message };
@@ -263,11 +246,11 @@ async function _downloadFullDKBImpl(onProgress) {
 }
 
 // Several components (e.g. KnowledgeBaseStatus's desktop auto-download and
-// smartLoadDKB callers) can all decide to download the full DKB on the same
+// smartLoadDKB callers) can all decide to download the DKB on the same
 // page load before the first call's IndexedDB write lands - observed as 8
 // concurrent downloads+parses in one audit run. Single-flight: concurrent
 // callers await the same in-progress download instead of each re-fetching
-// and re-parsing the full database.
+// and re-parsing it.
 let inFlightDownload = null;
 
 export const downloadFullDKB = (onProgress = () => {}) => {
@@ -388,14 +371,14 @@ export const smartLoadDKB = async (onProgress = () => {}) => {
     return { entries, source: "indexeddb", count: entries.length };
   }
 
-  // Desktop: Auto-download full database
+  // Desktop: Auto-download and cache
   if (!isMobile) {
     // eslint-disable-next-line no-console
-    console.log("[DKB] Desktop detected - downloading full database...");
+    console.log("[DKB] Desktop detected - downloading database...");
     const result = await downloadFullDKB(onProgress);
     if (result.success) {
       const entries = await loadCachedDKB();
-      return { entries, source: "download-full", count: entries.length };
+      return { entries, source: "download-cached", count: entries.length };
     }
   }
 

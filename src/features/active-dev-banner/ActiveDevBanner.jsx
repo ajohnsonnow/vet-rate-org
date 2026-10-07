@@ -10,7 +10,12 @@
  */
 export default function ActiveDevBanner() {
   return (
-    <div className="bg-va-blue text-white py-1.5 px-4 text-center">
+    // pt-20 below `sm` reserves the same Quick Exit gutter as
+    // ResponsiveModal.jsx: this banner is the first element in the app tree
+    // (AppShellTop, above the header), so on phones it renders directly
+    // behind the fixed top-left Quick Exit button and its centered text
+    // wraps to a second line that sat under it.
+    <div className="bg-va-blue text-white pb-1.5 pt-20 px-4 text-center sm:pt-1.5">
       <p className="text-sm">
         Built by a veteran, for veterans - continuously improved.
       </p>

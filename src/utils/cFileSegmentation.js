@@ -26,6 +26,7 @@
  */
 
 import { parseVADocument, parseCodeSheet } from "./vaDocumentParser.js";
+import { createTimeSlicer } from "./mainThreadScheduler.js";
 
 /**
  * Document type signatures for segmentation
@@ -176,58 +177,142 @@ export const DOCUMENT_SIGNATURES = {
  * @param {Object} options - Segmentation options
  * @returns {Object} Segmented C-File with parsed documents
  */
+// The text is never trimmed at the match: a VBMS export is not ordered with the
+// code sheet last, and a stray "code sheet" mention early in a real 2,018-page
+// file used to discard everything after it (~90%) before segmentation.
 function _extractCodeSheet(text, result) {
   const codeSheetIndex = findLastOccurrence(
     text,
     DOCUMENT_SIGNATURES.CODE_SHEET.patterns,
   );
   if (codeSheetIndex !== -1) {
-    const codeSheetText = text.substring(codeSheetIndex);
-    result.codeSheet = parseCodeSheet(codeSheetText);
+    result.codeSheet = parseCodeSheet(text.substring(codeSheetIndex));
     result.notes.push(`Code Sheet found at position ${codeSheetIndex}`);
-
-    // Trim the text to exclude the code sheet from further processing
-    return text.substring(0, codeSheetIndex);
+    return;
   }
 
   result.notes.push("No Code Sheet found - this may be an incomplete C-File");
-  return text;
+}
+
+// D19-7: same work as _extractCodeSheet, via the chunked, yielding scan.
+async function _extractCodeSheetChunked(text, result, slicer) {
+  const codeSheetIndex = await findLastOccurrenceChunked(
+    text,
+    DOCUMENT_SIGNATURES.CODE_SHEET.patterns,
+    slicer,
+  );
+  if (codeSheetIndex !== -1) {
+    result.codeSheet = parseCodeSheet(text.substring(codeSheetIndex));
+    result.notes.push(`Code Sheet found at position ${codeSheetIndex}`);
+    return;
+  }
+
+  result.notes.push("No Code Sheet found - this may be an incomplete C-File");
+}
+
+// One boundary -> either a pushed segment or null (fragment too short to
+// keep). Shared by the sync and chunked burst loops below.
+function _buildSegmentAt(text, boundaries, i, options) {
+  const { minSegmentLength, parseDocuments } = options;
+  const boundary = boundaries[i];
+  const nextBoundary = boundaries[i + 1];
+  const endPosition = nextBoundary ? nextBoundary.position : text.length;
+  const segmentText = text.substring(boundary.position, endPosition).trim();
+  if (segmentText.length < minSegmentLength) return null;
+
+  const segment = {
+    id: `segment_${i + 1}`,
+    type: boundary.type,
+    category: DOCUMENT_SIGNATURES[boundary.type]?.category || "UNKNOWN",
+    position: boundary.position,
+    length: segmentText.length,
+    preview: segmentText.substring(0, 300),
+    confidence: boundary.confidence,
+    rawText: segmentText,
+    parsed: null,
+  };
+  if (parseDocuments) segment.parsed = parseVADocument(segmentText);
+  return segment;
+}
+
+function _recordSegment(segment, result) {
+  result.segments.push(segment);
+  result.byCategory[segment.category].push(segment.id);
+  result.segmentCount++;
+}
+
+function _noteTruncation(boundaries, maxSegments, result) {
+  if (boundaries.length > maxSegments) {
+    result.notes.push(
+      `Stopped at ${maxSegments} segments; ${boundaries.length - maxSegments} later documents were not segmented`,
+    );
+  }
 }
 
 function _burstIntoSegments(text, boundaries, options, result) {
-  const { maxSegments, minSegmentLength, parseDocuments } = options;
-
+  const { maxSegments } = options;
   for (let i = 0; i < boundaries.length && i < maxSegments; i++) {
-    const boundary = boundaries[i];
-    const nextBoundary = boundaries[i + 1];
-    const endPosition = nextBoundary ? nextBoundary.position : text.length;
-
-    const segmentText = text.substring(boundary.position, endPosition).trim();
-
-    if (segmentText.length < minSegmentLength) {
-      continue; // Skip tiny fragments
-    }
-
-    const segment = {
-      id: `segment_${i + 1}`,
-      type: boundary.type,
-      category: DOCUMENT_SIGNATURES[boundary.type]?.category || "UNKNOWN",
-      position: boundary.position,
-      length: segmentText.length,
-      preview: segmentText.substring(0, 300),
-      confidence: boundary.confidence,
-      rawText: segmentText,
-      parsed: null,
-    };
-
-    if (parseDocuments) {
-      segment.parsed = parseVADocument(segmentText);
-    }
-
-    result.segments.push(segment);
-    result.byCategory[segment.category].push(segment.id);
-    result.segmentCount++;
+    const segment = _buildSegmentAt(text, boundaries, i, options);
+    if (segment) _recordSegment(segment, result);
   }
+  _noteTruncation(boundaries, maxSegments, result);
+}
+
+// D19-7: same work as _burstIntoSegments, yielding between segments once the
+// slicer's time budget is spent. parseVADocument (when parseDocuments is
+// true) is the expensive part per segment; boundary count drives how many
+// yield points there are.
+async function _burstIntoSegmentsChunked(
+  text,
+  boundaries,
+  options,
+  result,
+  slicer,
+) {
+  const { maxSegments } = options;
+  for (let i = 0; i < boundaries.length && i < maxSegments; i++) {
+    const segment = _buildSegmentAt(text, boundaries, i, options);
+    if (segment) _recordSegment(segment, result);
+    await slicer.maybeYield();
+  }
+  _noteTruncation(boundaries, maxSegments, result);
+}
+
+// Shared by segmentCFile and segmentCFileChunked - identical starting shape,
+// see the `summary: null` field's own comment for why it must exist upfront.
+function _initSegmentResult(text) {
+  return {
+    success: true,
+    processedAt: new Date().toISOString(),
+    totalLength: text.length,
+    segmentCount: 0,
+    codeSheet: null,
+    summary: null,
+    segments: [],
+    byCategory: {
+      SERVICE_RECORD: [],
+      MEDICAL: [],
+      DECISION: [],
+      APPEAL: [],
+      CORRESPONDENCE: [],
+      EVIDENCE: [],
+      SUMMARY: [],
+      UNKNOWN: [],
+    },
+    notes: [],
+  };
+}
+
+function _buildSummary(result) {
+  return {
+    totalDocuments: result.segmentCount,
+    codeSheetFound: result.codeSheet !== null,
+    combinedRating: result.codeSheet?.combinedRating || null,
+    conditions: result.codeSheet?.conditions || [],
+    documentBreakdown: Object.fromEntries(
+      Object.entries(result.byCategory).map(([k, v]) => [k, v.length]),
+    ),
+  };
 }
 
 export function segmentCFile(text, options = {}) {
@@ -238,45 +323,12 @@ export function segmentCFile(text, options = {}) {
     prioritizeCodeSheet = true,
   } = options;
 
-  const result = {
-    success: true,
-    processedAt: new Date().toISOString(),
-
-    // Summary statistics
-    totalLength: text.length,
-    segmentCount: 0,
-
-    // The holy grail - Code Sheet data
-    codeSheet: null,
-
-    // Always present: STEP 5 below overwrites this, but it runs inside the try
-    // and a throw there used to leave `summary` undefined on an otherwise
-    // returned object, so callers reading `.summary.documentBreakdown` crashed
-    // on a failure they had no way to see (the error is only on `.error`).
-    summary: null,
-
-    // Categorized segments
-    segments: [],
-
-    // By category for quick access
-    byCategory: {
-      SERVICE_RECORD: [],
-      MEDICAL: [],
-      DECISION: [],
-      APPEAL: [],
-      CORRESPONDENCE: [],
-      EVIDENCE: [],
-      UNKNOWN: [],
-    },
-
-    // Processing notes
-    notes: [],
-  };
+  const result = _initSegmentResult(text);
 
   try {
     // === STEP 1: BACKWARDS SEARCH FOR CODE SHEET ===
     if (prioritizeCodeSheet) {
-      text = _extractCodeSheet(text, result);
+      _extractCodeSheet(text, result);
     }
 
     // === STEP 2: IDENTIFY DOCUMENT BOUNDARIES ===
@@ -291,15 +343,7 @@ export function segmentCFile(text, options = {}) {
     );
 
     // === STEP 5: BUILD SUMMARY ===
-    result.summary = {
-      totalDocuments: result.segmentCount,
-      codeSheetFound: result.codeSheet !== null,
-      combinedRating: result.codeSheet?.combinedRating || null,
-      conditions: result.codeSheet?.conditions || [],
-      documentBreakdown: Object.fromEntries(
-        Object.entries(result.byCategory).map(([k, v]) => [k, v.length]),
-      ),
-    };
+    result.summary = _buildSummary(result);
   } catch (err) {
     result.success = false;
     result.error = err.message;
@@ -309,50 +353,206 @@ export function segmentCFile(text, options = {}) {
 }
 
 /**
- * Find document boundaries using signature patterns
+ * D19-7: chunked twin of segmentCFile - same steps, same result shape, but
+ * each CPU-bound pass (code-sheet scan, boundary detection, bursting) yields
+ * to the main thread on a time budget instead of running as one long task.
+ * Byte-identical output to segmentCFile for the same input - see
+ * cFileSegmentation.chunked.equivalence.test.js.
+ *
+ * @param {string} text - Full C-File text
+ * @param {Object} options - Same options as segmentCFile, plus budgetMs and
+ *   slicer (share one slicer with another chunked call in the same pipeline
+ *   so the time budget carries over instead of resetting per call)
+ * @returns {Promise<Object>} Same shape segmentCFile returns
  */
-function findDocumentBoundaries(text) {
-  const boundaries = [];
+export async function segmentCFileChunked(text, options = {}) {
+  const {
+    maxSegments = 1000,
+    minSegmentLength = 200,
+    parseDocuments = true,
+    prioritizeCodeSheet = true,
+    budgetMs,
+    slicer = createTimeSlicer(budgetMs),
+  } = options;
 
-  for (const [typeName, signature] of Object.entries(DOCUMENT_SIGNATURES)) {
-    for (const pattern of signature.patterns) {
-      let match;
-      const globalPattern = new RegExp(
-        pattern.source,
-        pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g",
-      );
+  const result = _initSegmentResult(text);
 
-      while ((match = globalPattern.exec(text)) !== null) {
-        // Check for duplicates within 500 chars
-        const isDuplicate = boundaries.some(
-          (b) =>
-            Math.abs(b.position - match.index) < 500 && b.type === typeName,
-        );
-
-        if (!isDuplicate) {
-          boundaries.push({
-            type: typeName,
-            position: match.index,
-            matchedText: match[0],
-            priority: signature.priority,
-            confidence: calculateMatchConfidence(
-              text,
-              match.index,
-              signature.patterns,
-            ),
-          });
-        }
-      }
+  try {
+    if (prioritizeCodeSheet) {
+      await _extractCodeSheetChunked(text, result, slicer);
     }
+
+    const boundaries = await findDocumentBoundariesChunked(text, slicer);
+
+    await _burstIntoSegmentsChunked(
+      text,
+      boundaries,
+      { maxSegments, minSegmentLength, parseDocuments },
+      result,
+      slicer,
+    );
+
+    result.summary = _buildSummary(result);
+  } catch (err) {
+    result.success = false;
+    result.error = err.message;
   }
 
-  // Sort by position
-  boundaries.sort((a, b) => a.position - b.position);
+  return result;
+}
 
-  // Remove boundaries that are too close together
+// D19-7 follow-up: a linear scan of every already-accepted match (even
+// newest-first, as this used to be) only amortizes well while a signature's
+// FIRST pattern is running. For a later pattern, the newest entries in
+// `found` are the *earlier* pattern's matches - clustered whenever that
+// pattern hit a few common words, and almost always nowhere near this
+// pattern's own candidate positions, so the scan still walks back through
+// roughly all of them. That keeps total CPU quadratic in match count for a
+// signature with more than one pattern (see
+// cFileSegmentation.dedupePerf.test.js).
+//
+// This dedupe's own rule - "reject a candidate within NEARBY_WINDOW_CHARS of
+// an already-accepted match" - guarantees every pair of accepted positions
+// for a signature ends up >= NEARBY_WINDOW_CHARS apart (a rejected candidate
+// never gets recorded, so nothing closer than that ever survives). Bucketing
+// position by NEARBY_WINDOW_CHARS therefore holds at most one accepted
+// position per bucket, and any position within NEARBY_WINDOW_CHARS of a
+// given point can only fall in that point's own bucket or an immediate
+// neighbor - so checking those 3 buckets is an exact, O(1)-per-match
+// replacement for the full scan, independent of pattern order.
+const NEARBY_WINDOW_CHARS = 500;
+
+function _hasNearbyMatch(nearbyIndex, position) {
+  const bucket = Math.floor(position / NEARBY_WINDOW_CHARS);
+  for (let b = bucket - 1; b <= bucket + 1; b++) {
+    const existing = nearbyIndex.get(b);
+    if (
+      existing !== undefined &&
+      Math.abs(existing - position) < NEARBY_WINDOW_CHARS
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function _recordMatch(nearbyIndex, position) {
+  nearbyIndex.set(Math.floor(position / NEARBY_WINDOW_CHARS), position);
+}
+
+function _matchToBoundary(typeName, signature, text, match) {
+  return {
+    type: typeName,
+    position: match.index,
+    matchedText: match[0],
+    priority: signature.priority,
+    confidence: calculateMatchConfidence(text, match.index, signature.patterns),
+  };
+}
+
+// One pattern's matches, appended into the signature's shared `found` list
+// so the 500-char dedupe below sees everything found for this signature so
+// far - same scope the inline per-signature loop used to keep implicitly.
+// `nearbyIndex` is `found`'s companion spatial index (shared across every
+// pattern of this signature the same way `found` itself is) - see
+// _hasNearbyMatch's doc comment.
+function _collectPatternMatches(
+  typeName,
+  signature,
+  pattern,
+  text,
+  found,
+  nearbyIndex,
+) {
+  let match;
+  const globalPattern = new RegExp(
+    pattern.source,
+    pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g",
+  );
+
+  while ((match = globalPattern.exec(text)) !== null) {
+    if (!_hasNearbyMatch(nearbyIndex, match.index)) {
+      found.push(_matchToBoundary(typeName, signature, text, match));
+      _recordMatch(nearbyIndex, match.index);
+    }
+  }
+}
+
+// D19-7: same work as _collectPatternMatches, checking the time budget
+// after every raw match so one pathological pattern (thousands of raw
+// matches on a few common words, each survivor costing a fresh
+// calculateMatchConfidence substring+re-scan) can't itself become a single
+// long main-thread task - findDocumentBoundariesChunked's between-pattern
+// yield alone isn't enough when ONE pattern's own while-loop is the
+// expensive part, and per-match cost is too uneven (duplicate vs. survivor,
+// sparse vs. dense regions) for a fixed match-count interval to bound
+// reliably. slicer.maybeYield() is a cheap performance.now() comparison
+// when the budget isn't spent, so checking every iteration costs nothing
+// in the common (non-pathological) case.
+async function _collectPatternMatchesChunked(
+  typeName,
+  signature,
+  pattern,
+  text,
+  found,
+  nearbyIndex,
+  slicer,
+) {
+  let match;
+  const globalPattern = new RegExp(
+    pattern.source,
+    pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g",
+  );
+
+  while ((match = globalPattern.exec(text)) !== null) {
+    if (!_hasNearbyMatch(nearbyIndex, match.index)) {
+      found.push(_matchToBoundary(typeName, signature, text, match));
+      _recordMatch(nearbyIndex, match.index);
+    }
+    await slicer.maybeYield();
+  }
+}
+
+// Find every boundary match for one document-signature's patterns.
+// Dedupes matches of the *same* type within 500 chars of each other.
+function _collectPatternBoundaries(typeName, signature, text) {
+  const found = [];
+  const nearbyIndex = new Map();
+  for (const pattern of signature.patterns) {
+    _collectPatternMatches(
+      typeName,
+      signature,
+      pattern,
+      text,
+      found,
+      nearbyIndex,
+    );
+  }
+  return found;
+}
+
+// Every (signature, pattern) pair as one flat list of independent units of
+// work, in the same order findDocumentBoundaries has always processed them -
+// the chunked scheduler below yields between these instead of between whole
+// signatures, since a single signature can carry several expensive patterns.
+function _boundaryWorkItems() {
+  const items = [];
+  for (const [typeName, signature] of Object.entries(DOCUMENT_SIGNATURES)) {
+    const found = [];
+    const nearbyIndex = new Map();
+    for (const pattern of signature.patterns) {
+      items.push({ typeName, signature, pattern, found, nearbyIndex });
+    }
+  }
+  return items;
+}
+
+// Remove boundaries that are too close together, keeping the
+// higher-priority match when two candidates collide.
+function _filterCloseBoundaries(boundaries) {
   const filtered = [];
   for (const boundary of boundaries) {
-    const lastBoundary = filtered[filtered.length - 1];
+    const lastBoundary = filtered.at(-1);
     if (!lastBoundary || boundary.position - lastBoundary.position > 500) {
       filtered.push(boundary);
     } else if (boundary.priority > lastBoundary.priority) {
@@ -360,8 +560,66 @@ function findDocumentBoundaries(text) {
       filtered[filtered.length - 1] = boundary;
     }
   }
-
   return filtered;
+}
+
+// Shared tail end of boundary-finding: concatenate each signature's matches
+// (in signature order), sort by position, then collapse close collisions.
+// Both the sync and chunked finders funnel through this so their final step
+// can never drift apart.
+function _finalizeBoundaries(foundArrays) {
+  let boundaries = [];
+  for (const found of foundArrays) {
+    boundaries = boundaries.concat(found);
+  }
+  boundaries.sort((a, b) => a.position - b.position);
+  return _filterCloseBoundaries(boundaries);
+}
+
+/**
+ * Find document boundaries using signature patterns
+ */
+function findDocumentBoundaries(text) {
+  const foundArrays = Object.entries(DOCUMENT_SIGNATURES).map(
+    ([typeName, signature]) =>
+      _collectPatternBoundaries(typeName, signature, text),
+  );
+  return _finalizeBoundaries(foundArrays);
+}
+
+// Same `found` array is shared by every pattern-item belonging to one
+// signature (see _boundaryWorkItems) - collect each signature's array once,
+// in first-seen order, so the chunked path concatenates in the same
+// signature order the sync path iterates DOCUMENT_SIGNATURES in.
+function _foundArraysInOrder(items) {
+  const seen = new Set();
+  const arrays = [];
+  for (const item of items) {
+    if (seen.has(item.found)) continue;
+    seen.add(item.found);
+    arrays.push(item.found);
+  }
+  return arrays;
+}
+
+// D19-7: same work as findDocumentBoundaries, chunked per (signature,
+// pattern) pair with a yield to the main thread when the slicer's budget is
+// spent. Byte-identical output - see cFileSegmentation.chunked.equivalence.test.js.
+async function findDocumentBoundariesChunked(text, slicer) {
+  const items = _boundaryWorkItems();
+  for (const item of items) {
+    await _collectPatternMatchesChunked(
+      item.typeName,
+      item.signature,
+      item.pattern,
+      text,
+      item.found,
+      item.nearbyIndex,
+      slicer,
+    );
+    await slicer.maybeYield();
+  }
+  return _finalizeBoundaries(_foundArraysInOrder(items));
 }
 
 /**
@@ -380,6 +638,20 @@ function findLastOccurrence(text, patterns) {
     }
   }
 
+  return lastIndex;
+}
+
+// D19-7: same scan as findLastOccurrence, yielding between patterns.
+async function findLastOccurrenceChunked(text, patterns, slicer) {
+  let lastIndex = -1;
+  for (const pattern of patterns) {
+    const globalPattern = new RegExp(pattern.source, "gi");
+    let match;
+    while ((match = globalPattern.exec(text)) !== null) {
+      if (match.index > lastIndex) lastIndex = match.index;
+    }
+    await slicer.maybeYield();
+  }
   return lastIndex;
 }
 
@@ -462,6 +734,61 @@ export function quickScanCFile(text) {
   return scan;
 }
 
+// D19-7 follow-up: `text.match(pattern)` for a signature with no match at
+// all scans the whole string in one synchronous call, and a real C-File
+// always has several signatures that never appear at all (most files carry
+// only 2-4 of the 12 document types this checks). Windows overlap by
+// QUICK_SCAN_OVERLAP_CHARS so a match straddling a window boundary is still
+// fully contained in at least one window's slice - every DOCUMENT_SIGNATURES
+// pattern is a few literal words joined by small (`\s*`/`\s{1,N}`) gaps, so
+// 2,000 chars is generous margin for any realistic PDF text layer. A
+// signature is dropped from `remaining` the moment any of its patterns is
+// found, so a file that carries most signatures finishes early instead of
+// scanning the rest of the text for types it has already confirmed.
+const QUICK_SCAN_WINDOW_CHARS = 200_000;
+const QUICK_SCAN_OVERLAP_CHARS = 2000;
+
+export async function quickScanCFileChunked(text, slicer) {
+  const scan = {
+    estimatedPages: Math.ceil(text.length / 3000),
+    hasCodeSheet: false,
+    hasDD214: false,
+    hasDBQs: false,
+    hasBVA: false,
+    detectedTypes: [],
+  };
+
+  // Matches can be found in any window order depending on where in the
+  // text each signature's text actually sits, but quickScanCFile's own
+  // detectedTypes order is DOCUMENT_SIGNATURES' declaration order,
+  // independent of position - `found` records the set now and the
+  // declaration-order loop below replays it in that same order.
+  const remaining = new Map(Object.entries(DOCUMENT_SIGNATURES));
+  const found = new Set();
+  let pos = 0;
+  while (pos < text.length && remaining.size > 0) {
+    const windowEnd = Math.min(
+      text.length,
+      pos + QUICK_SCAN_WINDOW_CHARS + QUICK_SCAN_OVERLAP_CHARS,
+    );
+    const window = text.slice(pos, windowEnd);
+    for (const [typeName, signature] of remaining) {
+      if (signature.patterns.some((pattern) => window.match(pattern))) {
+        found.add(typeName);
+        remaining.delete(typeName);
+      }
+    }
+    pos += QUICK_SCAN_WINDOW_CHARS;
+    await slicer.maybeYield();
+  }
+
+  for (const typeName of Object.keys(DOCUMENT_SIGNATURES)) {
+    if (found.has(typeName)) _markDetectedType(scan, typeName);
+  }
+
+  return scan;
+}
+
 /**
  * Build a document inventory from C-File
  * Returns a table of contents for navigation
@@ -502,9 +829,11 @@ export function buildDocumentInventory(cFileText) {
 
 export default {
   segmentCFile,
+  segmentCFileChunked,
   extractDBQs,
   extractDecisions,
   quickScanCFile,
+  quickScanCFileChunked,
   buildDocumentInventory,
   DOCUMENT_SIGNATURES,
 };

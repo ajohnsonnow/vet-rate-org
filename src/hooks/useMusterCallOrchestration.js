@@ -11,6 +11,7 @@
 
 import { useState, useEffect } from "react";
 import { PROCESSING_STATES } from "../utils/musterCallProcessor";
+import { clearImportMarker } from "../utils/importProgressMarker";
 import useFormationQueue from "./useFormationQueue";
 import useMusterCallAILoader from "./useMusterCallAILoader";
 import useMusterCallFileIntake from "./useMusterCallFileIntake";
@@ -78,6 +79,9 @@ export const useMusterCallOrchestration = ({
   const showProcessingView =
     flow.activeEntry && flow.currentProgress && !flow.showIntelBriefing;
 
+  const showCompletionSummary =
+    useSequentialMode && processingState === PROCESSING_STATES.COMPLETE;
+
   /**
    * Start processing files (dispatches to Formation or legacy batch mode)
    */
@@ -94,6 +98,7 @@ export const useMusterCallOrchestration = ({
    * Reset to initial state
    */
   const handleReset = () => {
+    clearImportMarker();
     intake.resetFileIntake();
     batch.resetBatchState();
     setProcessingState(PROCESSING_STATES.IDLE);
@@ -110,6 +115,7 @@ export const useMusterCallOrchestration = ({
     batch,
     shouldShowFormation,
     showProcessingView,
+    showCompletionSummary,
     handleStartProcessing,
     handleReset,
   };

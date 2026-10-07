@@ -67,7 +67,12 @@ function App() {
   // unconditional sync inits (error-capture, panic-key,
   // beforeunload warning). See features/boot/useBootSequence.js
   // (audit #35, B59; sync inits absorbed in B70).
-  const { isMigrating, maintenanceMode, maintenanceMessage } =
+  //
+  // isBooting (not isMigrating) gates the tree below: the interactive
+  // tree must not mount until the migration decision has resolved, or a
+  // returning user's migration can swap it out (and lose whatever they
+  // already opened) mid-session. See useBootSequence.js's own comment.
+  const { isBooting, isMigrating, maintenanceMode, maintenanceMessage } =
     useBootSequence();
 
   // Snapshot of App-level state for bug reports + feature requests.
@@ -81,7 +86,7 @@ function App() {
     userConditions,
   });
 
-  if (isMigrating) return <MigrationScreen />;
+  if (isBooting) return <MigrationScreen isMigrating={isMigrating} />;
   if (maintenanceMode) return <MaintenancePage message={maintenanceMessage} />;
 
   return (

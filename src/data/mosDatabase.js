@@ -9317,7 +9317,7 @@ export const getAllCategories = () => {
   Object.values(MOS_DATABASE).forEach((data) => {
     categories.add(data.category);
   });
-  return Array.from(categories).sort();
+  return Array.from(categories).sort((a, b) => a.localeCompare(b));
 };
 
 /**

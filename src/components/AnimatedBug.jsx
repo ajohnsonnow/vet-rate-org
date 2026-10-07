@@ -8,11 +8,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 const AnimatedBug = ({ size = "sm", className = "" }) => {
-  const { _t } = useLanguage();
-  const [_isAnimating, setIsAnimating] = useState(false);
   const [animationStyle, setAnimationStyle] = useState({});
 
   // Bug crawls randomly every 5-15 seconds
@@ -30,11 +27,9 @@ const AnimatedBug = ({ size = "sm", className = "" }) => {
         animations[Math.floor(Math.random() * animations.length)];
 
       setAnimationStyle({ animation: `bug-${randomAnim} 0.8s ease-in-out` });
-      setIsAnimating(true);
 
       // Reset after animation completes
       setTimeout(() => {
-        setIsAnimating(false);
         setAnimationStyle({});
       }, 800);
     };

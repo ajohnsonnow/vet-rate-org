@@ -1,14 +1,27 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { triggerBlobDownload } from "../utils/sanitize";
-import { Document, Packer, Paragraph, TextRun } from "docx";
-import jsPDF from "jspdf";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import AIConsentModal from "./AIConsentModal";
 import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { fillAndDownloadForm } from "../utils/pdfFormFiller";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import StandardDraftNotice from "./common/StandardDraftNotice";
+import { EditedDraftDialog, UnsavedEditDialog } from "./common/ChoiceDialog";
+import useAskBeforeClose from "../hooks/useAskBeforeClose";
+import RewordingOffNote from "./common/RewordingOffNote";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
+import {
+  AI_NO_CHANGE_NOTE,
+  rewordingOffNote,
+  formStatementPlan,
+  standardDraftNote,
+} from "../utils/writerTemplates";
+import { downloadDraft } from "../utils/draftExport";
+import { plainAIError } from "../utils/writerErrorMessage";
+import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
+import { fillAndDownloadForm, hasOfficialPdf } from "../utils/pdfFormFiller";
 import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -21,9 +34,16 @@ import {
   saveVeteranProfile,
   hasVeteranProfile,
   saveForm,
+  updateSavedForm,
   exportAllVeteranData,
   importVeteranData,
+  getMyRatings,
+  getServiceEntry,
+  setServiceEntryDate,
 } from "../utils/veteranProfile";
+import { isSameCalendarDay } from "../utils/serviceEntryDate";
+import { getSavedClaims } from "../utils/claimsStorage";
+import { normalizeConditionName } from "../utils/conditionName";
 
 const forms = [
   {
@@ -921,7 +941,7 @@ const intentToFileSteps = [
         label: "Mailing Address",
         type: "textarea",
         required: true,
-        placeholder: "123 Main St\nCity, State ZIP",
+        placeholder: "123 Main St\nCity, ST 12345",
         rows: 3,
       },
       {
@@ -1048,7 +1068,7 @@ const medicalReleaseSteps = [
         label: "Current Mailing Address",
         type: "textarea",
         required: true,
-        placeholder: "123 Main St\nCity, State ZIP",
+        placeholder: "123 Main St\nCity, ST 12345",
         rows: 3,
       },
     ],
@@ -1070,7 +1090,7 @@ const medicalReleaseSteps = [
         label: "Provider Address",
         type: "textarea",
         required: true,
-        placeholder: "456 Medical Blvd\nCity, State ZIP",
+        placeholder: "456 Medical Blvd\nCity, ST 12345",
         rows: 3,
       },
       {
@@ -1090,7 +1110,7 @@ const medicalReleaseSteps = [
         label: "Dates of Treatment",
         type: "text",
         required: true,
-        placeholder: "January 2020 - Present / 03/2019 - 06/2022",
+        placeholder: "03/15/2019 - 06/30/2022, or 03/15/2019 - Present",
       },
       {
         name: "provider1Conditions",
@@ -1116,7 +1136,7 @@ const medicalReleaseSteps = [
         name: "provider2Address",
         label: "Provider Address",
         type: "textarea",
-        placeholder: "Address",
+        placeholder: "456 Medical Blvd\nCity, ST 12345",
         rows: 3,
       },
       {
@@ -1129,7 +1149,7 @@ const medicalReleaseSteps = [
         name: "provider2Dates",
         label: "Dates of Treatment",
         type: "text",
-        placeholder: "January 2020 - Present",
+        placeholder: "03/15/2019 - 06/30/2022",
       },
       {
         name: "provider2Conditions",
@@ -1154,7 +1174,7 @@ const medicalReleaseSteps = [
         name: "provider3Address",
         label: "Provider Address",
         type: "textarea",
-        placeholder: "Address",
+        placeholder: "456 Medical Blvd\nCity, ST 12345",
         rows: 3,
       },
       {
@@ -1167,7 +1187,7 @@ const medicalReleaseSteps = [
         name: "provider3Dates",
         label: "Dates of Treatment",
         type: "text",
-        placeholder: "January 2020 - Present",
+        placeholder: "03/15/2019 - 06/30/2022",
       },
       {
         name: "provider3Conditions",
@@ -1493,7 +1513,7 @@ const vsoAppointmentSteps = [
         label: "Apt/Unit Number",
         type: "text",
         required: false,
-        placeholder: "Apt 4B",
+        placeholder: "4B",
       },
       {
         name: "city",
@@ -1681,7 +1701,7 @@ const individualRepSteps = [
         label: "Apt/Unit Number",
         type: "text",
         required: false,
-        placeholder: "Apt 4B",
+        placeholder: "4B",
       },
       {
         name: "city",
@@ -3510,10 +3530,10 @@ ${
   Array.isArray(formData.feeUnderstanding) &&
   formData.feeUnderstanding.length > 0
     ? formData.feeUnderstanding.map((f) => `[X] ${f}`).join("\n")
-    : `[X] Attorneys/agents may only charge fees AFTER VA issues an initial decision
-[X] VA limits fees to 33.3% of past-due benefits (unless higher approved)
-[X] The fee agreement must be filed with the VA
-[X] I can revoke this appointment at any time by filing a new form`
+    : `[ ] Attorneys/agents may only charge fees AFTER VA issues an initial decision
+[ ] VA limits fees to 33.3% of past-due benefits (unless higher approved)
+[ ] The fee agreement must be filed with the VA
+[ ] I can revoke this appointment at any time by filing a new form`
 }`;
 
 const _buildIndividualRepAuthorizationSection = (
@@ -3525,10 +3545,10 @@ ${
   Array.isArray(formData.authorizationScope) &&
   formData.authorizationScope.length > 0
     ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
-    : `[X] Access my VA records
-[X] Represent me in all VA claims matters
-[X] Submit evidence on my behalf
-[X] File appeals on my behalf`
+    : `[ ] Access my VA records
+[ ] Represent me in all VA claims matters
+[ ] Submit evidence on my behalf
+[ ] File appeals on my behalf`
 }`;
 
 const _buildMedicalReleaseVeteranSection = (
@@ -4091,7 +4111,7 @@ Address:
 ${formData.street || "________________________________________"}
 ${formData.apt ? `Apt/Unit: ${formData.apt}` : ""}
 ${formData.city || "_____________"}, ${formData.state || "__"} ${formData.zip || "_____"}
-${formData.country || "United States"}`;
+${formData.country || ""}`;
 }
 
 function _vsoAppointmentOrgSection(formData, vsoName) {
@@ -4108,10 +4128,10 @@ function _vsoAppointmentAuthorizationSection(formData) {
     Array.isArray(formData.authorizationScope) &&
     formData.authorizationScope.length > 0
       ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
-      : `[X] Access my VA records
-[X] Represent me in all VA claims matters
-[X] Submit evidence and documentation on my behalf
-[X] Appeal decisions on my behalf`;
+      : `[ ] Access my VA records
+[ ] Represent me in all VA claims matters
+[ ] Submit evidence and documentation on my behalf
+[ ] Appeal decisions on my behalf`;
   const recordAccess =
     formData.limitAccess === "yes"
       ? "LIMITED (see restrictions below)"
@@ -4127,26 +4147,78 @@ Record Access: ${recordAccess}
 ${limitationsText}`;
 }
 
-function ChecklistField({ field, formData, handleChecklistChange }) {
+const fieldId = (name) => `forms-helper-field-${name}`;
+
+// index.css sets `appearance: none` on every input, which leaves a check
+// box with no box at all. These give it back on the box itself: the native
+// box and tick, a fixed size, and a focus ring.
+const TICK_BOX =
+  "[appearance:auto] h-5 w-5 shrink-0 accent-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
+
+// A required answer is missing when it is empty, blank, unticked or has
+// nothing chosen.
+function isMissing(value) {
+  if (Array.isArray(value)) return value.length === 0;
+  return typeof value === "string" ? value.trim() === "" : !value;
+}
+
+const missingRequired = (step, formData) =>
+  step.fields
+    .filter((field) => field.required && isMissing(formData[field.name]))
+    .map((field) => field.name);
+
+// What ties a field to its "required" message for assistive technology.
+const invalidProps = (name, hasError) =>
+  hasError
+    ? { "aria-invalid": "true", "aria-describedby": `${fieldId(name)}-error` }
+    : {};
+
+// The message under a required field left empty. Words and a symbol, not
+// colour alone.
+function FieldError({ name, hasError }) {
+  if (!hasError) return null;
   return (
-    <div key={field.name} className="mb-6">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+    <p
+      id={`${fieldId(name)}-error`}
+      className="mt-1 text-sm font-semibold text-red-800 dark:text-red-200"
+    >
+      <span aria-hidden="true">⚠ </span>
+      This answer is required. Fill it in to continue.
+    </p>
+  );
+}
+
+function ChecklistField({ field, formData, handleChecklistChange, hasError }) {
+  return (
+    <div
+      key={field.name}
+      role="group"
+      aria-labelledby={`${fieldId(field.name)}-label`}
+      {...invalidProps(field.name, hasError)}
+      className="mb-6"
+    >
+      <span
+        id={`${fieldId(field.name)}-label`}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"
+      >
         {field.label}{" "}
         {field.required && <span className="text-red-500">*</span>}
-      </label>
+      </span>
+      <FieldError name={field.name} hasError={hasError} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {field.options.map((option) => (
+        {field.options.map((option, optionIndex) => (
           <label
             key={option}
-            className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+            className="flex items-center gap-3 min-h-[44px] p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
           >
             <input
+              id={optionIndex === 0 ? fieldId(field.name) : undefined}
               type="checkbox"
               checked={(formData[field.name] || []).includes(option)}
               onChange={(e) =>
                 handleChecklistChange(field.name, option, e.target.checked)
               }
-              className="mt-1 rounded border-gray-300 text-va-blue focus:ring-va-blue"
+              className={TICK_BOX}
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">
               {option}
@@ -4158,21 +4230,27 @@ function ChecklistField({ field, formData, handleChecklistChange }) {
   );
 }
 
-function TextareaField({ field, formData, handleFieldChange }) {
+function TextareaField({ field, formData, handleFieldChange, hasError }) {
+  const id = fieldId(field.name);
   return (
     <div key={field.name} className="mb-4">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        htmlFor={id}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+      >
         {field.label}{" "}
         {field.required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
         <textarea
+          id={id}
           value={formData[field.name] || ""}
           onChange={(e) => handleFieldChange(field.name, e.target.value)}
           placeholder={field.placeholder}
           rows={field.rows || 4}
           className="w-full pr-12 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
           required={field.required}
+          {...invalidProps(field.name, hasError)}
         />
         {isSpeechRecognitionSupported() && (
           <div
@@ -4192,6 +4270,63 @@ function TextareaField({ field, formData, handleFieldChange }) {
           </div>
         )}
       </div>
+      <FieldError name={field.name} hasError={hasError} />
+    </div>
+  );
+}
+
+// A select with its label tied to it, so it has an accessible name.
+function SelectField({ field, value, onChange, hasError }) {
+  const id = fieldId(field.name);
+  return (
+    <div className="mb-4">
+      <label
+        htmlFor={id}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+      >
+        {field.label}{" "}
+        {field.required && <span className="text-red-500">*</span>}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
+        required={field.required}
+        {...invalidProps(field.name, hasError)}
+      >
+        {/* A list with no blank entry would show its first option as if it
+            had been chosen while no answer is recorded. */}
+        {!field.options.some((opt) => opt.value === "") && (
+          <option value="">Select...</option>
+        )}
+        {field.options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <FieldError name={field.name} hasError={hasError} />
+    </div>
+  );
+}
+
+function TickBoxField({ field, formData, handleFieldChange, hasError }) {
+  return (
+    <div key={field.name} className="mb-4">
+      <label className="flex items-center gap-3 min-h-[44px] p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer">
+        <input
+          id={fieldId(field.name)}
+          type="checkbox"
+          checked={formData[field.name] || false}
+          onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+          className={TICK_BOX}
+          required={field.required}
+          {...invalidProps(field.name, hasError)}
+        />
+        <span className="text-gray-700 dark:text-gray-300">{field.label}</span>
+      </label>
+      <FieldError name={field.name} hasError={hasError} />
     </div>
   );
 }
@@ -4201,6 +4336,7 @@ function FormField({
   formData,
   handleFieldChange,
   handleChecklistChange,
+  hasError,
 }) {
   if (field.type === "checklist") {
     return (
@@ -4208,47 +4344,30 @@ function FormField({
         field={field}
         formData={formData}
         handleChecklistChange={handleChecklistChange}
+        hasError={hasError}
       />
     );
   }
 
   if (field.type === "checkbox") {
     return (
-      <label
-        key={field.name}
-        className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer mb-4"
-      >
-        <input
-          type="checkbox"
-          checked={formData[field.name] || false}
-          onChange={(e) => handleFieldChange(field.name, e.target.checked)}
-          className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
-        />
-        <span className="text-gray-700 dark:text-gray-300">{field.label}</span>
-      </label>
+      <TickBoxField
+        field={field}
+        formData={formData}
+        handleFieldChange={handleFieldChange}
+        hasError={hasError}
+      />
     );
   }
 
   if (field.type === "select") {
     return (
-      <div key={field.name} className="mb-4">
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          {field.label}{" "}
-          {field.required && <span className="text-red-500">*</span>}
-        </label>
-        <select
-          value={formData[field.name] || ""}
-          onChange={(e) => handleFieldChange(field.name, e.target.value)}
-          className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
-          required={field.required}
-        >
-          {field.options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <SelectField
+        field={field}
+        value={formData[field.name] || ""}
+        onChange={(value) => handleFieldChange(field.name, value)}
+        hasError={hasError}
+      />
     );
   }
 
@@ -4258,29 +4377,37 @@ function FormField({
         field={field}
         formData={formData}
         handleFieldChange={handleFieldChange}
+        hasError={hasError}
       />
     );
   }
 
   return (
     <div key={field.name} className="mb-4">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        htmlFor={`forms-helper-field-${field.name}`}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+      >
         {field.label}{" "}
         {field.required && <span className="text-red-500">*</span>}
       </label>
       <input
+        id={`forms-helper-field-${field.name}`}
         type={field.type}
         value={formData[field.name] || ""}
         onChange={(e) => handleFieldChange(field.name, e.target.value)}
         placeholder={field.placeholder}
         className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
         required={field.required}
+        {...invalidProps(field.name, hasError)}
       />
+      <FieldError name={field.name} hasError={hasError} />
     </div>
   );
 }
 
-function _getFormStepsForForm(selectedForm) {
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export function _getFormStepsForForm(selectedForm) {
   switch (selectedForm?.id) {
     case "buddy-statement":
       return buddyStatementSteps;
@@ -4409,9 +4536,9 @@ function FormInfoPanel({ selectedForm, setCurrentStep, setSelectedForm, t }) {
           💡 {t("formsHelper", "tipsForSuccess")}
         </h3>
         <ul className="space-y-1">
-          {selectedForm.tips.map((tip, i) => (
+          {selectedForm.tips.map((tip) => (
             <li
-              key={i}
+              key={tip}
               className="text-sm text-green-800 dark:text-green-300 flex items-start gap-2"
             >
               <span className="text-green-600">✓</span>
@@ -4465,7 +4592,8 @@ function WizardStepNavigation({
   currentStep,
   setCurrentStep,
   isLastStep,
-  handleFinishWizard,
+  onNext,
+  onFinish,
   t,
 }) {
   return (
@@ -4487,7 +4615,7 @@ function WizardStepNavigation({
       {isLastStep ? (
         <button
           type="button"
-          onClick={handleFinishWizard}
+          onClick={onFinish}
           className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2"
         >
           {t("formsHelper", "generateStatement")}
@@ -4508,7 +4636,7 @@ function WizardStepNavigation({
       ) : (
         <button
           type="button"
-          onClick={() => setCurrentStep((prev) => prev + 1)}
+          onClick={onNext}
           className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
         >
           {t("formsHelper", "next")}
@@ -4531,6 +4659,25 @@ function WizardStepNavigation({
   );
 }
 
+// Required means required: moving on with a required answer missing is
+// stopped, each missing field says so, and focus goes to the first one.
+function useRequiredAnswers(currentStep, formData) {
+  const [asked, setAsked] = useState({ step: 0, names: [] });
+  const forStep = (step) => ({
+    flagged:
+      asked.step === currentStep
+        ? asked.names.filter((name) => isMissing(formData[name]))
+        : [],
+    ifComplete: (go) => () => {
+      const names = missingRequired(step, formData);
+      setAsked({ step: currentStep, names });
+      if (names.length === 0) go();
+      else document.getElementById(fieldId(names[0]))?.focus();
+    },
+  });
+  return { forStep };
+}
+
 function WizardStepPanel({
   selectedForm,
   currentStep,
@@ -4542,10 +4689,23 @@ function WizardStepPanel({
   t,
 }) {
   const steps = _getFormStepsForForm(selectedForm);
+  const stepHeadingRef = useRef(null);
+  const required = useRequiredAnswers(currentStep, formData);
+
+  // "Start Guided Builder" (setCurrentStep(1)) and every Next/Back removes
+  // the button that had focus from the DOM - the step content it belonged
+  // to unmounts - stranding focus on <body>, outside the dialog's
+  // useFocusTrap keydown listener, so Tab/Escape stop working. Move focus
+  // to the new step's own heading so it stays inside the dialog.
+  useEffect(() => {
+    if (currentStep >= 1) stepHeadingRef.current?.focus();
+  }, [currentStep]);
+
   if (currentStep === 0 || currentStep > steps.length) return null;
 
   const step = steps[currentStep - 1];
   const isLastStep = currentStep === steps.length;
+  const { flagged, ifComplete } = required.forStep(step);
 
   return (
     <div className="space-y-6">
@@ -4558,7 +4718,11 @@ function WizardStepPanel({
 
       {/* Step content */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h3
+          ref={stepHeadingRef}
+          tabIndex={-1}
+          className="text-xl font-bold text-gray-900 dark:text-white mb-2 focus-visible:ring-2 focus-visible:ring-va-blue rounded"
+        >
           {step.title}
         </h3>
         {step.subtitle && (
@@ -4575,29 +4739,79 @@ function WizardStepPanel({
               formData={formData}
               handleFieldChange={handleFieldChange}
               handleChecklistChange={handleChecklistChange}
+              hasError={flagged.includes(field.name)}
             />
           ))}
         </div>
       </div>
 
+      {flagged.length > 0 && (
+        <p
+          role="alert"
+          className="p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm font-semibold text-red-900 dark:text-red-100"
+        >
+          {flagged.length === 1
+            ? "1 required answer is missing on this step."
+            : `${flagged.length} required answers are missing on this step.`}
+        </p>
+      )}
+
       <WizardStepNavigation
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
         isLastStep={isLastStep}
-        handleFinishWizard={handleFinishWizard}
+        onNext={ifComplete(() => setCurrentStep((prev) => prev + 1))}
+        onFinish={ifComplete(handleFinishWizard)}
         t={t}
       />
     </div>
   );
 }
 
+const STANDARD_DRAFT_LABEL = "Standard draft";
+const DOWNLOAD_FAILED =
+  "The download did not work. Your statement is still here. Try another format, or copy the text.";
+const SAVE_FAILED =
+  "This could not be saved on this device. Download it or copy the text so you do not lose it, then try saving again.";
+
+/*
+ * The one draft a statement form has on screen: the draft the AI reworded
+ * when there is one and it is chosen, otherwise the app-built draft, with
+ * the veteran's edits to whichever it is. Downloads and Save to Packet take
+ * `text`. An edit belongs to the draft it was made on.
+ */
+function shownDraft({
+  generatedContent,
+  aiEnhancedContent,
+  showAIVersion,
+  draftEdit,
+}) {
+  const base =
+    showAIVersion && aiEnhancedContent ? aiEnhancedContent : generatedContent;
+  return { base, text: draftEdit?.base === base ? draftEdit.text : base };
+}
+
+/**
+ * Whether closing now would lose words the veteran typed into a draft: an
+ * edited draft on screen, or one being kept while the answers are changed,
+ * that is not what was last saved.
+ */
+function hasUnsavedDraftEdit(state) {
+  const saved = state.savedItem?.text;
+  if (state.generatedContent) {
+    const box = shownDraft(state);
+    return box.text !== box.base && box.text !== saved;
+  }
+  return Boolean(state.keptDraft) && state.keptDraft.text !== saved;
+}
+
 function AIUnavailableNotice({ onOpenAISettings, t }) {
   return (
     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-600 rounded-xl p-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-start gap-3 min-w-0">
           <span className="text-2xl">✨</span>
-          <div>
+          <div className="min-w-0">
             <h3 className="font-bold text-amber-900 dark:text-amber-200">
               {t("formsHelper", "aiEnhancementAvailable")}
             </h3>
@@ -4609,7 +4823,7 @@ function AIUnavailableNotice({ onOpenAISettings, t }) {
         <button
           type="button"
           onClick={onOpenAISettings}
-          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold whitespace-nowrap transition-colors"
+          className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-colors"
         >
           ⚙️ {t("formsHelper", "configureAI")}
         </button>
@@ -4667,51 +4881,53 @@ function AIEnhanceButtonLabel({ isEnhancingWithAI, t }) {
 }
 
 function AIEnhanceControls({
-  aiEnhancedContent,
+  aiReady,
+  isModelDraft,
   handleAIEnhanceClick,
   isEnhancingWithAI,
   toggleAIVersion,
   showAIVersion,
   t,
 }) {
-  if (!aiEnhancedContent) {
-    return (
-      <button
-        type="button"
-        onClick={handleAIEnhanceClick}
-        disabled={isEnhancingWithAI}
-        className="px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
-      >
-        <AIEnhanceButtonLabel isEnhancingWithAI={isEnhancingWithAI} t={t} />
-      </button>
-    );
-  }
-
+  const versionClass = (active) =>
+    `min-h-[44px] px-4 py-2 rounded-lg font-medium transition-all ${
+      active
+        ? "bg-purple-600 text-white"
+        : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
+    }`;
   return (
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={toggleAIVersion}
-        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-          showAIVersion
-            ? "bg-purple-600 text-white"
-            : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
-        }`}
-      >
-        ✨ {t("formsHelper", "aiVersion")}
-      </button>
-      <button
-        type="button"
-        onClick={toggleAIVersion}
-        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-          !showAIVersion
-            ? "bg-purple-600 text-white"
-            : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
-        }`}
-      >
-        📝 {t("formsHelper", "original")}
-      </button>
-    </div>
+    <>
+      {aiReady && !isModelDraft && (
+        <button
+          type="button"
+          onClick={handleAIEnhanceClick}
+          disabled={isEnhancingWithAI}
+          className="px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+        >
+          <AIEnhanceButtonLabel isEnhancingWithAI={isEnhancingWithAI} t={t} />
+        </button>
+      )}
+      {isModelDraft && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={showAIVersion ? undefined : toggleAIVersion}
+            aria-pressed={Boolean(showAIVersion)}
+            className={versionClass(showAIVersion)}
+          >
+            ✨ {t("formsHelper", "aiVersion")}
+          </button>
+          <button
+            type="button"
+            onClick={showAIVersion ? toggleAIVersion : undefined}
+            aria-pressed={!showAIVersion}
+            className={versionClass(!showAIVersion)}
+          >
+            {STANDARD_DRAFT_LABEL}
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -4752,6 +4968,19 @@ function AIEnhancementHeader({ aiStatus, t }) {
   );
 }
 
+// Which draft is on screen: the standard-draft notice for the app-built
+// draft, the AI line for a draft the AI reworded.
+function AIVersionIndicator({ aiDraftNote, t }) {
+  if (aiDraftNote) {
+    return <StandardDraftNotice note={aiDraftNote} className="mt-3" />;
+  }
+  return (
+    <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
+      ✨ {t("formsHelper", "viewingAIVersion")}
+    </div>
+  );
+}
+
 function AIEnhancementSection({
   isAIEnabledFormType,
   aiStatus,
@@ -4761,23 +4990,37 @@ function AIEnhancementSection({
   toggleAIVersion,
   showAIVersion,
   aiError,
+  aiDraftNote,
   onOpenAISettings,
   t,
 }) {
   if (!isAIEnabledFormType()) return null;
-
-  if (!isAnyAIAvailable()) {
-    return <AIUnavailableNotice onOpenAISettings={onOpenAISettings} t={t} />;
+  const aiReady = isAnyAIAvailable();
+  // A small on-device model is not asked to reword, so rewording is not
+  // offered: no button, and so no consent dialog.
+  if (aiReady && !aiEnhancedContent && smallModelAnswering(aiStatus)) {
+    return (
+      <div className="border-2 border-gray-400 dark:border-gray-500 rounded-xl p-5">
+        <RewordingOffNote text={t("smallModelCaveat", "rewordingOff")} />
+        {aiDraftNote && <AIVersionIndicator aiDraftNote={aiDraftNote} t={t} />}
+      </div>
+    );
   }
 
   return (
     <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl p-5">
+      {!aiReady && (
+        <div className="mb-4">
+          <AIUnavailableNotice onOpenAISettings={onOpenAISettings} t={t} />
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <AIEnhancementHeader aiStatus={aiStatus} t={t} />
+        {aiReady && <AIEnhancementHeader aiStatus={aiStatus} t={t} />}
 
         <div className="flex flex-col gap-2">
           <AIEnhanceControls
-            aiEnhancedContent={aiEnhancedContent}
+            aiReady={aiReady}
+            isModelDraft={Boolean(aiEnhancedContent)}
             handleAIEnhanceClick={handleAIEnhanceClick}
             isEnhancingWithAI={isEnhancingWithAI}
             toggleAIVersion={toggleAIVersion}
@@ -4791,56 +5034,129 @@ function AIEnhancementSection({
       {aiError && (
         <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
           ⚠️ {aiError}
+          <button
+            type="button"
+            onClick={handleAIEnhanceClick}
+            className="block mt-2 min-h-[44px] px-3 underline font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded"
+          >
+            Try the AI again
+          </button>
         </div>
       )}
 
-      {/* Version indicator */}
-      {aiEnhancedContent && (
-        <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
-          {showAIVersion
-            ? `✨ ${t("formsHelper", "viewingAIVersion")}`
-            : `📝 ${t("formsHelper", "viewingOriginal")}`}
-        </div>
-      )}
+      <AIVersionIndicator aiDraftNote={aiDraftNote} t={t} />
     </div>
+  );
+}
+
+// What the official PDF holds for each form and what it leaves to the
+// veteran. It is never described as filled out or ready to sign. The words
+// are in the formsHelper translations under these keys.
+const OFFICIAL_PDF_NOTE_KEYS = {
+  "personal-statement": "officialPdfNotePersonal",
+  "ptsd-stressor": "officialPdfNotePtsd",
+  "buddy-statement": "officialPdfNoteBuddy",
+  "vso-appointment": "officialPdfNoteVso",
+  "intent-to-file": "officialPdfNoteIntentToFile",
+  "medical-release": "officialPdfNoteMedicalRelease",
+  "priority-processing": "officialPdfNotePriority",
+  "vso-appointment-individual": "officialPdfNoteIndividualRep",
+};
+// These two end with the general list of what is left to complete.
+const NOTES_ENDING_WITH_REST = new Set([
+  "officialPdfNotePersonal",
+  "officialPdfNoteOther",
+]);
+
+function officialPdfNoteText(formType, t) {
+  const key = OFFICIAL_PDF_NOTE_KEYS[formType] ?? "officialPdfNoteOther";
+  const note = t("formsHelper", key);
+  return NOTES_ENDING_WITH_REST.has(key)
+    ? `${note} ${t("formsHelper", "officialPdfRest")}`
+    : note;
+}
+
+// `sentence` about the answers in `list`, or "" when there are none.
+const aboutAnswers = (list, sentence) =>
+  list?.length > 0 ? `${sentence} ${list.join("; ")}.` : "";
+
+/** What to tell the veteran about the official PDF just made, or "". */
+function officialPdfProblems(result, t) {
+  return [
+    result?.overflow ? t("formsHelper", "officialPdfOverflow") : "",
+    aboutAnswers(result?.moved, t("formsHelper", "officialPdfMoved")),
+    aboutAnswers(result?.textOnly, t("formsHelper", "officialPdfTextOnly")),
+    aboutAnswers(result?.leftBlank, t("formsHelper", "officialPdfLeftBlank")),
+    aboutAnswers(result?.notPlaced, t("formsHelper", "officialPdfNotPlaced")),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function OfficialPdfNote({ formType, isStatement }) {
+  const { t } = useLanguage();
+  if (!hasOfficialPdf(formType)) {
+    return (
+      <p
+        role="note"
+        aria-label="About these downloads"
+        className="mt-3 text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t("formsHelper", "textOnlyNote")}
+      </p>
+    );
+  }
+  return (
+    <p
+      role="note"
+      aria-label="About the official PDF"
+      className="mt-3 text-sm text-gray-700 dark:text-gray-300"
+    >
+      {officialPdfNoteText(formType, t)}
+      {isStatement ? ` ${t("formsHelper", "officialPdfEdits")}` : ""}
+    </p>
+  );
+}
+
+// Offered only for a form the app can fill.
+function OfficialPdfButton({ onClick, t }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onClick()}
+      className="flex items-center gap-3 p-4 bg-gradient-to-r from-va-blue to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
+    >
+      <span className="text-2xl">📋</span>
+      <div className="text-left">
+        <div className="font-bold">{t("formsHelper", "officialVAFormPdf")}</div>
+        <div className="text-sm text-blue-100">
+          {t("formsHelper", "readyToSign")}
+        </div>
+      </div>
+    </button>
   );
 }
 
 function DownloadOptionsCard({
   t,
-  showAIVersion,
-  aiEnhancedContent,
   handleDownloadOfficialPdf,
   handleDownload,
+  formType,
+  isStatement,
+  officialPdfNotice,
 }) {
   return (
     <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
       <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
         <span className="text-xl">📥</span>{" "}
         {t("formsHelper", "downloadYourForm")}
-        {showAIVersion && aiEnhancedContent && (
-          <span className="text-sm font-normal text-purple-600 dark:text-purple-400">
-            ({t("formsHelper", "aiEnhanced")})
-          </span>
-        )}
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Primary: Official PDF */}
-        <button
-          type="button"
-          onClick={() => handleDownloadOfficialPdf()}
-          className="flex items-center gap-3 p-4 bg-gradient-to-r from-va-blue to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
-        >
-          <span className="text-2xl">📋</span>
-          <div className="text-left">
-            <div className="font-bold">
-              {t("formsHelper", "officialVAFormPdf")}
-            </div>
-            <div className="text-sm text-blue-100">
-              {t("formsHelper", "readyToSign")}
-            </div>
-          </div>
-        </button>
+      <div
+        className={`grid grid-cols-1 gap-3 ${hasOfficialPdf(formType) ? "sm:grid-cols-2" : ""}`}
+      >
+        {hasOfficialPdf(formType) && (
+          <OfficialPdfButton onClick={handleDownloadOfficialPdf} t={t} />
+        )}
 
         {/* Secondary options */}
         <div className="flex gap-2">
@@ -4876,11 +5192,32 @@ function DownloadOptionsCard({
           </button>
         </div>
       </div>
+      <OfficialPdfNote formType={formType} isStatement={isStatement} />
+      {officialPdfNotice && (
+        <p
+          role="alert"
+          className="mt-3 p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm text-red-900 dark:text-red-100"
+        >
+          {officialPdfNotice}
+        </p>
+      )}
     </div>
   );
 }
 
-function SaveToPacketCard({ t, handleSaveToPacket }) {
+const savedTime = (date) =>
+  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// The save button says what it will do: save, save changes to the item
+// already saved, or nothing because this text was saved (and when).
+function savePacketLabel({ savedItem, isSavedNow, t }) {
+  if (isSavedNow) return `Saved to My Packet at ${savedTime(savedItem.at)}`;
+  return savedItem
+    ? "Save changes to Packet"
+    : t("formsHelper", "saveToPacketBtn");
+}
+
+function SaveToPacketCard({ t, handleSaveToPacket, savedItem, isSavedNow }) {
   return (
     <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -4898,7 +5235,8 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
         <button
           type="button"
           onClick={handleSaveToPacket}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
+          disabled={isSavedNow}
+          className="min-h-[44px] px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-default text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
         >
           <svg
             className="w-5 h-5"
@@ -4913,7 +5251,7 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
               d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
             />
           </svg>
-          {t("formsHelper", "saveToPacketBtn")}
+          {savePacketLabel({ savedItem, isSavedNow, t })}
         </button>
       </div>
     </div>
@@ -4922,28 +5260,38 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
 
 function ReviewDownloadSection({
   t,
-  showAIVersion,
-  aiEnhancedContent,
   handleDownloadOfficialPdf,
   handleDownload,
   handleSaveToPacket,
   importStatus,
+  formType,
+  isStatement,
+  savedItem,
+  isSavedNow,
+  officialPdfNotice,
 }) {
   return (
     <>
       <DownloadOptionsCard
         t={t}
-        showAIVersion={showAIVersion}
-        aiEnhancedContent={aiEnhancedContent}
         handleDownloadOfficialPdf={handleDownloadOfficialPdf}
         handleDownload={handleDownload}
+        formType={formType}
+        isStatement={isStatement}
+        officialPdfNotice={officialPdfNotice}
       />
 
-      <SaveToPacketCard t={t} handleSaveToPacket={handleSaveToPacket} />
+      <SaveToPacketCard
+        t={t}
+        handleSaveToPacket={handleSaveToPacket}
+        savedItem={savedItem}
+        isSavedNow={isSavedNow}
+      />
 
       {/* Import Status Message */}
       {importStatus && (
         <div
+          role="status"
           className={`p-3 rounded-lg text-center font-medium ${
             importStatus.type === "success"
               ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700"
@@ -4957,22 +5305,57 @@ function ReviewDownloadSection({
   );
 }
 
-function ReviewPreviewSection({
-  showAIVersion,
-  aiEnhancedContent,
-  displayContent,
-  t,
-}) {
+function StatementDraftEditor({ versionLabel, value, onChange, outOfStep }) {
+  const { t } = useLanguage();
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      <details className="group" open={showAIVersion && aiEnhancedContent}>
+      <label
+        htmlFor="forms-helper-draft"
+        className="block bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 font-medium text-gray-700 dark:text-gray-300"
+      >
+        Your statement ({versionLabel})
+      </label>
+      <p
+        id="forms-helper-draft-hint"
+        className="px-4 pt-3 text-sm text-gray-700 dark:text-gray-300"
+      >
+        You can edit the text here. Downloads and Save to Packet use exactly
+        what this box shows.
+      </p>
+      {outOfStep && (
+        <p
+          id="forms-helper-draft-out-of-step"
+          role="note"
+          aria-label="Draft and answers differ"
+          className="mx-4 mt-3 p-3 rounded-lg border border-amber-700 bg-amber-50 dark:bg-amber-900/30 text-sm text-amber-950 dark:text-amber-100"
+        >
+          {t("formsHelper", "draftOutOfStep")}
+        </p>
+      )}
+      <textarea
+        id="forms-helper-draft"
+        aria-describedby={
+          outOfStep
+            ? "forms-helper-draft-hint forms-helper-draft-out-of-step"
+            : "forms-helper-draft-hint"
+        }
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={18}
+        className="block w-full p-4 text-sm text-gray-800 dark:text-gray-200 dark:bg-gray-800 font-mono border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600"
+      />
+    </div>
+  );
+}
+
+function ReviewPreviewSection({ displayContent, t }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <details className="group">
         <summary className="bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 cursor-pointer flex items-center justify-between">
           <span className="font-medium text-gray-700 dark:text-gray-300">
-            📄 {t("formsHelper", "textPreview")}{" "}
-            {showAIVersion && aiEnhancedContent
-              ? `(${t("formsHelper", "aiEnhanced")})`
-              : ""}{" "}
-            ({t("formsHelper", "clickToExpand")})
+            📄 {t("formsHelper", "textPreview")} (
+            {t("formsHelper", "clickToExpand")})
           </span>
           <svg
             className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform"
@@ -4988,13 +5371,23 @@ function ReviewPreviewSection({
             />
           </svg>
         </summary>
-        <pre className="p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono overflow-auto max-h-72">
+        {/* Scrolls, so it has to be reachable and scrollable by keyboard. */}
+        <pre
+          role="region"
+          aria-label="Statement text preview"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+          className="p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono overflow-auto max-h-72 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600"
+        >
           {displayContent}
         </pre>
       </details>
     </div>
   );
 }
+
+const TEXT_ONLY_NEXT_STEP =
+  "the text draft above. It is not the official VA form: get that from VA.gov and copy your answers onto it.";
 
 function ReviewNextSteps({ selectedForm, t }) {
   return (
@@ -5005,7 +5398,9 @@ function ReviewNextSteps({ selectedForm, t }) {
       <ol className="list-decimal list-inside text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
         <li>
           <strong>{t("formsHelper", "download")}</strong>{" "}
-          {t("formsHelper", "nextStepDownload")}
+          {hasOfficialPdf(selectedForm?.id)
+            ? t("formsHelper", "nextStepDownload")
+            : TEXT_ONLY_NEXT_STEP}
         </li>
         <li>
           <strong>{t("formsHelper", "review")}</strong>{" "}
@@ -5039,38 +5434,22 @@ function ReviewNextSteps({ selectedForm, t }) {
 
 function ReviewActionButtons({
   selectedForm,
-  setCurrentStep,
-  setGeneratedContent,
-  setAiEnhancedContent,
-  setShowAIVersion,
-  setSelectedForm,
-  setFormData,
+  onEditAnswers,
+  onStartNewForm,
   t,
 }) {
   return (
     <div className="flex flex-wrap gap-3">
       <button
         type="button"
-        onClick={() => {
-          setCurrentStep(1);
-          setGeneratedContent(null);
-          setAiEnhancedContent(null);
-          setShowAIVersion(false);
-        }}
+        onClick={onEditAnswers}
         className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
       >
         ← {t("formsHelper", "editAnswers")}
       </button>
       <button
         type="button"
-        onClick={() => {
-          setSelectedForm(null);
-          setFormData({});
-          setCurrentStep(0);
-          setGeneratedContent(null);
-          setAiEnhancedContent(null);
-          setShowAIVersion(false);
-        }}
+        onClick={onStartNewForm}
         className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium"
       >
         {t("formsHelper", "startNewForm")}
@@ -5418,7 +5797,7 @@ function ProfileAddressFieldsA({ veteranProfile, handleProfileChange, t }) {
           value={veteranProfile.apt || ""}
           onChange={(e) => handleProfileChange("apt", e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-          placeholder="Apt 4B"
+          placeholder="4B"
         />
       </div>
       <div>
@@ -5482,7 +5861,7 @@ function ProfileAddressFieldsB({ veteranProfile, handleProfileChange, t }) {
         </label>
         <input
           type="text"
-          value={veteranProfile.country || "United States"}
+          value={veteranProfile.country || ""}
           onChange={(e) => handleProfileChange("country", e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
         />
@@ -5558,11 +5937,19 @@ function MilitaryServiceDateFields({ veteranProfile, handleProfileChange }) {
         />
       </div>
       <div>
-        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="formsHelperServiceStartDate"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           Service Start Date
+          {veteranProfile.serviceStartDateDerived && (
+            <span className="ml-1 font-normal text-xs text-gray-600 dark:text-gray-400">
+              (calculated from net service)
+            </span>
+          )}
         </label>
         <input
+          id="formsHelperServiceStartDate"
           type="date"
           value={veteranProfile.serviceStartDate || ""}
           onChange={(e) =>
@@ -5756,32 +6143,42 @@ function ProfileSensitiveDataSection({
   );
 }
 
-function ProfileSaveFooter({ handleSaveProfile, t }) {
+function ProfileSaveFooter({ handleSaveProfile, profileSaveError, t }) {
   return (
-    <div className="flex items-center justify-between border-t border-blue-200 dark:border-blue-700 pt-4">
-      <p className="text-xs text-blue-700 dark:text-blue-400">
-        🔒 {t("formsHelper", "privacyLocalStorage")}
-      </p>
-      <button
-        type="button"
-        onClick={handleSaveProfile}
-        className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+    <div className="border-t border-blue-200 dark:border-blue-700 pt-4">
+      {profileSaveError && (
+        <p
+          role="alert"
+          className="mb-2 text-xs font-bold text-red-700 dark:text-red-400"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-        {t("formsHelper", "saveProfile")}
-      </button>
+          {profileSaveError}
+        </p>
+      )}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-blue-700 dark:text-blue-400">
+          🔒 {t("formsHelper", "privacyLocalStorage")}
+        </p>
+        <button
+          type="button"
+          onClick={handleSaveProfile}
+          className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          {t("formsHelper", "saveProfile")}
+        </button>
+      </div>
     </div>
   );
 }
@@ -5790,6 +6187,7 @@ function ProfileSetupPanel({
   veteranProfile,
   handleProfileChange,
   profileSaved,
+  profileSaveError,
   handleSaveProfile,
   t,
 }) {
@@ -5843,7 +6241,11 @@ function ProfileSetupPanel({
         t={t}
       />
 
-      <ProfileSaveFooter handleSaveProfile={handleSaveProfile} t={t} />
+      <ProfileSaveFooter
+        handleSaveProfile={handleSaveProfile}
+        profileSaveError={profileSaveError}
+        t={t}
+      />
     </div>
   );
 }
@@ -5913,7 +6315,11 @@ function FormSelectionCards({
           key={form.id}
           onClick={() => {
             setSelectedForm(form);
-            setFormData({});
+            // Fresh start for the new form's own answers, re-seeded from
+            // the veteran's records rather than wiped blank - otherwise
+            // the profile/conditions prefill from mount never survives
+            // past the form-selection grid.
+            setFormData(buildFormsHelperPrefillDefaults());
             setCurrentStep(0);
             setGeneratedContent(null);
           }}
@@ -5982,246 +6388,17 @@ function QuickLinksSection({ t }) {
   );
 }
 
-function downloadAsTxt(content, fileName) {
-  const blob = new Blob([content], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  if (!url.startsWith("blob:")) return; // Validate blob URL
-  // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${fileName}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-async function downloadAsDocx(content, fileName) {
-  try {
-    const lines = content.split("\n");
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: lines.map((line) => {
-            if (line.startsWith("═")) {
-              return new Paragraph({ text: "" });
-            }
-            if (/^[A-Z]{2,}/.test(line) && line.endsWith(":")) {
-              return new Paragraph({
-                children: [new TextRun({ text: line, bold: true })],
-                spacing: { before: 200, after: 100 },
-              });
-            }
-            return new Paragraph({
-              children: [new TextRun(line)],
-              spacing: { after: 50 },
-            });
-          }),
-        },
-      ],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    const url = URL.createObjectURL(blob);
-    if (!url.startsWith("blob:")) return; // Validate blob URL
-    // deepcode ignore javascript/DOMXSS: URL is a validated blob: object URL created locally
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}.docx`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Error generating DOCX:", error);
-    alert("Error generating Word document. Please try TXT format.");
-  }
-}
-
-function downloadAsPdf(content, fileName) {
-  try {
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 15;
-    const maxWidth = pageWidth - margin * 2;
-    let yPosition = 20;
-
-    pdf.setFontSize(10);
-    const lines = pdf.splitTextToSize(content, maxWidth);
-
-    lines.forEach((line) => {
-      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      pdf.text(line, margin, yPosition);
-      yPosition += 5;
-    });
-
-    pdf.save(`${fileName}.pdf`);
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert("Error generating PDF. Please try TXT format.");
-  }
-}
-
-function _buildBuddyDailyLifeImpactSection(formData) {
-  if (
-    !formData.dailyImpact &&
-    !formData.workImpact &&
-    !formData.specificExamples
-  ) {
-    return "";
-  }
-  let section = `
-D. Impact of Condition on Veteran's Daily Life:
-
-`;
-  if (formData.dailyImpact) {
-    section += `Impact on Daily Activities:
-${formData.dailyImpact}
-
-`;
-  }
-  if (formData.workImpact) {
-    section += `Impact on Employment/Work:
-${formData.workImpact}
-
-`;
-  }
-  if (formData.specificExamples) {
-    section += `Specific Examples/Incidents:
-${formData.specificExamples}
-
-`;
-  }
-  return section;
-}
-
-function _buildBuddyAdditionalInfoSection(formData) {
-  if (!formData.additionalInfo) return "";
-  return `
-E. Additional Information:
-
-${formData.additionalInfo}
-
-`;
-}
-
-function _buildPersonalStatementTreatmentHistorySection(formData) {
-  if (
-    !formData.currentTreatment &&
-    !formData.medications &&
-    !formData.treatmentEffectiveness
-  ) {
-    return "";
-  }
-  const currentTreatmentSection = formData.currentTreatment
-    ? `
-A. Current Treatment:
-
-${formData.currentTreatment}
-`
-    : "";
-  const medicationsSection = formData.medications
-    ? `
-B. Current Medications:
-
-${formData.medications}
-`
-    : "";
-  const treatmentEffectivenessSection = formData.treatmentEffectiveness
-    ? `
-C. Treatment Effectiveness:
-
-${formData.treatmentEffectiveness}
-`
-    : "";
-  return `
-SECTION V - TREATMENT HISTORY
-${currentTreatmentSection}${medicationsSection}${treatmentEffectivenessSection}
---------------------------------------------------------------------------------
-`;
-}
-
-function _buildPersonalStatementSecondaryConditionSection(formData) {
-  return formData.claimType === "secondary" && formData.primaryCondition
-    ? `
-Secondary to (Primary Condition): ${formData.primaryCondition}
-`
-    : "";
-}
-
-function _buildPersonalStatementFirstTreatmentSection(formData) {
-  return formData.firstTreatment
-    ? `
-C. First Treatment Sought:
-
-${formData.firstTreatment}
-`
-    : "";
-}
-
-function _buildPersonalStatementFlareUpsSection(formData) {
-  return formData.flareUps
-    ? `
-C. Flare-Ups:
-
-${formData.flareUps}
-`
-    : "";
-}
-
-function _buildPersonalStatementSocialImpactSection(formData) {
-  return formData.socialImpact
-    ? `
-C. Impact on Relationships and Social Activities:
-
-${formData.socialImpact}
-`
-    : "";
-}
-
-function _buildPTSDSymptomsChecklist(formData) {
-  return Array.isArray(formData.symptoms) && formData.symptoms.length > 0
-    ? formData.symptoms.map((s) => `[X] ${s}`).join("\n")
-    : `[ ] Nightmares or disturbing dreams
-[ ] Flashbacks (reliving the event)
-[ ] Intrusive thoughts or memories
-[ ] Avoiding reminders of the trauma
-[ ] Difficulty sleeping
-[ ] Hypervigilance (always on alert)
-[ ] Exaggerated startle response
-[ ] Difficulty concentrating
-[ ] Irritability or anger outbursts
-[ ] Emotional numbness
-[ ] Feeling detached from others
-[ ] Negative thoughts about self or world
-[ ] Memory problems
-[ ] Loss of interest in activities
-[ ] Difficulty feeling positive emotions`;
-}
-
-function _buildPTSDSymptomDetailsSection(formData) {
-  return formData.symptomDetails
-    ? `
-Detailed Description of Symptoms:
-
-${formData.symptomDetails}
-`
-    : "";
-}
-
-function buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow) {
+// No date is worked out from today: the year runs from the day VA receives
+// the form, which the app cannot know.
+function buildIntentToFileDeadlinesSection() {
   return `
 ================================================================================
 
                          *** CRITICAL DEADLINES ***
 
-If you file your Intent to File on: ${currentDate}
+Your Intent to File date is the day VA receives it.
 
-Your deadline to submit a complete claim is: ${oneYearFromNow}
+Your deadline to submit a complete claim is one year from that date.
 
 You have exactly ONE YEAR from your Intent to File date to submit your
 complete disability claim (VA Form 21-526EZ).
@@ -6233,7 +6410,7 @@ WHY INTENT TO FILE MATTERS:
 If approved, your VA benefits can be BACKDATED to your Intent to File date.
 
 Example:
-- You file Intent to File on ${currentDate}
+- VA receives your Intent to File
 - You submit your complete claim 6 months later
 - If approved, you receive 6 months of BACK PAY
 
@@ -6247,7 +6424,7 @@ NEXT STEPS CHECKLIST:
 
 [ ] 2. Save your confirmation number: _______________________
 
-[ ] 3. Note your 1-year deadline: ${oneYearFromNow}
+[ ] 3. Note your 1-year deadline (one year from the day VA receives it): _______________________
 
 [ ] 4. Gather evidence:
     [ ] Service treatment records
@@ -6280,21 +6457,11 @@ VA Benefits Hotline: 1-800-827-1000
 `;
 }
 
+// The signer writes the date on the day they sign. No document prints
+// today's date for them.
+const BLANK_DATE_LINE = "________________";
+
 function generateMedicalRelease(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const expirationDate = new Date(
-    Date.now() + 180 * 24 * 60 * 60 * 1000,
-  ).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   let statement = `AUTHORIZATION TO DISCLOSE INFORMATION TO VA
 Reference Worksheet for VA Forms 21-4142 & 21-4142a
 
@@ -6336,15 +6503,14 @@ information pertaining to the conditions listed to the Department of
 Veterans Affairs. This information is needed to evaluate my claim for
 VA disability benefits.
 
-EXPIRATION: This authorization expires ${expirationDate}
-            (180 days from the date of signature)
+EXPIRATION: This authorization expires 180 days from the date of signature.
 
 
 Signature: ________________________________________
 
 Printed Name: ${formData.veteranName || "________________________________________"}
 
-Date Signed: ${currentDate}
+Date Signed: ${BLANK_DATE_LINE}
 
 ================================================================================
 
@@ -6389,12 +6555,6 @@ Before submitting, contact each provider to confirm:
 }
 
 function generatePriorityProcessing(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const statement = `REQUEST FOR PRIORITY PROCESSING
 (To Be Submitted with VA Form 20-10207)
 
@@ -6463,7 +6623,7 @@ Signature: ________________________________________
 
 Printed Name: ${formData.veteranName || "________________________________________"}
 
-Date Signed: ${currentDate}
+Date Signed: ${BLANK_DATE_LINE}
 
 ================================================================================
 
@@ -6514,12 +6674,6 @@ VA Benefits Hotline: 1-800-827-1000
 }
 
 function generateVSOAppointment(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const vsoName =
     formData.vsoName === "Other" ? formData.vsoOther : formData.vsoName;
 
@@ -6576,7 +6730,7 @@ Signature: ________________________________________
 
 Printed Name: ${formData.veteranFirstName || ""} ${formData.veteranLastName || ""}
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 ================================================================================
 
@@ -6621,12 +6775,6 @@ VA Benefits Hotline: 1-800-827-1000
 }
 
 function generateIndividualRepAppointment(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const repTypeLabel =
     formData.repType === "attorney" ? "Attorney" : "Accredited Claims Agent";
 
@@ -6679,7 +6827,7 @@ Veteran Signature: ________________________________________
 
 Printed Name: ${formData.veteranFirstName || ""} ${formData.veteranLastName || ""}
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 ================================================================================
 
@@ -6734,11 +6882,6 @@ Phone: 1-202-461-7699
 }
 
 function generateThirdPartyAuth(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._thirdPartyAuthVeteranFields(formData),
     ..._thirdPartyAuthPartyFields(formData),
@@ -6786,7 +6929,7 @@ ${f.specificClaimDetailsLine}
 
 ================================================================================
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21-0845/
 
@@ -6795,11 +6938,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0845/
 }
 
 function generateFOIARequest(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const branchLabels = {
     army: "U.S. Army",
     navy: "U.S. Navy",
@@ -6856,7 +6994,7 @@ IMPORTANT NOTES:
 - Some records may require redaction of third-party information
 - There is no fee for veterans requesting their own records
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-20-10206/
 
@@ -6865,11 +7003,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-20-10206/
 }
 
 function generateAlternateSigner(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const reasonLabels = {
     "physical-disability": "Physical Disability",
     hospitalized: "Hospitalized",
@@ -6931,7 +7064,7 @@ ${formData.witnessStatement ? `Additional Statement: ${formData.witnessStatement
 
 ================================================================================
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
 
@@ -6940,11 +7073,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
 }
 
 function generateNursingHome(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._nursingHomeVeteranFields(formData),
     ..._nursingHomeFacilityFields(formData),
@@ -6996,7 +7124,7 @@ ${f.additionalInfoLine}
 
 ================================================================================
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21-0779/
 
@@ -7005,11 +7133,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0779/
 }
 
 function generateSubstitutionRequest(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._substitutionRequestVeteranFields(formData),
     ..._substitutionRequestClaimantFields(formData),
@@ -7063,7 +7186,7 @@ ${f.acknowledgmentsText}
 
 IMPORTANT: Request must be filed within 1 YEAR of the veteran's death.
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21p-0847/
 
@@ -7072,11 +7195,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-0847/
 }
 
 function generateIncomeAsset(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._incomeAssetClaimantFields(formData),
     ..._incomeAssetMonthlyIncomeFields(formData),
@@ -7141,7 +7259,7 @@ ${f.medicalExpenseNoteLine}
 
 ================================================================================
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21p-0969/
 
@@ -7150,11 +7268,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-0969/
 }
 
 function generateMedicalExpenseReport(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._medicalExpenseReportClaimantFields(formData),
     ..._medicalExpenseReportPeriodFields(formData),
@@ -7214,7 +7327,7 @@ ${f.otherDescriptionLine}
 
 KEEP YOUR RECEIPTS - VA may request documentation.
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21p-8416/
 
@@ -7223,11 +7336,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-8416/
 }
 
 function generateEmploymentInfo(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._employmentInfoVeteranFields(formData),
     ..._employmentInfoEmployerFields(formData),
@@ -7294,7 +7402,7 @@ IMPORTANT FOR TDIU CLAIMS:
 - Send to your last employer(s) with a cover letter
 - Employer should complete the employer section and return to VA
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
@@ -7302,360 +7410,7 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 `;
 }
 
-function generateBuddyStatement(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const relationLabels = {
-    "fellow-service-member": "Fellow Service Member",
-    supervisor: "Military Supervisor/NCO/Officer",
-    spouse: "Spouse",
-    family: "Family Member",
-    friend: "Friend",
-    coworker: "Civilian Coworker",
-    caregiver: "Caregiver",
-    other: "Other",
-  };
-
-  // Clean, official format that works as an attachment to VA Form 21-10210
-  let statement = `STATEMENT IN SUPPORT OF CLAIM
-(To Be Submitted with VA Form 21-10210)
-
---------------------------------------------------------------------------------
-
-SECTION I - PERSON PROVIDING STATEMENT (WITNESS/AFFIANT)
-
-Full Name: ${formData.witnessName || "________________________________________"}
-
-Relationship to Veteran: ${relationLabels[formData.witnessRelation] || formData.witnessRelation || "____________________"}
-
-Contact Phone: ${formData.witnessPhone || "________________________________________"}
-
-Contact Email: ${formData.witnessEmail || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION II - VETERAN INFORMATION
-
-Veteran's Full Name: ${formData.veteranName || "________________________________________"}
-
-Branch of Service: ${formData.veteranBranch || "________________________________________"}
-
-Condition/Disability Claimed: ${formData.conditionName || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION III - STATEMENT
-
-A. How I Know the Veteran:
-
-${formData.howKnown || "[Describe how you came to know the veteran]"}
-
-Length of Acquaintance: ${formData.knownSince || "________________________________________"}
-
-
-B. What I Personally Witnessed or Observed:
-
-${formData.whatObserved || "[Describe what you personally witnessed regarding the veteran's condition, injury, or symptoms]"}
-
-
-C. When and Where These Observations Occurred:
-
-Timeframe: ${formData.whenObserved || "________________________________________"}
-
-Location: ${formData.whereObserved || "________________________________________"}
-
-`;
-
-  statement += _buildBuddyDailyLifeImpactSection(formData);
-  statement += _buildBuddyAdditionalInfoSection(formData);
-
-  statement += `--------------------------------------------------------------------------------
-
-SECTION IV - CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001 (making false statements to a federal agency).
-
-${formData.willingToTestify ? "[X] I am willing to provide additional testimony or clarification if requested.\n" : "[ ] I am willing to provide additional testimony or clarification if requested.\n"}
-
-Signature: ________________________________________
-
-Printed Name: ${formData.witnessName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. The witness should review this statement for accuracy, then print and sign it.
-
-2. This statement should be submitted as an attachment to VA Form 21-10210
-   (Lay/Witness Statement).
-
-3. Submit online at: https://www.va.gov/supporting-forms-for-claims/lay-witness-statement-form-21-10210/
-   Or mail to your VA Regional Office.
-
-4. Retain a copy of this signed statement for your records.
-
-5. The veteran should include this statement with their VA disability claim.
-`;
-
-  return statement;
-}
-
-function generatePersonalStatement(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const claimTypeLabels = {
-    initial: "Initial Service Connection",
-    increase: "Claim for Increased Rating",
-    secondary: "Secondary Service Connection",
-    reopened: "Reopened Claim",
-  };
-
-  const statement = `STATEMENT IN SUPPORT OF CLAIM
-(To Be Submitted with VA Form 21-4138)
-
---------------------------------------------------------------------------------
-
-SECTION I - CLAIMANT INFORMATION
-
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Claim Type: ${claimTypeLabels[formData.claimType] || formData.claimType || "____________________"}
-
-Condition Claimed: ${formData.conditionName || "________________________________________"}
-${_buildPersonalStatementSecondaryConditionSection(formData)}
---------------------------------------------------------------------------------
-
-SECTION II - IN-SERVICE EVENT/INJURY/ONSET
-
-A. When Symptoms First Began:
-
-${formData.onsetDate || "[Date or timeframe when symptoms first appeared]"}
-
-
-B. In-Service Event, Injury, or Exposure:
-
-${formData.inServiceEvent || "[Describe the specific event, injury, training accident, exposure, or circumstances that led to or caused this condition]"}
-
-${_buildPersonalStatementFirstTreatmentSection(formData)}
---------------------------------------------------------------------------------
-
-SECTION III - CURRENT SYMPTOMS AND SEVERITY
-
-A. Description of Symptoms:
-
-${formData.symptoms || "[Describe your current symptoms in detail - include frequency, severity, triggers, and physical/mental effects]"}
-
-
-B. Description of Worst Days:
-
-${formData.worstDays || "[Describe what your worst days look like - this helps the VA understand the full impact of your condition]"}
-
-${_buildPersonalStatementFlareUpsSection(formData)}
---------------------------------------------------------------------------------
-
-SECTION IV - FUNCTIONAL IMPACT
-
-A. Impact on Employment:
-
-${formData.workImpact || "[Describe how this condition affects your ability to work - missed days, limitations, accommodations needed, etc.]"}
-
-
-B. Impact on Daily Activities:
-
-${formData.dailyImpact || "[Describe how this condition affects daily life - self-care, household tasks, hobbies, driving, etc.]"}
-
-${_buildPersonalStatementSocialImpactSection(formData)}
---------------------------------------------------------------------------------
-${_buildPersonalStatementTreatmentHistorySection(formData)}
-CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and belief. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
-
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. Review this statement for accuracy and completeness.
-
-2. Print and sign where indicated.
-
-3. Submit with VA Form 21-4138 or as an attachment to your VA disability claim.
-
-4. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
-   Or mail to your VA Regional Office.
-
-5. Retain a copy for your records.
-`;
-
-  return statement;
-}
-
-function generatePTSDStatement(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const stressorLabels = {
-    combat: "Combat-Related Trauma",
-    mst: "Military Sexual Trauma (MST)",
-    "personal-assault": "Personal Assault",
-    accident: "Serious Accident/Injury",
-    death: "Witnessing Death or Serious Injury",
-    "fear-hostile": "Fear of Hostile Military/Terrorist Activity",
-    other: "Other Traumatic Event",
-  };
-
-  const statement = `STATEMENT IN SUPPORT OF CLAIM FOR PTSD
-(To Be Submitted with VA Form 21-0781)
-
---------------------------------------------------------------------------------
-
-SECTION I - VETERAN IDENTIFICATION
-
-Full Name: ${formData.veteranName || "________________________________________"}
-
-Branch of Service: ${formData.branch || "________________________________________"}
-
-Dates of Military Service: ${formData.serviceDates || "________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION II - STRESSOR EVENT INFORMATION
-
-Type of Stressor: ${stressorLabels[formData.stressorType] || formData.stressorType || "____________________"}
-
-Date of Incident: ${formData.eventDate || "________________________________________"}
-(Provide as specific a date as possible - month/year minimum)
-
-Location of Incident: ${formData.eventLocation || "________________________________________"}
-(City/Base/Country or geographic location)
-
-${formData.unitInfo ? `Unit Assignment at Time of Event: ${formData.unitInfo}` : "Unit Assignment at Time of Event: ________________________________________"}
-
---------------------------------------------------------------------------------
-
-SECTION III - DETAILED DESCRIPTION OF STRESSOR EVENT
-
-${formData.eventDescription || "[Provide a detailed description of the traumatic event. Include: what happened before, during, and after the event; who was involved; what you saw, heard, and felt; how you responded; and the immediate aftermath.]"}
-
---------------------------------------------------------------------------------
-
-SECTION IV - CORROBORATING EVIDENCE
-
-A. Witnesses to Event:
-${formData.witnesses || "None identified / Unknown"}
-
-B. Supporting Documentation:
-${formData.documentation || "None identified"}
-
-C. Was This Event Reported? To Whom?
-${formData.reportedTo || "Not reported / Unknown"}
-
---------------------------------------------------------------------------------
-
-SECTION V - CURRENT PTSD SYMPTOMS
-
-Check all symptoms you currently experience:
-
-${_buildPTSDSymptomsChecklist(formData)}
-
-${_buildPTSDSymptomDetailsSection(formData)}
---------------------------------------------------------------------------------
-
-CERTIFICATION AND SIGNATURE
-
-I hereby certify that the statements made herein are true and correct to the best of my knowledge and recollection. I understand that a false statement may be grounds for punishment as provided by 18 U.S.C. 1001.
-
-
-Signature: ________________________________________
-
-Printed Name: ${formData.veteranName || "________________________________________"}
-
-Date Signed: ${currentDate}
-
---------------------------------------------------------------------------------
-
-FOR VA USE ONLY - DO NOT WRITE BELOW THIS LINE
-
-Received by: _________________ Date: _________ File Number: _________________
-
---------------------------------------------------------------------------------
-
-INSTRUCTIONS:
-
-1. This statement should accompany VA Form 21-0781 (Statement in Support of
-   Claim for Service Connection for PTSD).
-
-2. For MST claims, use VA Form 21-0781a instead.
-
-3. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
-   Or mail to your VA Regional Office.
-
-4. Retain a copy for your records.
-
-IMPORTANT NOTES:
-
-- Combat veterans may have reduced evidentiary requirements under 38 CFR 3.304(f)(2)
-- MST claims have special evidence provisions under 38 CFR 3.304(f)(5)
-- Fear of hostile activity claims: 38 CFR 3.304(f)(3)
-
-CRISIS RESOURCES:
-
-- Veterans Crisis Line: Dial 988, Press 1
-- Crisis Text Line: Text 838255
-- VA PTSD Resources: https://www.ptsd.va.gov/
-`;
-
-  return statement;
-}
-
 function generateIntentToFile(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const oneYearFromNow = new Date(
-    Date.now() + 365 * 24 * 60 * 60 * 1000,
-  ).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const benefitLabels = {
     compensation: "Disability Compensation",
     pension: "Pension",
@@ -7727,7 +7482,7 @@ ${formData.conditions}
     : ""
 }
 Preferred Submission Method: ${methodLabels[formData.preferredMethod] || "________________________________________"}
-${buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow)}`;
+${buildIntentToFileDeadlinesSection()}`;
 
   return statement;
 }
@@ -7760,7 +7515,12 @@ function useFormsHelperProfileState() {
   const [veteranProfile, setVeteranProfile] = useState({});
   const [profileSaved, setProfileSaved] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
+  const [profileSaveError, setProfileSaveError] = useState(null);
   const fileInputRef = useRef(null);
+  // ADR-007 W6: tracks whether THIS session typed a new serviceStartDate,
+  // so Save Profile only ever calls setServiceEntryDate for a genuine edit -
+  // never for an untouched, prefilled value.
+  const serviceStartDateEditedRef = useRef(false);
 
   return {
     showProfileSetup,
@@ -7772,6 +7532,9 @@ function useFormsHelperProfileState() {
     importStatus,
     setImportStatus,
     fileInputRef,
+    serviceStartDateEditedRef,
+    profileSaveError,
+    setProfileSaveError,
   };
 }
 
@@ -7781,8 +7544,29 @@ function useFormsHelperAIState() {
   const [aiEnhancedContent, setAiEnhancedContent] = useState(null);
   const [showAIVersion, setShowAIVersion] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [aiDraftNote, setAiDraftNote] = useState(null);
+  const [draftEdit, setDraftEdit] = useState(null);
+  const [keptDraft, setKeptDraft] = useState(null);
+  const [savedItem, setSavedItem] = useState(null);
+  const [officialPdfNotice, setOfficialPdfNotice] = useState("");
+  const [askRebuild, setAskRebuild] = useState(false);
+  const [draftOutOfStep, setDraftOutOfStep] = useState(false);
 
   return {
+    draftEdit,
+    setDraftEdit,
+    keptDraft,
+    setKeptDraft,
+    savedItem,
+    setSavedItem,
+    officialPdfNotice,
+    setOfficialPdfNotice,
+    askRebuild,
+    setAskRebuild,
+    draftOutOfStep,
+    setDraftOutOfStep,
+    aiDraftNote,
+    setAiDraftNote,
     showAIConsent,
     setShowAIConsent,
     isEnhancingWithAI,
@@ -7796,98 +7580,212 @@ function useFormsHelperAIState() {
   };
 }
 
-function _runFormsHelperProfilePrefillEffect(setVeteranProfile, setFormData) {
+// Every condition name the veteran already has on file (My Ratings + saved
+// claims), deduped the same way NexusBuilder/Pathfinder do. `first` seeds a
+// single-condition field (e.g. 21-4138's conditionName); `list` seeds a
+// multi-condition field (e.g. 21-0966's conditions, FOIA's
+// specificConditions).
+function getFormsHelperConditionsDefault() {
+  const seen = new Set();
+  const names = [];
+  getMyRatings().forEach((r) => {
+    const key = normalizeConditionName(r.name);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(r.name);
+  });
+  getSavedClaims().forEach((c) => {
+    const key = normalizeConditionName(c.conditionName);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(c.conditionName);
+  });
+  return { first: names[0] || "", list: names.join(", ") };
+}
+
+// Every field FormsHelper can pre-fill from the veteran's own records: name/
+// address/service from the profile (kept current by DD214 import + the
+// Profile Setup tab), plus condition(s)-claimed fields from My Ratings and
+// saved claims. Used both on first open and whenever a new form is
+// selected (FormSelectionCards' onClick), so the prefill survives the
+// fresh-start reset instead of only ever applying once at mount and then
+// being wiped the moment a form is picked.
+// The Profile Setup tab collects a bare middleInitial field, but a DD214
+// import only ever populates the full middleName (dd214FieldExtractor.js) -
+// a veteran who set up their profile from a scan has middleName but no
+// middleInitial, so forms that expect just the initial got nothing, and
+// building the full name from an empty middleInitial part left a double
+// space ("Jane  Veteran").
+function _resolveMiddleInitial(profile) {
+  if (profile.middleInitial) return profile.middleInitial;
+  return profile.middleName ? profile.middleName.trim().charAt(0) : "";
+}
+
+// Joins only the parts that are actually present, so a missing middle name/
+// initial never leaves a double space in the guessed full name.
+function _buildVeteranFullNameGuess(profile, middleInitial) {
+  return [profile.firstName, middleInitial, profile.lastName]
+    .filter((part) => part && String(part).trim())
+    .join(" ");
+}
+
+// Exported for direct unit testing: no wizard step currently binds a field
+// named serviceStartDate (the PTSD stressor / buddy-statement steps use
+// their own free-text "serviceDates" field instead), so there is nothing in
+// the rendered UI today that can observe whether a calculated date was
+// correctly left out of this object - see formsHelperCalculatedDate.test.jsx.
+export function buildFormsHelperPrefillDefaults() {
   const profile = getVeteranProfile();
-  setVeteranProfile(profile);
-  // Pre-fill formData with profile data
-  if (profile && Object.keys(profile).length > 0) {
-    setFormData((prev) => ({
-      ...prev,
-      // Name fields
-      veteranName:
-        `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim(),
-      veteranFirstName: profile.firstName,
-      veteranMiddleInitial: profile.middleInitial,
-      veteranLastName: profile.lastName,
-      fullName:
-        profile.fullName ||
-        `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim(),
+  const conditionsDefault = getFormsHelperConditionsDefault();
+  const middleInitial = _resolveMiddleInitial(profile);
+  const fullNameGuess = _buildVeteranFullNameGuess(profile, middleInitial);
 
-      // Identification
-      ssn: profile.ssn,
-      ssnLast4: profile.ssnLast4 || profile.ssn,
-      ssnFull: profile.ssnFull,
-      vaFileNumber: profile.vaFileNumber,
-      serviceNumber: profile.serviceNumber,
-      dob: profile.dob,
-      placeOfBirth: profile.placeOfBirth,
+  return {
+    // Name fields
+    veteranName: fullNameGuess,
+    veteranFirstName: profile.firstName,
+    veteranMiddleInitial: middleInitial,
+    veteranLastName: profile.lastName,
+    fullName: profile.fullName || fullNameGuess,
 
-      // Contact
-      email: profile.email,
-      phone: profile.phone,
-      alternatePhone: profile.alternatePhone,
+    // Identification
+    ssn: profile.ssn,
+    ssnLast4: profile.ssnLast4 || profile.ssn,
+    ssnFull: profile.ssnFull,
+    vaFileNumber: profile.vaFileNumber,
+    serviceNumber: profile.serviceNumber,
+    dob: profile.dob,
+    placeOfBirth: profile.placeOfBirth,
 
-      // Address
-      street: profile.street,
-      apt: profile.apt,
-      city: profile.city,
-      state: profile.state,
-      zip: profile.zip,
-      country: profile.country || "United States",
-      homeOfRecord: profile.homeOfRecord,
+    // Contact
+    email: profile.email,
+    phone: profile.phone,
+    alternatePhone: profile.alternatePhone,
 
-      // Military Service
-      veteranBranch: profile.branch,
-      branch: profile.branch,
-      rankAtDischarge: profile.rankAtDischarge,
-      payGrade: profile.payGrade,
-      mos: profile.mos,
-      mosTitle: profile.mosTitle,
-      serviceStartDate: profile.serviceStartDate,
-      serviceEndDate: profile.serviceEndDate,
-      characterOfService: profile.characterOfService,
-      separationType: profile.separationType,
-    }));
+    // Address
+    street: profile.street,
+    apt: profile.apt,
+    city: profile.city,
+    state: profile.state,
+    zip: profile.zip,
+    // No default: a country the veteran did not give is not put on a form.
+    country: profile.country || "",
+    homeOfRecord: profile.homeOfRecord,
+
+    // Military Service
+    veteranBranch: profile.branch,
+    branch: profile.branch,
+    rankAtDischarge: profile.rankAtDischarge,
+    payGrade: profile.payGrade,
+    mos: profile.mos,
+    mosTitle: profile.mosTitle,
+    // ADR-007: reads the SAME canonical resolver every other consumer
+    // does, not the flat profile field directly - a calculated guess
+    // (entry.derived) was never printed on the veteran's paperwork, so it
+    // must not be silently handed to a VA form field as if it were. Leaving
+    // it blank matches how this same prefill already treats any other
+    // field it isn't confident about (e.g. conditionsDefault above, blank
+    // with nothing on file) rather than inventing a UI-only "confirm this"
+    // affordance this wizard has nowhere else.
+    serviceStartDate: (() => {
+      const entry = getServiceEntry();
+      return entry.derived ? "" : entry.date || "";
+    })(),
+    serviceEndDate: profile.serviceEndDate,
+    characterOfService: profile.characterOfService,
+    separationType: profile.separationType,
+
+    // Conditions claimed (21-4138/21-0966/FOIA-style condition fields)
+    conditionName: conditionsDefault.first,
+    conditions: conditionsDefault.list,
+    specificConditions: conditionsDefault.list,
+  };
+}
+
+function _runFormsHelperProfilePrefillEffect(
+  setVeteranProfile,
+  setFormData,
+  serviceStartDateEditedRef,
+) {
+  const profile = getVeteranProfile();
+  const entry = getServiceEntry();
+  setVeteranProfile({
+    ...profile,
+    ...(entry.periodId
+      ? { serviceStartDate: entry.date, serviceStartDateDerived: entry.derived }
+      : null),
+  });
+  if (serviceStartDateEditedRef) serviceStartDateEditedRef.current = false;
+  const defaults = buildFormsHelperPrefillDefaults();
+  // Pre-fill formData with profile/records data, unless nothing at all is
+  // on file (every value would just be "").
+  if (Object.values(defaults).some(Boolean)) {
+    setFormData((prev) => ({ ...prev, ...defaults }));
   }
 }
 
+// ADR-007 W6: a typed serviceStartDate now reaches the canonical period (or
+// the flat store, with no period yet) through setServiceEntryDate - never
+// straight through saveVeteranProfile, whose own chokepoint would silently
+// replace it with the projection the moment a period backs the entry.
+// Returns an error string, or null on success.
+function _applyFormsHelperServiceStartCorrection(veteranProfile) {
+  const typed = veteranProfile.serviceStartDate;
+  if (isSameCalendarDay(typed, getServiceEntry().date)) return null;
+  const result = setServiceEntryDate({ date: typed, via: "forms_helper" });
+  if (result.ok) return null;
+  return "Your service start date couldn't be saved. Please use a valid date (YYYY-MM-DD).";
+}
+
 function _buildFormsHelperProfileEditHandlers(ctx) {
-  const { veteranProfile, setVeteranProfile, setProfileSaved, setFormData } =
-    ctx;
+  const {
+    veteranProfile,
+    setVeteranProfile,
+    setProfileSaved,
+    setFormData,
+    serviceStartDateEditedRef,
+    setProfileSaveError,
+  } = ctx;
 
   const handleProfileChange = (field, value) => {
-    setVeteranProfile((prev) => ({ ...prev, [field]: value }));
+    setVeteranProfile((prev) => ({
+      ...prev,
+      [field]: value,
+      // Cosmetic only (component-local display state) - a typed edit no
+      // longer looks like the prior calculated guess while the veteran is
+      // still typing, ahead of the real correction setServiceEntryDate
+      // applies to the canonical period on save.
+      ...(field === "serviceStartDate"
+        ? { serviceStartDateDerived: false }
+        : null),
+    }));
+    if (field === "serviceStartDate" && serviceStartDateEditedRef) {
+      serviceStartDateEditedRef.current = true;
+    }
     setProfileSaved(false);
+    setProfileSaveError?.(null);
   };
 
   const handleSaveProfile = () => {
     const success = saveVeteranProfile(veteranProfile);
-    if (success) {
-      setProfileSaved(true);
-      // Update formData with new profile
-      setFormData((prev) => ({
-        ...prev,
-        veteranName:
-          `${veteranProfile.firstName || ""} ${veteranProfile.middleInitial || ""} ${veteranProfile.lastName || ""}`.trim(),
-        veteranFirstName: veteranProfile.firstName,
-        veteranMiddleInitial: veteranProfile.middleInitial,
-        veteranLastName: veteranProfile.lastName,
-        ssn: veteranProfile.ssn,
-        dob: veteranProfile.dob,
-        email: veteranProfile.email,
-        phone: veteranProfile.phone,
-        street: veteranProfile.street,
-        apt: veteranProfile.apt,
-        city: veteranProfile.city,
-        state: veteranProfile.state,
-        zip: veteranProfile.zip,
-        country: veteranProfile.country || "United States",
-        veteranBranch: veteranProfile.branch,
-        vaFileNumber: veteranProfile.vaFileNumber,
-        serviceNumber: veteranProfile.serviceNumber,
-      }));
-      setTimeout(() => setProfileSaved(false), 3000);
+    if (!success) return;
+
+    if (serviceStartDateEditedRef?.current) {
+      const error = _applyFormsHelperServiceStartCorrection(veteranProfile);
+      if (error) {
+        setProfileSaveError?.(error);
+        return;
+      }
     }
+
+    setProfileSaveError?.(null);
+    setProfileSaved(true);
+    _runFormsHelperProfilePrefillEffect(
+      setVeteranProfile,
+      setFormData,
+      serviceStartDateEditedRef,
+    );
+    setTimeout(() => setProfileSaved(false), 3000);
   };
 
   return { handleProfileChange, handleSaveProfile };
@@ -7960,13 +7858,7 @@ function _buildFormsHelperProfileHandlers(ctx) {
 }
 
 function _buildFormsHelperFormDataHandlers(ctx) {
-  const {
-    setFormData,
-    formData,
-    selectedForm,
-    generatedContent,
-    setImportStatus,
-  } = ctx;
+  const { setFormData, formData, selectedForm, setImportStatus } = ctx;
 
   const handleFieldChange = (fieldName, value) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
@@ -7992,33 +7884,42 @@ function _buildFormsHelperFormDataHandlers(ctx) {
   };
 
   const handleSaveToPacket = () => {
-    const formId = saveForm({
-      formType: selectedForm?.id,
-      formNumber: selectedForm?.formNumber,
-      formName: selectedForm?.name,
+    // Saving again updates the item already saved; it never makes a second.
+    const text = shownDraft(ctx).text;
+    const fields = {
       title: formData.conditionName || selectedForm?.name,
       formData: formData,
-      generatedContent: generatedContent,
-      status: "Draft",
-    });
+      generatedContent: text,
+    };
+    const earlier = ctx.savedItem?.id;
+    const formId =
+      earlier && updateSavedForm(earlier, fields)
+        ? earlier
+        : saveForm({
+            formType: selectedForm?.id,
+            formNumber: selectedForm?.formNumber,
+            formName: selectedForm?.name,
+            status: "Draft",
+            ...fields,
+          });
 
     if (formId) {
+      ctx.setSavedItem({ id: formId, text, at: new Date() });
       setImportStatus({ type: "success", message: "Form saved to My Packet!" });
       setTimeout(() => setImportStatus(null), 3000);
+    } else {
+      setImportStatus({ type: "error", message: SAVE_FAILED });
     }
   };
 
   return { handleFieldChange, handleChecklistChange, handleSaveToPacket };
 }
 
-function _generateFormsHelperContent(selectedForm, formData) {
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export function _generateFormsHelperContent(selectedForm, formData) {
+  const plan = formStatementPlan(selectedForm?.id, formData);
+  if (plan) return plan.build(plan.answers);
   switch (selectedForm?.id) {
-    case "buddy-statement":
-      return generateBuddyStatement(formData);
-    case "personal-statement":
-      return generatePersonalStatement(formData);
-    case "ptsd-stressor":
-      return generatePTSDStatement(formData);
     case "intent-to-file":
       return generateIntentToFile(formData);
     case "medical-release":
@@ -8060,6 +7961,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     setAiEnhancedContent,
     setShowAIVersion,
     setAiError,
+    setAiDraftNote,
   } = ctx;
 
   const generateContent = () => {
@@ -8068,16 +7970,105 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     return content;
   };
 
-  const handleFinishWizard = () => {
-    generateContent();
-    setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
-    // Reset AI state when generating new content
+  const clearDraftState = () => {
+    setAiError(null);
     setAiEnhancedContent(null);
     setShowAIVersion(false);
-    setAiError(null);
+    setAiDraftNote(null);
+    ctx.setDraftEdit(null);
+    ctx.setKeptDraft(null);
+    ctx.setAskRebuild(false);
+    ctx.setDraftOutOfStep(false);
   };
 
-  return { generateContent, handleFinishWizard };
+  // Going back to the answers keeps what is in the box when the veteran
+  // changed it (by hand, or by taking the AI's wording), so regenerating
+  // can put it back instead of replacing it.
+  const handleEditAnswers = () => {
+    const box = shownDraft(ctx);
+    const changed = box.text !== ctx.generatedContent;
+    clearDraftState();
+    ctx.setKeptDraft(
+      changed
+        ? {
+            text: box.text,
+            builtFrom: ctx.generatedContent,
+            isAIVersion: box.base !== ctx.generatedContent,
+          }
+        : null,
+    );
+    setGeneratedContent(null);
+    setCurrentStep(1);
+  };
+
+  const handleFinishWizard = () => {
+    const kept = ctx.keptDraft;
+    const content = generateContent();
+    setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
+    clearDraftState();
+    if (!kept) return;
+    // The kept draft goes back in the box. If an answer changed since it
+    // was built, the veteran is asked whether to keep it or rebuild.
+    if (kept.isAIVersion) {
+      setAiEnhancedContent(kept.text);
+      setShowAIVersion(true);
+    } else {
+      ctx.setDraftEdit({ base: content, text: kept.text });
+    }
+    ctx.setAskRebuild(content !== kept.builtFrom);
+  };
+
+  const handleRebuildFromAnswers = () => clearDraftState();
+
+  // Kept after an answer changed: the draft and the answers now differ,
+  // and the screen says so.
+  const handleKeepEditedDraft = () => {
+    ctx.setAskRebuild(false);
+    ctx.setDraftOutOfStep(true);
+  };
+
+  const handleStartNewForm = () => {
+    clearDraftState();
+    ctx.setOfficialPdfNotice("");
+    ctx.setSavedItem(null);
+    ctx.setSelectedForm(null);
+    ctx.setFormData({});
+    setCurrentStep(0);
+    setGeneratedContent(null);
+  };
+
+  return {
+    generateContent,
+    handleFinishWizard,
+    handleEditAnswers,
+    handleRebuildFromAnswers,
+    handleKeepEditedDraft,
+    handleStartNewForm,
+  };
+}
+
+// Only a draft the AI reworded is an AI version. Its accepted rewordings go
+// into the text in the box, so an edit made there is kept. Otherwise the
+// box is left as it is, with the reason beside it.
+function showAIOutcome(ctx, result) {
+  const { text, applied } =
+    result.draftPath === "model"
+      ? applyAcceptedRewordings(shownDraft(ctx).text, result.passageOutcomes)
+      : { applied: 0 };
+  const reworded = applied > 0;
+  ctx.setAiEnhancedContent(reworded ? text : null);
+  ctx.setShowAIVersion(reworded);
+  ctx.setAiDraftNote(
+    reworded || result.draftErrorReason
+      ? null
+      : (rewordingOffNote(result, ctx.t("smallModelCaveat", "rewordingOff")) ??
+          AI_NO_CHANGE_NOTE),
+  );
+  ctx.setAiError(
+    result.draftErrorReason
+      ? plainAIError(result.draftErrorReason, ctx.t)
+      : null,
+  );
 }
 
 function _buildFormsHelperAIHandlers(ctx) {
@@ -8087,20 +8078,15 @@ function _buildFormsHelperAIHandlers(ctx) {
     setIsEnhancingWithAI,
     setAiError,
     formData,
-    setAiEnhancedContent,
     setShowAIVersion,
     showAIVersion,
-    aiEnhancedContent,
-    generatedContent,
+    setDraftEdit,
   } = ctx;
 
   // Check if current form type supports AI enhancement
   const isAIEnabledFormType = () => {
-    const aiEnabledForms = [
-      "buddy-statement",
-      "personal-statement",
-      "ptsd-stressor",
-    ];
+    // The buddy statement is a witness's: its words are never reworded.
+    const aiEnabledForms = ["personal-statement", "ptsd-stressor"];
     return aiEnabledForms.includes(selectedForm?.id);
   };
 
@@ -8129,10 +8115,9 @@ function _buildFormsHelperAIHandlers(ctx) {
       const result = await enhanceFormStatement(selectedForm?.id, formData);
 
       if (result.success) {
-        setAiEnhancedContent(result.content);
-        setShowAIVersion(true);
+        showAIOutcome(ctx, result);
       } else {
-        setAiError(result.error || "Failed to enhance statement with AI.");
+        setAiError(plainAIError(result.error, ctx.t));
       }
     } catch (error) {
       console.error("AI enhancement error:", error);
@@ -8150,11 +8135,10 @@ function _buildFormsHelperAIHandlers(ctx) {
     setShowAIVersion(!showAIVersion);
   };
 
-  const getDisplayContent = () => {
-    return showAIVersion && aiEnhancedContent
-      ? aiEnhancedContent
-      : generatedContent;
-  };
+  const getDisplayContent = () => shownDraft(ctx).text;
+
+  const editDraft = (text) =>
+    setDraftEdit({ base: shownDraft(ctx).base, text });
 
   return {
     isAIEnabledFormType,
@@ -8164,52 +8148,61 @@ function _buildFormsHelperAIHandlers(ctx) {
     handleAICancel,
     toggleAIVersion,
     getDisplayContent,
+    editDraft,
   };
+}
+
+/**
+ * The download name for a form's draft: its form number (which already
+ * begins "VA") and the condition, when this form asks for one. A condition
+ * left in the form data by another form is not used.
+ */
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export function _draftFileName(selectedForm, formData) {
+  const asksCondition = _getFormStepsForForm(selectedForm).some((step) =>
+    step.fields.some((field) => field.name === "conditionName"),
+  );
+  const condition = asksCondition ? (formData?.conditionName ?? "").trim() : "";
+  return [selectedForm?.formNumber ?? "VA Form", condition]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, "-");
 }
 
 function _buildFormsHelperDownloadHandlers(ctx) {
   const {
     selectedForm,
     formData,
-    generatedContent,
     generateContent,
     setShowDownloadMenu,
+    setImportStatus,
   } = ctx;
 
-  const handleDownload = (format) => {
-    const content = generatedContent || generateContent();
-    const fileName = `VA-${selectedForm?.formNumber?.replace(/\s+/g, "-")}-${formData.conditionName?.replace(/\s+/g, "-") || "Statement"}`;
-
-    switch (format) {
-      case "txt":
-        downloadAsTxt(content, fileName);
-        break;
-      case "docx":
-        downloadAsDocx(content, fileName);
-        break;
-      case "pdf":
-        downloadAsPdf(content, fileName);
-        break;
-      default:
-        downloadAsTxt(content, fileName);
-    }
+  const handleDownload = async (format) => {
     setShowDownloadMenu(false);
+    const fileName = _draftFileName(selectedForm, formData);
+    try {
+      await downloadDraft(
+        shownDraft(ctx).text || generateContent(),
+        fileName,
+        format,
+      );
+    } catch (error) {
+      console.error("Forms Helper download failed:", error);
+      setImportStatus({ type: "error", message: DOWNLOAD_FAILED });
+    }
   };
 
+  // The official PDF is filled from the answers. Anything that did not fit
+  // the form is said on screen, never dropped in silence.
   const handleDownloadOfficialPdf = async () => {
+    ctx.setOfficialPdfNotice("");
     try {
-      // Show loading state
       const result = await fillAndDownloadForm(selectedForm?.id, formData);
-      if (result.success) {
-        // eslint-disable-next-line no-console
-        console.log(`Downloaded: ${result.fileName}`);
-      }
+      ctx.setOfficialPdfNotice(officialPdfProblems(result, ctx.t));
     } catch (error) {
       console.error("Error generating official PDF:", error);
-      alert(
-        "Error generating official PDF form. Downloading text version instead.",
-      );
-      handleDownload("pdf");
+      ctx.setOfficialPdfNotice(ctx.t("formsHelper", "officialPdfFailed"));
     }
   };
 
@@ -8225,6 +8218,7 @@ function FormsHelperFormSelection({ state, handlers }) {
     importStatus,
     veteranProfile,
     profileSaved,
+    profileSaveError,
   } = state;
   const {
     handleFileSelect,
@@ -8276,6 +8270,7 @@ function FormsHelperFormSelection({ state, handlers }) {
           veteranProfile={veteranProfile}
           handleProfileChange={handleProfileChange}
           profileSaved={profileSaved}
+          profileSaveError={profileSaveError}
           handleSaveProfile={handleSaveProfile}
           t={t}
         />
@@ -8322,37 +8317,20 @@ function ReviewSuccessMessage({ t }) {
 }
 
 function FormsHelperReviewStep({ state, handlers }) {
-  const {
-    generatedContent,
-    t,
-    aiStatus,
-    aiEnhancedContent,
-    isEnhancingWithAI,
-    showAIVersion,
-    aiError,
-  } = state;
-  const { onOpenAISettings, importStatus, selectedForm } = state;
-  const {
-    setCurrentStep,
-    setGeneratedContent,
-    setAiEnhancedContent,
-    setShowAIVersion,
-    setSelectedForm,
-    setFormData,
-  } = state;
-  const {
-    isAIEnabledFormType,
-    handleAIEnhanceClick,
-    toggleAIVersion,
-    handleDownloadOfficialPdf,
-    handleDownload,
-    handleSaveToPacket,
-    getDisplayContent,
-  } = handlers;
-
+  const { generatedContent, t, aiEnhancedContent, showAIVersion } = state;
   if (!generatedContent) return null;
 
-  const displayContent = getDisplayContent();
+  const displayContent = handlers.getDisplayContent();
+  const plan = formStatementPlan(state.selectedForm?.id, {});
+  const isStatement = Boolean(plan);
+  const showingAIDraft = Boolean(showAIVersion && aiEnhancedContent);
+  // The notice follows the text on screen: it stops asking for blanks to be
+  // filled once the veteran has filled them.
+  const draftNote = showingAIDraft
+    ? null
+    : [state.aiDraftNote, standardDraftNote(displayContent)]
+        .filter(Boolean)
+        .join(" ");
 
   return (
     <div className="space-y-6">
@@ -8361,47 +8339,67 @@ function FormsHelperReviewStep({ state, handlers }) {
       <ClaimPrepDisclaimer />
 
       <AIEnhancementSection
-        isAIEnabledFormType={isAIEnabledFormType}
-        aiStatus={aiStatus}
+        isAIEnabledFormType={handlers.isAIEnabledFormType}
+        aiStatus={state.aiStatus}
         aiEnhancedContent={aiEnhancedContent}
-        handleAIEnhanceClick={handleAIEnhanceClick}
-        isEnhancingWithAI={isEnhancingWithAI}
-        toggleAIVersion={toggleAIVersion}
+        handleAIEnhanceClick={handlers.handleAIEnhanceClick}
+        isEnhancingWithAI={state.isEnhancingWithAI}
+        toggleAIVersion={handlers.toggleAIVersion}
         showAIVersion={showAIVersion}
-        aiError={aiError}
-        onOpenAISettings={onOpenAISettings}
+        aiError={state.aiError}
+        aiDraftNote={draftNote}
+        onOpenAISettings={state.onOpenAISettings}
         t={t}
       />
+
+      {plan?.note && <StandardDraftNotice note={plan.note} />}
+
+      {isStatement && (
+        <StatementDraftEditor
+          versionLabel={
+            showingAIDraft
+              ? t("formsHelper", "aiEnhanced")
+              : STANDARD_DRAFT_LABEL
+          }
+          value={displayContent}
+          onChange={handlers.editDraft}
+          outOfStep={state.draftOutOfStep}
+        />
+      )}
 
       <ReviewDownloadSection
         t={t}
-        showAIVersion={showAIVersion}
-        aiEnhancedContent={aiEnhancedContent}
-        handleDownloadOfficialPdf={handleDownloadOfficialPdf}
-        handleDownload={handleDownload}
-        handleSaveToPacket={handleSaveToPacket}
-        importStatus={importStatus}
+        handleDownloadOfficialPdf={handlers.handleDownloadOfficialPdf}
+        handleDownload={handlers.handleDownload}
+        handleSaveToPacket={handlers.handleSaveToPacket}
+        importStatus={state.importStatus}
+        formType={state.selectedForm?.id}
+        isStatement={isStatement}
+        savedItem={state.savedItem}
+        isSavedNow={state.savedItem?.text === displayContent}
+        officialPdfNotice={state.officialPdfNotice}
       />
 
-      <ReviewPreviewSection
-        showAIVersion={showAIVersion}
-        aiEnhancedContent={aiEnhancedContent}
-        displayContent={displayContent}
-        t={t}
-      />
+      {!isStatement && (
+        <ReviewPreviewSection displayContent={displayContent} t={t} />
+      )}
 
-      <ReviewNextSteps selectedForm={selectedForm} t={t} />
+      <ReviewNextSteps selectedForm={state.selectedForm} t={t} />
 
       <ReviewActionButtons
-        selectedForm={selectedForm}
-        setCurrentStep={setCurrentStep}
-        setGeneratedContent={setGeneratedContent}
-        setAiEnhancedContent={setAiEnhancedContent}
-        setShowAIVersion={setShowAIVersion}
-        setSelectedForm={setSelectedForm}
-        setFormData={setFormData}
+        selectedForm={state.selectedForm}
+        onEditAnswers={handlers.handleEditAnswers}
+        onStartNewForm={handlers.handleStartNewForm}
         t={t}
       />
+
+      {state.askRebuild && (
+        <EditedDraftDialog
+          onKeep={handlers.handleKeepEditedDraft}
+          onRebuild={handlers.handleRebuildFromAnswers}
+          returnFocusTo="forms-helper-draft"
+        />
+      )}
     </div>
   );
 }
@@ -8465,35 +8463,12 @@ function FormsHelperHeader({
 }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">📋</span>
-          <div>
-            <h2 id="forms-helper-title" className="text-xl font-bold">
-              {t("formsHelper", "title")}
-            </h2>
-            <p className="text-violet-100 text-sm">
-              {t("formsHelper", "subtitle")}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <LLMRecommendationBadge toolId="forms-helper" />
-          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-          <ShareButton
-            targetRef={formsContentRef}
-            filename="va-forms-helper"
-            variant="icon"
-          />
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Forms Helper"
-          />
+      <HeaderCloseSlot
+        close={
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg
@@ -8510,8 +8485,34 @@ function FormsHelperHeader({
               />
             </svg>
           </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-2xl shrink-0">📋</span>
+          <div className="min-w-0">
+            <h2 id="forms-helper-title" className="text-xl font-bold">
+              {t("formsHelper", "title")}
+            </h2>
+            <p className="text-violet-100 text-sm">
+              {t("formsHelper", "subtitle")}
+            </p>
+          </div>
         </div>
-      </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <LLMRecommendationBadge toolId="forms-helper" />
+          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+          <ShareButton
+            targetRef={formsContentRef}
+            filename="va-forms-helper"
+            variant="icon"
+          />
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Forms Helper"
+          />
+        </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -8526,17 +8527,18 @@ function FormsHelperView({ state, handlers }) {
     showAIConsent,
   } = state;
   const { handleAIConsent, handleAICancel, getAIStatementType } = handlers;
+  const closing = useAskBeforeClose(hasUnsavedDraftEdit(state), onClose);
 
   return (
     <>
       <ResponsiveModal
         isOpen
-        onClose={onClose}
+        onClose={closing.requestClose}
         size="xl"
         labelledBy="forms-helper-title"
         header={
           <FormsHelperHeader
-            onClose={onClose}
+            onClose={closing.requestClose}
             onReportBug={onReportBug}
             onOpenAISettings={onOpenAISettings}
             formsContentRef={formsContentRef}
@@ -8552,6 +8554,13 @@ function FormsHelperView({ state, handlers }) {
         <div ref={formsContentRef}>
           <FormsHelperContent state={state} handlers={handlers} />
         </div>
+        {closing.asking && (
+          <UnsavedEditDialog
+            onStay={closing.stay}
+            onClose={closing.closeAnyway}
+            returnFocusTo="forms-helper-draft"
+          />
+        )}
       </ResponsiveModal>
 
       {/* Luna encouragement — lifted above the z-60 shell */}
@@ -8595,8 +8604,13 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
       _runFormsHelperProfilePrefillEffect(
         profileState.setVeteranProfile,
         coreState.setFormData,
+        profileState.serviceStartDateEditedRef,
       ),
-    [profileState.setVeteranProfile, coreState.setFormData],
+    [
+      profileState.setVeteranProfile,
+      coreState.setFormData,
+      profileState.serviceStartDateEditedRef,
+    ],
   );
 
   const state = {

@@ -6,7 +6,6 @@
  */
 
 import { useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { getAIDataDisclosure } from "../utils/aiStatementHelper";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -79,7 +78,7 @@ const ThreePillarsSection = ({ pillars }) => (
     </h3>
     <div className="space-y-3">
       {pillars.map((pillar, index) => (
-        <div key={index} className="flex items-start gap-3">
+        <div key={pillar.name} className="flex items-start gap-3">
           <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-600 text-white text-sm font-bold flex items-center justify-center">
             {index + 1}
           </span>
@@ -119,8 +118,8 @@ const DataSharedSection = ({ items }) => (
       Information That Will Be Sent to Google
     </h3>
     <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
-      {items.map((item, index) => (
-        <li key={index} className="flex items-start gap-2">
+      {items.map((item) => (
+        <li key={item} className="flex items-start gap-2">
           <span className="text-amber-500 mt-0.5">•</span>
           {item}
         </li>
@@ -148,8 +147,8 @@ const DataNotSharedSection = ({ items }) => (
       Information That Will NOT Be Sent
     </h3>
     <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-      {items.map((item, index) => (
-        <li key={index} className="flex items-start gap-2">
+      {items.map((item) => (
+        <li key={item} className="flex items-start gap-2">
           <span className="text-green-500 mt-0.5">✓</span>
           {item}
         </li>
@@ -178,18 +177,16 @@ const PrivacyInfoSection = ({ provider }) => (
     </h3>
     <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
       <li className="flex items-start gap-2">
-        <span className="text-blue-500 mt-0.5">•</span>
-        Provider: <strong>{provider}</strong> (Google&apos;s AI service)
+        <span className="text-blue-500 mt-0.5">•</span> Provider:{" "}
+        <strong>{provider}</strong> (Google&apos;s AI service)
       </li>
       <li className="flex items-start gap-2">
-        <span className="text-blue-500 mt-0.5">•</span>
-        Google&apos;s free API tier does not use your prompts to train their
-        models
+        <span className="text-blue-500 mt-0.5">•</span> Google&apos;s free API
+        tier does not use your prompts to train their models
       </li>
       <li className="flex items-start gap-2">
-        <span className="text-blue-500 mt-0.5">•</span>
-        This feature is optional - you can always use the standard template
-        instead
+        <span className="text-blue-500 mt-0.5">•</span> This feature is optional
+        - you can always use the standard template instead
       </li>
       <li className="flex items-start gap-2">
         <span className="text-blue-500 mt-0.5">•</span>
@@ -242,7 +239,6 @@ const AIConsentModal = ({
   onCancel,
   statementType = "personal", // 'personal', 'buddy', or 'ptsd'
 }) => {
-  const { _t } = useLanguage();
   const containerRef = useRef(null);
   useBodyScrollLock(isOpen);
 
@@ -257,7 +253,9 @@ const AIConsentModal = ({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4"
+      // pt-20 below `sm` reserves the same Quick Exit gutter as
+      // ResponsiveModal.jsx (D3, 52a1edd8).
+      className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4 pt-20 sm:pt-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ai-consent-title"

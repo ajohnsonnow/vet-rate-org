@@ -7,8 +7,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 // Comprehensive Body zones with their medical translations - ALL body systems
 const BODY_ZONES = {
@@ -577,8 +577,32 @@ function useZoneSelection(symptoms) {
 function BodyMapHeader({ onClose }) {
   return (
     <div className="bg-gray-900 border-b border-yellow-500/30 px-6 py-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <HeaderCloseSlot
+        close={
+          onClose && (
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors"
+              aria-label="Close"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )
+        }
+      >
+        <div className="min-w-0">
           <h2
             id="body-map-selector-title"
             className="text-2xl font-bold text-yellow-400 mb-1"
@@ -590,28 +614,7 @@ function BodyMapHeader({ onClose }) {
             We&apos;ll translate your pain into VA medical terminology.
           </p>
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        )}
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -897,7 +900,7 @@ function LoggedSymptomsList({ symptoms, onRemove }) {
     <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
       {symptoms.map((symptom, index) => (
         <LoggedSymptomRow
-          key={index}
+          key={`${symptom.zoneName}-${symptom.userDescription}`}
           symptom={symptom}
           index={index}
           onRemove={onRemove}
@@ -1083,7 +1086,6 @@ const BodyMapSelector = ({
   onLogToSymptomLogger,
   onClose,
 }) => {
-  const { _t } = useLanguage();
   const [view, setView] = useState("front"); // 'front' or 'back'
   const [activeCategory, setActiveCategory] = useState("musculoskeletal"); // Category filter
   const { symptoms, addSymptom, removeSymptom, exportToText } = useSymptomLog(

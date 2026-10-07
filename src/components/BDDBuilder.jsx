@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
@@ -23,6 +24,48 @@ import {
   getChecklistCompletion,
 } from "../utils/bddData.js";
 import { SERVICE_BRANCHES } from "../config/affiliations.js";
+import { getVeteranProfile, getServicePeriods } from "../utils/veteranProfile";
+
+// Free-text branch names (profile.branch, servicePeriod.branch) -> the
+// kebab-case ids BranchSelector/SERVICE_BRANCHES use.
+const BRANCH_NAME_TO_ID = {
+  army: "army",
+  navy: "navy",
+  "air force": "air-force",
+  "marine corps": "marines",
+  marines: "marines",
+  "coast guard": "coast-guard",
+  "space force": "space-force",
+  "national guard": "national-guard",
+  reserves: "reserves",
+};
+
+function normalizeBranchId(branch) {
+  if (!branch) return "";
+  return BRANCH_NAME_TO_ID[String(branch).trim().toLowerCase()] || "";
+}
+
+// The veteran's own separation date + branch: the profile's top-level
+// serviceEndDate/branch fields (kept current by DD214 import) win, falling
+// back to the most recently-ended service period on file.
+function getVeteranSeparationDefault() {
+  const profile = getVeteranProfile();
+  if (profile.serviceEndDate) {
+    return {
+      separationDate: profile.serviceEndDate,
+      branch: normalizeBranchId(profile.branch),
+    };
+  }
+  const withEndDate = getServicePeriods().filter((p) => p.serviceEndDate);
+  if (withEndDate.length === 0) return { separationDate: "", branch: "" };
+  const latest = withEndDate.reduce((a, b) =>
+    b.serviceEndDate > a.serviceEndDate ? b : a,
+  );
+  return {
+    separationDate: latest.serviceEndDate,
+    branch: normalizeBranchId(latest.branch),
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 // TABS
@@ -76,12 +119,95 @@ function getDateNDaysFromNow(n) {
 // ─────────────────────────────────────────────────────────────
 // STATE HOOK
 // ─────────────────────────────────────────────────────────────
-function useBDDBuilderClaimState() {
+// Combines any already-saved BDD progress with a one-time records default
+// (profile/service-period separation date+branch) - the saved value always
+// wins, so this never overwrites an existing answer. Whether the current
+// separation date came from records (not typed by the veteran) is itself
+// persisted in savedData.prefilledFromRecords, once set below - otherwise
+// the very first autosave (which fires as soon as the records default makes
+// separationDate non-empty) would make every later open look exactly like
+// a veteran-typed date, and the "filled in from your service record" notice
+// would only ever show once.
+function useBDDBuilderInitialState() {
   const [savedData] = useState(() => loadBDDProgress());
-  const [separationDate, setSeparationDate] = useState(
-    savedData.separationDate || "",
+  const [recordsDefault] = useState(() =>
+    savedData.separationDate ? null : getVeteranSeparationDefault(),
   );
-  const [branch, setBranch] = useState(savedData.branch || "");
+  return {
+    prefilledFromRecords:
+      savedData.prefilledFromRecords ?? Boolean(recordsDefault?.separationDate),
+    initialSeparationDate:
+      savedData.separationDate || recordsDefault?.separationDate || "",
+    initialBranch: savedData.branch || recordsDefault?.branch || "",
+    savedData,
+  };
+}
+
+// The only setter ever exposed for separationDate - always a genuine
+// veteran edit (SetupView's Save/"Launch BDD Builder" button), never an
+// internal sync - so this is also the only place the provenance flag needs
+// to clear. Split out of useBDDBuilderClaimState to keep it under the
+// repo's line-count ceiling.
+function useBDDSeparationDateWithProvenance(
+  initialSeparationDate,
+  initialPrefilledFromRecords,
+) {
+  const [separationDate, setSeparationDateRaw] = useState(
+    initialSeparationDate,
+  );
+  const [prefilledFromRecords, setPrefilledFromRecords] = useState(
+    initialPrefilledFromRecords,
+  );
+
+  const setSeparationDate = (value) => {
+    setPrefilledFromRecords(false);
+    setSeparationDateRaw(value);
+  };
+
+  return { separationDate, setSeparationDate, prefilledFromRecords };
+}
+
+// Split out of useBDDBuilderClaimState to keep it under the repo's
+// line-count ceiling. Same behavior: autosave whenever anything meaningful
+// is on the form, carrying the provenance flag along with it.
+function useBDDAutosaveEffect({
+  separationDate,
+  branch,
+  checkedItems,
+  conditions,
+  prefilledFromRecords,
+}) {
+  useEffect(() => {
+    if (
+      separationDate ||
+      branch ||
+      checkedItems.size > 0 ||
+      conditions.length > 0
+    ) {
+      saveBDDProgress({
+        separationDate,
+        branch,
+        checkedItems: [...checkedItems],
+        conditions,
+        prefilledFromRecords,
+      });
+    }
+  }, [separationDate, branch, checkedItems, conditions, prefilledFromRecords]);
+}
+
+function useBDDBuilderClaimState() {
+  const {
+    prefilledFromRecords: initialPrefilledFromRecords,
+    initialSeparationDate,
+    initialBranch,
+    savedData,
+  } = useBDDBuilderInitialState();
+  const { separationDate, setSeparationDate, prefilledFromRecords } =
+    useBDDSeparationDateWithProvenance(
+      initialSeparationDate,
+      initialPrefilledFromRecords,
+    );
+  const [branch, setBranch] = useState(initialBranch);
   const [checkedItems, setCheckedItems] = useState(
     new Set(savedData.checkedItems || []),
   );
@@ -106,21 +232,13 @@ function useBDDBuilderClaimState() {
     [checkedItems],
   );
 
-  useEffect(() => {
-    if (
-      separationDate ||
-      branch ||
-      checkedItems.size > 0 ||
-      conditions.length > 0
-    ) {
-      saveBDDProgress({
-        separationDate,
-        branch,
-        checkedItems: [...checkedItems],
-        conditions,
-      });
-    }
-  }, [separationDate, branch, checkedItems, conditions]);
+  useBDDAutosaveEffect({
+    separationDate,
+    branch,
+    checkedItems,
+    conditions,
+    prefilledFromRecords,
+  });
 
   const toggleCheckItem = (id) => {
     setCheckedItems((prev) => {
@@ -158,6 +276,7 @@ function useBDDBuilderClaimState() {
     toggleCheckItem,
     addCondition,
     removeCondition,
+    prefilledFromRecords,
   };
 }
 
@@ -197,6 +316,7 @@ function useBDDBuilderState() {
     toggleCheckItem: claim.toggleCheckItem,
     addCondition: claim.addCondition,
     removeCondition: claim.removeCondition,
+    prefilledFromRecords: claim.prefilledFromRecords,
   };
 }
 
@@ -206,36 +326,11 @@ function useBDDBuilderState() {
 
 function BDDBuilderTitleRow({ onClose, onReportBug }) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <span className="text-3xl">🎖️</span>
-        <div>
-          <h2
-            id="bdd-builder-title"
-            className="text-xl font-bold text-white flex items-center gap-2"
-          >
-            BDD Builder
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-              NEW
-            </span>
-          </h2>
-          <p className="text-sm text-emerald-100">
-            Pre-Discharge Claims Planner (38 CFR § 3.326)
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <ReportBugLink
-          onClick={() => {
-            onClose();
-            onReportBug?.();
-          }}
-          variant="light"
-          moduleName="BDD Builder"
-        />
+    <HeaderCloseSlot
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close BDD Builder"
         >
           <svg
@@ -252,8 +347,31 @@ function BDDBuilderTitleRow({ onClose, onReportBug }) {
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="text-3xl">🎖️</span>
+        <div className="min-w-0">
+          <h2 id="bdd-builder-title" className="text-xl font-bold text-white">
+            BDD Builder{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              NEW
+            </span>
+          </h2>
+          <p className="text-sm text-emerald-100">
+            Pre-Discharge Claims Planner (38 CFR § 3.326)
+          </p>
+        </div>
       </div>
-    </div>
+      <ReportBugLink
+        onClick={() => {
+          onClose();
+          onReportBug?.();
+        }}
+        variant="light"
+        moduleName="BDD Builder"
+      />
+    </HeaderCloseSlot>
   );
 }
 
@@ -358,6 +476,7 @@ function ActiveTabContent({
   onToggleItem,
   expandedMistake,
   onToggleMistake,
+  prefilledFromRecords,
 }) {
   if (activeTab === "dashboard") {
     return (
@@ -375,6 +494,7 @@ function ActiveTabContent({
         onChangeDate={onChangeDate}
         separationDate={separationDate}
         branch={branch}
+        prefilledFromRecords={prefilledFromRecords}
       />
     );
   }
@@ -474,6 +594,7 @@ function BDDBuilderModal({ state, onClose, onReportBug, onNavigateToTool }) {
     toggleCheckItem,
     addCondition,
     removeCondition,
+    prefilledFromRecords,
   } = state;
 
   return (
@@ -513,6 +634,7 @@ function BDDBuilderModal({ state, onClose, onReportBug, onNavigateToTool }) {
         onRemoveCondition={removeCondition}
         onNavigateToTool={onNavigateToTool}
         onChangeDate={() => setShowSetup(true)}
+        prefilledFromRecords={prefilledFromRecords}
         expandedMilestone={expandedMilestone}
         onToggleMilestone={(id) =>
           setExpandedMilestone(expandedMilestone === id ? null : id)
@@ -947,7 +1069,7 @@ function ConditionsTracker({
           onChange={(e) => onNewConditionChange(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onAddCondition()}
           placeholder="e.g., Lumbar Strain, Tinnitus, PTSD..."
-          className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500"
+          className="min-w-0 flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500"
         />
         <button
           onClick={onAddCondition}
@@ -1018,6 +1140,17 @@ function KeyDatesCard({ eligibility, separationDate }) {
   );
 }
 
+function RecordsPrefillNotice({ show }) {
+  if (!show) return null;
+
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">
+      📋 We filled in your separation date from your service record — use
+      &quot;Change Date&quot; below if it&apos;s wrong.
+    </div>
+  );
+}
+
 const DashboardTab = ({
   eligibility,
   milestones,
@@ -1032,6 +1165,7 @@ const DashboardTab = ({
   onChangeDate,
   separationDate,
   _branch,
+  prefilledFromRecords,
 }) => {
   // Find the next actionable milestone
   const nextMilestone =
@@ -1039,6 +1173,8 @@ const DashboardTab = ({
 
   return (
     <div className="space-y-6">
+      <RecordsPrefillNotice show={prefilledFromRecords} />
+
       <EligibilityStatusCard
         eligibility={eligibility}
         checklistCompletion={checklistCompletion}
@@ -1079,9 +1215,9 @@ function MilestoneDetails({ milestone: m, onNavigateToTool }) {
     <div className="mt-2 ml-2 p-4 bg-gray-50 dark:bg-gray-750 rounded-lg border border-gray-200 dark:border-gray-600">
       {m.details && (
         <ul className="space-y-1.5 mb-3">
-          {m.details.map((d, i) => (
+          {m.details.map((d) => (
             <li
-              key={i}
+              key={d}
               className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
             >
               <span className="text-emerald-500 mt-0.5 flex-shrink-0">
@@ -1113,7 +1249,7 @@ function MilestoneDetails({ milestone: m, onNavigateToTool }) {
             >
               Open{" "}
               {toolId
-                .replace(/-/g, " ")
+                .replaceAll("-", " ")
                 .replace(/\b\w/g, (c) => c.toUpperCase())}
             </button>
           ))}

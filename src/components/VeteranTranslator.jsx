@@ -295,7 +295,7 @@ const translateText = async (text, fromLang, toLang) => {
   for (const category of Object.values(QUICK_PHRASES)) {
     for (const phrase of category) {
       // Check if input matches any language version of this phrase
-      for (const [_lang, phraseText] of Object.entries(phrase.translations)) {
+      for (const [, phraseText] of Object.entries(phrase.translations)) {
         if (phraseText.toLowerCase() === text.toLowerCase()) {
           // Found it! Return the target language version
           const translated =
@@ -585,7 +585,7 @@ const TranslatorFooter = ({ isSpeaking }) => (
     <div className="flex items-center gap-2">
       {isSpeaking && (
         <span className="flex items-center gap-1 text-amber-500">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span>
+          <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span>{" "}
           Speaking...
         </span>
       )}
@@ -929,7 +929,7 @@ const TranslatorPanels = ({
 );
 
 const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
-  const { _t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
+  const { SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
   const {
     myLanguage,
     setMyLanguage,

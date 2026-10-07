@@ -26,6 +26,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 // Storage key for workflow progress
 const WORKFLOW_PROGRESS_KEY = "vet_rate_workflow_progress";
@@ -1098,32 +1099,42 @@ const WorkflowDetail = ({
 // MODAL HEADER / FOOTER
 // ============================================
 const WorkflowGuideHeader = ({ onClose }) => (
-  <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-b-2 border-va-gold px-6 py-4 flex items-center justify-between flex-shrink-0">
-    <div className="flex items-center gap-3">
-      <div className="p-2 bg-va-gold/20 rounded-lg">
-        <Map className="w-6 h-6 text-va-gold" />
-      </div>
-      <div>
-        <h2 id="workflow-guide-title" className="text-xl font-bold text-white">
-          🗺️ Mission Briefings{" "}
-          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-            BETA
-          </span>
-        </h2>
-        <p className="text-gray-400 text-sm">
-          Step-by-step workflows for every VA process
-        </p>
-      </div>
-    </div>
-    {/* mr-20 keeps the close button clear of the fixed Quick Exit
-        panic button on phones (WCAG 2.5.8 target collision) */}
-    <button
-      onClick={onClose}
-      className="mr-20 grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors hover:bg-gray-700 sm:mr-0"
-      aria-label="Close"
+  <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-b-2 border-va-gold px-6 py-4 flex-shrink-0">
+    {/* N13: no mr-20 phone offset - Quick Exit repositions itself to
+        top-left below `sm` (QuickExitButton.jsx), and ResponsiveModal's
+        shared `!mt-20` gutter clears it vertically, so the close × stays
+        flush top-right at every width instead of shifting left. */}
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors hover:bg-gray-700"
+          aria-label="Close"
+        >
+          <X className="w-6 h-6 text-gray-400 hover:text-white" />
+        </button>
+      }
     >
-      <X className="w-6 h-6 text-gray-400 hover:text-white" />
-    </button>
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="p-2 bg-va-gold/20 rounded-lg">
+          <Map className="w-6 h-6 text-va-gold" />
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="workflow-guide-title"
+            className="text-xl font-bold text-white"
+          >
+            🗺️ Mission Briefings{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-gray-400 text-sm">
+            Step-by-step workflows for every VA process
+          </p>
+        </div>
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 

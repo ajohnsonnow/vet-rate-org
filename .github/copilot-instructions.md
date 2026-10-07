@@ -1,5 +1,7 @@
 # GitHub Copilot — Repository Instructions
 
+<!-- propagate-ai-rules: keep (project-specific rules; the toolkit propagator skips files carrying this marker) -->
+
 > Auto-loaded by GitHub Copilot Chat in VS Code, Visual Studio, and the GitHub web UI. Mirrors [../CLAUDE.md](../CLAUDE.md). When you change one, change all. Canonical: [../../best-practices-toolkit/CLAUDE.md](../../best-practices-toolkit/CLAUDE.md).
 
 ## Universal rules

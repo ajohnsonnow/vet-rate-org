@@ -14,7 +14,6 @@ import {
   RefreshCw,
   ExternalLink,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * GPU discovery/selection state + scan/select handlers, extracted so the
@@ -49,7 +48,7 @@ function useGpuScanner(autoSelect, onGPUSelected) {
 
       // Validate adapter data before setting state
       const validAdapters = (found || []).filter((adapter) => {
-        return adapter && adapter.id && adapter.info;
+        return adapter?.id && adapter?.info;
       });
 
       setAdapters(validAdapters);
@@ -76,7 +75,7 @@ function useGpuScanner(autoSelect, onGPUSelected) {
 
     try {
       // Wait for the manager to return the device
-      const _device = await gpuManager.selectAdapter(id);
+      await gpuManager.selectAdapter(id);
 
       // Update UI state
       setSelectedId(id);
@@ -158,7 +157,7 @@ function SingleGpuGuidance() {
         Only seeing one GPU?
       </p>
       <p className="mb-3">
-        Due to browser privacy protections (
+        Due to browser privacy protections ({""}
         <a
           href="https://issues.chromium.org/issues/369219127"
           target="_blank"
@@ -168,7 +167,7 @@ function SingleGpuGuidance() {
           Chromium Issue #369219127
           <ExternalLink className="w-3 h-3" />
         </a>
-        ), Chrome often hides secondary GPUs. Windows also ignores GPU
+        {""}) , Chrome often hides secondary GPUs. Windows also ignores GPU
         preference settings.
       </p>
       <div className="bg-slate-800/50 dark:bg-slate-700/50 p-3 rounded">
@@ -202,7 +201,7 @@ function SingleGpuGuidance() {
             <code className="px-1.5 py-0.5 bg-slate-700 rounded text-yellow-300 font-mono text-xs">
               ms-settings:display
             </code>
-            , then scroll to Graphics Settings
+            {""}, then scroll to Graphics Settings
           </p>
         </div>
       </div>
@@ -215,7 +214,6 @@ function SingleGpuGuidance() {
 }
 
 const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
-  const { _t } = useLanguage();
   const { adapters, selectedId, loading, error, scanSystem, handleSelect } =
     useGpuScanner(autoSelect, onGPUSelected);
 

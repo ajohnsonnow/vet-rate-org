@@ -10,7 +10,6 @@
 
 import { useState, useCallback, useRef } from "react";
 import { VisionSimulator } from "../utils/visionSimulator";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Validate a picked file before it becomes the selected image
 function selectImageFile(
@@ -123,7 +122,7 @@ function dropImageFile(e, handleFileSelect) {
   e.stopPropagation();
 
   const file = e.dataTransfer?.files?.[0];
-  if (file && file.type.startsWith("image/")) {
+  if (file?.type.startsWith("image/")) {
     const event = { target: { files: [file] } };
     handleFileSelect(event);
   }
@@ -593,8 +592,8 @@ const CapabilitiesFooter = ({ capabilities }) => (
           ✅ Capabilities
         </p>
         <ul className="text-gray-600 dark:text-gray-400 space-y-1 mt-1">
-          {capabilities.capabilities.map((cap, i) => (
-            <li key={i}>{cap.replace("✅ ", "")}</li>
+          {capabilities.capabilities.map((cap) => (
+            <li key={cap}>{cap.replace("✅ ", "")}</li>
           ))}
         </ul>
       </div>
@@ -603,8 +602,8 @@ const CapabilitiesFooter = ({ capabilities }) => (
           ⚠️ Limitations
         </p>
         <ul className="text-gray-600 dark:text-gray-400 space-y-1 mt-1">
-          {capabilities.limitations.map((lim, i) => (
-            <li key={i}>{lim.replace("⚠️ ", "")}</li>
+          {capabilities.limitations.map((lim) => (
+            <li key={lim}>{lim.replace("⚠️ ", "")}</li>
           ))}
         </ul>
       </div>
@@ -613,7 +612,6 @@ const CapabilitiesFooter = ({ capabilities }) => (
 );
 
 const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
-  const { _t } = useLanguage();
   const {
     selectedImage,
     setSelectedImage,

@@ -9,8 +9,10 @@
  * Privacy: Text extraction happens locally. AI analysis uses your configured AI (Local or Cloud).
  */
 
+import { logger } from "../utils/logger";
 import { useState, useCallback, useRef, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import BuyMeCoffee from "./BuyMeCoffee";
 import { scanDocumentForCrisis } from "../utils/crisisInterceptor";
 import * as pdfjsLib from "pdfjs-dist";
@@ -19,7 +21,12 @@ import {
   generateAI,
   isAnyAIAvailable,
   getAIStatus,
+  getDocumentAIRouting,
 } from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -404,17 +411,8 @@ function repairTruncatedJson(cleanResponse, jsonErr) {
   }
 }
 
-/**
- * Classify why AI response parsing failed and either throw a user-facing
- * error, or return a plain-text-fallback result. Always throws or returns -
- * never both. Pure function - no component state involved.
- */
-function classifyAndReportParseFailure(aiResponse, parseError) {
-  console.error(
-    "Failed to parse AI response:",
-    parseError.message || parseError,
-  );
-  // Safely log raw response (limit to 500 chars for readability)
+// Safely log the raw AI response (limit to 500 chars for readability).
+function _logRawAIResponse(aiResponse) {
   try {
     let rawForLog;
     if (typeof aiResponse === "string") {
@@ -431,10 +429,11 @@ function classifyAndReportParseFailure(aiResponse, parseError) {
   } catch (logError) {
     console.error("Could not log raw response:", logError.message);
   }
+}
 
-  // Check for specific error messages that indicate recoverable situations
-  const rawText =
-    typeof aiResponse === "string" ? aiResponse : aiResponse?.text || "";
+// Throw a user-facing error for known transient failure messages
+// (model still loading, context window exceeded).
+function _throwIfKnownTransientError(rawText) {
   if (
     rawText.includes("model is still loading") ||
     rawText.includes("still loading")
@@ -451,44 +450,78 @@ function classifyAndReportParseFailure(aiResponse, parseError) {
       "Document is too large for local AI. Try using Cloud AI or upload a smaller file.",
     );
   }
-  if (rawText.includes("[Warrant Council") || rawText.includes("CW5 Auditor")) {
-    // AI returned a helpful message but not JSON - extract and return as error.
-    // Uses indexOf/slice instead of a regex here because the equivalent
-    // /will help with[:\s]*(.+?)(?:Your question|$)/s pattern has adjacent
-    // overlapping quantifiers ([:\s]* next to .+?) that are vulnerable to
-    // super-linear backtracking (sonarjs/slow-regex).
-    const helpIdx = rawText.indexOf("will help with");
-    if (helpIdx !== -1) {
-      const afterHelp = rawText.slice(helpIdx + "will help with".length);
-      const stopIdx = afterHelp.indexOf("Your question");
-      const captured = stopIdx !== -1 ? afterHelp.slice(0, stopIdx) : afterHelp;
-      const message = captured.replace(/^[:\s]+/, "");
-      throw new Error("AI is initializing. " + message.trim().split("\n")[0]);
-    }
+}
+
+// AI returned a helpful "still initializing" message but not JSON - extract
+// and throw it as an error. Uses indexOf/slice instead of a regex here
+// because the equivalent /will help with[:\s]*(.+?)(?:Your question|$)/s
+// pattern has adjacent overlapping quantifiers ([:\s]* next to .+?) that
+// are vulnerable to super-linear backtracking (sonarjs/slow-regex).
+function _throwIfInitializingMessage(rawText) {
+  if (
+    !(rawText.includes("[Warrant Council") || rawText.includes("CW5 Auditor"))
+  ) {
+    return;
   }
 
-  // FALLBACK: Try to extract conditions from plain text response
-  // The AI may have returned useful info in a non-JSON format
+  const helpIdx = rawText.indexOf("will help with");
+  if (helpIdx === -1) return;
+
+  const afterHelp = rawText.slice(helpIdx + "will help with".length);
+  const stopIdx = afterHelp.indexOf("Your question");
+  const captured = stopIdx !== -1 ? afterHelp.slice(0, stopIdx) : afterHelp;
+  const message = captured.replace(/^[:\s]+/, "");
+  throw new Error("AI is initializing. " + message.trim().split("\n")[0]);
+}
+
+// FALLBACK: try to extract conditions from a plain-text (non-JSON) AI
+// response. Returns null when the text doesn't look extractable.
+function _tryTextFallbackExtraction(rawText) {
   if (
-    rawText.length > 50 &&
-    !rawText.includes("error") &&
-    !rawText.includes("Error")
+    !(
+      rawText.length > 50 &&
+      !rawText.includes("error") &&
+      !rawText.includes("Error")
+    )
   ) {
-    // eslint-disable-next-line no-console
-    console.log("💡 Attempting text fallback extraction...");
-    const extractedConditions = extractConditionsFromText(rawText);
-    if (extractedConditions.length > 0) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
-      );
-      return {
-        conditions: extractedConditions,
-        summary: "Extracted from AI text response (non-JSON fallback)",
-        wasFallback: true,
-      };
-    }
+    return null;
   }
+
+  logger.info("💡 Attempting text fallback extraction...");
+  const extractedConditions = extractConditionsFromText(rawText);
+  if (extractedConditions.length === 0) return null;
+
+  logger.info(
+    `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
+  );
+  return {
+    conditions: extractedConditions,
+    summary: "Extracted from AI text response (non-JSON fallback)",
+    wasFallback: true,
+  };
+}
+
+/**
+ * Classify why AI response parsing failed and either throw a user-facing
+ * error, or return a plain-text-fallback result. Always throws or returns -
+ * never both. Pure function - no component state involved.
+ */
+function classifyAndReportParseFailure(aiResponse, parseError) {
+  console.error(
+    "Failed to parse AI response:",
+    parseError.message || parseError,
+  );
+  _logRawAIResponse(aiResponse);
+
+  // Check for specific error messages that indicate recoverable situations
+  const rawText =
+    typeof aiResponse === "string" ? aiResponse : aiResponse?.text || "";
+
+  _throwIfKnownTransientError(rawText);
+  _throwIfInitializingMessage(rawText);
+
+  const fallback = _tryTextFallbackExtraction(rawText);
+  if (fallback) return fallback;
 
   throw new Error("AI returned invalid format. Please try again.");
 }
@@ -696,41 +729,12 @@ function AiScanButtonContent({ isProcessing, processingStage, aiAvailable }) {
 function BlueButtonHeader({ onClose, onOpenAISettings, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-violet-600 to-purple-600 p-4 shadow-lg">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">📋</span>
-          <div>
-            <h2
-              id="blue-button-xray-title"
-              className="text-xl font-bold text-white flex items-center gap-2"
-            >
-              Blue Button X-Ray
-              <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
-                AI
-              </span>
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-                BETA
-              </span>
-            </h2>
-            <p className="text-sm text-violet-100">
-              AI-Powered Evidence Mining from VA Medical Records
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <LLMRecommendationBadge toolId="blue-button" />
-          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="Blue Button X-Ray"
-            />
-          )}
+      <HeaderCloseSlot
+        close={
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg
@@ -747,13 +751,99 @@ function BlueButtonHeader({ onClose, onOpenAISettings, onReportBug }) {
               />
             </svg>
           </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl shrink-0">📋</span>
+          <div className="min-w-0">
+            <h2
+              id="blue-button-xray-title"
+              className="text-xl font-bold text-white flex flex-wrap items-center gap-2"
+            >
+              Blue Button X-Ray{""}
+              <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
+                AI
+              </span>
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                BETA
+              </span>
+            </h2>
+            <p className="text-sm text-violet-100">
+              AI-Powered Evidence Mining from VA Medical Records
+            </p>
+          </div>
         </div>
-      </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <LLMRecommendationBadge toolId="blue-button" />
+          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="Blue Button X-Ray"
+            />
+          )}
+        </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
 
-function InfoBanner({ aiStatus }) {
+// D19-5: this banner used to phrase the AI line from `aiStatus.isPrivate`
+// (the user's PREFERRED/effective mode - true only when it isn't Cloud),
+// not from whether THIS document call will actually reach that mode. A
+// Blue Button report is document-derived (ADR-009), so it is ALWAYS
+// analyzed on-device when any on-device engine is ready - even when Cloud
+// is the preferred mode - and never reaches Cloud at all when none is
+// ready (the off-device notice built below then explains the built-in
+// reader ran instead). `getDocumentAIRouting()` is the same routing
+// decision the actual analysis call uses, so this banner can never say
+// "Cloud AI" for a call that was always going to be on-device-only or
+// blocked.
+//
+// D19 follow-up: the "Load an on-device AI to enable this" CTA used to
+// show whenever `onDeviceReady` was false, regardless of whether a load
+// button is actually on screen to click. `SmartAILoadPrompt` below only
+// renders while `!isAnyAIAvailable()` - a cloud-configured veteran has
+// `isAnyAIAvailable()` true (cloud counts), so the button is hidden while
+// this banner still pointed them at it. `aiAvailable` is the same
+// `isAnyAIAvailable()` result `BlueButtonUploadContent` already computes
+// to decide whether to render that button, so the two can never disagree
+// again. Still not reactive to a later AI-state change within the same
+// render (documented, not silently assumed) - re-rendering this banner
+// live as AI status changes would need the caller to pass a subscribed
+// value rather than a one-time read, a larger change than this copy fix.
+function _infoBannerAIMessage(onDeviceReady, aiAvailable) {
+  if (onDeviceReady) {
+    return (
+      <>
+        🤖 <strong>AI-Powered:</strong> Uses your on-device AI to intelligently
+        extract diagnoses. Your data never leaves your device!
+      </>
+    );
+  }
+  if (aiAvailable) {
+    return (
+      <>
+        🤖 <strong>AI-Powered (on-device only):</strong> Diagnoses are only ever
+        extracted by an on-device AI, never sent to a cloud AI. Your configured
+        AI is cloud-only, so the app's built-in document reader is used instead
+        for this report.
+      </>
+    );
+  }
+  return (
+    <>
+      🤖 <strong>AI-Powered (on-device only):</strong> Diagnoses are only ever
+      extracted by an on-device AI, never sent to a cloud AI. Load an on-device
+      AI to enable this - without one, the app's built-in document reader is
+      used instead.
+    </>
+  );
+}
+
+export function InfoBanner({ aiAvailable }) {
+  const { onDeviceReady } = getDocumentAIRouting();
   return (
     <div className="bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 p-4 mb-6 rounded-r-lg">
       <div className="flex items-start gap-3">
@@ -769,7 +859,7 @@ function InfoBanner({ aiStatus }) {
               href="https://www.va.gov/my-health/medical-records/download/"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-cyan-600"
+              className="underline text-cyan-800 dark:text-cyan-200 hover:text-cyan-900 dark:hover:text-cyan-100"
             >
               VA.gov
             </a>
@@ -777,10 +867,7 @@ function InfoBanner({ aiStatus }) {
             <strong>today</strong>.
           </p>
           <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-2">
-            🤖 <strong>AI-Powered:</strong> Uses your{" "}
-            {aiStatus.isPrivate ? "secure Local AI" : "Cloud AI"} to
-            intelligently extract diagnoses.
-            {aiStatus.isPrivate && " Your data never leaves your device!"}
+            {_infoBannerAIMessage(onDeviceReady, aiAvailable)}
           </p>
         </div>
       </div>
@@ -912,8 +999,8 @@ function Step1ActionButtons({
 
       {/* Explanation of options */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-        💡 <strong>Save to My Packet</strong> stores the document now.{" "}
-        <strong>AI Scan</strong> auto-saves first, then extracts diagnoses.
+        💡 <strong>Save to My Packet</strong> stores the document when you
+        choose. <strong>AI Scan</strong> extracts diagnoses and saves nothing.
       </p>
     </>
   );
@@ -1026,6 +1113,27 @@ function ErrorBanner({ error }) {
           </h3>
           <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ADR-009: shown when only an off-device AI is configured, so the built-in
+// regex condition scan ran instead of sending the health-record text
+// off-device.
+function OffDeviceNotice({ notice }) {
+  if (!notice) return null;
+
+  return (
+    <div
+      className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg"
+      role="status"
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-2xl" aria-hidden="true">
+          🔒
+        </span>
+        <p className="text-amber-700 dark:text-amber-300 text-sm">{notice}</p>
       </div>
     </div>
   );
@@ -1145,7 +1253,7 @@ function AddToCalculatorPanel({ conditions, onAddToCalculator }) {
           className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all flex items-center gap-2"
         >
           <span>🧭</span>
-          Add to Pathfinder
+          {""}Add to Pathfinder
         </button>
       </div>
     </div>
@@ -1300,7 +1408,6 @@ function SmartAILoadPrompt() {
 }
 
 function BlueButtonUploadContent({
-  aiStatus,
   extractedConditions,
   dropZoneClass,
   handleDrop,
@@ -1322,7 +1429,7 @@ function BlueButtonUploadContent({
   return (
     <>
       {/* Info Banner */}
-      <InfoBanner aiStatus={aiStatus} />
+      <InfoBanner aiAvailable={aiAvailable} />
 
       {/* Smart AI Load Button */}
       {!aiAvailable && <SmartAILoadPrompt />}
@@ -1356,6 +1463,7 @@ function BlueButtonUploadContent({
 
 function BlueButtonResultsContent({
   error,
+  offDeviceNotice,
   extractedConditions,
   unclaimedCount,
   onSelectAllClaimable,
@@ -1375,6 +1483,9 @@ function BlueButtonResultsContent({
     <>
       {/* Error Display */}
       <ErrorBanner error={error} />
+
+      {/* ADR-009 on-device-only fallback notice */}
+      <OffDeviceNotice notice={offDeviceNotice} />
 
       {/* Results Section */}
       {extractedConditions.length > 0 && (
@@ -1408,7 +1519,6 @@ function BlueButtonResultsContent({
 }
 
 function BlueButtonMainContent({
-  aiStatus,
   extractedConditions,
   dropZoneClass,
   handleDrop,
@@ -1426,6 +1536,7 @@ function BlueButtonMainContent({
   processingStage,
   onProcessFile,
   error,
+  offDeviceNotice,
   onSelectAllClaimable,
   onReset,
   showRawText,
@@ -1439,7 +1550,6 @@ function BlueButtonMainContent({
   return (
     <div className="max-w-4xl mx-auto">
       <BlueButtonUploadContent
-        aiStatus={aiStatus}
         extractedConditions={extractedConditions}
         dropZoneClass={dropZoneClass}
         handleDrop={handleDrop}
@@ -1459,6 +1569,7 @@ function BlueButtonMainContent({
 
       <BlueButtonResultsContent
         error={error}
+        offDeviceNotice={offDeviceNotice}
         extractedConditions={extractedConditions}
         unclaimedCount={unclaimedCount}
         onSelectAllClaimable={onSelectAllClaimable}
@@ -1731,6 +1842,71 @@ function chunkText(text, maxTokensPerChunk = 2500) {
   return chunks;
 }
 
+// Run one extraction attempt against a chunk with the given strategy.
+// Returns the parsed result, or null if the AI didn't return usable
+// conditions (caller decides whether that's worth retrying).
+async function _attemptChunkExtraction(
+  chunkText,
+  chunkIndex,
+  totalChunks,
+  strategy,
+  setProcessingStage,
+) {
+  setProcessingStage(
+    `Processing section ${chunkIndex + 1} of ${totalChunks}... (${strategy.name})`,
+  );
+
+  const chunkPrompt =
+    BLUE_BUTTON_AI_PROMPT_HEADER + chunkText + BLUE_BUTTON_AI_PROMPT_FOOTER;
+
+  // AIS-05: non-blocking crisis scan over this raw record chunk.
+  scanDocumentForCrisis(chunkText);
+
+  const aiResponse = await generateAI(chunkPrompt, {
+    dataClass: AI_DATA_CLASS.DOCUMENT,
+    toolId: "blue-button",
+    temperature: strategy.temp,
+    maxTokens: strategy.maxTokens,
+    expectJSON: true,
+    skipHallucinationCheck: true,
+    skipCrisisCheck: true,
+    useDKB: false,
+    systemPrompt: "",
+  });
+
+  const parsed = parseAIResponse(aiResponse);
+
+  // Success! Return results
+  if (parsed?.conditions && Array.isArray(parsed.conditions)) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,
+    );
+    return parsed;
+  }
+  return null;
+}
+
+// Last-resort regex extraction for a chunk after every AI strategy has
+// failed. Returns the fallback result, or null if it found nothing either.
+function _tryRegexFallbackForChunk(chunkText, chunkIndex) {
+  logger.info(
+    `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
+  );
+  const fallbackConditions = extractConditionsFromText(chunkText);
+
+  if (fallbackConditions.length === 0) return null;
+
+  logger.info(
+    `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
+  );
+  return {
+    conditions: fallbackConditions,
+    summary: `Extracted via fallback (section ${chunkIndex + 1})`,
+    wasFallback: true,
+  };
+}
+
 /**
  * Process a single chunk with retry logic and multiple fallback strategies
  * NO FAILED SECTIONS ALLOWED - we try everything possible
@@ -1750,37 +1926,14 @@ async function processChunkWithRetry(
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const strategy = strategies[attempt];
-      setProcessingStage(
-        `Processing section ${chunkIndex + 1} of ${totalChunks}... (${strategy.name})`,
+      const parsed = await _attemptChunkExtraction(
+        chunkText,
+        chunkIndex,
+        totalChunks,
+        strategies[attempt],
+        setProcessingStage,
       );
-
-      const chunkPrompt =
-        BLUE_BUTTON_AI_PROMPT_HEADER + chunkText + BLUE_BUTTON_AI_PROMPT_FOOTER;
-
-      // AIS-05: non-blocking crisis scan over this raw record chunk.
-      scanDocumentForCrisis(chunkText);
-
-      const aiResponse = await generateAI(chunkPrompt, {
-        temperature: strategy.temp,
-        maxTokens: strategy.maxTokens,
-        expectJSON: true,
-        skipHallucinationCheck: true,
-        skipCrisisCheck: true,
-        useDKB: false,
-        systemPrompt: "",
-      });
-
-      const parsed = parseAIResponse(aiResponse);
-
-      // Success! Return results
-      if (parsed && parsed.conditions && Array.isArray(parsed.conditions)) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,
-        );
-        return parsed;
-      }
+      if (parsed) return parsed;
     } catch (error) {
       console.warn(
         `⚠️ Section ${chunkIndex + 1} attempt ${attempt + 1}/${MAX_RETRIES} failed:`,
@@ -1789,23 +1942,8 @@ async function processChunkWithRetry(
 
       // If this was the last attempt, try regex fallback
       if (attempt === MAX_RETRIES - 1) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
-        );
-        const fallbackConditions = extractConditionsFromText(chunkText);
-
-        if (fallbackConditions.length > 0) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
-          );
-          return {
-            conditions: fallbackConditions,
-            summary: `Extracted via fallback (section ${chunkIndex + 1})`,
-            wasFallback: true,
-          };
-        }
+        const fallbackResult = _tryRegexFallbackForChunk(chunkText, chunkIndex);
+        if (fallbackResult) return fallbackResult;
       }
 
       // Wait before retry (exponential backoff)
@@ -1926,6 +2064,29 @@ async function analyzeWithAI(text, setProcessingStage) {
     throw new Error("No AI available. Please configure AI in settings first.");
   }
 
+  // ADR-009: Blue Button health-record text is document-derived and stays
+  // on-device only. If only an off-device AI is configured, skip AI
+  // entirely (no per-chunk retries against a routing decision that can't
+  // change) and use the same regex condition scan already used as the
+  // per-chunk AI-failure fallback below.
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    setProcessingStage?.(
+      "On-device AI unavailable - using built-in document scan...",
+    );
+    const fallbackConditions = extractConditionsFromText(text);
+    return {
+      ...formatConditionsResponse({
+        conditions: fallbackConditions,
+        summary: null,
+      }),
+      offDeviceBlocked: true,
+      offDeviceNotice: buildDocumentOffDeviceNotice(
+        routing.blockedProviderLabel,
+      ),
+    };
+  }
+
   // Calculate prompt overhead (the AI prompt itself takes tokens)
   const promptTokens =
     estimateTokens(BLUE_BUTTON_AI_PROMPT_HEADER) +
@@ -1947,6 +2108,8 @@ async function analyzeWithAI(text, setProcessingStage) {
     scanDocumentForCrisis(text);
 
     const aiResponse = await generateAI(fullPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "blue-button",
       temperature: 0.2,
       maxTokens: 2000,
       expectJSON: true,
@@ -1981,55 +2144,18 @@ async function extractBlueButtonFileText(file, setProcessingStage) {
 }
 
 /**
- * Auto-save the Blue Button document to VKB before AI analysis, if it
- * hasn't already been saved. Failures here don't block AI analysis.
- */
-async function autoSaveBlueButtonToVKB(
-  file,
-  text,
-  savedToVKB,
-  { setProcessingStage, setSavedToVKB },
-) {
-  if (savedToVKB) return;
-
-  setProcessingStage("Saving to My Packet...");
-  try {
-    await addDocumentToVKB({
-      fileName: file.name,
-      classification: "blue_button",
-      rawText: text,
-      extractedData: {
-        conditions: [], // Will be updated after AI analysis
-        processingDate: new Date().toISOString(),
-        source: "BlueButtonXRay",
-      },
-      documentDate: new Date().toISOString(),
-      sourceFile: file.name,
-    });
-    setSavedToVKB(true);
-    // eslint-disable-next-line no-console
-    console.log("✅ Auto-saved Blue Button to VKB before AI analysis");
-  } catch (vkbErr) {
-    console.warn(
-      "⚠️ Could not save to VKB, continuing with AI analysis:",
-      vkbErr.message,
-    );
-  }
-}
-
-/**
- * Process the dropped in file using AI
- * Auto-saves to VKB first so the document is available to other tools
+ * Process the dropped in file using AI. Nothing is written to the Knowledge
+ * Base here: the veteran saves it with the explicit Save to My Packet button.
  */
 async function handleProcessFile(
-  { file, savedToVKB },
+  { file },
   {
     setError,
+    setOffDeviceNotice,
     setIsProcessing,
     setExtractedConditions,
     setProcessingStage,
     setRawText,
-    setSavedToVKB,
   },
 ) {
   if (!file) {
@@ -2047,6 +2173,7 @@ async function handleProcessFile(
 
   setIsProcessing(true);
   setError(null);
+  setOffDeviceNotice(null);
   setExtractedConditions([]);
 
   try {
@@ -2059,20 +2186,22 @@ async function handleProcessFile(
       );
     }
 
-    await autoSaveBlueButtonToVKB(file, text, savedToVKB, {
-      setProcessingStage,
-      setSavedToVKB,
-    });
-
-    setProcessingStage(
-      "AI analyzing diagnoses (this may take 30-60 seconds)...",
-    );
+    setProcessingStage("AI analyzing diagnoses (this can take a while)...");
     const result = await analyzeWithAI(text, setProcessingStage);
 
+    if (result.offDeviceBlocked) {
+      setOffDeviceNotice(result.offDeviceNotice);
+    }
+
     if (result.conditions.length === 0) {
-      setError(
-        "No diagnoses found in this file. This might not be a Blue Button report, or it contains no medical conditions. You can view the raw text below.",
-      );
+      // ADR-009: an off-device-blocked scan finding nothing is still a
+      // completed local read, not a dead end - the notice above already
+      // explains why, so don't also show the generic "no diagnoses" error.
+      if (!result.offDeviceBlocked) {
+        setError(
+          "No diagnoses found in this file. This might not be a Blue Button report, or it contains no medical conditions. You can view the raw text below.",
+        );
+      }
     } else {
       setExtractedConditions(result.conditions);
     }
@@ -2093,8 +2222,8 @@ function useFileHandlers({
   file,
   rawText,
   extractedConditions,
-  savedToVKB,
   setError,
+  setOffDeviceNotice,
   setFile,
   setIsDragging,
   setExtractedConditions,
@@ -2148,14 +2277,14 @@ function useFileHandlers({
 
   const handleProcessFileClick = () =>
     handleProcessFile(
-      { file, savedToVKB },
+      { file },
       {
         setError,
+        setOffDeviceNotice,
         setIsProcessing,
         setExtractedConditions,
         setProcessingStage,
         setRawText,
-        setSavedToVKB,
       },
     );
 
@@ -2287,6 +2416,7 @@ function useBlueButtonXRay() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState("");
   const [error, setError] = useState(null);
+  const [offDeviceNotice, setOffDeviceNotice] = useState(null);
   const [extractedConditions, setExtractedConditions] = useState([]);
   const [rawText, setRawText] = useState("");
   const [showRawText, setShowRawText] = useState(false);
@@ -2295,8 +2425,8 @@ function useBlueButtonXRay() {
     file,
     rawText,
     extractedConditions,
-    savedToVKB,
     setError,
+    setOffDeviceNotice,
     setFile,
     setIsDragging,
     setExtractedConditions,
@@ -2332,6 +2462,7 @@ function useBlueButtonXRay() {
     isProcessing,
     processingStage,
     error,
+    offDeviceNotice,
     extractedConditions,
     rawText,
     showRawText,

@@ -12,7 +12,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import useFocusTrap from "../hooks/useFocusTrap";
 import {
   Camera,
   Upload,
@@ -28,9 +27,17 @@ import {
   generateAI,
   isAnyAIAvailable,
   getAIStatus,
+  getDocumentAIRouting,
 } from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
+import { parseDecisionLetter } from "../utils/vaDocumentParser";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   getVeteranAIContext,
   saveAnalysisResults,
@@ -86,8 +93,101 @@ const getUrgencyColor = (urgency) => {
   }
 };
 
+// ADR-009: only an off-device AI is configured. Denial letter text stays
+// on-device only, so fall back to the local regex decision-letter parser
+// (vaDocumentParser.js, already used elsewhere for this exact letter
+// shape) instead of a dead end.
+//
+// `_hasRealReason`/`_hasRealMissing` mark which of the fields below are
+// actually grounded in the letter text vs. a UI hedge shown when the
+// built-in parser found nothing - "never present a guess as a printed
+// fact" means _saveDenialAnalysis must not persist the hedge text (or the
+// invented "medium" urgency this used to default to) as if it were a real
+// finding about the veteran's claim.
+export function _buildOffDeviceFallbackAnalysis(text) {
+  const parsed = parseDecisionLetter(text);
+  const reasons = parsed.reasonsForDenial || [];
+  const hasRealReason = reasons.length > 0;
+  const hasRealMissing = Boolean(parsed.evidenceConsidered?.length);
+  return {
+    denialReason: hasRealReason
+      ? reasons[0]
+      : "Not determined by the built-in reader - load the on-device AI for a full analysis.",
+    simplifiedExplanation: hasRealReason
+      ? `The letter states: ${reasons.join("; ")}`
+      : "The built-in reader could not identify a specific denial reason in this letter.",
+    whatWasMissing: hasRealMissing
+      ? `Evidence considered: ${parsed.evidenceConsidered.join(", ")}`
+      : "Not determined by the built-in reader.",
+    nextSteps: [
+      "Load the on-device AI (Warrant Council or Wllama) for a full plain-English translation.",
+      "Contact a VSO for free claim assistance.",
+      "Request a copy of your C-File to understand what evidence VA used.",
+    ],
+    // Unknown, not "medium" - the built-in reader has no basis to guess
+    // urgency; getUrgencyColor's default case renders this neutrally.
+    urgency: null,
+    appealDeadline: parsed.appealDeadline || "Not specified",
+    _hasRealReason: hasRealReason,
+    _hasRealMissing: hasRealMissing,
+  };
+}
+
+// Both the off-device-blocked fallback and a successful AI analysis save
+// the identical VKB/My Packet shape, keyed off whichever `parsedAnalysis`
+// they produced - pulled out once so analyzeWithAI doesn't carry it twice.
+//
+// _hasRealReason/_hasRealMissing are only ever set (to false) by
+// _buildOffDeviceFallbackAnalysis when the built-in parser found nothing -
+// a real AI response never carries them, so `!== false` defaults to "real"
+// for the AI path and only excludes the fallback's own UI hedge text.
+export async function _saveDenialAnalysis(text, parsedAnalysis) {
+  const hasRealReason = parsedAnalysis._hasRealReason !== false;
+  const hasRealMissing = parsedAnalysis._hasRealMissing !== false;
+
+  await saveAnalysisResults({
+    toolName: "Denial Decoder",
+    classification: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+    rawText: text,
+    extractedData: parsedAnalysis,
+    vkbDocument: {
+      classification: "va_decision",
+      rawText: text,
+      extractedData: parsedAnalysis,
+      source: "DenialDecoder",
+    },
+    vkbMergeData: {
+      aiInsights: {
+        ...(hasRealReason && { lastDenialReason: parsedAnalysis.denialReason }),
+        ...(hasRealMissing && {
+          lastDenialMissing: parsedAnalysis.whatWasMissing,
+        }),
+        ...(parsedAnalysis.urgency && {
+          denialUrgency: parsedAnalysis.urgency,
+        }),
+        appealDeadline: parsedAnalysis.appealDeadline,
+      },
+      keyFacts: hasRealReason
+        ? [
+            {
+              source: "DenialDecoder",
+              fact: `Denial reason: ${parsedAnalysis.denialReason}`,
+              date: new Date().toISOString(),
+            },
+          ]
+        : [],
+    },
+  });
+}
+
 async function analyzeWithAI(text, ctx) {
-  const { setError, setAnalysis, setStep, onOpenAISettings } = ctx;
+  const {
+    setError,
+    setAnalysis,
+    setStep,
+    setOffDeviceNotice,
+    onOpenAISettings,
+  } = ctx;
 
   // Check if AI is available
   if (!isAnyAIAvailable()) {
@@ -96,6 +196,18 @@ async function analyzeWithAI(text, ctx) {
     );
     onOpenAISettings?.();
     setStep("upload");
+    return;
+  }
+
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    const parsedAnalysis = _buildOffDeviceFallbackAnalysis(text);
+    setOffDeviceNotice?.(
+      buildDocumentOffDeviceNotice(routing.blockedProviderLabel),
+    );
+    setAnalysis(parsedAnalysis);
+    setStep("results");
+    await _saveDenialAnalysis(text, parsedAnalysis);
     return;
   }
 
@@ -109,8 +221,11 @@ async function analyzeWithAI(text, ctx) {
       : "";
     const fullPrompt = DENIAL_ANALYSIS_PROMPT + contextBlock + "\n\n" + text;
 
-    // Use unified AI service
+    // Use unified AI service - ADR-009: "document" - text is the veteran's
+    // denial letter (uploaded/OCR'd or pasted), stays on-device only.
     const response = await generateAI(fullPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "denial-decoder",
       temperature: 0.3,
       maxTokens: 1500,
       expectJSON: true,
@@ -139,35 +254,7 @@ async function analyzeWithAI(text, ctx) {
 
     setAnalysis(parsedAnalysis);
     setStep("results");
-
-    // Save analysis results to VKB + My Packet
-    await saveAnalysisResults({
-      toolName: "Denial Decoder",
-      classification: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
-      rawText: text,
-      extractedData: parsedAnalysis,
-      vkbDocument: {
-        classification: "va_decision",
-        rawText: text,
-        extractedData: parsedAnalysis,
-        source: "DenialDecoder",
-      },
-      vkbMergeData: {
-        aiInsights: {
-          lastDenialReason: parsedAnalysis.denialReason,
-          lastDenialMissing: parsedAnalysis.whatWasMissing,
-          denialUrgency: parsedAnalysis.urgency,
-          appealDeadline: parsedAnalysis.appealDeadline,
-        },
-        keyFacts: [
-          {
-            source: "DenialDecoder",
-            fact: `Denial reason: ${parsedAnalysis.denialReason}`,
-            date: new Date().toISOString(),
-          },
-        ],
-      },
-    });
+    await _saveDenialAnalysis(text, parsedAnalysis);
   } catch (err) {
     console.error("AI Analysis Error:", err);
     setError(
@@ -180,12 +267,19 @@ async function analyzeWithAI(text, ctx) {
 
 // Handle file upload or camera capture
 async function handleImageSelect(file, ctx) {
-  const { setStep, setError, setProgress, setExtractedText } = ctx;
+  const {
+    setStep,
+    setError,
+    setOffDeviceNotice,
+    setProgress,
+    setExtractedText,
+  } = ctx;
 
   if (!file) return;
 
   setStep("processing");
   setError(null);
+  setOffDeviceNotice?.(null);
   setProgress(0);
 
   try {
@@ -227,35 +321,13 @@ async function handleImageSelect(file, ctx) {
 
 const DenialDecoderHeader = ({ t, onClose, onOpenAISettings }) => (
   <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <FileText className="w-8 h-8" />
-        <div>
-          <h2
-            id="denial-decoder-title"
-            className="text-2xl font-bold flex items-center gap-2"
-          >
-            {t("denialDecoder.title")}
-            <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">
-              {t("denialDecoder.ai")}
-            </span>
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-              BETA
-            </span>
-          </h2>
-          <p className="text-blue-100 text-sm mt-1">
-            {t("denialDecoder.subtitle")}
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <LLMRecommendationBadge toolId="denial-decoder" />
-        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-        {onClose && (
+    <HeaderCloseSlot
+      close={
+        onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/10 rounded-lg transition-colors"
             aria-label={t("common.close")}
           >
             <svg
@@ -272,23 +344,48 @@ const DenialDecoderHeader = ({ t, onClose, onOpenAISettings }) => (
               />
             </svg>
           </button>
-        )}
+        )
+      }
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <FileText className="w-8 h-8 shrink-0" />
+        <div className="min-w-0">
+          <h2
+            id="denial-decoder-title"
+            className="text-2xl font-bold flex flex-wrap items-center gap-2"
+          >
+            {t("denialDecoder.title")}
+            <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">
+              {t("denialDecoder.ai")}
+            </span>
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              BETA
+            </span>
+          </h2>
+          <p className="text-blue-100 text-sm mt-1">
+            {t("denialDecoder.subtitle")}
+          </p>
+        </div>
       </div>
-    </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <LLMRecommendationBadge toolId="denial-decoder" />
+        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
 const UploadNotices = ({ t, aiStatus, error }) => (
   <>
     {/* Privacy Notice */}
-    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
       <div className="flex items-start gap-3">
-        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-green-900">
+        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-300 flex-shrink-0 mt-0.5" />
+        <div className="text-sm text-green-900 dark:text-green-100">
           <p className="font-semibold mb-1">
             {t("denialDecoder.privacyProtected")}
           </p>
-          <p className="text-green-800">
+          <p className="text-green-800 dark:text-green-200">
             {t("denialDecoder.ocrProcessingLocal")}{" "}
             {aiStatus.isPrivate
               ? t("denialDecoder.aiAnalysisLocal")
@@ -300,14 +397,14 @@ const UploadNotices = ({ t, aiStatus, error }) => (
 
     {/* AI Setup Message */}
     {!isAnyAIAvailable() && (
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-900">
+          <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-300 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-900 dark:text-amber-100">
             <p className="font-semibold mb-1">
               {t("denialDecoder.aiRequired")}
             </p>
-            <p className="text-amber-800">
+            <p className="text-amber-800 dark:text-amber-200">
               {t("denialDecoder.aiSetupMessage")}
             </p>
           </div>
@@ -518,9 +615,30 @@ const ResultsRawTextToggle = ({
   </div>
 );
 
+// ADR-009: shown when only an off-device AI was configured, so the local
+// decision-letter parser ran instead of sending the denial letter off-device.
+const OffDeviceNotice = ({ notice }) => {
+  if (!notice) return null;
+  return (
+    <div
+      className="bg-amber-50 border border-amber-200 rounded-lg p-4"
+      role="status"
+    >
+      <div className="flex items-start gap-3">
+        <Lightbulb
+          className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+          aria-hidden="true"
+        />
+        <p className="text-sm text-amber-900">{notice}</p>
+      </div>
+    </div>
+  );
+};
+
 const ResultsStep = ({
   t,
   analysis,
+  offDeviceNotice,
   showRawText,
   setShowRawText,
   extractedText,
@@ -528,6 +646,7 @@ const ResultsStep = ({
   onClose,
 }) => (
   <div className="space-y-6">
+    <OffDeviceNotice notice={offDeviceNotice} />
     <ResultsSummary t={t} analysis={analysis} />
 
     {/* Next Steps */}
@@ -540,7 +659,7 @@ const ResultsStep = ({
       </div>
       <ol className="space-y-3">
         {analysis.nextSteps.map((step, index) => (
-          <li key={index} className="flex gap-3">
+          <li key={step} className="flex gap-3">
             <span className="font-bold text-blue-600 flex-shrink-0">
               {index + 1}.
             </span>
@@ -581,14 +700,13 @@ const ResultsStep = ({
 );
 
 const DenialDecoderView = ({
-  dialogRef,
-  className,
   t,
   onClose,
   onOpenAISettings,
   step,
   aiStatus,
   error,
+  offDeviceNotice,
   cameraInputRef,
   fileInputRef,
   handleFileUpload,
@@ -599,70 +717,66 @@ const DenialDecoderView = ({
   extractedText,
   handleReset,
 }) => (
-  <div
-    ref={dialogRef}
-    className={`denial-decoder ${className}`}
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="denial-decoder-title"
+  <ResponsiveModal
+    isOpen
+    onClose={onClose}
+    size="xl"
+    labelledBy="denial-decoder-title"
+    header={
+      <DenialDecoderHeader
+        t={t}
+        onClose={onClose}
+        onOpenAISettings={onOpenAISettings}
+      />
+    }
   >
-    {/* Header */}
-    <DenialDecoderHeader
-      t={t}
-      onClose={onClose}
-      onOpenAISettings={onOpenAISettings}
-    />
+    {/* Upload Step */}
+    {step === "upload" && (
+      <UploadStep
+        t={t}
+        aiStatus={aiStatus}
+        error={error}
+        cameraInputRef={cameraInputRef}
+        fileInputRef={fileInputRef}
+        handleFileUpload={handleFileUpload}
+      />
+    )}
 
-    <div className="p-6">
-      {/* Upload Step */}
-      {step === "upload" && (
-        <UploadStep
-          t={t}
-          aiStatus={aiStatus}
-          error={error}
-          cameraInputRef={cameraInputRef}
-          fileInputRef={fileInputRef}
-          handleFileUpload={handleFileUpload}
-        />
-      )}
+    {/* Processing Step */}
+    {step === "processing" && <ProcessingStep t={t} progress={progress} />}
 
-      {/* Processing Step */}
-      {step === "processing" && <ProcessingStep t={t} progress={progress} />}
+    {/* Analyzing Step */}
+    {step === "analyzing" && <AnalyzingStep t={t} />}
 
-      {/* Analyzing Step */}
-      {step === "analyzing" && <AnalyzingStep t={t} />}
-
-      {/* Results Step */}
-      {step === "results" && analysis && (
-        <ResultsStep
-          t={t}
-          analysis={analysis}
-          showRawText={showRawText}
-          setShowRawText={setShowRawText}
-          extractedText={extractedText}
-          handleReset={handleReset}
-          onClose={onClose}
-        />
-      )}
-    </div>
-  </div>
+    {/* Results Step */}
+    {step === "results" && analysis && (
+      <ResultsStep
+        t={t}
+        analysis={analysis}
+        offDeviceNotice={offDeviceNotice}
+        showRawText={showRawText}
+        setShowRawText={setShowRawText}
+        extractedText={extractedText}
+        handleReset={handleReset}
+        onClose={onClose}
+      />
+    )}
+  </ResponsiveModal>
 );
 
-const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
+const DenialDecoder = ({ onClose, onOpenAISettings }) => {
   const { t } = useLanguage();
   const [step, setStep] = useState("upload"); // upload, processing, analyzing, results
   const [extractedText, setExtractedText] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
+  const [offDeviceNotice, setOffDeviceNotice] = useState(null);
   const [progress, setProgress] = useState(0);
   const [showRawText, setShowRawText] = useState(false);
   const [aiStatus, setAIStatus] = useState(getAIStatus());
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
-  const dialogRef = useRef(null);
-
-  useFocusTrap(dialogRef, { active: true, onEscape: onClose });
 
   // Monitor AI status
   useEffect(() => {
@@ -678,6 +792,7 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
       handleImageSelect(file, {
         setStep,
         setError,
+        setOffDeviceNotice,
         setProgress,
         setExtractedText,
         setAnalysis,
@@ -691,20 +806,20 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
     setExtractedText("");
     setAnalysis(null);
     setError(null);
+    setOffDeviceNotice(null);
     setProgress(0);
     setShowRawText(false);
   };
 
   return (
     <DenialDecoderView
-      dialogRef={dialogRef}
-      className={className}
       t={t}
       onClose={onClose}
       onOpenAISettings={onOpenAISettings}
       step={step}
       aiStatus={aiStatus}
       error={error}
+      offDeviceNotice={offDeviceNotice}
       cameraInputRef={cameraInputRef}
       fileInputRef={fileInputRef}
       handleFileUpload={handleFileUpload}

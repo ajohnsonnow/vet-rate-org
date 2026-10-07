@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { test, expect, Page } from "@playwright/test";
+import { TOOLS } from "./tool-launch-matrix.data";
 
 const APP_VERSION: string = JSON.parse(
   readFileSync("package.json", "utf-8"),
@@ -9,160 +10,27 @@ const FIXTURE = JSON.parse(
   readFileSync("tests/fixtures/redacted-packet.json", "utf-8"),
 );
 
-// ──────────────────────────────────────────────────────────────
-// All 48 user-facing tool events (verified against window.addEventListener
-// calls across src/). Organised by cluster matching the app's 7 clusters.
-// ──────────────────────────────────────────────────────────────
-const TOOLS: { name: string; event: string; cluster: string }[] = [
-  // Calculate Your Rating
-  {
-    name: "Tactical Calculator",
-    event: "openTacticalCalculator",
-    cluster: "Calculate",
-  },
-  {
-    name: "Million Dollar Dashboard",
-    event: "openMillionDollarDashboard",
-    cluster: "Calculate",
-  },
-  {
-    name: "Time Machine (ITF)",
-    event: "openTimeMachine",
-    cluster: "Calculate",
-  },
-  {
-    name: "Retro Pay Hunter",
-    event: "openRetroPayHunter",
-    cluster: "Calculate",
-  },
-  {
-    name: "C&P Exam Simulator",
-    event: "openCAPSimulator",
-    cluster: "Calculate",
-  },
-
-  // Discover Your Claims
-  { name: "BDD Builder", event: "openBDDBuilder", cluster: "Discover" },
-  {
-    name: "Secondary Scout",
-    event: "openSecondaryScoutLauncher",
-    cluster: "Discover",
-  },
-  { name: "Pathfinder", event: "openPathfinder", cluster: "Discover" },
-  {
-    name: "MOS Hazard Matcher",
-    event: "openMOSHazardMatcher",
-    cluster: "Discover",
-  },
-  {
-    name: "PACT Act Navigator",
-    event: "openPACTActNavigator",
-    cluster: "Discover",
-  },
-  {
-    name: "Web of Conditions",
-    event: "openWebOfConditions",
-    cluster: "Discover",
-  },
-  { name: "Claim Navigator", event: "openClaimNavigator", cluster: "Discover" },
-
-  // Build Your Evidence
-  {
-    name: "C-File AI Analyzer",
-    event: "openCFileAnalyzer",
-    cluster: "Evidence",
-  },
-  {
-    name: "Blue Button X-Ray",
-    event: "openBlueButtonXRay",
-    cluster: "Evidence",
-  },
-  { name: "Muster Call (PDF)", event: "openMusterCall", cluster: "Evidence" },
-  { name: "Witness Bench", event: "openWitnessBench", cluster: "Evidence" },
-  { name: "Nexus Builder", event: "openNexusBuilder", cluster: "Evidence" },
-  { name: "Forms Helper", event: "openFormsHelper", cluster: "Evidence" },
-  { name: "Symptom Logger", event: "openSymptomLogger", cluster: "Evidence" },
-  { name: "Pain Painter", event: "openPainPainter", cluster: "Evidence" },
-  {
-    name: "Evidence Timeline",
-    event: "openEvidenceTimeline",
-    cluster: "Evidence",
-  },
-  { name: "FOIA Keysmith", event: "openFOIAGenerator", cluster: "Evidence" },
-
-  // Quality Control
-  { name: "Red Team", event: "openRedTeam", cluster: "QC" },
-  { name: "The War Game", event: "openClaimStressTest", cluster: "QC" },
-  { name: "Decision Decoder", event: "openDecisionDecoder", cluster: "QC" },
-  { name: "Denials Decoder", event: "openDenialDecoder", cluster: "QC" },
-  { name: "Shark Radar", event: "openSharkRadar", cluster: "QC" },
-  { name: "Consistency Engine", event: "openConsistencyEngine", cluster: "QC" },
-  {
-    name: "Evidence Gap Finder",
-    event: "openEvidenceGapVisualizer",
-    cluster: "QC",
-  },
-  { name: "Risk Assessment", event: "openRiskAssessment", cluster: "QC" },
-
-  // Maximize Your Rating
-  { name: "TDIU Builder", event: "openTDIUBuilder", cluster: "Maximize" },
-  {
-    name: "State Benefit Hunter",
-    event: "openStateBenefitHunter",
-    cluster: "Maximize",
-  },
-  { name: "The Tribunal", event: "openTheTribunal", cluster: "Maximize" },
-  {
-    name: "Legislative Watchdog",
-    event: "openLegislativeWatchdog",
-    cluster: "Maximize",
-  },
-  {
-    name: "Body Map Selector",
-    event: "openBodyMapSelector",
-    cluster: "Maximize",
-  },
-
-  // Appeals
-  {
-    name: "Nexus Quality Analyzer",
-    event: "openNexusQualityAnalyzer",
-    cluster: "Appeals",
-  },
-  {
-    name: "Remand Risk Checker",
-    event: "openRemandRiskChecker",
-    cluster: "Appeals",
-  },
-  {
-    name: "Appeals Lane Advisor",
-    event: "openAppealsLaneAdvisor",
-    cluster: "Appeals",
-  },
-
-  // Support & Resources
-  { name: "VSO Finder", event: "openVSOFinder", cluster: "Support" },
-  { name: "My Packet", event: "openMyPacket", cluster: "Support" },
-  { name: "Knowledge Base (VKB)", event: "openVKBViewer", cluster: "Support" },
-  { name: "VA Resources Hub", event: "openVAResources", cluster: "Support" },
-  { name: "Field Manual", event: "openUserManual", cluster: "Support" },
-  { name: "Cloud Sync", event: "openCloudSyncManager", cluster: "Support" },
-  { name: "Backup Manager", event: "openBackupManager", cluster: "Support" },
-  { name: "VKB Timeline", event: "openVKBTimeline", cluster: "Support" },
-  {
-    name: "Publications Library",
-    event: "openPublicationsLibrary",
-    cluster: "Support",
-  },
-  { name: "Record Search", event: "openRecordSearch", cluster: "Support" },
-];
+// React commits the interactive tree (including every cluster's listener-
+// registering useEffect) once useBootSequence's isBooting gate flips false,
+// but passive effects flush a tick AFTER that commit paints - #main-content
+// attaching (or networkidle) only proves the commit happened, not that
+// effects have run yet. Waiting on two animation frames plus a macrotask
+// turn is tied to the browser's real paint/task-queue lifecycle (and so
+// scales with actual system load) rather than guessing a fixed duration.
+async function waitForInteractiveEffectsToSettle(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setTimeout(resolve, 0)),
+        );
+      }),
+  );
+}
 
 // ──────────────────────────────────────────────────────────────
 // Boot helper — seeds localStorage with returning-user flags +
 // redacted packet claims, then navigates to the app root.
-// Extra 1200ms wait gives all React useEffect hooks time to
-// register their window event listeners (lazy clusters mount
-// after networkidle but effects run a paint cycle later).
 // ──────────────────────────────────────────────────────────────
 async function bootWithPacket(page: Page): Promise<void> {
   const claims = FIXTURE.claims;
@@ -179,35 +47,27 @@ async function bootWithPacket(page: Page): Promise<void> {
   );
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(1200);
+  await waitForInteractiveEffectsToSettle(page);
 }
 
 // ──────────────────────────────────────────────────────────────
-// Modal detection — polls up to 15 s (30 × 500 ms) for a dialog to
-// appear (matches the budget established in tool-with-packet.spec.ts
-// and mobile.spec.ts's Atomic Wipe test). Heavier tools (My Packet,
-// Retro Pay Hunter, C&P Exam Simulator) can exceed a tighter budget
-// under the parallel-worker local dev-server contention this suite
-// runs with — a 48-step test has ~48x the exposure to that per-tool
-// risk of a single-tool test, so it needs the same generous margin.
-// Uses isVisible() snapshots rather than expect().toBeVisible() to
-// avoid Playwright's web-first retry machinery interfering with
-// back-to-back dispatches.
+// Modal detection — waits up to 15s for either dialog shape to become
+// visible (matches the budget established in tool-with-packet.spec.ts and
+// mobile.spec.ts's Atomic Wipe test). Heavier tools (My Packet, Retro Pay
+// Hunter, C&P Exam Simulator) can exceed a tighter budget under the
+// parallel-worker local dev-server contention this suite runs with — a
+// 48-step test has ~48x the exposure to that per-tool risk of a
+// single-tool test, so it needs the same generous margin. A single
+// locator.waitFor() replaces the old manual 500ms-interval poll loop with
+// Playwright's own built-in retry.
 // ──────────────────────────────────────────────────────────────
 async function modalIsVisible(page: Page): Promise<boolean> {
-  const selectors = ['[role="dialog"]', '[aria-modal="true"]'];
-  for (let i = 0; i < 30; i++) {
-    for (const sel of selectors) {
-      const visible = await page
-        .locator(sel)
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (visible) return true;
-    }
-    await page.waitForTimeout(500);
-  }
-  return false;
+  return page
+    .locator('[role="dialog"], [aria-modal="true"]')
+    .first()
+    .waitFor({ state: "visible", timeout: 15000 })
+    .then(() => true)
+    .catch(() => false);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -240,15 +100,25 @@ async function closeModal(page: Page): Promise<void> {
     }
     await anyDialog.waitFor({ state: "hidden", timeout: 1500 }).catch(() => {});
   }
-  // Give React's unmount/cleanup effects (focus restoration, scroll-lock
-  // removal) time to settle before dispatching the next tool event. Widened
-  // from 300ms: under the parallel-worker local dev-server contention this
-  // suite runs with, a shorter wait let the next tool's dispatch fire while
-  // the previous tool's async cleanup was still in flight, producing a
-  // delayed React error #299 that got misattributed to whichever tool
-  // happened to be "current" when pageerror fired (a timing/attribution
-  // artifact, not a bug in that tool's own code).
-  await page.waitForTimeout(800);
+  // React's unmount/cleanup effects (focus restoration, scroll-lock removal)
+  // flush as passive effects after the dialog's DOM node is already gone;
+  // dispatching the next tool's open event before that finished raced the
+  // previous tool's cleanup and produced a delayed React error #299
+  // misattributed to whichever tool happened to be "current" when it
+  // fired. useBodyScrollLock's cleanup only removes "modal-open" once the
+  // LAST open modal's effect has flushed, so waiting for that class to
+  // clear is a real signal cleanup settled, not a fixed guess at how long
+  // that takes. Falls back to the same double-rAF+macrotask settle for any
+  // dialog that never used the body-scroll-lock hook in the first place.
+  const stillLocked = await page
+    .waitForFunction(
+      () => !document.body.classList.contains("modal-open"),
+      null,
+      { timeout: 3000 },
+    )
+    .then(() => false)
+    .catch(() => true);
+  if (stillLocked) await waitForInteractiveEffectsToSettle(page);
 }
 
 // ──────────────────────────────────────────────────────────────

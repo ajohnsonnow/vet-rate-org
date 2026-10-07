@@ -1,9 +1,9 @@
 import { useState } from "react";
 import PDFButton from "./PDFButton";
 import { saveClaim, isClaimSaved } from "../utils/claimsStorage";
-import { useLanguage } from "../contexts/LanguageContext";
 import { PACTActInfoCard, PACTActBadge } from "./PACTActIndicator";
 import StaleDataIndicator from "./StaleDataIndicator";
+import ScrollRegion from "./common/ScrollRegion";
 
 const VAResources = {
   emergency: [
@@ -219,7 +219,7 @@ const RatingCriteriaBadges = ({ result }) => (
     {/* Type Badge */}
     <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
       <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">
-        Rating Type: {result.ratingCriteria.type.replace(/-/g, " ")}
+        Rating Type: {result.ratingCriteria.type.replaceAll("-", " ")}
       </span>
     </div>
 
@@ -264,7 +264,7 @@ const RatingCriteriaBadges = ({ result }) => (
 const RatingCriteriaTable = ({ result }) =>
   result.ratingCriteria.ratings &&
   Object.keys(result.ratingCriteria.ratings).length > 0 && (
-    <div className="overflow-x-auto">
+    <ScrollRegion label="Rating criteria by percentage">
       <table className="w-full">
         <thead>
           <tr className="bg-va-blue text-white">
@@ -275,7 +275,7 @@ const RatingCriteriaTable = ({ result }) =>
         <tbody>
           {/* Sort ratings in descending order */}
           {Object.entries(result.ratingCriteria.ratings)
-            .sort(([a], [b]) => parseInt(b) - parseInt(a))
+            .sort(([a], [b]) => Number.parseInt(b) - Number.parseInt(a))
             .map(([percentage, criteria], idx) => (
               <tr
                 key={percentage}
@@ -297,7 +297,7 @@ const RatingCriteriaTable = ({ result }) =>
             ))}
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
   );
 
 const RatingCriteriaNotes = ({ result }) =>
@@ -311,8 +311,8 @@ const RatingCriteriaNotes = ({ result }) =>
           <p>{result.ratingCriteria.notes}</p>
         ) : (
           <ul className="space-y-2">
-            {result.ratingCriteria.notes.map((note, idx) => (
-              <li key={idx}>{note}</li>
+            {result.ratingCriteria.notes.map((note) => (
+              <li key={note}>{note}</li>
             ))}
           </ul>
         )}
@@ -382,9 +382,9 @@ const DocumentationSection = ({
         </p>
         <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
           {result.documentationRequirements.split("\n").map(
-            (line, idx) =>
+            (line) =>
               line.trim() && (
-                <p key={idx} className="mb-2">
+                <p key={line} className="mb-2">
                   • {line.trim()}
                 </p>
               ),
@@ -407,7 +407,7 @@ const RelatedSecondaryConditions = ({ result, onSecondaryConditionClick }) =>
         disability:
       </p>
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {result.relatedSecondaryConditions.map((condition, idx) => {
+        {result.relatedSecondaryConditions.map((condition) => {
           // Support both string and object format for backwards compatibility
           const conditionName =
             typeof condition === "string" ? condition : condition.name;
@@ -415,7 +415,7 @@ const RelatedSecondaryConditions = ({ result, onSecondaryConditionClick }) =>
             typeof condition === "object" ? condition.diagnosticCode : null;
 
           return (
-            <li key={idx} className="flex items-start gap-2">
+            <li key={conditionName} className="flex items-start gap-2">
               <span className="text-amber-600 dark:text-amber-400 font-bold mt-0.5">
                 →
               </span>
@@ -470,8 +470,8 @@ const VeteranResourcesSection = () => (
         🚨 EMERGENCY & CRISIS SUPPORT
       </h4>
       <ul className="space-y-2">
-        {VAResources.emergency.map((resource, idx) => (
-          <li key={idx} className="text-gray-700 dark:text-gray-300">
+        {VAResources.emergency.map((resource) => (
+          <li key={resource.label} className="text-gray-700 dark:text-gray-300">
             <span className="font-semibold text-gray-800 dark:text-gray-200">
               {resource.label}:
             </span>{" "}
@@ -489,8 +489,8 @@ const VeteranResourcesSection = () => (
         📋 ESSENTIAL VA TOOLS & BENEFITS
       </h4>
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {VAResources.essential.map((resource, idx) => (
-          <li key={idx}>
+        {VAResources.essential.map((resource) => (
+          <li key={resource.label}>
             <a
               href={resource.url}
               target="_blank"
@@ -627,7 +627,6 @@ function DisabilityDetails({
   onBuildStatement,
   onSecondaryConditionClick,
 }) {
-  const { _t } = useLanguage();
   const [expandedSection, setExpandedSection] = useState("documentation");
   const [isSaved, setIsSaved] = useState(
     isClaimSaved(result.conditionName, null),

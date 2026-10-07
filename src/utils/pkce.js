@@ -52,13 +52,13 @@ export function generateState() {
  */
 function base64UrlEncode(buffer) {
   // Convert buffer to base64
-  const base64 = btoa(String.fromCharCode(...buffer));
+  const base64 = btoa(String.fromCodePoint(...buffer));
 
   // Make it URL-safe:
   // Replace + with - (minus)
   // Replace / with _ (underscore)
   // Remove trailing = padding
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return base64.replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
 }
 
 /**

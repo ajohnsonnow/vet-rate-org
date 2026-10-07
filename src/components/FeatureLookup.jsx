@@ -583,9 +583,9 @@ function RequestDetailReviewAndAudit({ selectedRequest, auditLog }) {
       {auditLog.length > 0 && (
         <DetailSection title="Audit Log" icon={History}>
           <div className="space-y-2">
-            {auditLog.map((entry, idx) => (
+            {auditLog.map((entry) => (
               <div
-                key={idx}
+                key={`${entry.timestamp}-${entry.action}`}
                 className="flex items-center justify-between text-sm"
               >
                 <span className="text-gray-600 dark:text-slate-400">

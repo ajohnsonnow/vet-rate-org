@@ -13,13 +13,20 @@ import AskTheRegs from "../../components/AskTheRegs.jsx";
 const mockAnswer = vi.fn();
 const mockIsAnyAIAvailable = vi.fn(() => true);
 const mockGenerateAI = vi.fn();
+const mockRetrieve = vi.fn();
+const mockSmallModel = vi.fn(() => false);
 
 vi.mock("../../services/legalAnswerer.js", () => ({
   answer: (...args) => mockAnswer(...args),
+  retrieveRegulationText: (...args) => mockRetrieve(...args),
+}));
+vi.mock("../../utils/smallModelAnswering.js", () => ({
+  smallModelAnswering: () => mockSmallModel(),
 }));
 vi.mock("../../utils/unifiedAIService.js", () => ({
   generateAI: (...args) => mockGenerateAI(...args),
   isAnyAIAvailable: () => mockIsAnyAIAvailable(),
+  getAIStatus: () => ({}),
 }));
 vi.mock("../../components/AIModeSelector.jsx", () => ({
   AIStatusBadge: () => <div data-testid="ai-status-badge" />,
@@ -29,6 +36,8 @@ beforeEach(() => {
   mockAnswer.mockReset();
   mockIsAnyAIAvailable.mockReset().mockReturnValue(true);
   mockGenerateAI.mockReset();
+  mockRetrieve.mockReset();
+  mockSmallModel.mockReset().mockReturnValue(false);
 });
 
 async function askQuestion(text) {
@@ -162,5 +171,66 @@ describe("AskTheRegs", () => {
     });
     expect(askButton).toBeDisabled();
     expect(mockAnswer).not.toHaveBeenCalled();
+  });
+});
+
+describe("AskTheRegs while a small-class model would answer (ADR-010 section 11)", () => {
+  const PASSAGE = {
+    citation: "38 CFR § 4.25",
+    title: "Combined ratings table",
+    text: "The combined value is converted to the nearest number divisible by 10.",
+    source_url: "https://www.ecfr.gov/section-4.25",
+    fetched_at: "2026-05-15T00:00:00Z",
+    score: 0.91,
+  };
+
+  it("searches the regulations and shows the text found, with no model call", async () => {
+    mockSmallModel.mockReturnValue(true);
+    mockRetrieve.mockResolvedValue([PASSAGE]);
+    render(<AskTheRegs onClose={vi.fn()} />);
+
+    await askQuestion("How does VA combine ratings?");
+
+    expect(
+      await screen.findByText(
+        /converted to the nearest number divisible by 10/,
+      ),
+    ).toBeInTheDocument();
+    expect(mockRetrieve).toHaveBeenCalledWith("How does VA combine ratings?");
+    expect(mockAnswer).not.toHaveBeenCalled();
+    expect(mockGenerateAI).not.toHaveBeenCalled();
+    expect(screen.getByText("38 CFR § 4.25")).toBeInTheDocument();
+    const note = screen.getByRole("note", {
+      name: "Search results, not an AI answer",
+    });
+    expect(note).toHaveTextContent(
+      "Search results from the regulations. These are the closest text matches and may not be about your question. Read the section heading before relying on one.",
+    );
+  });
+
+  it("says so when the search finds nothing", async () => {
+    mockSmallModel.mockReturnValue(true);
+    mockRetrieve.mockResolvedValue([]);
+    render(<AskTheRegs onClose={vi.fn()} />);
+
+    await askQuestion("What is the meaning of life?");
+
+    expect(
+      await screen.findByText(
+        "The search found no regulation text for that question. Try naming the condition or the rule you are asking about.",
+      ),
+    ).toBeInTheDocument();
+    expect(mockAnswer).not.toHaveBeenCalled();
+  });
+
+  it("uses the model as before when the loaded model is not small-class", async () => {
+    mockAnswer.mockResolvedValue(SIMPLE_ANSWER_RESULT);
+    render(<AskTheRegs onClose={vi.fn()} />);
+
+    await askQuestion("How does VA combine ratings?");
+
+    await waitFor(() => expect(mockAnswer).toHaveBeenCalledTimes(1));
+    expect(mockRetrieve).not.toHaveBeenCalled();
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
   });
 });

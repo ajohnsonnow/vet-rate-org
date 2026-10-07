@@ -326,15 +326,14 @@ const LANGUAGE_TRANSLATIONS = {
 
 function useUnityPhraseLearning(targetLang) {
   const [currentPhrase, setCurrentPhrase] = useState(null);
-  const [_isListening, _setIsListening] = useState(false);
-  const [_userAttempt, setUserAttempt] = useState("");
+  const [, setUserAttempt] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [progress, setProgress] = useState({});
 
   // Get phrase translation
   const getPhraseTranslation = (phraseKey) => {
     const langData = LANGUAGE_TRANSLATIONS[targetLang];
-    if (!langData || !langData.phrases[phraseKey]) return null;
+    if (!langData?.phrases[phraseKey]) return null;
     return langData.phrases[phraseKey];
   };
 

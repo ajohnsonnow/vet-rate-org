@@ -8,19 +8,28 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   EVIDENCE_REQUIREMENTS,
   getAvailableConditions,
   analyzeEvidenceGaps,
 } from "../data/evidenceRequirements";
-import { saveClaim } from "../utils/claimsStorage";
+import { saveClaim, getSavedClaims } from "../utils/claimsStorage";
+import { getMyRatings } from "../utils/veteranProfile";
+import { matchConditionToKnownKey } from "../utils/conditionName";
 import ReportBugLink from "./ReportBugLink";
+
+// {key, label} pairs for matchConditionToKnownKey, built once at module load
+// (the requirements schema itself is static).
+const EVIDENCE_CONDITIONS_LIST = Object.entries(EVIDENCE_REQUIREMENTS).map(
+  ([id, data]) => ({ key: id, label: data.name }),
+);
 
 function getAvailableRatingsForCondition(conditionId) {
   const data = conditionId ? EVIDENCE_REQUIREMENTS[conditionId] : null;
   return data
     ? Object.keys(data.ratings)
-        .map((r) => parseInt(r))
+        .map((r) => Number.parseInt(r))
         .sort((a, b) => a - b)
     : [];
 }
@@ -30,9 +39,95 @@ function computeDefaultRating(conditionId) {
   if (!condition) return null;
   // Set default to highest rating that isn't 100
   const ratings = Object.keys(condition.ratings)
-    .map((r) => parseInt(r))
+    .map((r) => Number.parseInt(r))
     .sort((a, b) => b - a);
   return ratings.find((r) => r < 100 && r >= 30) || ratings[0];
+}
+
+// Smallest available rating tier above the veteran's current rating, or the
+// highest tier if they're already at (or above) the top of the scale.
+function computeSuggestedTarget(conditionId, currentRating) {
+  const ratings = getAvailableRatingsForCondition(conditionId);
+  if (currentRating === null) return computeDefaultRating(conditionId);
+  const nextTier = ratings.find((r) => r > currentRating);
+  return nextTier ?? ratings.at(-1);
+}
+
+// One-click quick-picks for conditions the veteran already has on file (My
+// Ratings, then saved claims) that this tool has evidence requirements for.
+// Real VA letters spell condition names out in full ("radiculopathy, left
+// lower extremity (femoral)"), so matching against the schema's short
+// canonical names goes through matchConditionToKnownKey rather than an exact
+// normalized-name lookup. Ratings carry a known current percentage, so the
+// suggested target is the next tier up; saved claims have no rating on file
+// yet, so the target falls back to the same default a manual condition pick
+// would get.
+function getRecordsQuickPicks() {
+  const seen = new Set();
+  const picks = [];
+
+  getMyRatings().forEach((r) => {
+    const conditionId = matchConditionToKnownKey(
+      r.name,
+      EVIDENCE_CONDITIONS_LIST,
+    );
+    if (!conditionId || seen.has(conditionId)) return;
+    const currentRating = typeof r.rating === "number" ? r.rating : null;
+    const targetRating = computeSuggestedTarget(conditionId, currentRating);
+    // Already at the condition's maximum (tinnitus caps at 10%): no increase
+    // to gather evidence for.
+    if (currentRating !== null && targetRating <= currentRating) return;
+    seen.add(conditionId);
+    picks.push({
+      conditionId,
+      name: EVIDENCE_REQUIREMENTS[conditionId].name,
+      currentRating,
+      targetRating,
+    });
+  });
+
+  getSavedClaims().forEach((c) => {
+    const conditionId = matchConditionToKnownKey(
+      c.conditionName,
+      EVIDENCE_CONDITIONS_LIST,
+    );
+    if (!conditionId || seen.has(conditionId)) return;
+    seen.add(conditionId);
+    picks.push({
+      conditionId,
+      name: EVIDENCE_REQUIREMENTS[conditionId].name,
+      currentRating: null,
+      targetRating: computeDefaultRating(conditionId),
+    });
+  });
+
+  return picks;
+}
+
+function RecordsQuickPicks({ picks, onPick }) {
+  if (picks.length === 0) return null;
+
+  return (
+    <div className="mb-6">
+      <p className="text-sm text-gray-400 mb-2">
+        📋 From your records — one click to load:
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {picks.map((pick) => (
+          <button
+            key={pick.conditionId}
+            type="button"
+            onClick={() => onPick(pick)}
+            className="min-h-[44px] px-4 py-2 bg-gray-800 border-2 border-gray-700 rounded-lg text-sm text-white hover:border-purple-500 focus-visible:ring-2 focus-visible:ring-purple-500 transition-colors"
+          >
+            {pick.currentRating !== null
+              ? `${pick.name} (${pick.currentRating}% → try ${pick.targetRating}%)`
+              : `${pick.name} → target ${pick.targetRating}%`}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function saveGapAnalysis({
@@ -113,37 +208,12 @@ const EvidenceGapHeader = ({ onClose, onReportBug }) => (
     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-4xl">🔬</span>
-        </div>
-        <div>
-          <h2
-            id="evidence-gap-title"
-            className="text-2xl sm:text-3xl font-bold"
-          >
-            Evidence Gap Visualizer{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h2>
-          <p className="text-purple-200 mt-1">
-            &quot;The Missing Link&quot; • See exactly what you need
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Evidence Gap Visualizer"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -160,8 +230,35 @@ const EvidenceGapHeader = ({ onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
+          <span className="text-4xl">🔬</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="evidence-gap-title"
+            className="text-2xl sm:text-3xl font-bold"
+          >
+            Evidence Gap Visualizer{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-purple-200 mt-1">
+            &quot;The Missing Link&quot; • See exactly what you need
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="Evidence Gap Visualizer"
+        />
+      )}
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -200,7 +297,7 @@ const ConditionRatingSelectors = ({
       </label>
       <select
         value={targetRating}
-        onChange={(e) => setTargetRating(parseInt(e.target.value))}
+        onChange={(e) => setTargetRating(Number.parseInt(e.target.value))}
         disabled={!selectedCondition}
         className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all disabled:opacity-50"
       >
@@ -413,7 +510,7 @@ const CriticalGapsSummary = ({ analysis, targetRating }) => {
 
 // Render tips section
 const TipsSection = ({ analysis, showTips, setShowTips }) => {
-  if (!analysis || !analysis.tips) return null;
+  if (!analysis?.tips) return null;
 
   return (
     <div className="bg-blue-900/30 border-2 border-blue-500/50 rounded-xl p-6 mb-6">
@@ -432,8 +529,8 @@ const TipsSection = ({ analysis, showTips, setShowTips }) => {
 
       {showTips && (
         <ul className="mt-4 space-y-2">
-          {analysis.tips.map((tip, index) => (
-            <li key={index} className="flex items-start gap-2 text-blue-200">
+          {analysis.tips.map((tip) => (
+            <li key={tip} className="flex items-start gap-2 text-blue-200">
               <span className="text-blue-400 flex-shrink-0">→</span>
               <span>{tip}</span>
             </li>
@@ -681,6 +778,8 @@ const EvidenceGapBody = ({
   targetRating,
   handleConditionChange,
   setTargetRating,
+  quickPicks,
+  handleQuickPick,
   analysis,
   showTips,
   setShowTips,
@@ -691,6 +790,8 @@ const EvidenceGapBody = ({
   <div className="-mx-4 -my-4">
     {/* Content */}
     <div className="p-6">
+      <RecordsQuickPicks picks={quickPicks} onPick={handleQuickPick} />
+
       {/* Condition & Rating Selection */}
       <ConditionRatingSelectors
         availableConditions={availableConditions}
@@ -777,6 +878,7 @@ const EvidenceGapVisualizer = ({
   const [showTips, setShowTips] = useState(false);
   const [savedGapAnalyses, setSavedGapAnalyses] = useState([]);
   const [saveStatus, setSaveStatus] = useState(null); // 'success' | 'error' | null
+  const [quickPicks] = useState(getRecordsQuickPicks);
 
   // Get available conditions and ratings
   const availableConditions = getAvailableConditions();
@@ -796,6 +898,13 @@ const EvidenceGapVisualizer = ({
     setUserEvidence([]);
     const defaultRating = computeDefaultRating(conditionId);
     if (defaultRating !== null) setTargetRating(defaultRating);
+  };
+
+  // One-click load from a records quick-pick (My Ratings / saved claims)
+  const handleQuickPick = (pick) => {
+    setSelectedCondition(pick.conditionId);
+    setUserEvidence([]);
+    setTargetRating(pick.targetRating);
   };
 
   // Toggle evidence item
@@ -833,6 +942,8 @@ const EvidenceGapVisualizer = ({
         targetRating={targetRating}
         handleConditionChange={handleConditionChange}
         setTargetRating={setTargetRating}
+        quickPicks={quickPicks}
+        handleQuickPick={handleQuickPick}
         analysis={analysis}
         showTips={showTips}
         setShowTips={setShowTips}

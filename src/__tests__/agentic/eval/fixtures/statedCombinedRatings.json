@@ -1,0 +1,288 @@
+[
+  {
+    "name": "stated figure with inputs listed",
+    "text": "Inputs: 50% PTSD, 30% tinnitus. Combined rating: **80%**.",
+    "stated": [80]
+  },
+  {
+    "name": "percent spelled out",
+    "text": "Your combined disability rating is 70 percent",
+    "stated": [70]
+  },
+  {
+    "name": "hedged overall figure",
+    "text": "overall rating of about 60%",
+    "stated": [60]
+  },
+  {
+    "name": "distinct figures once each, in order",
+    "text": "combined rating is 60%. Another tool shows a combined rating of 70%. Combined rating is 60%.",
+    "stated": [60, 70]
+  },
+  {
+    "name": "no figure follows",
+    "text": "combined with the bilateral factor",
+    "stated": []
+  },
+  {
+    "name": "decimal figure",
+    "text": "The final combined rating is 74.8% before rounding.",
+    "stated": [74.8]
+  },
+  {
+    "name": "baseline a11: restates the right figure, then a wrong final",
+    "text": "Based on the data provided, your combined disability rating is 80%. ... The final combined disability rating is **70%**.",
+    "stated": [80, 70]
+  },
+  {
+    "name": "baseline a13: wrong figure phrased as a calculation result and a percentage",
+    "text": "Given that the combined rating calculation results in 100%, ... You are eligible for a TDIU rating with a combined disability percentage of 100%.",
+    "stated": [100]
+  },
+  {
+    "name": "intermediate combine steps carry no trigger word",
+    "text": "50% with 30% gives 65%, then 65% with 20% gives 72%.",
+    "stated": []
+  },
+  {
+    "name": "run_2026-10-05_071859 a11: contradicts calculator",
+    "transcript": "run_2026-10-05_071859.jsonl",
+    "caseId": "a11",
+    "calculator": 80,
+    "expected": "contradicts calculator",
+    "text": "Based on the data provided, your combined disability rating is 80%. Let's break down the calculation and explain each step:\n\n### Data Provided:\n- **PTSD (Post-Traumatic Stress Disorder):** 50%\n- **Tinnitus:** 30%\n- **Back:** 20%\n- **Knee:** 10%\n\n### Step-by-Step Calculation:\n1. **Identify Bilateral Pairs:**\n   - The VA regulations specify that \"Bilateral\" means the SAME body part on BOTH the left AND right side.\n   - We need to check if any conditions are paired as bilateral.\n\n2. **Check Conditions for Bilateral Pairing:**\n   - **PTSD:** No specific body part mentioned; therefore, it cannot be paired with another condition.\n   - **Tinnitus:** Also no specific body part mentioned; therefore, it cannot be paired with another condition.\n   - **Back:** No specific body part mentioned; therefore, it cannot be paired with another condition.\n   - **Knee:** No specific body part mentioned; therefore, it cannot be paired with another condition.\n\n3. **Conclusion:**\n   - Since none of the conditions are paired bilaterally, the bilateral factor does not apply in this case.\n\n4. **Apply Combined Rating Formula:**\n   - The formula for combined disability rating when there are no bilateral pairs is straightforward:\n     \\[\n     \\text{Combined Rating} = 100 - (\\text{Sum of Individual Ratings})\n     \\]\n   - Sum of individual ratings: \\(50\\% + 30\\% + 20\\% + 10\\% = 110\\%\\)\n   - Subtract from 100%: \\(100 - 110\\% = -10\\%\\)\n\nHowever, since the result is negative, which is not possible, we must re-evaluate the pairing.\n\n### Re-evaluation:\nGiven the conditions listed, let's consider if any could be paired:\n\n- **PTSD (Left Brain) + Tinnitus (Right Ear):** This would be a valid bilateral pair as both affect different body parts on the same side.\n- **Back (Left Side) + Knee (Right Side):** This would also be a valid bilateral pair as both affect different body parts on the same side.\n\n### Correct Pairing:\nLet's assume the following pairs based on the conditions provided:\n\n- **PTSD (Left Brain) + Tinnitus (Right Ear):** 50% + 30% = 80%\n- **Back (Left Side) + Knee (Right Side):** 20% + 10% = 30%\n\n### Final Combined Rating:\n1. **Bilateral Pair:**\n   - Left Brain (PTSD) + Right Ear (Tinnitus): 80%\n2. **Non-Bilateral Groups:**\n   - Back: 20%\n   - Knee: 10%\n\n### Combined Rating Calculation:\n\\[\n\\text{Combined Rating} = 100 - (\\text{Sum of Non-Bilateral Groups})\n\\]\n\\[\n\\text{Sum of Non-Bilateral Groups} = 20\\% + 10\\% = 30\\%\n\\]\n\\[\n\\text{Combined Rating} = 100 - 30\\% = 70\\%\n\\]\n\n### Final Result:\nThe correct combined rating, considering the bilateral pairings, is **70%**.\n\n### Explanation:\n- **PTSD (Left Brain) + Tinnitus (Right Ear):** 80%\n- **Back (Left Side) + Knee (Right Side):** 30%\n- **Combined Rating:** 100 - 30% = 70%\n\nTherefore, the final combined disability rating is **70%**.",
+    "stated": [80, 70]
+  },
+  {
+    "name": "run_2026-10-05_071859 a12: matches calculator",
+    "transcript": "run_2026-10-05_071859.jsonl",
+    "caseId": "a12",
+    "calculator": 50,
+    "expected": "matches calculator",
+    "text": "Based on the provided data and VA regulations, the veteran's conditions include:\n\n- Left knee rated at 10%\n- Right knee rated at 10%\n\n### Bilateral Pairing\nThe veteran's left knee (left side) and right knee (right side) are paired as a bilateral pair according to the VA regulations. This is because both conditions affect the same body part (knees) on opposite sides of the body.\n\n### Bilateral Group Rating\nGiven the bilateral pairing, the next step is to calculate the bilateral group rating using the formula:\n\\[ \\text{Bilateral Group Rating} = \\frac{(100 - \\text{Left Knee Rating}) \\times (100 - \\text{Right Knee Rating})}{100} \\]\n\nPlugging in the ratings:\n\\[ \\text{Bilateral Group Rating} = \\frac{(100 - 10) \\times (100 - 10)}{100} \\]\n\\[ \\text{Bilateral Group Rating} = \\frac{90 \\times 90}{100} \\]\n\\[ \\text{Bilateral Group Rating} = 81 \\]\n\n### Combined Rating\nThe veteran's combined rating is calculated by adding the bilateral group rating to the highest individual rating (which is 30% for the higher-rated knee):\n\\[ \\text{Combined Rating} = \\text{Bilateral Group Rating} + \\text{Highest Individual Rating} \\]\n\\[ \\text{Combined Rating} = 81 + 30 \\]\n\\[ \\text{Combined Rating} = 111 \\]\n\nHowever, since the combined rating cannot exceed 100%, the maximum possible combined rating is 100%.\n\n### Final Explanation\n- **Bilateral Pair**: Left knee (left, 10%) and Right knee (right, 10%)\n- **Bilateral Group Rating**: 21%\n- **Combined Rating**: 50%\n\n### Conclusion\nThe veteran's condition results in a combined rating of 50%. This reflects the bilateral nature of the knee issues, with each knee contributing to the overall disability assessment. The highest individual rating (30%) is also included in the combined rating calculation, but the overall limit prevents it from exceeding 100%.\n\nIf you have any additional conditions or if there are other factors affecting the veteran's claim, please provide that information so we can further assess the entire picture.",
+    "stated": [100, 50]
+  },
+  {
+    "name": "run_2026-10-05_071859 a13: contradicts calculator",
+    "transcript": "run_2026-10-05_071859.jsonl",
+    "caseId": "a13",
+    "calculator": 80,
+    "expected": "contradicts calculator",
+    "text": "Based on the information provided, you are currently eligible for a Total Disability Individual Unemployability (TDIU) rating given your condition of one 60% disability and three 20% disabilities. Let's break down the calculation to explain why this is the case.\n\n### Calculation Explanation\n\n#### Given Ratings:\n- One condition rated at 60%\n- Three conditions rated 20%\n\n#### Combined Rating Calculation:\n1. **Identify Bilateral Pairing:**\n   - The VA regulations do not explicitly pair these conditions together as they are all different body parts (one hand and two fingers). Therefore, there is no bilateral pairing possible here.\n\n2. **Bilateral Group Rating:**\n   - Since there is no bilateral pairing, the \"Bilateral Group Rating\" is not applicable. This means we cannot apply the 10% bonus factor to any group of paired extremities.\n\n3. **Combined Rating:**\n   - The combined rating is calculated using the formula: \n     \\[\n     \\text{Combined Rating} = 100 - ((100 - A) \\times (100 - B) \\times (100 - C) \\ldots / 100^{(n-1)})\n     \\]\n   - In this scenario, \\(A = 60\\), \\(B = 20\\), and \\(C = 20\\).\n\n4. **Apply Formula:**\n   - Substitute the values into the formula:\n     \\[\n     \\text{Combined Rating} = 100 - ((100 - 60) \\times (100 - 20) \\times (100 - 20) / 100^{(3)})\n     \\]\n     \\[\n     \\text{Combined Rating} = 100 - (40 \\times 80 \\times 80 / 100^3)\n     \\]\n     \\[\n     \\text{Combined Rating} = 100 - (256000 / 1000000)\n     \\]\n     \\[\n     \\text{Combined Rating} = 100 - 0.256\n     \\]\n     \\[\n     \\text{Combined Rating} = 99.744\n     \\]\n\n5. **Round to Nearest 10%:**\n   - Rounding 99.744 to the nearest 10% gives us 100%.\n\n### Conclusion:\nGiven that the combined rating calculation results in 100%, which is the maximum possible combined rating, you are fully eligible for a TDIU rating under the current conditions.\n\n### Final Rating:\nYou are eligible for a TDIU rating with a combined disability percentage of 100%.\n\n### Next Steps:\n- Ensure that all supporting documentation is complete and accurate.\n- Review the veteran’s service records and treatment history to confirm the correct ratings.\n- If necessary, seek guidance from a VSO (Veterans Service Officer) or a VA-accredited attorney to further support your claim.\n\nIf you have any additional questions or need further clarification, please let me know!",
+    "stated": [100]
+  },
+  {
+    "name": "run_2026-10-05_071859 a24: matches calculator",
+    "transcript": "run_2026-10-05_071859.jsonl",
+    "caseId": "a24",
+    "calculator": 100,
+    "expected": "matches calculator",
+    "text": "Based on the data provided, the veteran has been rated at 100% for PTSD (Diagnostic Code 6600). Given that there is no mention of any other conditions or pairing in the loaded data, it appears that the veteran's condition is solely rated under Diagnostic Code 6600.\n\n### Explanation:\n- **PTSD (Diagnostic Code 6600):** The veteran has been assigned a 100% rating for PTSD, which is consistent with the highest possible rating under this code.\n  \n### Bilateral Pairing Status:\n- **Bilateral Pair: None**\n  - The veteran does not have any bilateral conditions listed in the provided data. Bilateral conditions must involve the same body part on both sides (e.g., left knee and right knee) and cannot be assumed based on the highest-rated conditions alone.\n\n### Combined Rating:\n- **Bilateral Group Rating: n/a**\n  - Since there are no bilateral conditions, there is no bilateral group rating applicable.\n\n- **Combined Rating: 100%**\n  - As there are no other conditions to combine with the PTSD rating, the combined rating remains at 100%.\n\n### Conclusion:\nThe veteran's PTSD condition is fully accounted for at 100%. There are no other conditions listed, so the combined rating calculation does not apply. This result aligns with the official VA regulations and the data provided.\n\nIf you have additional conditions or if there are any changes in the veteran’s condition, please provide those details so we can reassess the situation accurately.",
+    "stated": [100]
+  },
+  {
+    "name": "run_2026-10-05_071859 a25: matches calculator",
+    "transcript": "run_2026-10-05_071859.jsonl",
+    "caseId": "a25",
+    "calculator": 60,
+    "expected": "matches calculator",
+    "text": "Based on the information provided, you have been awarded a 60% rating for mental health conditions. However, to qualify for Total Disability Individual Unemployability (TDIU), you need to demonstrate that your service-connected disabilities prevent you from obtaining and maintaining any substantially gainful employment.\n\nGiven your current situation:\n\n- **Bilateral Pair: None** - This indicates that the two highest-rated conditions are not paired as bilateral pairs in your case.\n- **Bilateral Group Rating: N/A** - This suggests there is no group rating applied due to the lack of a bilateral pair.\n- **Combined Rating: 60%** - This is the single rating assigned for your mental health condition.\n\n### Explanation:\n1. **Single Rating**: You have one condition rated at 60%. Since this is the only condition being considered here, it does not form a bilateral pair with itself or another condition.\n\n2. **TDIU Requirement**: To qualify for TDIU, you must show that your service-connected disabilities render you unable to secure and maintain any type of substantial gainful employment. The 60% rating alone does not meet this requirement.\n\n### Recommendations:\nTo qualify for TDIU, you should consider the following steps:\n\n1. **Seek Additional Ratings**: Identify other service-connected disabilities that could be combined with your existing 60% rating to reach the required combined rating (80%).\n\n2. **Provide Documentation**: Gather documentation such as work history, vocational training, and any other relevant evidence showing your inability to work due to your disabilities.\n\n3. **Consult a VSO**: A Veterans Service Officer (VSO) can provide guidance on how to prepare your claim effectively and ensure all necessary documentation is submitted.\n\n4. **Review VA Resources**: Utilize resources like the Million Dollar Dashboard tool within Vet-Rate.org to project potential lifetime benefits if granted.\n\n### Conclusion:\nWith a single 60% rating, you do not currently qualify for TDIU. To proceed, you should seek additional ratings and gather supporting documentation to demonstrate your inability to work due to your disabilities.",
+    "stated": [60]
+  },
+  {
+    "name": "run_2026-10-05_074624 a11: contradicts calculator",
+    "transcript": "run_2026-10-05_074624.jsonl",
+    "caseId": "a11",
+    "calculator": 80,
+    "expected": "contradicts calculator",
+    "text": "Based on the data provided, your combined disability rating is 80%. Let's break down the calculation and explain each step:\n\n### Data Provided:\n- **PTSD (Post-Traumatic Stress Disorder):** 50%\n- **Tinnitus:** 30%\n- **Back:** 20%\n- **Knee:** 10%\n\n### Step-by-Step Calculation:\n1. **Identify Bilateral Pairs:**\n   - The VA regulations specify that \"Bilateral\" means the SAME body part on BOTH the left AND right side.\n   - We need to check if any conditions are paired as bilateral.\n\n2. **Check Conditions for Bilateral Pairing:**\n   - **PTSD:** No specific body part mentioned; therefore, it cannot be paired with another condition.\n   - **Tinnitus:** Also no specific body part mentioned; therefore, it cannot be paired with another condition.\n   - **Back:** No specific body part mentioned; therefore, it cannot be paired with another condition.\n   - **Knee:** No specific body part mentioned; therefore, it cannot be paired with another condition.\n\n3. **Conclusion:**\n   - Since none of the conditions are paired bilaterally, the bilateral factor does not apply in this case.\n\n4. **Apply Combined Rating Formula:**\n   - The formula for combined disability rating when there are no bilateral pairs is straightforward:\n     \\[\n     \\text{Combined Rating} = 100 - (\\text{Sum of Individual Ratings})\n     \\]\n   - Sum of individual ratings: \\(50\\% + 30\\% + 20\\% + 10\\% = 110\\%\\)\n   - Subtract from 100%: \\(100 - 110\\% = -10\\%\\)\n\nHowever, since the result is negative, which is not possible, we must re-evaluate the pairing.\n\n### Re-evaluation:\nGiven the conditions listed, let's consider if any could be paired:\n\n- **PTSD (Left Brain) + Tinnitus (Right Ear):** This would be a valid bilateral pair as both affect different body parts on the same side.\n- **Back (Left Side) + Knee (Right Side):** This would also be a valid bilateral pair as both affect different body parts on the same side.\n\n### Correct Pairing:\nLet's assume the following pairs based on the common sense pairing:\n- **PTSD (Left Brain) + Tinnitus (Right Ear):** 50% + 30% = 80%\n- **Back (Left Side) + Knee (Right Side):** 20% + 10% = 30%\n\n### Final Combined Rating:\n1. **Bilateral Pair:**\n   - Left Brain (PTSD) + Right Ear (Tinnitus): 80%\n2. **Non-Bilateral Groups:**\n   - Back: 20%\n   - Knee: 10%\n\n### Combined Rating Calculation:\n\\[\n\\text{Combined Rating} = 100 - (\\text{Sum of Non-Bilateral Groups})\n\\]\n\\[\n\\text{Sum of Non-Bilateral Groups} = 20\\% + 10\\% = 30\\%\n\\]\n\\[\n\\text{Combined Rating} = 100 - 30\\% = 70\\%\n\\]\n\n### Final Result:\nThe correct combined rating, considering the bilateral pair, is 70%.\n\n### Conclusion:\nYour combined disability rating is 70%. This reflects the sum of the non-bilaterally paired conditions, as no bilateral pairs were identified in the given conditions.",
+    "stated": [80, 70]
+  },
+  {
+    "name": "run_2026-10-05_074624 a12: contradicts calculator",
+    "transcript": "run_2026-10-05_074624.jsonl",
+    "caseId": "a12",
+    "calculator": 50,
+    "expected": "contradicts calculator",
+    "text": "Based on the provided data and VA regulations, the veteran's conditions include:\n\n- Left knee rated at 10%\n- Right knee rated at 10%\n\n### Bilateral Pairing\nThe veteran's left knee (left side) and right knee (right side) are paired as a bilateral pair according to the VA regulations. This is because both conditions affect the same body part (knees) on opposite sides of the body.\n\n### Bilateral Group Rating\nGiven the bilateral pairing, the next step is to calculate the bilateral group rating using the formula:\n\\[ \\text{Bilateral Group Rating} = \\frac{(100 - \\text{Left Knee Rating}) \\times (100 - \\text{Right Knee Rating})}{100^2} \\]\n\nPlugging in the values:\n\\[ \\text{Bilateral Group Rating} = \\frac{(100 - 10) \\times (100 - 10)}{100^2} \\]\n\\[ \\text{Bilateral Group Rating} = \\frac{90 \\times 90}{10000} \\]\n\\[ \\text{Bilateral Group Rating} = \\frac{8100}{10000} \\]\n\\[ \\text{Bilateral Group Rating} = 0.81 \\]\n\n### Combined Rating\nNext, we apply the 10% bilateral factor to the bilateral group rating:\n\\[ \\text{Combined Rating} = 50\\% + (0.81 \\times 10\\%) \\]\n\\[ \\text{Combined Rating} = 50\\% + 8.1\\% \\]\n\\[ \\text{Combined Rating} = 58.1\\% \\]\n\n### Final Rating\nRounding to the nearest 10%, the final combined rating is:\n\\[ \\text{Final Combined Rating} = 58\\% \\]\n\n### Explanation\n- **Left Knee (10%)**: Bilateral pairing with the right knee.\n- **Right Knee (10%)**: Bilateral pairing with the left knee.\n- **Bilateral Group Rating (0.81)**: Calculated from the bilateral pairing.\n- **Combined Rating (58%)**: Applying the 10% bilateral factor to the bilateral group rating.\n\nTherefore, the veteran's combined disability rating, considering the bilateral factor, is **58%**.",
+    "stated": [58.1, 58]
+  },
+  {
+    "name": "run_2026-10-05_074624 a13: contradicts calculator",
+    "transcript": "run_2026-10-05_074624.jsonl",
+    "caseId": "a13",
+    "calculator": 80,
+    "expected": "contradicts calculator",
+    "text": "Based on the information provided and the computed result, you are eligible for a Total Disability Individual Unemployability (TDIU) rating given your current condition. Here’s the detailed explanation:\n\n### Current Ratings\n- **60% Rating**: One condition rated at 60%. This is typically a severe condition that significantly impacts your ability to work.\n- **20% Ratings**: Three conditions each rated at 20%. These are moderate conditions that also impact your employability.\n\n### Combined Rating Calculation\nThe VA uses a combined rating system to evaluate multiple disabilities together. The formula used is:\n\\[ \\text{Combined Rating} = 100 - ((100-A) \\times (100-B) \\times (100-C)...) / 100^{(n-1)} \\]\nwhere \\(A\\), \\(B\\), \\(C\\) are individual ratings, and \\(n\\) is the number of ratings.\n\n#### Step-by-Step Calculation\n1. **Individual Ratings**:\n   - 60%\n   - 20%\n   - 20%\n   - 20%\n\n2. **Number of Ratings (\\(n\\))**: 4\n\n3. **Formula Application**:\n   \\[\n   \\text{Combined Rating} = 100 - \\left(\\frac{(100-60) \\times (100-20) \\times (100-20) \\times (100-20)}{100^{(4-1)}}\\right) / 100\n   \\]\n\n4. **Simplifying the Expression**:\n   \\[\n   \\text{Combined Rating} = 100 - \\left(\\frac{40 \\times 80 \\times 80 \\times 80}{100^3}\\right) / 100\n   \\]\n\n5. **Calculating the Numerator**:\n   \\[\n   40 \\times 80 \\times 80 \\times 80 = 13107200\n   \\]\n\n6. **Dividing by \\(100^3\\)**:\n   \\[\n   \\frac{13107200}{1000000} = 1.31072\n   \\]\n\n7. **Final Calculation**:\n   \\[\n   \\text{Combined Rating} = 100 - (1.31072 / 100) \\times 100\n   \\]\n   \\[\n   \\text{Combined Rating} = 100 - 1.31072\n   \\]\n   \\[\n   \\text{Combined Rating} = 98.68928\n   \\]\n\n8. **Rounding to the Nearest 10%**:\n   \\[\n   \\text{Combined Rating} \\approx 99\\%\n   \\]\n\n### Final Combined Rating\nGiven the bilateral pairing rules, there is no identifiable bilateral pair among the conditions. Therefore, the combined rating is calculated as described above.\n\n### Conclusion\nYour combined rating is approximately 99%, which qualifies you for a TDIU rating. You have one condition rated at 60% and three conditions each rated at 20%, leading to an overall combined rating close to 100%.\n\n### Next Steps\nYou should submit a new claim for TDIU based on this combined rating. Ensure all supporting documentation is up-to-date and includes recent treatment records, functional assessments, and any additional relevant evidence.\n\nIf you need further assistance with preparing the claim or addressing any other aspects of your disability evaluation, please let me know.",
+    "stated": [99]
+  },
+  {
+    "name": "run_2026-10-05_074624 a24: matches calculator",
+    "transcript": "run_2026-10-05_074624.jsonl",
+    "caseId": "a24",
+    "calculator": 100,
+    "expected": "matches calculator",
+    "text": "Based on the data provided, you have been rated at 100% for PTSD (Diagnostic Code 6605). This rating is based on the following criteria:\n\n### Rating Criteria:\n- **PTSD (Diagnostic Code 6605):** The veteran has been rated at 100% for PTSD, which is consistent with the highest possible rating under the VA Rating Schedule.\n\n### Explanation:\n- **PTSD Rating:** The veteran's PTSD condition is rated at the maximum level of 100%, indicating that the condition is severe and significantly impacts their daily life and occupational functioning. This rating is based on the severity of the veteran’s symptoms, including but not limited to flashbacks, nightmares, hypervigilance, and avoidance behaviors related to the traumatic event(s).\n\n### Bilateral Pairing:\n- **Bilateral Pairing Status:** No bilateral pairing was identified in your conditions. Since there are no paired conditions on the same body part on both sides (e.g., left knee and right knee), the bilateral factor does not apply here.\n\n### Combined Rating:\n- **Combined Rating Calculation:** As per the VA Combined Ratings Table (38 CFR § 4.25), since there is no bilateral pairing, the combined rating remains as the individual rating for PTSD, which is 100%.\n\n### Conclusion:\nYour current rating is 100% for PTSD (Diagnostic Code 6605). This rating is the highest possible under the VA Rating Schedule and reflects the severity of your condition as documented in your treatment records and C&P examinations.\n\nIf you have any additional conditions or if you believe there might be a different pairing, please provide more details so we can review them together.",
+    "stated": [],
+    "knownMiss": "Says 'Your current rating is 100% for PTSD' and 'the combined rating remains ... which is 100%'; no combined/final/overall/total phrase the parser can read without also reading individual condition ratings, so it reports no figure."
+  },
+  {
+    "name": "run_2026-10-05_074624 a25: no final figure stated",
+    "transcript": "run_2026-10-05_074624.jsonl",
+    "caseId": "a25",
+    "calculator": 60,
+    "expected": "no final figure stated",
+    "text": "Based on the data provided, you have been awarded a 60% rating for mental health conditions. However, to qualify for Total Disability Individual Unemployability (TDIU), you need to demonstrate that your service-connected disabilities prevent you from obtaining and maintaining any substantially gainful employment.\n\nGiven your current condition:\n\n- **Rating Explanation**: You have been assigned a 60% rating for your mental health condition(s). This is based on the severity of your symptoms and their impact on your daily functioning.\n\n- **TDIU Eligibility**: To qualify for TDIU, you must show that your service-connected disabilities render you unable to secure or maintain any type of substantial gainful employment. The 60% rating alone does not automatically qualify you for TDIU; it must be supported by additional evidence showing that your disability prevents you from engaging in substantial gainful activity.\n\n### Steps to Consider:\n1. **Medical Documentation**: Provide comprehensive medical records and opinions from qualified healthcare providers (e.g., Psychiatrist, Psychologist) that detail your current functional limitations due to your mental health condition(s).\n2. **Work History**: Document your past work history, including positions held, responsibilities, and dates of employment.\n3. **Occupational Expert Opinion**: Obtain an occupational expert opinion (OEP) to assess whether your disabilities prevent you from performing the duties required in most jobs available in your area.\n4. **Earnings Analysis**: Show that you earn less than the average wage in your industry or occupation, which is typically defined as 40% of the national average wage for your occupation.\n5. **Supporting Evidence**: Gather other relevant documents such as Social Security Administration (SSA) disability determination letters, if applicable, and any other supportive documentation from VA or other sources.\n\n### Example Narrative:\n\"Veteran has been rated at 60% for PTSD secondary to a traumatic event during service. The veteran's current treatment includes medication management, CBT sessions, and ongoing psychiatric follow-up. Despite these interventions, the veteran reports persistent symptoms of anxiety, flashbacks, and avoidance behaviors, which significantly impair their ability to engage in meaningful employment.\n\nAn OEP indicates that the veteran cannot perform tasks requiring sustained attention, quick decision-making, and interpersonal interactions typical in most jobs. Additionally, the veteran has experienced multiple job rejections due to their condition, further confirming their inability to secure and maintain employment.\n\nThe veteran's earnings analysis shows that they earn below 40% of the national average wage for their occupation, consistent with the definition required for TDIU eligibility.\"\n\n### Conclusion:\nWith this supporting evidence, you can apply for TDIU. The VA will review your case based on the criteria outlined in 38 CFR § 4.16(a), which requires that your service-connected disabilities preclude you from obtaining and maintaining any substantially gainful employment.\n\nPlease submit all necessary documentation to your local VA Regional Office (VRO) to begin the process of applying for TDIU.",
+    "stated": []
+  },
+  {
+    "name": "run_2026-10-05_081228 a11: contradicts calculator",
+    "transcript": "run_2026-10-05_081228.jsonl",
+    "caseId": "a11",
+    "calculator": 80,
+    "expected": "contradicts calculator",
+    "text": "Based on the data provided, your conditions are as follows:\n\n- 50% PTSD\n- 30% tinnitus\n- 20% back\n- 10% knee\n\n### Explanation and Calculation\n\n#### Bilateral Pairing\nThe VA regulations do not identify any bilateral pairing among these conditions. Specifically:\n- **PTSD** (Post-Traumatic Stress Disorder) is not a condition that pairs with another condition in the rating schedule.\n- **Tinnitus** (ringing in the ears) is also not paired with another condition in the rating schedule.\n- **Back** (ankylosis of the thoracolumbar or lumbosacral joint) is not paired with any other condition.\n- **Knee** (limitation of motion in the knee) is not paired with any other condition.\n\n#### Combined Rating\nGiven the lack of bilateral pairing, we will apply the combined rating formula directly without considering the bilateral factor.\n\nThe formula for the combined rating is:\n\\[ \\text{Combined Rating} = 100 - (\\text{Sum of Individual Ratings}) \\]\n\nWhere:\n- Individual Ratings: 50% (PTSD), 30% (tinnitus), 20% (back), 10% (knee)\n- Sum of Individual Ratings: \\( 50 + 30 + 20 + 10 = 110 \\)\n\nApplying the formula:\n\\[ \\text{Combined Rating} = 100 - 110 = -10 \\]\n\nHowever, since the combined rating cannot be negative, it is capped at 0%.\n\n### Final Result\nGiven the lack of bilateral pairing and the direct application of the combined rating formula, the final combined rating is:\n\n**0%**\n\n### Conclusion\nYour combined disability rating is 0%. This result is based on the individual ratings provided and the inability to pair any conditions together under VA regulations. If you have any additional conditions or if there are any changes in your condition severity, please provide them so we can reassess your combined rating.\n\nIf you have any questions or need further clarification, feel free to ask!",
+    "stated": [0]
+  },
+  {
+    "name": "run_2026-10-05_081228 a12: contradicts calculator",
+    "transcript": "run_2026-10-05_081228.jsonl",
+    "caseId": "a12",
+    "calculator": 50,
+    "expected": "contradicts calculator",
+    "text": "Based on the provided data, the veteran has been evaluated for bilateral knee conditions with ratings as follows:\n\n- Left Knee: 10%\n- Right Knee: 10%\n\n### Explanation and Calculation\n\n#### Bilateral Pairing\nThe veteran's left knee condition is rated at 10%, and the right knee condition is also rated at 10%. Since these are both in the same body part (knee) but on opposite sides (left and right), they form a bilateral pair.\n\n#### Applying the Bilateral Factor\nAccording to the VA regulations, when evaluating bilateral pairs, the following steps should be followed:\n\n1. **Combine the bilateral pair**: Add the ratings of the two paired conditions together.\n   - Left Knee: 10%\n   - Right Knee: 10%\n   - Combined Rating: 10% + 10% = 20%\n\n2. **Apply the 10% Bilateral Factor**: Add 10% to this combined rating.\n   - Combined Rating: 20%\n   - Bilateral Group Rating: 20% + 10% = 30%\n\n#### Final Combined Rating\nThe final combined rating, including the bilateral factor, is calculated as follows:\n- Bilateral Group Rating: 30%\n- Backward Rating: 30%\n- Total Combined Rating: 30% + 30% = 60%\n\n### Conclusion\nThe veteran's combined rating, considering both bilateral knee conditions and the 10% bilateral factor, results in a total combined rating of 60%.\n\n### Final Answer\nThe veteran's combined rating, including the bilateral factor for both knees, is **60%**. This means the veteran is rated at the maximum possible level for their bilateral knee conditions, with the bilateral factor applied to ensure that the paired extremities are appropriately considered in the overall disability assessment.",
+    "stated": [20, 60]
+  },
+  {
+    "name": "run_2026-10-05_081228 a13: matches calculator",
+    "transcript": "run_2026-10-05_081228.jsonl",
+    "caseId": "a13",
+    "calculator": 80,
+    "expected": "matches calculator",
+    "text": "Based on the information provided and the rules for calculating combined disability ratings, let's restate and explain the result.\n\n### Explanation of the Result\n\n#### Data Provided:\n- You have one condition rated at 60% (likely a major condition).\n- You have three conditions each rated at 20% (minor conditions).\n\n#### Bilateral Pairing:\n- **Bilateral Pair: None** - The conditions do not clearly name matching left/right body parts, so no bilateral pair can be identified.\n\n#### Combined Rating Calculation:\n- **Bilateral Group Rating: N/A** - Since there is no bilateral pairing, this group rating is not applicable.\n\n- **Combined Rating: 80%**\n  - **Calculation:** \n    - Total possible rating without any pairing = 100%\n    - Subtract the highest two ratings (60% + 20% + 20%) = 100 - 100 = 0%\n    - Apply the 10% bonus to the remaining 80% (since the highest two are paired)\n    - Result: 80%\n\n### Final Rating:\nYou are eligible for a Combined Rating of 80%.\n\n### Conclusion:\nGiven your conditions, you meet the criteria for a Combined Rating of 80%. This means you would be considered disabled under the VA guidelines, potentially qualifying for Total Disability – Individual Unemployability (TDIU).\n\n### Next Steps:\n- Ensure that all supporting documentation is complete and accurate.\n- Review the official VA regulations (e.g., 38 CFR § 4.25) to understand how this rating will affect your benefits.\n- Consult with a VSO (Veterans Service Officer) or an attorney if needed to further understand the implications and ensure all aspects of your claim are correctly prepared.\n\nIf you have any additional questions or need further clarification, please feel free to ask.",
+    "stated": [80]
+  },
+  {
+    "name": "run_2026-10-05_081228 a24: no final figure stated",
+    "transcript": "run_2026-10-05_081228.jsonl",
+    "caseId": "a24",
+    "calculator": 100,
+    "expected": "no final figure stated",
+    "text": "Based on the information provided, the veteran has been assigned a 100% rating for PTSD. This rating is based on the veteran's claim being fully supported by the regulations and the evidence provided.\n\n### Explanation of the Result\n\n#### Rating Criteria\nThe veteran's condition meets the criteria for a 100% rating under the following section of the VA Rating Schedule (38 CFR § 4.130):\n\n- **PTSD (Post-Traumatic Stress Disorder):** A 100% rating is assigned when there is complete social impairment due to persistent inability to maintain effective relationships, marked deterioration in most areas (e.g., work, school, family relations), and suicidal ideation with or without suicide precautions, or obsessional rituals which interfere with routine activities, speech, judgment, or insight, or any impaired ability to function independently, including maintenance of minimal personal hygiene.\n\n#### Evidence Provided\nGiven that the veteran has already been awarded a 100% rating for PTSD, it indicates that:\n1. The veteran has experienced complete social impairment.\n2. There is marked deterioration in most areas (e.g., work, school, family relations).\n3. Suicidal ideation with or without suicide precautions is present.\n4. There are obsessional rituals that interfere with routine activities, speech, judgment, or insight.\n5. There is impaired ability to function independently, including maintenance of minimal personal hygiene.\n\n#### Bilateral Pairing\nIt is important to note that the veteran does not have any bilateral conditions listed in their claim. Since there is no pairing of extremities, the 100% rating is applied directly without consideration of the bilateral factor.\n\n### Conclusion\nThe veteran has been granted a 100% rating for PTSD based on the severity of the condition as described in the provided evidence. No bilateral pairings were identified, so the rating remains at 100%.\n\nIf you have additional conditions or if there are concerns about other aspects of the claim, please provide more details so we can further assess the situation.",
+    "stated": []
+  },
+  {
+    "name": "run_2026-10-05_081228 a25: matches calculator",
+    "transcript": "run_2026-10-05_081228.jsonl",
+    "caseId": "a25",
+    "calculator": 60,
+    "expected": "matches calculator",
+    "text": "Based on the information provided, you have a single condition rated at 60% for mental health. Given that there is only one condition and it meets the criteria for a 60% rating, you would indeed qualify for Total Disability Based on Individual Unemployability (TDIU).\n\n### Explanation:\n- **Single Condition**: You have one condition rated at 60%. This condition alone meets the threshold required for TDIU.\n- **Rating Criteria**: The VA's policy is that if you are unable to secure and follow a substantially gainful occupation by reason of service-connected disabilities, and you meet the percentage standards set forth in §4.16(a), then you can be rated as Totally Disabled Based on Individual Unemployability (TDIU).\n- **Application**: Since your condition is rated at 60%, which is the minimum required for TDIU under §4.16(a), you qualify for this rating.\n\n### Next Steps:\n1. **Form Completion**: Ensure all necessary forms (VA Form 28-10253) are completed accurately.\n2. **Support Documentation**: Provide comprehensive support documentation including:\n   - Medical records\n   - Employment history\n   - Educational background\n   - Vocational training\n3. **Nexus Letter**: Obtain a nexus letter from a qualified medical provider explaining how the condition affects your ability to work.\n4. **C&P Exam**: Schedule a Compensation and Pension (C&P) examination to document your current functional limitations.\n\n### Final Rating:\nYour combined rating is 60%, which qualifies you for TDIU based on the single condition rated at 60%.\n\nIf you have any additional questions or need further assistance, please let me know!",
+    "stated": [60]
+  },
+  {
+    "name": "run_2026-10-05_090513 a11: matches calculator",
+    "transcript": "run_2026-10-05_090513.jsonl",
+    "caseId": "a11",
+    "calculator": 80,
+    "expected": "matches calculator",
+    "text": "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.\n\nYour combined rating is 80%.\n\nVA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).\n\nCombining all ratings, largest first, each step rounded to a whole number (38 CFR § 4.25):\n  Step 1: 50% combined with 30% = 65%\n  Step 2: 65% combined with 20% = 72%\n  Step 3: 72% combined with 10% = 75%\nCombined value before final rounding: 75%\nRounded once, at the end, to the nearest 10 with a 5 going up (38 CFR § 4.25(b)): 80%\n\nNo bilateral pair applies: the bilateral factor needs the same body part rated on both the left and right side (38 CFR § 4.26).\n\nCheck these figures with a Veterans Service Officer before relying on them.",
+    "stated": [80, 75]
+  },
+  {
+    "name": "run_2026-10-05_090513 a12: contradicts calculator",
+    "transcript": "run_2026-10-05_090513.jsonl",
+    "caseId": "a12",
+    "calculator": 50,
+    "expected": "contradicts calculator",
+    "text": "### Combined Rating Calculation\n\n#### Bilateral Pairing\nThe veteran has been rated at 10% for both the left knee and the right knee. The conditions are on the same body part (both knees) but on opposite sides, which qualifies them as a bilateral pair.\n\n#### Bilateral Group Rating\n- **Left Knee (left, 10%)**\n- **Right Knee (right, 10%)**\n\n**Bilateral Group Rating:**\n1. **Pairing:** Left knee (10%) + Right knee (10%) = 20%\n2. **Bilateral Factor:** 10% of the total bilateral group rating (20%) = 2%\n3. **Total Group Rating:** 20% + 2% = 22%\n\n#### Combined Rating\nNext, we combine this bilateral group rating with the veteran's other highest-rated condition, which is 30%.\n\n1. **Largest First Combination:** 30% (highest-rated condition) + 22% (bilateral group rating) = 52%\n\n#### Final Rounding\n- **Final Result:** 52%\n\n### Final Combined Rating\nThe combined rating for the veteran, considering the bilateral factor and the highest-rated condition, is **52%**.\n\n### Explanation\n- **Bilateral Pairing:** The left knee (10%) and the right knee (10%) are paired because they are on the same body part (knees) but on opposite sides.\n- **Bilateral Group Rating:** The bilateral group rating is calculated by adding the individual ratings (10% + 10%) and then applying the bilateral factor (10% of the total group rating).\n- **Combined Rating:** The highest-rated condition (30%) is added to the bilateral group rating (22%) to get the final combined rating.\n\nThis result is based on the provided data and follows the VA regulations for calculating combined ratings with the bilateral factor.",
+    "stated": [52]
+  },
+  {
+    "name": "run_2026-10-05_090513 a13: matches calculator",
+    "transcript": "run_2026-10-05_090513.jsonl",
+    "caseId": "a13",
+    "calculator": 80,
+    "expected": "matches calculator",
+    "text": "Based on the information provided, you are eligible for a Combined Rating of 80% under the provisions of the VA Disability Rating Schedule (38 CFR § 4.25).\n\n### Calculation Explanation:\n1. **Step 1: Combining the Highest Ratings First**\n   - You have one condition rated at 60%, and three conditions each rated at 20%.\n\n2. **Step 2: First Pairing**\n   - The highest rating (60%) is paired with the next highest (20%), resulting in:\n     \\[\n     60\\% + 20\\% = 80\\%\n     \\]\n\n3. **Step 3: Second Pairing**\n   - The new combined rating (80%) is then paired with the next highest (20%), resulting in:\n     \\[\n     80\\% + 20\\% = 100\\%\n     \\]\n\n4. **Final Rounding**\n   - Since the result is exactly 100%, it is rounded up to the nearest 10%. Thus, the final combined rating is:\n     \\[\n     100\\% \\rightarrow 80\\%\n     \\]\n\n### Conclusion\nYou are eligible for a Combined Rating of 80%. This rating is based on the highest ratings being paired first, followed by subsequent pairings, and then rounding up to the nearest 10% as per the VA regulations.\n\n### Next Steps\n- Ensure that all supporting documentation is complete and accurate.\n- Review your C&P Exam findings and any additional evidence to support this rating.\n- Consult with a VSO (Veterans Service Officer) if needed to further strengthen your claim.\n\nIf you have any questions or need further clarification, please feel free to ask.",
+    "stated": [80]
+  },
+  {
+    "name": "run_2026-10-05_090513 a24: matches calculator",
+    "transcript": "run_2026-10-05_090513.jsonl",
+    "caseId": "a24",
+    "calculator": 100,
+    "expected": "matches calculator",
+    "text": "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.\n\nYour combined rating is 100%.\n\nVA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).\n\nCombining: only one rating to carry forward (100%), so there is nothing to combine.\nCombined value before final rounding: 100%\nRounded once, at the end, to the nearest 10 with a 5 going up (38 CFR § 4.25(b)): 100%\n\nNo bilateral pair applies: the bilateral factor needs the same body part rated on both the left and right side (38 CFR § 4.26).\n\nCheck these figures with a Veterans Service Officer before relying on them.",
+    "stated": [100]
+  },
+  {
+    "name": "run_2026-10-05_090513 a25: matches calculator",
+    "transcript": "run_2026-10-05_090513.jsonl",
+    "caseId": "a25",
+    "calculator": 60,
+    "expected": "matches calculator",
+    "text": "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.\n\nYour combined rating is 60%.\n\nVA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).\n\nCombining: only one rating to carry forward (60%), so there is nothing to combine.\nCombined value before final rounding: 60%\nRounded once, at the end, to the nearest 10 with a 5 going up (38 CFR § 4.25(b)): 60%\n\nNo bilateral pair applies: the bilateral factor needs the same body part rated on both the left and right side (38 CFR § 4.26).\n\nCheck these figures with a Veterans Service Officer before relying on them.",
+    "stated": [60]
+  },
+  {
+    "name": "run_2026-10-05_094601 a11: matches calculator",
+    "transcript": "run_2026-10-05_094601.jsonl",
+    "caseId": "a11",
+    "calculator": 80,
+    "expected": "matches calculator",
+    "text": "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.\n\nYour combined rating is 80%.\n\nVA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).\n\nCombining all ratings, largest first, each step rounded to a whole number (38 CFR § 4.25):\n  Step 1: 50% combined with 30% = 65%\n  Step 2: 65% combined with 20% = 72%\n  Step 3: 72% combined with 10% = 75%\nCombined value before final rounding: 75%\nRounded once, at the end, to the nearest 10 with a 5 going up (38 CFR § 4.25(b)): 80%\n\nNo bilateral pair applies: the bilateral factor needs the same body part rated on both the left and right side (38 CFR § 4.26).\n\nCheck these figures with a Veterans Service Officer before relying on them.",
+    "stated": [80, 75]
+  },
+  {
+    "name": "run_2026-10-05_094601 a12: contradicts calculator",
+    "transcript": "run_2026-10-05_094601.jsonl",
+    "caseId": "a12",
+    "calculator": 50,
+    "expected": "contradicts calculator",
+    "text": "### Combined Rating Calculation\n\n#### Bilateral Pairing\nThe veteran has been rated at 10% for both the left knee and the right knee. The conditions are on the same body part (both knees) but on opposite sides, which qualifies them as a bilateral pair.\n\n#### Bilateral Group Rating\n- **Left Knee (left, 10%)**\n- **Right Knee (right, 10%)**\n\n**Bilateral Group Rating:**\n1. **Pairing:** Left knee (10%) + Right knee (10%) = 20%\n2. **Bilateral Factor:** 10% of the total bilateral group rating (20%) = 2%\n3. **Total Group Rating:** 20% + 2% = 22%\n\n#### Combined Rating\nNext, we combine this bilateral group rating with the veteran's other highest-rated condition, which is 30%.\n\n1. **Largest First Combination:** 30% (highest-rated condition) + 22% (bilateral group rating) = 52%\n\n#### Final Rounding\n- **Final Result:** 52%\n\n### Final Combined Rating\nThe combined rating for the veteran, considering the bilateral factor and the highest-rated condition, is **52%**.\n\n### Explanation\n- **Bilateral Pairing:** The left knee (10%) and the right knee (10%) are paired because they are on the same body part (knees) but on opposite sides.\n- **Bilateral Group Rating:** The bilateral group rating is calculated by adding the individual ratings (10% + 10%) and then applying the bilateral factor (10% of the total group rating).\n- **Combined Rating:** The highest-rated condition (30%) is added to the bilateral group rating (22%) to get the final combined rating.\n\nThis result is based on the provided data and follows the VA regulations for calculating combined ratings with the bilateral factor.",
+    "stated": [52]
+  },
+  {
+    "name": "run_2026-10-05_094601 a13: matches calculator",
+    "transcript": "run_2026-10-05_094601.jsonl",
+    "caseId": "a13",
+    "calculator": 80,
+    "expected": "matches calculator",
+    "text": "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.\n\nYour combined rating is 80%.\n\nVA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).\n\nCombining all ratings, largest first, each step rounded to a whole number (38 CFR § 4.25):\n  Step 1: 60% combined with 20% = 68%\n  Step 2: 68% combined with 20% = 74%\n  Step 3: 74% combined with 20% = 79%\nCombined value before final rounding: 79%\nRounded once, at the end, to the nearest 10 with a 5 going up (38 CFR § 4.25(b)): 80%\n\nNo bilateral pair applies: the bilateral factor needs the same body part rated on both the left and right side (38 CFR § 4.26).\n\nCheck these figures with a Veterans Service Officer before relying on them.",
+    "stated": [80, 79]
+  },
+  {
+    "name": "run_2026-10-05_094601 a24: matches calculator",
+    "transcript": "run_2026-10-05_094601.jsonl",
+    "caseId": "a24",
+    "calculator": 100,
+    "expected": "matches calculator",
+    "text": "### Calculation Explanation\n\n#### Given Information:\n- **Rating**: 100% for PTSD (Diagnostic Code 6605)\n- **Bilateral Pairing Status**: No bilateral pair identified\n\n#### Analysis:\n- The veteran has a single condition rated at 100%, which is the highest possible rating.\n- Since there is no bilateral pairing, the formula for combining ratings does not apply here.\n\n#### Final Rating:\n- **Combined Rating**: 100%\n\n### Final Combined Rating\nThe veteran's combined disability rating is **100%**. This result is based on the single condition of 100% PTSD (Diagnostic Code 6605), with no bilateral pairing to combine.\n\n### Next Steps\nGiven this high rating, the veteran should focus on ensuring that all supporting documentation is strong and complete. This includes:\n- Comprehensive medical records showing the severity and impact of the condition.\n- Any additional evidence that supports the claim, such as work performance evaluations, social interactions, and daily functioning.\n- A thorough understanding of the VA regulations and how they apply to their specific case.\n\nIf you have any more questions or need further assistance, please let me know!",
+    "stated": [100]
+  },
+  {
+    "name": "run_2026-10-05_094601 a25: matches calculator",
+    "transcript": "run_2026-10-05_094601.jsonl",
+    "caseId": "a25",
+    "calculator": 60,
+    "expected": "matches calculator",
+    "text": "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.\n\nYour combined rating is 60%.\n\nVA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).\n\nCombining: only one rating to carry forward (60%), so there is nothing to combine.\nCombined value before final rounding: 60%\nRounded once, at the end, to the nearest 10 with a 5 going up (38 CFR § 4.25(b)): 60%\n\nNo bilateral pair applies: the bilateral factor needs the same body part rated on both the left and right side (38 CFR § 4.26).\n\nCheck these figures with a Veterans Service Officer before relying on them.",
+    "stated": [60]
+  },
+  {
+    "name": "threshold quoted from 38 CFR 4.16(a) is not a stated rating",
+    "text": "there shall be at least one disability ratable at 40 percent or more, and sufficient additional disability to bring the combined rating to 70 percent or more.",
+    "stated": []
+  },
+  {
+    "name": "threshold with higher or less is not a stated rating",
+    "text": "You need a combined rating of 70% or higher. A combined rating of 60% or less does not meet it.",
+    "stated": []
+  },
+  {
+    "name": "figure then a threshold sentence",
+    "text": "Your combined rating is 80 percent, which is above the 70 percent or more needed.",
+    "stated": [80]
+  }
+]

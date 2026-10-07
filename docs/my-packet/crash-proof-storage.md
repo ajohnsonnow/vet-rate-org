@@ -14,11 +14,11 @@ Vet-Rate.org now uses a **"Save-As-You-Go"** protocol that ensures your work is 
 
 ### The Protection Layers
 
-| Layer | Description | Survives |
-|-------|-------------|----------|
-| **💾 File System** | Saves directly to your computer (Desktop only) | ✅ Crashes, ✅ Cache clear, ✅ Uninstall |
-| **📦 IndexedDB** | Modern browser storage with large capacity | ✅ Crashes, ✅ Tab closes, ❌ Cache clear |
-| **⚡ Memory Buffer** | Real-time changes before save | ❌ (temporary) |
+| Layer                | Description                                    | Survives                                  |
+| -------------------- | ---------------------------------------------- | ----------------------------------------- |
+| **💾 File System**   | Saves directly to your computer (Desktop only) | ✅ Crashes, ✅ Cache clear, ✅ Uninstall  |
+| **📦 IndexedDB**     | Modern browser storage with large capacity     | ✅ Crashes, ✅ Tab closes, ❌ Cache clear |
+| **⚡ Memory Buffer** | Real-time changes before save                  | ❌ (temporary)                            |
 
 ---
 
@@ -35,6 +35,7 @@ On desktop browsers (Chrome, Edge, Firefox on Windows/Mac), you get the **Gold S
 ### File Location
 
 When you click "Save My Packet", your browser will ask where to save the file. We recommend:
+
 - `Documents/My-Vet-Rate-Packet.json`
 - A cloud-synced folder like OneDrive or Google Drive
 
@@ -57,9 +58,9 @@ Mobile browsers don't support direct file system access, so we use a **Download 
 ### Important for Mobile
 
 !!! warning "Mobile Limitations"
-    
+
     On mobile devices, clearing your browser data **will erase** your saved work.
-    
+
     **Always download a backup before:**
     - Clearing browser cache
     - Reinstalling the browser
@@ -72,6 +73,7 @@ Mobile browsers don't support direct file system access, so we use a **Download 
 ### Form Auto-Save
 
 When filling out forms in Forms Helper:
+
 - Every field change triggers an auto-save
 - Data is protected within **1.5 seconds** of your last keystroke
 - Visual indicator shows save status
@@ -79,12 +81,14 @@ When filling out forms in Forms Helper:
 ### Step Transitions
 
 When clicking "Next" on multi-step forms:
+
 - Data is saved **before** the screen changes
 - You can't lose progress mid-form
 
 ### Milestone Saves
 
 Even if you stop typing:
+
 - Automatic save every **30 seconds** if changes exist
 - Peace of mind during long sessions
 
@@ -105,12 +109,12 @@ The warning says: "Changes you made may not be saved."
 
 Look for these indicators in My Packet:
 
-| Status | Meaning |
-|--------|---------|
-| ✅ Saved | All changes safely stored |
-| 💾 Saving... | Save in progress |
-| ⚠️ Unsaved changes | Changes pending (will auto-save soon) |
-| ❌ Save failed | Issue saving - data backed up to browser |
+| Status             | Meaning                                  |
+| ------------------ | ---------------------------------------- |
+| ✅ Saved           | All changes safely stored                |
+| 💾 Saving...       | Save in progress                         |
+| ⚠️ Unsaved changes | Changes pending (will auto-save soon)    |
+| ❌ Save failed     | Issue saving - data backed up to browser |
 
 ---
 
@@ -142,12 +146,12 @@ Look for these indicators in My Packet:
 
 ### Recommended Backup Locations
 
-| Location | Why |
-|----------|-----|
+| Location                | Why                           |
+| ----------------------- | ----------------------------- |
 | Google Drive / OneDrive | Automatic sync across devices |
-| Desktop/Documents | Easy to find |
-| External USB drive | Air-gapped backup |
-| Email to yourself | Off-site backup |
+| Desktop/Documents       | Easy to find                  |
+| External USB drive      | Air-gapped backup             |
+| Email to yourself       | Off-site backup               |
 
 ---
 
@@ -165,6 +169,7 @@ Look for these indicators in My Packet:
 ### Data Format
 
 Your packet file is a standard JSON file containing:
+
 - Veteran profile
 - Saved claims
 - Generated statements
@@ -193,6 +198,7 @@ Your packet file is a standard JSON file containing:
 ### Lost Data After Cache Clear?
 
 If you cleared cache without a backup:
+
 1. Data may still be in IndexedDB - try reloading
 2. Check if you have any downloaded backup files
 3. Unfortunately, cache clear on mobile is permanent

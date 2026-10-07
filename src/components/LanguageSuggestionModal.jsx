@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 const regions = [
   { id: "pacific", name: "Pacific Islander", icon: "🌊" },
@@ -113,17 +114,39 @@ Verify translations with native speakers for accuracy!
 }
 
 const SuggestionModalHeader = ({ onClose, onReportBug }) => (
-  <div className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-4 flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <span className="text-3xl">🌍</span>
-      <div>
-        <h2 id="language-suggestion-title" className="text-xl font-bold">
-          Suggest a Language
-        </h2>
-        <p className="text-sm text-cyan-100">Help us be more inclusive!</p>
+  <div className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-4">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/20 rounded-lg transition-colors"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="text-3xl">🌍</span>
+        <div className="min-w-0">
+          <h2 id="language-suggestion-title" className="text-xl font-bold">
+            Suggest a Language
+          </h2>
+          <p className="text-sm text-cyan-100">Help us be more inclusive!</p>
+        </div>
       </div>
-    </div>
-    <div className="flex items-center gap-2">
       {onReportBug && (
         <ReportBugLink
           onClick={onReportBug}
@@ -131,26 +154,7 @@ const SuggestionModalHeader = ({ onClose, onReportBug }) => (
           moduleName="Language Suggestion"
         />
       )}
-      <button
-        onClick={onClose}
-        aria-label="Close"
-        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -447,7 +451,6 @@ function useLanguageSuggestionForm(currentLang, language) {
       return null;
     }
 
-    const _timestamp = new Date().toISOString();
     const regionById = Object.fromEntries(regions.map((r) => [r.id, r.name]));
 
     return buildFeatureRequestText({
@@ -503,7 +506,7 @@ function useLanguageSuggestionForm(currentLang, language) {
 }
 
 const LanguageSuggestionModal = ({ isOpen, onClose, onReportBug }) => {
-  const { _t, language, getCurrentLanguage } = useLanguage();
+  const { language, getCurrentLanguage } = useLanguage();
   const currentLang = getCurrentLanguage();
 
   const {

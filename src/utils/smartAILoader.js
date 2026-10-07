@@ -7,6 +7,12 @@
 import { getToolRecommendation } from "./llmRecommendations";
 import { isMobilePhone, isTabletDevice } from "./persistentStorage";
 import { getAIStatus } from "./unifiedAIService";
+import {
+  describeDeviceModel,
+  getCachedDeviceProfile,
+} from "./deviceCapabilityDetector";
+import { formatDownloadSize } from "./localModelLabels";
+import { describeOnDeviceSupport } from "./deviceLabels";
 
 /**
  * Get device type
@@ -17,121 +23,87 @@ export const getDeviceType = () => {
   return "desktop";
 };
 
+const FALLBACK_ROLE = {
+  id: "diamond-auditor",
+  name: "CWO3 HAWKEYE",
+  reason: "Balanced performance for general tasks",
+};
+
+const describeLoadedModel = (deviceModel, tabletNote) => {
+  if (!deviceModel) return "";
+  const size = formatDownloadSize(deviceModel);
+  const base = ` On this device it runs ${deviceModel.displayName} (${size}). It is a one-time download kept on your device.`;
+  return tabletNote ? `${base} ${tabletNote}` : base;
+};
+
 /**
- * Get the perfect model for this device and tool
+ * Get the role and on-device model for this device and tool.
+ * The role (id, name) comes from the tool recommendation; the model is the
+ * first entry of the device profile's recommendedModels, the same list
+ * initializeSwarm loads from, so the button and the swarm cannot disagree.
  * @param {string} toolId - The tool being used (e.g., 'nexus-builder')
- * @returns {Object} Model recommendation { id, name, reason }
+ * @returns {Object} Recommendation { id, name, reason, deviceModel }
  */
 export const getRecommendedModelForDevice = (toolId) => {
-  const deviceType = getDeviceType();
   const toolRec = getToolRecommendation(toolId);
+  const primaryModel = toolRec?.primary;
+  const profile = getCachedDeviceProfile();
+  const deviceModel = profile?.hasWebGPU ? describeDeviceModel(profile) : null;
+  const { tabletNote } = describeOnDeviceSupport(profile);
 
-  if (!toolRec) {
-    // Default fallback
+  if (!primaryModel?.modelId) {
     return {
-      id: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-      name: "CWO3 HAWKEYE (3B)",
-      reason: "Balanced performance for general tasks",
+      ...FALLBACK_ROLE,
+      reason:
+        FALLBACK_ROLE.reason +
+        "." +
+        describeLoadedModel(deviceModel, tabletNote),
+      deviceModel,
     };
   }
 
-  // Use primary recommendation (structure is toolRec.primary, not mobile/desktop)
-  const primaryModel = toolRec.primary;
-  if (!primaryModel || !primaryModel.modelId) {
-    // Fallback if primary doesn't have modelId
-    return {
-      id: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-      name: "CWO3 HAWKEYE (3B)",
-      reason: "Balanced performance for general tasks",
-    };
-  }
-
-  // Mobile/Tablet: Still use the primary model but note the device context
-  if (deviceType === "mobile" || deviceType === "tablet") {
-    return {
-      id: primaryModel.modelId,
-      name: primaryModel.modelName || primaryModel.modelId,
-      reason: `Optimized for ${toolRec.name}: ${primaryModel.reason || "Recommended model"}`,
-    };
-  }
-
-  // Desktop: Use primary model
+  const prefix =
+    getDeviceType() === "desktop" ? "Recommended for" : "Optimized for";
+  const fallbackReason =
+    prefix === "Recommended for" ? "Best match" : "Recommended model";
   return {
     id: primaryModel.modelId,
     name: primaryModel.modelName || primaryModel.modelId,
-    reason: `Recommended for ${toolRec.name}: ${primaryModel.reason || "Best match"}`,
+    reason: `${prefix} ${toolRec.name}: ${primaryModel.reason || fallbackReason}${describeLoadedModel(deviceModel, tabletNote)}`,
+    deviceModel,
   };
 };
 
 /**
- * Check if the correct model is loaded for this tool and device
+ * What the load panel offers. Every caller shows the panel only while no AI is
+ * available, so it has one job: offer to load. There is no "ready" or "switch"
+ * state; a loaded model is never unloaded from here.
  * @param {string} toolId - The tool being used
- * @returns {Object} { isCorrect, currentModel, recommendedModel, action }
+ * @returns {Object} { recommendedModel, action: "load", message }
  */
 export const checkModelMatch = (toolId) => {
-  const aiStatus = getAIStatus();
   const recommended = getRecommendedModelForDevice(toolId);
-
-  // No AI loaded
-  if (!aiStatus.isLocal || !aiStatus.modelId) {
-    return {
-      isCorrect: false,
-      currentModel: null,
-      recommendedModel: recommended,
-      action: "load",
-      message: `Load ${recommended.name} for this tool`,
-    };
-  }
-
-  // Check if current model matches recommendation
-  const isMatch = aiStatus.modelId === recommended.id;
-
-  if (isMatch) {
-    return {
-      isCorrect: true,
-      currentModel: aiStatus.modelId,
-      recommendedModel: recommended,
-      action: "none",
-      message: `✓ ${recommended.name} ready`,
-    };
-  }
-
-  // Wrong model loaded
   return {
-    isCorrect: false,
-    currentModel: aiStatus.modelId,
     recommendedModel: recommended,
-    action: "switch",
-    message: `Switch to ${recommended.name} for better performance`,
+    action: "load",
+    message: `Load ${recommended.name} for this tool`,
   };
 };
 
 /**
- * Smart loader: Automatically handle model loading/switching
+ * Load the model this device recommends. If a model is already loaded it is
+ * left alone: nothing is unloaded or reloaded.
  * @param {string} toolId - The tool being used
  * @param {Function} onProgress - Progress callback (progress, text)
  * @returns {Promise<boolean>} Success status
  */
 export const smartLoadAI = async (toolId, onProgress = null) => {
-  const check = checkModelMatch(toolId);
-  const recommended = check.recommendedModel;
+  const recommended = checkModelMatch(toolId).recommendedModel;
 
   try {
-    // Already correct model
-    if (check.isCorrect) {
+    if (getAIStatus().swarmAvailable) {
       onProgress?.(100, `${recommended.name} ready`);
       return true;
-    }
-
-    // Need to unload current model first
-    if (check.action === "switch") {
-      onProgress?.(10, "Unloading current model...");
-
-      const { unloadSwarm } = await import("./diamondSwarm");
-      await unloadSwarm();
-
-      // Wait a moment for cleanup
-      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     // Load recommended model

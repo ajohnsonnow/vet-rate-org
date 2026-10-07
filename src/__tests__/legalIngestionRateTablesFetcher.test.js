@@ -131,7 +131,7 @@ describe("parseBasicRatesRows", () => {
       90: 2362.3,
       100: 3938.58,
     });
-    expect(byStatus.get("V-S")[30]).toBe(617.47);
+    expect(Math.round(byStatus.get("V-S")[30] * 100)).toBe(61747);
     expect(byStatus.get("V-S")[10]).toBeNull();
     // The header row is explicitly recognized-and-ignored, not an unknown
     // shape, so it isn't counted here (see the "skips footnote, header, and
@@ -152,7 +152,7 @@ describe("parseBasicRatesRows", () => {
       90: 98,
       100: 109.11,
     });
-    expect(childSchool[100]).toBe(352.45);
+    expect(Math.round(childSchool[100] * 100)).toBe(35245);
   });
 
   it("handles whole-dollar values without decimals (not just cents-formatted)", () => {
@@ -160,7 +160,7 @@ describe("parseBasicRatesRows", () => {
     // "\d+.\d{2}" cells and silently dropped whole-dollar rate columns.
     const rows = wholeDollarV1PRow();
     const { byStatus } = parseBasicRatesRows(rows);
-    expect(byStatus.get("V-1P")[30]).toBe(604.47);
+    expect(Math.round(byStatus.get("V-1P")[30] * 100)).toBe(60447);
   });
 
   it("skips footnote, header, and malformed rows without throwing", () => {
@@ -266,12 +266,12 @@ describe("parseColaArticle + validateParsed (integration)", () => {
   it("parses a realistic fixture into a fully valid result", () => {
     const parsed = parseColaArticle(buildFixtureHtml());
     expect(parsed.effectiveDate).toBe("12/01/2025");
-    expect(parsed.colaPercent).toBe(2.8);
+    expect(Math.round(parsed.colaPercent * 10)).toBe(28);
     expect(parsed.publicLaw).toBe("119-42");
-    expect(parsed.veteran[100]).toBe(3938.58);
-    expect(parsed.spouse[30]).toBe(617.47);
-    expect(parsed.childUnder18[100]).toBe(109.11);
-    expect(parsed.smc.length).toBe(32);
+    expect(Math.round(parsed.veteran[100] * 100)).toBe(393858);
+    expect(Math.round(parsed.spouse[30] * 100)).toBe(61747);
+    expect(Math.round(parsed.childUnder18[100] * 100)).toBe(10911);
+    expect(parsed.smc).toHaveLength(32);
     expect(validateParsed(parsed)).toBeNull();
   });
 

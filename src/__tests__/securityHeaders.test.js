@@ -18,11 +18,11 @@ describe("render.yaml security headers (D-H08/D-H13/D-M15/D-M16)", () => {
   const yaml = read("render.yaml");
 
   it("delivers a Content-Security-Policy header on both service blocks", () => {
-    expect((yaml.match(/name: Content-Security-Policy/g) || []).length).toBe(2);
+    expect(yaml.match(/name: Content-Security-Policy/g) || []).toHaveLength(2);
   });
 
   it("delivers HSTS on both blocks (D-M15)", () => {
-    expect((yaml.match(/name: Strict-Transport-Security/g) || []).length).toBe(
+    expect(yaml.match(/name: Strict-Transport-Security/g) || []).toHaveLength(
       2,
     );
     expect(yaml).toMatch(/max-age=\d{7,}/);
@@ -34,7 +34,7 @@ describe("render.yaml security headers (D-H08/D-H13/D-M15/D-M16)", () => {
   });
 
   it("CSP sets frame-ancestors for clickjacking protection (D-H13)", () => {
-    expect((yaml.match(/frame-ancestors 'self'/g) || []).length).toBe(2);
+    expect(yaml.match(/frame-ancestors 'self'/g) || []).toHaveLength(2);
   });
 
   it("CSP connect-src includes the cloud backup origins (D-H11)", () => {
@@ -69,6 +69,38 @@ describe("CSP connect-src vs. actual fetch origins (D-H11)", () => {
         connectSrc.includes(`https://${host}`),
         `connect-src does not allow fetched host ${host}`,
       ).toBe(true);
+    }
+  });
+});
+
+// The Stress Relief Division's DOOM easter egg used to embed
+// archive.org/dos.zone in a same-page iframe; that iframe is gone (it's now
+// a plain new-tab link - see StressReliefDivision.jsx), but the CSP
+// allowlist entries for it stayed behind. Nothing in src/ frames either
+// origin any more, so the "no third party inside the app" rule is only
+// enforced in practice, not by policy, until this allowlist matches.
+describe("CSP frame-src has no dead third-party allowlist entries (D-frame)", () => {
+  const indexHtml = read("index.html");
+  const yaml = read("render.yaml");
+  const frameSrcBlocks = [
+    (indexHtml.match(/frame-src([^;]*);/) || [])[1] || "",
+    ...(yaml.match(/frame-src[^;]*;/g) || []),
+  ];
+
+  it("found frame-src to check in both index.html and render.yaml", () => {
+    expect(frameSrcBlocks.filter(Boolean).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("no longer allows framing archive.org or dos.zone", () => {
+    for (const block of frameSrcBlocks) {
+      expect(block).not.toContain("archive.org");
+      expect(block).not.toContain("dos.zone");
+    }
+  });
+
+  it("still allows the real cross-origin frame the app uses (Google OAuth)", () => {
+    for (const block of frameSrcBlocks) {
+      expect(block).toContain("https://accounts.google.com");
     }
   });
 });

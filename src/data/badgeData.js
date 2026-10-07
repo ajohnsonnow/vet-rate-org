@@ -1063,8 +1063,7 @@ export function parseDD214Badges(rawText, branch = "Army") {
 
   // Clean the text
   const cleanedText = rawText
-    // eslint-disable-next-line sonarjs/slow-regex -- single non-nested [^)]* quantifier; linear-time match, not vulnerable to catastrophic backtracking. Rewriting to string ops risks altering DD214 parsing behavior for nested-paren edge cases.
-    .replace(/\([^)]*\)/g, " ") // Remove parenthetical
+    .replace(/\([^)]{0,300}\)/g, " ") // Remove parenthetical
     .replace(/[a-z]{3,}/g, " ") // Remove lowercase words
     .toUpperCase()
     .replace(/\s+/g, " ")
@@ -1119,7 +1118,7 @@ export function calculateOverseasBars(foreignServiceMonths, isWartime = false) {
 
 export function calculateServiceStripes(totalYearsService, branch = "Army") {
   const config = SERVICE_STRIPES[branch];
-  if (!config || !config.yearsPerStripe) {
+  if (!config?.yearsPerStripe) {
     return { count: 0, note: "Uses ribbon instead of stripes" };
   }
 

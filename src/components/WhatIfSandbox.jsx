@@ -9,16 +9,22 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 import {
-  combineMultipleRatings,
-  calculateBilateralFactor,
-  roundToNearest10,
+  BODY_PARTS,
+  calculateVARating,
+  readRating,
+  sideFromName,
 } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
+import {
+  BodyPartSelectField,
+  SideSelectField,
+} from "./ConditionLocationFields";
+import { APP_TRANSLATIONS } from "../i18n/translations";
 
 // Common VA disabilities with typical ratings
 const commonConditions = [
@@ -28,11 +34,15 @@ const commonConditions = [
   { name: "Migraine", ratings: [0, 30, 50], category: "neurological" },
   {
     name: "Knee (Left)",
+    side: "left",
+    bodyPart: "knee",
     ratings: [0, 10, 20, 30, 40, 50, 60],
     category: "musculoskeletal",
   },
   {
     name: "Knee (Right)",
+    side: "right",
+    bodyPart: "knee",
     ratings: [0, 10, 20, 30, 40, 50, 60],
     category: "musculoskeletal",
   },
@@ -43,11 +53,15 @@ const commonConditions = [
   },
   {
     name: "Shoulder (Left)",
+    side: "left",
+    bodyPart: "shoulder",
     ratings: [0, 10, 20, 30, 40, 50],
     category: "musculoskeletal",
   },
   {
     name: "Shoulder (Right)",
+    side: "right",
+    bodyPart: "shoulder",
     ratings: [0, 10, 20, 30, 40, 50],
     category: "musculoskeletal",
   },
@@ -91,58 +105,24 @@ const _getRatingColor = (rating) => {
   return "text-green-600 dark:text-green-400";
 };
 
-const hasMatchingConditionPair = (currentConditions, bodyPart) => {
-  const left = currentConditions.find(
-    (c) => c.name.includes(bodyPart) && c.name.includes("Left"),
-  );
-  const right = currentConditions.find(
-    (c) => c.name.includes(bodyPart) && c.name.includes("Right"),
-  );
-  return left && right && left.rating > 0 && right.rating > 0;
-};
+const joinNames = (names) =>
+  names.length < 2
+    ? names.join("")
+    : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 
-// Single source of truth for the math: 38 CFR § 4.25 combine + § 4.26
-// bilateral factor, via vaCalculator. Bilateral detection (knees/shoulders
-// by L/R name) stays here; the arithmetic is the canonical VA-table engine.
+// 38 CFR § 4.25 combining and the § 4.26 bilateral factor both come from
+// calculateVARating, so the sandbox pairs conditions by the same rules as
+// every other calculator in the app.
 const computeScenarioResult = (currentConditions, compensationRates) => {
-  const hasBilateralKnees = hasMatchingConditionPair(currentConditions, "Knee");
-  const hasBilateralShoulders = hasMatchingConditionPair(
-    currentConditions,
-    "Shoulder",
-  );
-
-  let groupRatings;
-  if (hasBilateralKnees || hasBilateralShoulders) {
-    const bilateralRatings = [];
-    const otherRatings = [];
-
-    currentConditions.forEach((c) => {
-      if (
-        (c.name.includes("Knee") && hasBilateralKnees) ||
-        (c.name.includes("Shoulder") && hasBilateralShoulders)
-      ) {
-        bilateralRatings.push(c.rating);
-      } else {
-        otherRatings.push(c.rating);
-      }
-    });
-
-    // The bilateral group (combined + 10% factor) becomes one rating, then
-    // combines with the rest. Handles >2 paired conditions too — the old
-    // code silently dropped everything unless exactly two were present.
-    groupRatings = [
-      calculateBilateralFactor(bilateralRatings),
-      ...otherRatings,
-    ];
-  } else {
-    groupRatings = currentConditions.map((c) => c.rating);
-  }
-
-  const finalRating = roundToNearest10(combineMultipleRatings(groupRatings));
-  const pay = compensationRates[finalRating] || 0;
-
-  return { finalRating, pay };
+  const result = calculateVARating(currentConditions);
+  return {
+    finalRating: result.combinedRating,
+    pay: compensationRates[result.combinedRating] || 0,
+  };
 };
+
+const bilateralNamesOf = (currentConditions) =>
+  calculateVARating(currentConditions).bilateralConditions.map((c) => c.name);
 
 const runScenarioCalculation = (
   currentConditions,
@@ -171,6 +151,91 @@ const runScenarioCalculation = (
   return finalRating;
 };
 
+// Display name only: the side itself travels in the `side` field.
+const nameWithSide = (condition, side) => {
+  if (sideFromName(condition) === side) return condition;
+  if (side === "left") return `${condition} (Left)`;
+  if (side === "right") return `${condition} (Right)`;
+  return condition;
+};
+
+const ALL_BODY_PARTS = [...BODY_PARTS.extremities, ...BODY_PARTS.other];
+const CUSTOM_RATINGS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+const EMPTY_CUSTOM_CONDITION = { bodyPart: "", side: "none", rating: 10 };
+const englishText = (section, key) => APP_TRANSLATIONS[section]?.[key]?.en;
+
+// A scenario condition of the veteran's own, with the body part and side the
+// calculator needs to decide whether 38 CFR § 4.26 pairs it with another.
+const CustomConditionForm = ({ onAddCondition }) => {
+  const [custom, setCustom] = useState(EMPTY_CUSTOM_CONDITION);
+  const part = ALL_BODY_PARTS.find((bp) => bp.value === custom.bodyPart);
+  const add = () => {
+    onAddCondition({
+      name: nameWithSide(part.label, custom.side),
+      rating: custom.rating,
+      side: custom.side,
+      bodyPart: custom.bodyPart,
+      category: "user",
+    });
+    setCustom(EMPTY_CUSTOM_CONDITION);
+  };
+  return (
+    <div className="mb-4 space-y-3 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-700 dark:bg-purple-900/30">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <BodyPartSelectField
+          t={englishText}
+          newCondition={custom}
+          setNewCondition={setCustom}
+          allBodyParts={ALL_BODY_PARTS}
+        />
+        {part?.canBeBilateral && (
+          <SideSelectField
+            t={englishText}
+            newCondition={custom}
+            setNewCondition={setCustom}
+          />
+        )}
+        <div className="min-w-0">
+          <label
+            htmlFor="sandbox-custom-rating"
+            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            {englishText("tacticalCalc", "ratingPercent")}
+          </label>
+          <select
+            id="sandbox-custom-rating"
+            value={custom.rating}
+            onChange={(e) =>
+              setCustom((prev) => ({
+                ...prev,
+                rating: Number.parseInt(e.target.value),
+              }))
+            }
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          >
+            {CUSTOM_RATINGS.map((r) => (
+              <option key={r} value={r}>
+                {r}%
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <p className="text-xs text-purple-700 dark:text-purple-300">
+        {englishText("tacticalCalc", "whatIfBilateralRule")}
+      </p>
+      <button
+        type="button"
+        onClick={add}
+        disabled={!part}
+        className="min-h-[44px] rounded bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-500"
+      >
+        Add to scenario
+      </button>
+    </div>
+  );
+};
+
 const loadCurrentClaims = (setCurrentConditions) => {
   try {
     // Canonical claims store ("savedClaims" was a key nothing writes, so
@@ -195,27 +260,18 @@ const loadCurrentClaims = (setCurrentConditions) => {
   }
 };
 
-// hasMatchingConditionPair below detects a bilateral pair by looking for
-// "Left"/"Right" inside the condition name (matching how commonConditions
-// above names its own entries, e.g. "Knee (Left)"). Saved ratings track side
-// as a separate field instead, so it has to be folded into the name here or
-// a real bilateral pair loaded via "Load My Ratings" would never trigger the
-// bonus indicator.
-const nameWithSide = (condition, side) => {
-  if (side === "left") return `${condition} (Left)`;
-  if (side === "right") return `${condition} (Right)`;
-  return condition;
-};
-
 const loadMyRatings = (pendingAnnounceRef, setCurrentConditions) => {
   const savedRatings = getMyRatings();
   if (savedRatings && savedRatings.length > 0) {
     const formatted = savedRatings
-      .filter((r) => r.condition && typeof r.rating === "number")
+      .map((r) => ({ ...r, rating: readRating(r.rating) }))
+      .filter((r) => r.name && r.rating !== null)
       .map((r) => ({
-        id: `${r.condition}-${r.rating}-${Date.now()}-${Math.random()}`,
-        name: nameWithSide(r.condition, r.side),
+        id: `${r.name}-${r.rating}-${Date.now()}-${Math.random()}`,
+        name: nameWithSide(r.name, r.side),
         rating: r.rating,
+        side: r.side,
+        bodyPart: r.bodyPart,
         category: "user",
       }));
     pendingAnnounceRef.current = `${formatted.length} saved conditions loaded.`;
@@ -436,22 +492,19 @@ const ScenarioConditions = ({
   );
 };
 
-const BilateralBonusIndicator = ({ hasMatchingBilateral }) => {
-  if (!hasMatchingBilateral("Knee") && !hasMatchingBilateral("Shoulder")) {
-    return null;
-  }
+const BilateralBonusIndicator = ({ bilateralNames }) => {
+  if (bilateralNames.length === 0) return null;
   return (
     <div className="mt-4 rounded border-l-4 border-green-400 bg-green-50 p-4 dark:bg-green-900/20">
       <h4 className="mb-2 flex items-center gap-2 font-bold text-green-800 dark:text-green-300">
         <span>🎖️</span> Bilateral Factor Applied!
       </h4>
       <p className="text-sm text-green-700 dark:text-green-300">
-        {hasMatchingBilateral("Knee") && "Both knees rated: 10% bonus applied."}
-        {hasMatchingBilateral("Shoulder") &&
-          " Both shoulders rated: 10% bonus applied."}
+        Applied to {joinNames(bilateralNames)}.
       </p>
-      <p className="mt-1 text-xs text-green-600 dark:text-green-400">
-        38 CFR § 4.26 - Bilateral factor increases combined rating by 10%
+      <p className="mt-1 text-xs text-green-800 dark:text-green-300">
+        38 CFR § 4.26: these ratings are combined first, and 10% of that
+        combined value is added before combining with the rest.
       </p>
     </div>
   );
@@ -465,7 +518,10 @@ const ScenarioInfoBox = ({ ratesYear }) => (
     <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
       <li>• Tap or drag conditions from the library to build scenarios</li>
       <li>• Combined rating uses official VA math (38 CFR Part 4)</li>
-      <li>• Bilateral factor automatically applied when both sides rated</li>
+      <li>
+        • The bilateral factor needs a compensable rating in both arms or both
+        legs
+      </li>
       <li>• Monthly pay reflects {ratesYear} compensation rates</li>
       <li>• Test &quot;what-if&quot; scenarios before filing claims</li>
     </ul>
@@ -481,7 +537,8 @@ const ScenarioCanvas = ({
   onRemoveCondition,
   onLoadMyRatings,
   onClearAll,
-  hasMatchingBilateral,
+  onAddCondition,
+  bilateralNames,
   ratesYear,
 }) => (
   <div
@@ -499,7 +556,7 @@ const ScenarioCanvas = ({
         {hasMyRatings() && (
           <button
             onClick={onLoadMyRatings}
-            className="rounded bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-700"
+            className="rounded bg-green-700 px-4 py-2 text-sm text-white transition-colors hover:bg-green-800"
           >
             📊 Load My Ratings
           </button>
@@ -515,6 +572,8 @@ const ScenarioCanvas = ({
       </div>
     </div>
 
+    <CustomConditionForm onAddCondition={onAddCondition} />
+
     <ScenarioConditions
       currentConditions={currentConditions}
       hoveredIndex={hoveredIndex}
@@ -524,7 +583,9 @@ const ScenarioCanvas = ({
       onRemoveCondition={onRemoveCondition}
     />
 
-    <BilateralBonusIndicator hasMatchingBilateral={hasMatchingBilateral} />
+    <BilateralBonusIndicator bilateralNames={bilateralNames} />
+
+    <BilateralIssuesSummary conditions={currentConditions} />
 
     <ScenarioInfoBox ratesYear={ratesYear} />
   </div>
@@ -639,6 +700,8 @@ function useScenarioSandbox() {
           id: `${condition.name}-${rating}-${Date.now()}-${Math.random()}`,
           name: condition.name,
           rating: rating,
+          side: condition.side,
+          bodyPart: condition.bodyPart,
           category: condition.category,
         });
       });
@@ -670,8 +733,7 @@ function useScenarioSandbox() {
       setIsAnimating,
     );
 
-  const hasMatchingBilateral = (bodyPart) =>
-    hasMatchingConditionPair(currentConditions, bodyPart);
+  const bilateralNames = bilateralNamesOf(currentConditions);
 
   const {
     hoveredIndex,
@@ -699,7 +761,7 @@ function useScenarioSandbox() {
     announcement,
     ratesYear,
     pendingAnnounceRef,
-    hasMatchingBilateral,
+    bilateralNames,
     handleDragStart,
     handleDragOver,
     handleDrop,
@@ -711,7 +773,6 @@ function useScenarioSandbox() {
 }
 
 export default function WhatIfSandbox({ onClose }) {
-  const { _t } = useLanguage();
   const {
     currentConditions,
     setCurrentConditions,
@@ -723,7 +784,7 @@ export default function WhatIfSandbox({ onClose }) {
     announcement,
     ratesYear,
     pendingAnnounceRef,
-    hasMatchingBilateral,
+    bilateralNames,
     handleDragStart,
     handleDragOver,
     handleDrop,
@@ -779,7 +840,8 @@ export default function WhatIfSandbox({ onClose }) {
             loadMyRatings(pendingAnnounceRef, setCurrentConditions)
           }
           onClearAll={clearAll}
-          hasMatchingBilateral={hasMatchingBilateral}
+          onAddCondition={addCondition}
+          bilateralNames={bilateralNames}
           ratesYear={ratesYear}
         />
       </div>

@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { searchStateBenefits, isAIAvailable } from "../utils/aiStatementHelper";
 import { generateAI } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
+import { getVeteranProfile, getMyRatings } from "../utils/veteranProfile";
+import { calculateVARating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 
 /**
  * StateBenefitHunter Component
@@ -229,7 +233,7 @@ const _groupBenefitsByCategory = (benefits) => {
   return grouped;
 };
 
-const BenefitCard = ({ benefit, index }) => {
+const BenefitCard = ({ benefit }) => {
   const config = getCategoryConfig(benefit.category);
 
   // The scraped-data path (searchStateBenefits) maps benefits to name /
@@ -244,7 +248,6 @@ const BenefitCard = ({ benefit, index }) => {
 
   return (
     <div
-      key={index}
       className={`${config.bgLight} ${config.borderColor} border rounded-xl p-4 transition-all hover:shadow-lg hover:-translate-y-0.5`}
     >
       <div className="flex items-start gap-3">
@@ -296,37 +299,12 @@ const ModalHeader = ({ onClose, onReportBug }) => (
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-3xl">💰</span>
-        </div>
-        <div>
-          <h2
-            id="state-benefit-hunter-title"
-            className="text-2xl sm:text-3xl font-bold"
-          >
-            State Benefit Hunter{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h2>
-          <p className="text-green-100 text-sm sm:text-base mt-1">
-            Find the money you&apos;re leaving on the table
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="State Benefit Hunter"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -343,8 +321,35 @@ const ModalHeader = ({ onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
+          <span className="text-3xl">💰</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="state-benefit-hunter-title"
+            className="text-2xl sm:text-3xl font-bold"
+          >
+            State Benefit Hunter{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-green-100 text-sm sm:text-base mt-1">
+            Find the money you&apos;re leaving on the table
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="State Benefit Hunter"
+        />
+      )}
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -387,7 +392,7 @@ const PermanentTotalCheckbox = ({
   const showCheckbox =
     selectedRating &&
     selectedRating !== "100-PT" &&
-    parseInt(selectedRating) >= 70;
+    Number.parseInt(selectedRating) >= 70;
 
   if (!showCheckbox) return null;
 
@@ -656,16 +661,18 @@ const BenefitsGrid = ({ benefits }) => {
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <span className="text-xl">📋</span>
-        Your Eligible Benefits
+        <span className="text-xl">📋</span> Your Eligible Benefits{""}
         <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 text-sm rounded-full">
           {benefits.length} found
         </span>
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {benefits.map((benefit, index) => (
-          <BenefitCard key={index} benefit={benefit} index={index} />
+        {benefits.map((benefit) => (
+          <BenefitCard
+            key={benefit.name || benefit.benefit_name}
+            benefit={benefit}
+          />
         ))}
       </div>
     </div>
@@ -855,7 +862,7 @@ const fetchStateBenefits = async (selectedState, selectedRating) => {
   // Use state code directly instead of state name
   const stateCode = selectedState;
   const ratingNum =
-    selectedRating === "100-PT" ? 100 : parseInt(selectedRating);
+    selectedRating === "100-PT" ? 100 : Number.parseInt(selectedRating);
 
   const response = await searchStateBenefits(stateCode, ratingNum);
 
@@ -933,8 +940,12 @@ const fetchAIAdvice = async (aiQuestion, selectedState, selectedRating) => {
 
   const prompt = buildAIAdvicePrompt(aiQuestion, selectedState, selectedRating);
 
-  // Race between AI call and timeout
-  const response = await Promise.race([generateAI(prompt), timeoutPromise]);
+  // ADR-009: "context" - the veteran's own question + state/rating
+  // selections, never a document upload.
+  const response = await Promise.race([
+    generateAI(prompt, { dataClass: AI_DATA_CLASS.CONTEXT }),
+    timeoutPromise,
+  ]);
 
   // generateAI returns { text, mode } object - extract the text content
   const aiText = response?.text || response;
@@ -984,17 +995,53 @@ const consultAI = async ({
   }
 };
 
-const StateBenefitHunter = ({ onClose, onReportBug }) => {
-  const { _t } = useLanguage();
+// Reads the veteran's saved state + combined rating once at mount, using
+// the same calculateVARating util the Tactical Calculator uses so the
+// default here always matches what "My Ratings" would produce. Null/""
+// fields mean nothing was on file - the form falls back to its normal
+// blank state.
+function getStateBenefitDefaults() {
+  const profile = getVeteranProfile();
+  const profileStateCode = profile.state
+    ? String(profile.state).toUpperCase()
+    : "";
+  const state = US_STATES.some((s) => s.value === profileStateCode)
+    ? profileStateCode
+    : "";
+  const ratings = getMyRatings();
+  const combinedRating =
+    ratings.length > 0 ? calculateVARating(ratings).combinedRating : null;
+  return {
+    state,
+    rating: combinedRating !== null ? String(combinedRating) : "",
+  };
+}
 
-  const [selectedState, setSelectedState] = useState("");
-  const [selectedRating, setSelectedRating] = useState("");
+const PrefilledFromRecordsBanner = ({ hasState, hasRating }) => {
+  if (!hasState && !hasRating) return null;
+  let filledLabel = "rating";
+  if (hasState && hasRating) filledLabel = "state and rating";
+  else if (hasState) filledLabel = "state";
+
+  return (
+    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+      📋 We filled in your {filledLabel} from your saved records — change
+      anything that&apos;s wrong.
+    </div>
+  );
+};
+
+const StateBenefitHunter = ({ onClose, onReportBug }) => {
+  const [defaults] = useState(getStateBenefitDefaults);
+  const hasStateDefault = Boolean(defaults.state);
+  const hasRatingDefault = Boolean(defaults.rating);
+  const [selectedState, setSelectedState] = useState(defaults.state);
+  const [selectedRating, setSelectedRating] = useState(defaults.rating);
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPermanentTotal, setIsPermanentTotal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
-  const [_showAIConsultation, _setShowAIConsultation] = useState(false);
   const [aiQuestion, setAIQuestion] = useState("");
   const [aiAdvice, setAIAdvice] = useState(null);
   const [isAIThinking, setIsAIThinking] = useState(false);
@@ -1030,6 +1077,11 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
       {/* Content */}
       <div>
         <InfoBanner />
+        <PrefilledFromRecordsBanner
+          hasState={hasStateDefault}
+          hasRating={hasRatingDefault}
+        />
+        {hasRatingDefault && <BilateralIssuesSummary />}
 
         <SelectionForm
           selectedState={selectedState}

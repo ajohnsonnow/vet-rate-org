@@ -36,7 +36,7 @@ A **personal statement** you write:
 - Explains timeline and events
 
 !!! info "What Nexus Builder Creates"
-    The Nexus Builder helps you create a **Statement in Support of Claim** - your personal account that supplements medical evidence.
+The Nexus Builder helps you create a **Statement in Support of Claim** - your personal account that supplements medical evidence.
 
 ---
 
@@ -96,15 +96,15 @@ Your personal statement serves to:
 
 ### What to Include
 
-| Element | Description |
-|---------|-------------|
-| **Identity** | Your name, claim number, dates |
-| **Condition** | What you're claiming |
-| **Service Details** | When, where, what happened |
-| **Timeline** | Onset, progression, treatment |
-| **Symptoms** | What you experience |
-| **Impact** | How it affects daily life |
-| **Treatment** | Medical care received |
+| Element             | Description                    |
+| ------------------- | ------------------------------ |
+| **Identity**        | Your name, claim number, dates |
+| **Condition**       | What you're claiming           |
+| **Service Details** | When, where, what happened     |
+| **Timeline**        | Onset, progression, treatment  |
+| **Symptoms**        | What you experience            |
+| **Impact**          | How it affects daily life      |
+| **Treatment**       | Medical care received          |
 
 ### What NOT to Include
 
@@ -150,31 +150,31 @@ Medical records are snapshots. Your statement shows:
 ```
 STATEMENT IN SUPPORT OF CLAIM
 
-I, [NAME], hereby state the following in support of my 
+I, [NAME], hereby state the following in support of my
 claim for service connection for [CONDITION]:
 
 MILITARY SERVICE
-I served in the United States [Branch] from [Start Date] 
-to [End Date]. My MOS was [MOS/Rating], and I was stationed 
+I served in the United States [Branch] from [Start Date]
+to [End Date]. My MOS was [MOS/Rating], and I was stationed
 at [Locations].
 
 IN-SERVICE EVENT
-During my service, [describe the event, injury, or exposure]. 
+During my service, [describe the event, injury, or exposure].
 This occurred on or about [date] at [location].
 
 ONSET OF CONDITION
-Following this event, I began experiencing [symptoms]. 
+Following this event, I began experiencing [symptoms].
 These symptoms have [continued/worsened] since that time.
 
 CURRENT SYMPTOMS
-Currently, I experience [specific symptoms]. These symptoms 
-occur [frequency] and last [duration]. The severity ranges 
+Currently, I experience [specific symptoms]. These symptoms
+occur [frequency] and last [duration]. The severity ranges
 from [mild description] to [severe description].
 
 IMPACT ON DAILY LIFE
 This condition affects my daily life in the following ways:
 - [Work impact]
-- [Relationship impact]  
+- [Relationship impact]
 - [Daily activity impact]
 
 MEDICAL TREATMENT
@@ -183,10 +183,10 @@ I have sought medical treatment for this condition from:
 - [Current treatment plan]
 
 CONCLUSION
-Based on the foregoing, I respectfully request that service 
+Based on the foregoing, I respectfully request that service
 connection be granted for [condition].
 
-I certify that the statements made herein are true and 
+I certify that the statements made herein are true and
 correct to the best of my knowledge and belief.
 
 _____________________________
@@ -199,7 +199,7 @@ _____________________________
 ## Tips for Effective Statements
 
 !!! tip "Writing Your Statement"
-    
+
     1. **Be specific with dates** - Approximate if necessary ("On or about...")
     2. **Use first-person** - "I experienced..." not "The veteran experienced..."
     3. **Stay factual** - Describe what happened, not what you think happened

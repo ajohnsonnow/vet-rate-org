@@ -15,6 +15,7 @@ import {
   getPersistenceMessage,
 } from "../data/bvaSuccessData";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 const questions = [
   {
@@ -169,7 +170,7 @@ function BvaStatsBanner() {
         <div className="text-xs text-gray-500 dark:text-gray-400">Granted</div>
       </div>
       <div>
-        <div className="text-3xl font-bold text-yellow-600">
+        <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-300">
           {BVA_OVERALL_OUTCOMES.remanded}%
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400">Remanded</div>
@@ -181,7 +182,7 @@ function BvaStatsBanner() {
         <div className="text-xs text-gray-500 dark:text-gray-400">Denied</div>
       </div>
       <div>
-        <div className="text-3xl font-bold text-indigo-600">
+        <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-200">
           {BVA_OVERALL_OUTCOMES.favorableRate}%
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -204,7 +205,7 @@ function PriorDenialsInput({ priorDenials, setPriorDenials, persistenceMsg }) {
         min="0"
         max="10"
         value={priorDenials}
-        onChange={(e) => setPriorDenials(parseInt(e.target.value) || 0)}
+        onChange={(e) => setPriorDenials(Number.parseInt(e.target.value) || 0)}
         className="w-24 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
       />
       <div className="mt-2 text-sm text-blue-700 dark:text-blue-400">
@@ -289,7 +290,7 @@ function IdentifiedGaps({ gaps }) {
       <ul className="space-y-3">
         {gaps
           .sort((a, b) => b.weight - a.weight)
-          .map((gap, idx) => {
+          .map((gap) => {
             let badgeClassName = "bg-yellow-200 text-yellow-800";
             let badgeLabel = "MEDIUM";
             if (gap.weight >= 4) {
@@ -301,7 +302,7 @@ function IdentifiedGaps({ gaps }) {
             }
 
             return (
-              <li key={idx} className="flex items-start gap-2">
+              <li key={gap.risk} className="flex items-start gap-2">
                 <span
                   className={`px-2 py-0.5 rounded text-xs font-bold ${badgeClassName}`}
                 >
@@ -384,8 +385,11 @@ function RemandReasonsReference({ showDetails, setShowDetails }) {
             <h5 className="font-semibold text-yellow-700 dark:text-yellow-300 mb-2">
               Top Remand Reasons
             </h5>
-            {TOP_REMAND_REASONS.slice(0, 5).map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm mb-1">
+            {TOP_REMAND_REASONS.slice(0, 5).map((item) => (
+              <div
+                key={item.reason}
+                className="flex justify-between text-sm mb-1"
+              >
                 <span className="text-yellow-600 dark:text-yellow-400">
                   {item.reason}
                 </span>
@@ -399,8 +403,11 @@ function RemandReasonsReference({ showDetails, setShowDetails }) {
             <h5 className="font-semibold text-red-700 dark:text-red-300 mb-2">
               Top Denial Reasons
             </h5>
-            {TOP_DENIAL_REASONS.slice(0, 5).map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm mb-1">
+            {TOP_DENIAL_REASONS.slice(0, 5).map((item) => (
+              <div
+                key={item.reason}
+                className="flex justify-between text-sm mb-1"
+              >
                 <span className="text-red-600 dark:text-red-400">
                   {item.reason}
                 </span>
@@ -435,25 +442,30 @@ const RemandRiskChecker = ({ onClose }) => {
       size="xl"
       labelledBy="remand-risk-title"
       header={
-        <div className="flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white">
-          <div>
-            <h2
-              id="remand-risk-title"
-              className="text-xl font-bold flex items-center gap-2"
-            >
-              🔍 Pre-Submission Remand Risk Checker
-            </h2>
-            <p className="text-amber-100 text-sm">
-              Find gaps before VA finds them
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="text-white hover:text-amber-200 text-2xl"
+        <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white">
+          <HeaderCloseSlot
+            close={
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="grid h-11 w-11 shrink-0 place-items-center text-2xl text-white hover:text-amber-200"
+              >
+                ×
+              </button>
+            }
           >
-            ×
-          </button>
+            <div className="min-w-0">
+              <h2
+                id="remand-risk-title"
+                className="text-xl font-bold flex items-center gap-2"
+              >
+                🔍 Pre-Submission Remand Risk Checker
+              </h2>
+              <p className="text-amber-100 text-sm">
+                Find gaps before VA finds them
+              </p>
+            </div>
+          </HeaderCloseSlot>
         </div>
       }
     >

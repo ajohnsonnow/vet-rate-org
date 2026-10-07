@@ -323,9 +323,9 @@ function DbqRecentSearches({ recentSearches, onSelect, t }) {
         {t("dbqFinder", "recentSearches")}
       </h3>
       <div className="flex flex-wrap gap-2">
-        {recentSearches.map((search, idx) => (
+        {recentSearches.map((search) => (
           <button
-            key={idx}
+            key={search}
             onClick={() => onSelect(search)}
             className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
@@ -457,9 +457,9 @@ function DbqCategoryCard({
       {isExpanded && (
         <div className="p-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
           <div className="flex flex-wrap gap-2">
-            {category.queries.map((query, qIdx) => (
+            {category.queries.map((query) => (
               <button
-                key={qIdx}
+                key={query}
                 onClick={() => onCategorySearch(query)}
                 className="px-3 py-1.5 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-lg text-sm font-medium hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors"
               >
@@ -488,7 +488,7 @@ function DbqCategoryBrowser({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {DBQ_CATEGORIES.map((category, idx) => (
           <DbqCategoryCard
-            key={idx}
+            key={category.labelKey}
             category={category}
             isExpanded={expandedCategory === idx}
             onToggle={() =>

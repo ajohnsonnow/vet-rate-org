@@ -9,20 +9,22 @@
 
 **Output Location**: HuggingFace: [Vet-Rate-org/Vet-Rate-Vision-Phi-Float32](https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Float32)
 
-| File | Size | Description |
-|------|------|-------------|
-| `model-lib.wasm` | **6.7 MB** | WebGPU WASM binary with Float32 bypass |
-| `params_shard_*.bin` | **2.6 GB** (106 shards) | Quantized model weights (q4f16_1) |
-| `mlc-chat-config.json` | 5.2 KB | Model configuration |
-| `tensor-cache.json` | - | Weight shard manifest |
-| `tokenizer.json` | - | Tokenizer data |
+| File                   | Size                    | Description                            |
+| ---------------------- | ----------------------- | -------------------------------------- |
+| `model-lib.wasm`       | **6.7 MB**              | WebGPU WASM binary with Float32 bypass |
+| `params_shard_*.bin`   | **2.6 GB** (106 shards) | Quantized model weights (q4f16_1)      |
+| `mlc-chat-config.json` | 5.2 KB                  | Model configuration                    |
+| `tensor-cache.json`    | -                       | Weight shard manifest                  |
+| `tokenizer.json`       | -                       | Tokenizer data                         |
 
 ### Memory Requirements
+
 - **Without KV cache**: 3,329 MB (Parameters: 2,640 MB + Temp buffer: 688 MB)
 - **With 4K context**: 4,865 MB
 - **KV cache per token**: 0.38 MB
 
 ### Browser Compatibility
+
 This model was compiled with **Float32 pixel inputs** instead of uint8, which should allow it to run in standard Chrome/Edge without experimental WebGPU flags. The image preprocessing happens on the CPU/JavaScript side using our `visionPreprocessor.js` utility.
 
 ---
@@ -30,15 +32,19 @@ This model was compiled with **Float32 pixel inputs** instead of uint8, which sh
 ## 🚀 PHASE 2: Float32 Bypass (Compiler Fork) - COMPLETED
 
 ### The Problem
+
 Vision models use CLIP image encoders that process pixel data as `uint8` (u8). This requires WebGPU shaders with `array<u8>` which needs the experimental `chromium_experimental_subgroup_matrix` extension that's only available in Chrome Canary with special flags.
 
 ### The Solution: Float32 Bypass
+
 Instead of waiting for upstream fixes, we **fork the MLC-LLM compiler** and patch it to:
+
 1. Accept `float32` inputs instead of `uint8` for pixel values
 2. Shift the pixel normalization (u8 → f32) to the **JavaScript/CPU side**
 3. The GPU only sees safe, clean floating-point numbers
 
 ### Quick Start (WSL2 Required)
+
 ```bash
 # Copy the build script to your WSL2 environment
 cd ~
@@ -50,19 +56,22 @@ chmod +x build_vetrate_compiler.sh
 ```
 
 ### Build Script Location
+
 The complete automation script is at: `/scripts/build_vetrate_compiler.sh`
 
 ### Client-Side Preprocessing
+
 Since the compiler expects float32 inputs, use the vision preprocessor utility:
+
 ```javascript
-import { prepareImageForVision } from '@/utils/visionPreprocessor';
+import { prepareImageForVision } from "@/utils/visionPreprocessor";
 
 // Prepare image for Float32 Bypass model
-const imageElement = document.querySelector('img');
+const imageElement = document.querySelector("img");
 const { data, shape } = await prepareImageForVision(imageElement, {
   targetWidth: 336,
   targetHeight: 336,
-  clipNormalize: true
+  clipNormalize: true,
 });
 
 // Pass float32 data to the model instead of raw uint8
@@ -85,26 +94,26 @@ Build a custom vision-language model that can analyze DD214 documents and vetera
 
 ## 📊 Build Statistics
 
-| Metric | Value |
-|--------|-------|
-| **Total Build Time** | ~2.5 hours |
-| **Source Model** | microsoft/Phi-3.5-vision-instruct |
-| **Source Model Size** | 8.3 GB |
-| **Compiled Model Size** | 2.6 GB (68% reduction) |
-| **WASM Library Size** | 6.7 MB |
-| **Quantization** | q4f16_1 (int4 weights, float16 compute) |
-| **Parameters** | 4,048,120,832 (~4B) |
-| **Bits per Parameter** | 5.47 |
-| **Context Window** | 131,072 tokens |
-| **Prefill Chunk Size** | 8,192 tokens |
-| **Vision Encoder** | CLIP ViT-L/14 (336px, 24 layers) |
-| **Image Tokens** | 144 per image |
-| **Weight Shards** | 106 files |
-| **Float32 Bypass** | ✅ Enabled (pixel_values input dtype) |
-| **Build Environment** | WSL2 Ubuntu-24.04 |
-| **MLC-LLM Version** | v0.20.dev108 (nightly) |
-| **TVM Version** | Bundled with MLC-AI v0.20.dev679 |
-| **Emscripten Version** | 3.1.56 |
+| Metric                  | Value                                   |
+| ----------------------- | --------------------------------------- |
+| **Total Build Time**    | ~2.5 hours                              |
+| **Source Model**        | microsoft/Phi-3.5-vision-instruct       |
+| **Source Model Size**   | 8.3 GB                                  |
+| **Compiled Model Size** | 2.6 GB (68% reduction)                  |
+| **WASM Library Size**   | 6.7 MB                                  |
+| **Quantization**        | q4f16_1 (int4 weights, float16 compute) |
+| **Parameters**          | 4,048,120,832 (~4B)                     |
+| **Bits per Parameter**  | 5.47                                    |
+| **Context Window**      | 131,072 tokens                          |
+| **Prefill Chunk Size**  | 8,192 tokens                            |
+| **Vision Encoder**      | CLIP ViT-L/14 (336px, 24 layers)        |
+| **Image Tokens**        | 144 per image                           |
+| **Weight Shards**       | 106 files                               |
+| **Float32 Bypass**      | ✅ Enabled (pixel_values input dtype)   |
+| **Build Environment**   | WSL2 Ubuntu-24.04                       |
+| **MLC-LLM Version**     | v0.20.dev108 (nightly)                  |
+| **TVM Version**         | Bundled with MLC-AI v0.20.dev679        |
+| **Emscripten Version**  | 3.1.56                                  |
 
 ---
 
@@ -115,6 +124,7 @@ Build a custom vision-language model that can analyze DD214 documents and vetera
 **Objective**: Build directly on Windows 11
 
 **Steps Attempted**:
+
 1. Installed MSVC Build Tools 2022
 2. Installed CUDA Toolkit 12.8
 3. Installed CMake, Ninja, LLVM
@@ -124,6 +134,7 @@ Build a custom vision-language model that can analyze DD214 documents and vetera
 7. Attempted Python package installation (FAILED)
 
 **Failure Reason**: MLC-LLM's Python packages have Linux-only dependencies:
+
 - `nvidia-cutlass-dsl` - Not available for Windows
 - `flashinfer` - Requires CUDA on Linux
 - No pre-built Windows wheels exist anywhere
@@ -133,6 +144,7 @@ Build a custom vision-language model that can analyze DD214 documents and vetera
 ### Successful Approach: WSL2 Ubuntu
 
 **Environment Setup**:
+
 ```bash
 # Install Ubuntu 24.04 in WSL2
 wsl --install -d Ubuntu-24.04
@@ -146,6 +158,7 @@ pip install --pre -f https://mlc.ai/wheels mlc-ai-nightly-cpu mlc-llm-nightly-cp
 ```
 
 **Packages Installed**:
+
 - `mlc-llm-nightly-cpu`: 0.20.dev108
 - `mlc-ai-nightly-cpu`: 0.20.dev679
 - `transformers`: For model loading
@@ -156,6 +169,7 @@ pip install --pre -f https://mlc.ai/wheels mlc-ai-nightly-cpu mlc-llm-nightly-cp
 ## 📥 Model Download Phase
 
 **Command**:
+
 ```bash
 cd ~/mlc-workspace
 python -c "
@@ -170,6 +184,7 @@ print(f'Downloaded to: {path}')
 ```
 
 **Statistics**:
+
 - Download Size: 8.3 GB
 - Download Time: 34 seconds
 - Files: 15 model files + tokenizer + config
@@ -189,6 +204,7 @@ python -m mlc_llm gen_config \
 ```
 
 **Output**:
+
 - Detected model type: `phi3_v`
 - Generated `mlc-chat-config.json`
 - Processed tokenizer files
@@ -206,6 +222,7 @@ python -m mlc_llm convert_weight \
 ```
 
 **Statistics**:
+
 - Parameters Processed: 592 tensors
 - Original Size: 8.3 GB (fp16)
 - Quantized Size: 3.368 GB
@@ -214,6 +231,7 @@ python -m mlc_llm convert_weight \
 - Time: 40 seconds
 
 **Quantization Details**:
+
 - Quantization Type: Group Quantize
 - Group Size: 32
 - Quantize Dtype: int4
@@ -265,12 +283,13 @@ cp ~/mlc-llm-src/3rdparty/tvm/web/dist/wasm/*.bc ~/mlc-env/lib/python3.12/site-p
 ```
 
 **Files Built**:
-| File | Size | Purpose |
-|------|------|---------|
-| `wasm_runtime.bc` | 9.2 MB | TVM WASM runtime |
-| `tvmjs_support.bc` | 185 KB | TVM JavaScript support |
-| `webgpu_runtime.bc` | 257 KB | WebGPU runtime bindings |
-| `mlc_wasm_runtime.bc` | 832 KB | MLC-LLM WASM runtime |
+
+| File                  | Size   | Purpose                 |
+| --------------------- | ------ | ----------------------- |
+| `wasm_runtime.bc`     | 9.2 MB | TVM WASM runtime        |
+| `tvmjs_support.bc`    | 185 KB | TVM JavaScript support  |
+| `webgpu_runtime.bc`   | 257 KB | WebGPU runtime bindings |
+| `mlc_wasm_runtime.bc` | 832 KB | MLC-LLM WASM runtime    |
 
 #### 3d. Compile to WebGPU WASM
 
@@ -288,6 +307,7 @@ python -m mlc_llm compile \
 ```
 
 **Compilation Phases**:
+
 1. Load model configuration
 2. Export to TVM compiler
 3. Run TVM Relax graph optimizations
@@ -299,16 +319,18 @@ python -m mlc_llm compile \
 9. Export to disk (WASM)
 
 **Memory Usage Estimates** (from compiler):
-| Function | Memory |
-|----------|--------|
-| `prefill` | 1,056 MB |
+
+| Function        | Memory     |
+| --------------- | ---------- |
+| `prefill`       | 1,056 MB   |
 | `batch_prefill` | 1,057.5 MB |
-| `batch_verify` | 1,056 MB |
-| `image_embed` | 311 MB |
-| `decode` | 0.13 MB |
-| `embed` | 96 MB |
+| `batch_verify`  | 1,056 MB   |
+| `image_embed`   | 311 MB     |
+| `decode`        | 0.13 MB    |
+| `embed`         | 96 MB      |
 
 **Output**:
+
 - WASM file: 6.6 MB
 - Compilation time: ~3 minutes
 
@@ -337,6 +359,7 @@ hf upload Vet-Rate-org/Vet-Rate-Vision-Phi .
 ```
 
 **Upload Statistics**:
+
 - Files Uploaded: 112
 - Total Size: 2.78 GB
 - Upload Speed: ~4.5 MB/s
@@ -382,22 +405,28 @@ hf upload Vet-Rate-org/Vet-Rate-Vision-Phi .
 ## 🎓 Lessons Learned
 
 ### 1. Windows is Not Ready for MLC-LLM
+
 Despite having all build tools installed, the Python package ecosystem for MLC-LLM is Linux-only. WSL2 is the pragmatic solution for Windows users.
 
 ### 2. WASM Runtime Files Are Not Pre-built
+
 The MLC-LLM pip packages don't include the WASM runtime `.bc` files needed for WebGPU compilation. You must:
+
 - Clone the full MLC-LLM source with submodules
 - Build the WASM runtimes manually using Emscripten
 - Copy the files to the correct Python package directories
 
 ### 3. Quantization Choice Matters for Browser Compatibility
+
 - `q4f16_1` uses f16 shader types → requires `shader-f16` feature
 - `q4f32_1` uses f32 shader types → works in standard WebGPU
 - Some models use u8 types regardless → require experimental Chrome flags
 - Our custom compile avoids u8 entirely by using f32 model dtype
 
 ### 4. Memory Planning is Critical
+
 The compiler estimates memory usage for each function. For browser deployment:
+
 - Keep `prefill_chunk_size` reasonable (8192 works well)
 - Monitor total memory usage (aim for < 8GB for broad compatibility)
 - Consider context window size impact on KV cache
@@ -407,12 +436,14 @@ The compiler estimates memory usage for each function. For browser deployment:
 ## 📈 Impact
 
 ### Before (Standard Phi 3.5 Vision)
+
 - ❌ Required Chrome Canary
 - ❌ Required enabling experimental flags
 - ❌ Required `chromium-experimental-subgroup-matrix` feature
 - ❌ Users had to follow complex setup instructions
 
 ### After (Vet-Rate Vision Phi)
+
 - ✅ Works in standard Chrome, Edge, Firefox (with WebGPU)
 - ✅ No experimental flags needed
 - ✅ Zero configuration required
@@ -423,42 +454,42 @@ The compiler estimates memory usage for each function. For browser deployment:
 
 ## 🔗 Resources
 
-- **Model Repository**: https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi
-- **Base Model**: https://huggingface.co/microsoft/Phi-3.5-vision-instruct
-- **MLC-LLM Documentation**: https://llm.mlc.ai/docs/
-- **WebLLM**: https://github.com/mlc-ai/web-llm
-- **Emscripten**: https://emscripten.org/
+- **Model Repository**: <https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi>
+- **Base Model**: <https://huggingface.co/microsoft/Phi-3.5-vision-instruct>
+- **MLC-LLM Documentation**: <https://llm.mlc.ai/docs/>
+- **WebLLM**: <https://github.com/mlc-ai/web-llm>
+- **Emscripten**: <https://emscripten.org/>
 
 ---
 
 ## 📅 Build Timeline
 
-| Time | Activity |
-|------|----------|
-| 0:00 | Start - Analyze WebGPU shader error |
-| 0:15 | Attempt Windows native build |
-| 1:00 | Windows build fails, switch to WSL2 |
-| 1:15 | Install Ubuntu-24.04 in WSL2 |
-| 1:30 | Set up Python venv, install MLC-LLM |
-| 1:45 | Download Phi 3.5 Vision (8.3 GB) |
-| 2:00 | Run gen_config |
-| 2:05 | Run convert_weight (40 seconds) |
-| 2:10 | First WebGPU compile attempt (fails - missing .bc files) |
-| 2:30 | Install Emscripten SDK |
-| 2:45 | Clone MLC-LLM source |
-| 3:00 | Build WASM runtime libraries |
-| 3:15 | Copy .bc files, retry compile |
-| 3:20 | WebGPU compile succeeds |
-| 3:30 | Copy to Windows, prepare for upload |
-| 3:45 | Install HF CLI, authenticate |
-| 3:55 | Upload to HuggingFace (2.78 GB) |
-| 4:00 | Integrate into Vet-Rate.org codebase |
-| **4:00** | **BUILD COMPLETE** ✅ |
+| Time     | Activity                                                 |
+| -------- | -------------------------------------------------------- |
+| 0:00     | Start - Analyze WebGPU shader error                      |
+| 0:15     | Attempt Windows native build                             |
+| 1:00     | Windows build fails, switch to WSL2                      |
+| 1:15     | Install Ubuntu-24.04 in WSL2                             |
+| 1:30     | Set up Python venv, install MLC-LLM                      |
+| 1:45     | Download Phi 3.5 Vision (8.3 GB)                         |
+| 2:00     | Run gen_config                                           |
+| 2:05     | Run convert_weight (40 seconds)                          |
+| 2:10     | First WebGPU compile attempt (fails - missing .bc files) |
+| 2:30     | Install Emscripten SDK                                   |
+| 2:45     | Clone MLC-LLM source                                     |
+| 3:00     | Build WASM runtime libraries                             |
+| 3:15     | Copy .bc files, retry compile                            |
+| 3:20     | WebGPU compile succeeds                                  |
+| 3:30     | Copy to Windows, prepare for upload                      |
+| 3:45     | Install HF CLI, authenticate                             |
+| 3:55     | Upload to HuggingFace (2.78 GB)                          |
+| 4:00     | Integrate into Vet-Rate.org codebase                     |
+| **4:00** | **BUILD COMPLETE** ✅                                    |
 
 ---
 
-*Built with determination and fueled by veteran spirit 🎖️*
-*January 21, 2026*
+_Built with determination and fueled by veteran spirit 🎖️_
+_January 21, 2026_
 
 ---
 
@@ -511,40 +542,41 @@ When using a Float32 Bypass model, you MUST preprocess images in JavaScript:
 const input = { pixel_values: new Uint8Array(buffer) }; // CRASH!
 
 // VET-RATE WAY (Float32 Bypass / Works):
-import { prepareImageForVision } from '@/utils/visionPreprocessor';
+import { prepareImageForVision } from "@/utils/visionPreprocessor";
 
 const { data } = await prepareImageForVision(imageElement);
-const input = { pixel_values: data };  // Clean Float32Array
+const input = { pixel_values: data }; // Clean Float32Array
 ```
 
 ### Build Environment Requirements
 
-| Requirement | Minimum | Recommended |
-|------------|---------|-------------|
-| **OS** | WSL2 Ubuntu 22.04+ | Ubuntu 24.04 |
-| **Disk Space** | 40 GB | 60+ GB |
-| **RAM** | 8 GB | 16+ GB |
-| **CPU Cores** | 2 | 4-8 |
-| **Internet** | 10 Mbps | 50+ Mbps |
+| Requirement    | Minimum            | Recommended  |
+| -------------- | ------------------ | ------------ |
+| **OS**         | WSL2 Ubuntu 22.04+ | Ubuntu 24.04 |
+| **Disk Space** | 40 GB              | 60+ GB       |
+| **RAM**        | 8 GB               | 16+ GB       |
+| **CPU Cores**  | 2                  | 4-8          |
+| **Internet**   | 10 Mbps            | 50+ Mbps     |
 
 ### Phase-by-Phase Build Timeline
 
-| Phase | Duration | Description |
-|-------|----------|-------------|
-| 1. System Deps | 2-5 min | Install build tools, git-lfs |
-| 2. Workspace Setup | 5-15 min | Clone MLC-LLM with submodules (~3 GB) |
-| 3. Python Env | 2-5 min | Create venv, install deps |
-| 4. Float32 Patch | 1 min | Auto-patch uint8 → float32 |
-| 5. Emscripten | 5-10 min | Install SDK 3.1.56 |
-| 6. Build MLC-LLM | 30-60 min | Compile TVM and MLC runtime |
-| 7. Build WASM | 5-10 min | Compile WASM runtime libraries |
-| 8. Download Model | 5-30 min | Pull model weights (~8-15 GB) |
-| 9. Compile Model | 5-15 min | Generate WebGPU WASM |
-| **TOTAL** | **2-4 hours** | |
+| Phase              | Duration      | Description                           |
+| ------------------ | ------------- | ------------------------------------- |
+| 1. System Deps     | 2-5 min       | Install build tools, git-lfs          |
+| 2. Workspace Setup | 5-15 min      | Clone MLC-LLM with submodules (~3 GB) |
+| 3. Python Env      | 2-5 min       | Create venv, install deps             |
+| 4. Float32 Patch   | 1 min         | Auto-patch uint8 → float32            |
+| 5. Emscripten      | 5-10 min      | Install SDK 3.1.56                    |
+| 6. Build MLC-LLM   | 30-60 min     | Compile TVM and MLC runtime           |
+| 7. Build WASM      | 5-10 min      | Compile WASM runtime libraries        |
+| 8. Download Model  | 5-30 min      | Pull model weights (~8-15 GB)         |
+| 9. Compile Model   | 5-15 min      | Generate WebGPU WASM                  |
+| **TOTAL**          | **2-4 hours** |                                       |
 
 ### Troubleshooting
 
 #### Build fails with "out of memory"
+
 ```bash
 # Edit the build script to use fewer parallel jobs
 # Change: make -j$(nproc)
@@ -552,6 +584,7 @@ const input = { pixel_values: data };  // Clean Float32Array
 ```
 
 #### Missing `.bc` files error
+
 ```bash
 # Rebuild WASM runtime
 cd ~/vetrate-vision-compiler/mlc-llm/web
@@ -566,6 +599,7 @@ cp dist/wasm/wasm_runtime.bc ~/vetrate-vision-compiler/venv/lib/python3.12/site-
 ```
 
 #### "Module not found: mlc_llm"
+
 ```bash
 # Install the Python package in editable mode
 cd ~/vetrate-vision-compiler/mlc-llm/python
@@ -573,7 +607,9 @@ pip install -e .
 ```
 
 #### Shader still crashes after Float32 bypass
+
 The patch may not have found all uint8 references. Check:
+
 ```bash
 grep -r "uint8\|u8" python/mlc_llm/model --include="*.py"
 ```
@@ -585,7 +621,9 @@ grep -r "uint8\|u8" python/mlc_llm/model --include="*.py"
 These patches were applied to the pre-built MLC-LLM package to enable Float32 pixel inputs:
 
 ### Patch 1: phi3v_model.py (line 317)
+
 **File**: `venv/lib/python3.12/site-packages/mlc_llm/model/phi3v/phi3v_model.py`
+
 ```python
 # BEFORE:
 "pixel_values": nn.spec.Tensor([1, "image_height", "image_width", 3], "uint8"),
@@ -595,7 +633,9 @@ These patches were applied to the pre-built MLC-LLM package to enable Float32 pi
 ```
 
 ### Patch 2: image_processing.py (line 228)
+
 **File**: `venv/lib/python3.12/site-packages/mlc_llm/model/vision/image_processing.py`
+
 ```python
 # BEFORE:
 def pad(self, image: Tensor, dtype="uint8"):
@@ -605,6 +645,7 @@ def pad(self, image: Tensor, dtype="float32"):
 ```
 
 ### What the Patches Do
+
 1. **pixel_values tensor** now expects float32 (0.0-255.0) instead of uint8 (0-255)
 2. **Padding operations** default to float32 to match the input dtype
 3. **JavaScript preprocessing** normalizes pixels to float32 before sending to GPU
@@ -614,12 +655,12 @@ def pad(self, image: Tensor, dtype="float32"):
 
 ### Related Files
 
-| File | Purpose |
-|------|---------|
-| `/scripts/build_vetrate_compiler.sh` | Automated WSL2 build script |
-| `/src/utils/visionPreprocessor.js` | Client-side Float32 preprocessing |
-| `/docs/COMPILE_CUSTOM_VISION_MODEL.md` | Original build documentation |
-| [HuggingFace Repo](https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Float32) | Compiled Float32 Bypass model |
+| File                                                                                | Purpose                           |
+| ----------------------------------------------------------------------------------- | --------------------------------- |
+| `/scripts/build_vetrate_compiler.sh`                                                | Automated WSL2 build script       |
+| `/src/utils/visionPreprocessor.js`                                                  | Client-side Float32 preprocessing |
+| `/docs/COMPILE_CUSTOM_VISION_MODEL.md`                                              | Original build documentation      |
+| [HuggingFace Repo](https://huggingface.co/Vet-Rate-org/Vet-Rate-Vision-Phi-Float32) | Compiled Float32 Bypass model     |
 
 ### External Resources
 
@@ -630,5 +671,5 @@ def pad(self, image: Tensor, dtype="float32"):
 
 ---
 
-*Float32 Bypass Strategy developed January 2026*
-*"When the off-the-shelf tools fail, we build our own." - Firearm Safety Team*
+_Float32 Bypass Strategy developed January 2026_
+_"When the off-the-shelf tools fail, we build our own." - Firearm Safety Team_

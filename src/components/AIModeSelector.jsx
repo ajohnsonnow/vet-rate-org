@@ -42,7 +42,7 @@ function useAIStatusBadgeMeta(status) {
   let badgeStyle;
   if (status.localInitializing || status.wllamaInitializing) {
     badgeStyle =
-      "bg-cyan-500/30 text-cyan-300 border-cyan-400 shadow-cyan-500/50 shadow-md animate-pulse";
+      "bg-cyan-500/30 text-cyan-300 border-cyan-400 shadow-cyan-500/50 shadow-md animate-attention";
   } else if (status.effectiveMode === AI_MODES.SWARM) {
     badgeStyle =
       "bg-purple-500/30 text-purple-300 border-purple-400 shadow-purple-500/50 shadow-md";
@@ -60,7 +60,7 @@ function useAIStatusBadgeMeta(status) {
       "bg-blue-500/30 text-blue-300 border-blue-400 shadow-blue-500/50 shadow-md";
   } else {
     badgeStyle =
-      "bg-yellow-500/30 text-yellow-300 border-yellow-400 shadow-yellow-500/50 shadow-md animate-pulse";
+      "bg-yellow-700 text-white border-yellow-400 shadow-yellow-500/50 shadow-md animate-attention";
   }
 
   // DKB coverage is currently identical across every mode - Local and Cloud
@@ -166,6 +166,7 @@ export const AIStatusBadge = ({ onClick, className = "" }) => {
         onClick={onClick}
         className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${badgeStyle} ${className}`}
         aria-label={tooltip}
+        data-testid="ai-status-badge"
       >
         <AIStatusBadgeContent status={status} />
       </button>

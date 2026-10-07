@@ -15,6 +15,7 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { getMyRatings } from "../utils/veteranProfile";
@@ -417,8 +418,8 @@ function ProtectionsSection({ protections }) {
         </h3>
       </div>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        {protections.map((protection, i) => (
-          <div key={i} className="p-4">
+        {protections.map((protection) => (
+          <div key={protection.rule.cfr} className="p-4">
             <div className="flex items-start gap-3">
               <span
                 className={`px-2 py-1 text-xs font-bold rounded ${
@@ -462,7 +463,7 @@ function FactorsSection({ factors }) {
         📌 Additional Considerations
       </h3>
       <div className="space-y-3">
-        {factors.map((factor, i) => {
+        {factors.map((factor) => {
           let factorClassName =
             "bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300";
           if (factor.type === "critical") {
@@ -474,7 +475,10 @@ function FactorsSection({ factors }) {
           }
 
           return (
-            <div key={i} className={`p-3 rounded-lg ${factorClassName}`}>
+            <div
+              key={factor.text}
+              className={`p-3 rounded-lg ${factorClassName}`}
+            >
               <p>{factor.text}</p>
             </div>
           );
@@ -547,9 +551,9 @@ function AIBulletList({ title, items, bulletChar, bulletClassName }) {
         {title}
       </h4>
       <ul className="space-y-2">
-        {items.map((item, i) => (
+        {items.map((item) => (
           <li
-            key={i}
+            key={item}
             className="flex items-start gap-2 text-gray-600 dark:text-gray-300"
           >
             <span className={`${bulletClassName} mt-1`}>{bulletChar}</span>
@@ -760,14 +764,18 @@ function RiskResultsPanel({
 
       {warnings
         .filter((w) => w.severity === "critical")
-        .map((warning, i) => (
-          <WarningCard key={i} warning={warning} tone="critical" />
+        .map((warning) => (
+          <WarningCard
+            key={warning.message}
+            warning={warning}
+            tone="critical"
+          />
         ))}
 
       {warnings
         .filter((w) => w.severity === "high")
-        .map((warning, i) => (
-          <WarningCard key={i} warning={warning} tone="high" />
+        .map((warning) => (
+          <WarningCard key={warning.message} warning={warning} tone="high" />
         ))}
 
       <ProtectionsSection protections={protections} />
@@ -822,40 +830,12 @@ function RiskResultsPanel({
 function RiskAssessmentHeader({ onClose, onReportBug, onOpenAISettings }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-orange-600 to-red-600 p-4 shadow-lg rounded-t-xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🐻</span>
-          <div>
-            <h2
-              id="risk-assessment-title"
-              className="text-xl font-bold text-white flex items-center gap-2"
-            >
-              Poke the Bear Calculator
-              <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">
-                AI
-              </span>
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-                BETA
-              </span>
-            </h2>
-            <p className="text-sm text-orange-100">
-              Risk Assessment Before Filing
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="Risk Assessment (Poke the Bear)"
-            />
-          )}
+      <HeaderCloseSlot
+        close={
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg
@@ -872,8 +852,39 @@ function RiskAssessmentHeader({ onClose, onReportBug, onOpenAISettings }) {
               />
             </svg>
           </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl shrink-0">🐻</span>
+          <div className="min-w-0">
+            <h2
+              id="risk-assessment-title"
+              className="text-xl font-bold text-white flex flex-wrap items-center gap-2"
+            >
+              Poke the Bear Calculator{" "}
+              <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">
+                AI
+              </span>
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                BETA
+              </span>
+            </h2>
+            <p className="text-sm text-orange-100">
+              Risk Assessment Before Filing
+            </p>
+          </div>
         </div>
-      </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="Risk Assessment (Poke the Bear)"
+            />
+          )}
+        </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -939,9 +950,9 @@ function RiskAssessmentNotices({ showResults, savedRatings }) {
                 been auto-populated below.
               </p>
               <div className="flex flex-wrap gap-2 mt-2">
-                {savedRatings.slice(0, 5).map((r, i) => (
+                {savedRatings.slice(0, 5).map((r) => (
                   <span
-                    key={i}
+                    key={`${r.name || r.bodyPart}-${r.rating}`}
                     className="px-2 py-1 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs rounded"
                   >
                     {r.name || r.bodyPart} {r.rating}%

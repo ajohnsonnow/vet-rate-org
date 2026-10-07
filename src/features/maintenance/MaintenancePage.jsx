@@ -1,3 +1,5 @@
+import QuickExitButton from "../../components/QuickExitButton";
+
 /**
  * Maintenance kill-switch page. Rendered by App.jsx when `version.json`
  * reports `maintenance_mode: true` so the app shows an explanation instead
@@ -7,11 +9,17 @@
  * gates the IndexedDB migration (must await maintenance before starting any
  * data writes).
  *
+ * QuickExitButton is rendered here too, same as MigrationScreen.jsx: this is
+ * the only thing on screen while maintenance mode is on, and Quick Exit must
+ * stay one tap away on every screen, this one included - a veteran routed
+ * here by the kill switch mid-session is not exempt.
+ *
  * Extracted from App.jsx (audit #35, B29).
  */
 export default function MaintenancePage({ message }) {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <QuickExitButton position="top-right" variant="subtle" />
       <div className="max-w-2xl w-full bg-gray-800 border-2 border-yellow-500 rounded-lg p-8 text-center">
         <div className="mb-6">
           <span className="text-6xl">🛠️</span>

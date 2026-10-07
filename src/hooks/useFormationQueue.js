@@ -6,7 +6,8 @@
  * React hook for managing formation queue state
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { logger } from "../utils/logger";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   buildFormation,
   sortFormation,
@@ -23,19 +24,27 @@ import {
   clearFormationState,
   FORMATION_STATUS,
 } from "../utils/formationQueue";
+import { neutralDocumentLabel } from "../utils/documentLabel";
+import { describePersistIncomplete } from "../utils/persistIncompleteMessage";
+import {
+  describeDocumentFailure,
+  plainDocumentLabel,
+} from "../utils/readFailureMessage";
+import { clearImportMarker } from "../utils/importProgressMarker";
 
 function logFormationInitialized(count) {
   // eslint-disable-next-line no-console
   console.log(`🚩 Formation initialized with ${count} documents`);
 }
 
-function logFormationStatsUpdated(newStats, current) {
-  // eslint-disable-next-line no-console
-  console.log("📊 Formation stats updated:", {
+function logFormationStatsUpdated(newStats, current, formation) {
+  logger.info("📊 Formation stats updated:", {
     total: newStats.total,
     waiting: newStats.waiting,
     inProgress: newStats.inProgress,
-    currentEntry: current ? current.filename : "none",
+    currentEntry: current
+      ? neutralDocumentLabel(current.estimatedType, formation.indexOf(current))
+      : "none",
     isProcessing: current !== null,
   });
 }
@@ -43,15 +52,11 @@ function logFormationStatsUpdated(newStats, current) {
 function logInitializeFormationStart(files) {
   // eslint-disable-next-line no-console
   console.log("🚩 initializeFormation called with:", files?.length, "files");
-  // eslint-disable-next-line no-console
-  console.log("🚩 Files are:", files);
 }
 
 function logInitializeFormationBuilt(newFormation) {
   // eslint-disable-next-line no-console
   console.log("🚩 buildFormation returned:", newFormation?.length, "entries");
-  // eslint-disable-next-line no-console
-  console.log("🚩 First entry:", newFormation?.[0]);
 }
 
 function logInitializeFormationSaved(count) {
@@ -80,7 +85,7 @@ function advanceToNext(
       status: FORMATION_STATUS.CALLED,
     });
     // eslint-disable-next-line no-console
-    console.log(`📞 Called to inspection: ${next.filename}`);
+    console.log("📞 Called to inspection");
   }
 
   return next;
@@ -128,8 +133,66 @@ function errorCurrentAndNextImpl(currentEntry, formation, updateEntry, error) {
   );
 }
 
+// Marks exactly the entry that failed - never "whatever the current entry was
+// when this closure rendered", which attributed the error to a different,
+// already-saved document and re-called the failed one - then calls the next
+// WAITING entry forward from the latest formation.
+function errorEntryAndNextImpl(
+  entryId,
+  error,
+  formationRef,
+  updateEntry,
+  extra = {},
+) {
+  updateEntry(
+    entryId,
+    buildStatusUpdate(FORMATION_STATUS.ERROR, {
+      error: error?.message || error,
+      ...extra,
+    }),
+  );
+  const next = getNextInFormation(
+    formationRef.current.filter((entry) => entry.id !== entryId),
+  );
+  if (next) updateEntry(next.id, { status: FORMATION_STATUS.CALLED });
+  return next;
+}
+
+// A save that did not finish can only be retried while the read result is held
+// in memory, which a page reload drops. The restored entry must not promise a
+// Retry that is not there: it keeps the plain failure and says to import again.
+function withoutRetryThatReloadDropped(entry, index) {
+  if (entry.processingFailure) {
+    return {
+      ...entry,
+      retryable: false,
+      error: describeDocumentFailure(
+        plainDocumentLabel(entry.estimatedType, index),
+        {
+          kind: entry.failureKind,
+          canRetry: false,
+          fileGone: true,
+          reloaded: true,
+        },
+      ),
+    };
+  }
+  if (!entry.retryable) return entry;
+  return {
+    ...entry,
+    retryable: false,
+    error: describePersistIncomplete(
+      entry.filename || entry.file?.name,
+      null,
+      entry,
+    ),
+  };
+}
+
 function loadInitialFormation(setFormation) {
-  const savedFormation = loadFormationState();
+  const savedFormation = loadFormationState()?.map((entry, index) =>
+    withoutRetryThatReloadDropped(entry, index),
+  );
   if (savedFormation && savedFormation.length > 0) {
     setFormation(savedFormation);
     logFormationInitialized(savedFormation.length);
@@ -144,7 +207,7 @@ function syncFormationStats(formation, setStats, setCurrentEntry) {
     setCurrentEntry(current);
 
     // Debug logging
-    logFormationStatsUpdated(newStats, current);
+    logFormationStatsUpdated(newStats, current, formation);
 
     // Auto-save state
     saveFormationState(formation);
@@ -204,7 +267,7 @@ function startFormationImpl(formation, updateEntry) {
       status: FORMATION_STATUS.CALLED,
     });
     // eslint-disable-next-line no-console
-    console.log(`🚩 Formation begun - First call: ${first.filename}`);
+    console.log("🚩 Formation begun");
     return first;
   }
   return null;
@@ -234,6 +297,7 @@ function clearFormationImpl(setFormation, setCurrentEntry, setStats) {
   setCurrentEntry(null);
   setStats(null);
   clearFormationState();
+  clearImportMarker();
   // eslint-disable-next-line no-console
   console.log("🚩 Formation dismissed");
 }
@@ -243,7 +307,12 @@ function clearFormationImpl(setFormation, setCurrentEntry, setStats) {
  * custom hook (still calls useCallback internally) so the parent hook body
  * stays under the line budget without breaking rules-of-hooks.
  */
-function useFormationActions({ formation, setFormation, currentEntry }) {
+function useFormationActions({
+  formation,
+  formationRef,
+  setFormation,
+  currentEntry,
+}) {
   const initializeFormation = useCallback(
     (files) => initializeFormationImpl(files, setFormation),
     [setFormation],
@@ -289,6 +358,12 @@ function useFormationActions({ formation, setFormation, currentEntry }) {
     [currentEntry, formation, updateEntry],
   );
 
+  const errorEntryAndNext = useCallback(
+    (entryId, error, extra) =>
+      errorEntryAndNextImpl(entryId, error, formationRef, updateEntry, extra),
+    [formationRef, updateEntry],
+  );
+
   const startFormation = useCallback(
     () => startFormationImpl(formation, updateEntry),
     [formation, updateEntry],
@@ -313,6 +388,7 @@ function useFormationActions({ formation, setFormation, currentEntry }) {
     completeCurrentAndNext,
     skipCurrentAndNext,
     errorCurrentAndNext,
+    errorEntryAndNext,
     startFormation,
     reorderDocuments,
     removeDocument,
@@ -354,6 +430,11 @@ export const useFormationQueue = () => {
   const [formation, setFormation] = useState([]);
   const [currentEntry, setCurrentEntry] = useState(null);
   const [stats, setStats] = useState(null);
+  const formationRef = useRef(formation);
+  useEffect(() => {
+    formationRef.current = formation;
+  }, [formation]);
+  const getFormation = useCallback(() => formationRef.current, []);
 
   // Load saved formation on mount
   useEffect(() => {
@@ -373,11 +454,13 @@ export const useFormationQueue = () => {
     completeCurrentAndNext,
     skipCurrentAndNext,
     errorCurrentAndNext,
+    errorEntryAndNext,
     startFormation,
     reorderDocuments,
     removeDocument,
   } = useFormationActions({
     formation,
+    formationRef,
     setFormation,
     currentEntry,
   });
@@ -403,6 +486,8 @@ export const useFormationQueue = () => {
     completeCurrentAndNext,
     skipCurrentAndNext,
     errorCurrentAndNext,
+    errorEntryAndNext,
+    getFormation,
     startFormation,
     reorderDocuments,
     removeDocument,

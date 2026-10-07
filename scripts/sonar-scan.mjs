@@ -1,0 +1,87 @@
+#!/usr/bin/env node
+/**
+ * Scan the repo with the local SonarQube server (docker-compose.sonar.yml)
+ * and print the quality-gate status plus open-issue counts.
+ *
+ *   npm run sonar:up      # once per boot
+ *   SONAR_TOKEN=... npm run sonar:scan
+ */
+import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const HOST = process.env.SONAR_HOST_URL || "http://127.0.0.1:9000";
+const TOKEN = process.env.SONAR_TOKEN;
+const PROJECT = "vet-rate-org";
+const REPO = resolve(fileURLToPath(new URL("..", import.meta.url)));
+
+if (!TOKEN) {
+  console.error(
+    "SONAR_TOKEN is not set. Create a User token at " +
+      `${HOST}/account/security and export it first (see docs/SONARQUBE.md).`,
+  );
+  process.exit(2);
+}
+
+// Without a fresh lcov report SonarQube scores new code at 0% coverage and
+// fails the quality gate. SKIP_COVERAGE=1 reuses the last report.
+if (process.env.SKIP_COVERAGE !== "1") {
+  const coverage = spawnSync("npm", ["run", "test:coverage"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  if (coverage.status !== 0) {
+    console.warn(
+      "Coverage run did not pass cleanly; scanning with whatever report it wrote.",
+    );
+  }
+}
+
+const scan = spawnSync(
+  "docker",
+  [
+    "run",
+    "--rm",
+    "--network",
+    "host",
+    "-e",
+    `SONAR_HOST_URL=${HOST}`,
+    "-e",
+    "SONAR_TOKEN",
+    "-v",
+    `${REPO}:/usr/src`,
+    "sonarsource/sonar-scanner-cli",
+  ],
+  { stdio: "inherit", env: { ...process.env, SONAR_TOKEN: TOKEN } },
+);
+if (scan.status !== 0) process.exit(scan.status ?? 1);
+
+const auth = { Authorization: `Bearer ${TOKEN}` };
+const api = async (path) => {
+  const res = await fetch(`${HOST}/api/${path}`, { headers: auth });
+  if (!res.ok) throw new Error(`${path} -> HTTP ${res.status}`);
+  return res.json();
+};
+
+// The server processes the report asynchronously after the scanner exits.
+for (let i = 0; i < 60; i++) {
+  const { queue } = await api(`ce/component?component=${PROJECT}`);
+  if (queue.length === 0) break;
+  await new Promise((r) => setTimeout(r, 5000));
+}
+
+const gate = await api(`qualitygates/project_status?projectKey=${PROJECT}`);
+const issues = await api(
+  `issues/search?components=${PROJECT}&issueStatuses=OPEN,CONFIRMED&ps=1` +
+    "&facets=impactSoftwareQualities,impactSeverities",
+);
+process.stdout.write(`\nQuality gate: ${gate.projectStatus.status}\n`);
+process.stdout.write(`Open issues: ${issues.total}\n`);
+for (const facet of issues.facets) {
+  const counts = facet.values
+    .filter((v) => v.count > 0)
+    .map((v) => `${v.val}=${v.count}`)
+    .join(" ");
+  process.stdout.write(`  ${facet.property}: ${counts}\n`);
+}
+process.stdout.write(`Dashboard: ${HOST}/dashboard?id=${PROJECT}\n`);

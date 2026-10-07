@@ -7,16 +7,30 @@
  * knowledge in an organized, editable format.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { useLanguage } from "../contexts/LanguageContext";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   loadVKB,
   saveVKB,
   generateLLMContext,
   exportVKB,
-  clearVKB,
 } from "../utils/veteranKnowledgeBase";
+import { setServiceEntryDate } from "../utils/veteranProfile";
+import { isSameCalendarDay } from "../utils/serviceEntryDate";
+import { wipeAllLocalData, forceReloadWithCacheBypass } from "./AtomicWipe";
+import { broadcastDataWipe } from "../utils/dataWipeChannel";
+
+// Decision B: same scope as the app's full "delete my data" (Atomic Wipe) -
+// this confirm must say exactly that, not a VKB-only subset, since
+// wipeAllLocalData() below deletes everything Atomic Wipe deletes.
+const CLEAR_ALL_DATA_CONFIRM_TEXT =
+  "This permanently deletes EVERYTHING Vet-Rate.org has about you on this " +
+  "device: your records, profile, and service history; My Packet documents; " +
+  "the knowledge base; your timeline; saved claims and conditions; local AI " +
+  "models and vector databases; preferences and settings; and all cached or " +
+  "offline data. This does not redirect you anywhere and cannot be undone. " +
+  "Continue?";
 
 const SECTIONS = [
   { id: "personal", label: "Personal Info", icon: "👤" },
@@ -169,24 +183,44 @@ const ServiceHistoryCharacterField = ({ vkb, setVkb, editMode }) => (
   </div>
 );
 
+// ADR-007: the VKB is a PROJECTION of servicePeriods[] now, never an
+// independent editor - this only ever updates LOCAL component state (never
+// servicePeriods[] itself); the real correction is applied to the
+// canonical period by saveVkbViewerEdits (via setServiceEntryDate) on
+// Save, and the projection then re-derives every VKB field, including
+// this one, from that single source of truth.
+function _applyEntryDateEdit(vkb, newValue) {
+  return {
+    ...vkb,
+    serviceHistory: {
+      ...vkb.serviceHistory,
+      entryDate: newValue,
+      // A veteran editing this field is supplying a real, remembered
+      // date - never the calculated NGB-22 guess the marker above and
+      // generateLLMContext's own check of this same flag key off.
+      entryDateDerived: false,
+    },
+  };
+}
+
 const ServiceHistoryEntryDateField = ({ vkb, setVkb, editMode }) => (
   <div>
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+    <label
+      htmlFor="vkbServiceHistoryEntryDate"
+      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+    >
       Entry Date
+      {vkb.serviceHistory.entryDateDerived && (
+        <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+          (calculated from net service)
+        </span>
+      )}
     </label>
     <input
+      id="vkbServiceHistoryEntryDate"
       type="date"
       value={vkb.serviceHistory.entryDate || ""}
-      onChange={(e) =>
-        setVkb({
-          ...vkb,
-          serviceHistory: {
-            ...vkb.serviceHistory,
-            entryDate: e.target.value,
-          },
-        })
-      }
+      onChange={(e) => setVkb(_applyEntryDateEdit(vkb, e.target.value))}
       disabled={!editMode}
       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
     />
@@ -249,8 +283,11 @@ const ServiceHistoryMOSList = ({ mosList }) => (
       </p>
     ) : (
       <div className="space-y-2">
-        {mosList.map((mos, idx) => (
-          <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        {mosList.map((mos) => (
+          <div
+            key={mos.code}
+            className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
             <div className="font-semibold">
               {mos.code} - {mos.title}
             </div>
@@ -277,8 +314,11 @@ const ServiceHistoryAwardsList = ({ awards }) => (
       </p>
     ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {awards.map((award, idx) => (
-          <div key={idx} className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+        {awards.map((award) => (
+          <div
+            key={award.name}
+            className="p-2 bg-gray-50 dark:bg-gray-800 rounded"
+          >
             <span className="font-medium">{award.name}</span>
             {award.isCombat && (
               <span className="ml-2 text-red-600 dark:text-red-400">
@@ -292,9 +332,52 @@ const ServiceHistoryAwardsList = ({ awards }) => (
   </div>
 );
 
+// D11-6: previously never rendered at all - a veteran with more than one
+// enlistment period (or a single corrected period) had no way to see what
+// this same data looked like to generateLLMContext's "Period N:" lines.
+// Display-only (matches "service periods display" scope) - editing a
+// specific period lives in My Packet's Service tab, the canonical editor
+// for the profile-side servicePeriods[] array.
+const ServiceHistoryPeriodsList = ({ periods }) => {
+  if (!periods || periods.length === 0) return null;
+  return (
+    <div>
+      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+        Service Periods
+      </h4>
+      <div className="space-y-2">
+        {periods.map((period, index) => (
+          <div
+            key={`${period.serviceStartDate || ""}-${period.serviceEndDate || ""}-${index}`}
+            className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
+            <div className="font-semibold">
+              {period.serviceStartDate || "?"}
+              {period.serviceStartDateDerived && (
+                <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+                  (calculated from net service)
+                </span>
+              )}{" "}
+              to {period.serviceEndDate || "?"}
+            </div>
+            {(period.branch || period.rank || period.mos) && (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {[period.branch, period.rank, period.mos]
+                  .filter(Boolean)
+                  .join(" - ")}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const ServiceSection = ({ vkb, setVkb, editMode }) => (
   <div className="space-y-6">
     <ServiceHistoryFields vkb={vkb} setVkb={setVkb} editMode={editMode} />
+    <ServiceHistoryPeriodsList periods={vkb.serviceHistory.servicePeriods} />
     <ServiceHistoryMOSList mosList={vkb.serviceHistory.mos} />
     <ServiceHistoryAwardsList awards={vkb.serviceHistory.awards} />
   </div>
@@ -312,9 +395,9 @@ const ConditionsSection = ({ vkb }) => (
         </p>
       ) : (
         <div className="space-y-3">
-          {vkb.medicalConditions.current.map((condition, idx) => (
+          {vkb.medicalConditions.current.map((condition) => (
             <div
-              key={idx}
+              key={condition.name}
               className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
             >
               <div className="flex items-start justify-between">
@@ -355,9 +438,9 @@ const ConditionsSection = ({ vkb }) => (
         </p>
       ) : (
         <div className="space-y-2">
-          {vkb.medicalConditions.secondary.map((sec, idx) => (
+          {vkb.medicalConditions.secondary.map((sec) => (
             <div
-              key={idx}
+              key={sec.condition}
               className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
             >
               <div className="font-medium">{sec.condition}</div>
@@ -397,9 +480,9 @@ const DocumentationSection = ({ vkb }) => {
             DD-214s ({vkb.documentation.dd214s.length})
           </h4>
           <div className="space-y-2">
-            {vkb.documentation.dd214s.map((doc, idx) => (
+            {vkb.documentation.dd214s.map((doc) => (
               <div
-                key={idx}
+                key={`${doc.fileName}-${doc.uploadDate}`}
                 className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
               >
                 <div className="flex items-center justify-between">
@@ -420,9 +503,9 @@ const DocumentationSection = ({ vkb }) => {
             Blue Button Reports ({vkb.documentation.blueButtonReports.length})
           </h4>
           <div className="space-y-2">
-            {vkb.documentation.blueButtonReports.map((doc, idx) => (
+            {vkb.documentation.blueButtonReports.map((doc) => (
               <div
-                key={idx}
+                key={doc.uploadDate}
                 className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
               >
                 <div className="flex items-center justify-between">
@@ -448,9 +531,9 @@ const InsightsStrengths = ({ strengths }) => (
       ✅ Strengths of Your Claim
     </h4>
     <div className="space-y-2">
-      {strengths.map((strength, idx) => (
+      {strengths.map((strength) => (
         <div
-          key={idx}
+          key={strength.condition}
           className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
         >
           <div className="font-semibold">{strength.condition}</div>
@@ -469,9 +552,9 @@ const InsightsMissingEvidence = ({ missingEvidence }) => (
       ⚠️ Missing Evidence
     </h4>
     <div className="space-y-2">
-      {missingEvidence.map((missing, idx) => (
+      {missingEvidence.map((missing) => (
         <div
-          key={idx}
+          key={missing.condition}
           className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
         >
           <div className="font-semibold">{missing.condition}</div>
@@ -495,9 +578,9 @@ const InsightsSuggestedSecondaries = ({ suggestions }) => (
       💡 Suggested Secondary Conditions
     </h4>
     <div className="space-y-2">
-      {suggestions.map((suggestion, idx) => (
+      {suggestions.map((suggestion) => (
         <div
-          key={idx}
+          key={`${suggestion.secondaryCondition}-${suggestion.primaryCondition}`}
           className="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg"
         >
           <div className="font-semibold">{suggestion.secondaryCondition}</div>
@@ -576,69 +659,74 @@ const ViewerHeader = ({
   onExport,
   onClose,
 }) => (
-  <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-    <div>
-      <h2
-        id="vkb-viewer-title"
-        className="text-2xl font-bold text-gray-900 dark:text-gray-100"
-      >
-        📚 Veteran Knowledge Base
-      </h2>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-        Completeness: {vkb.metadata.completeness}% •{" "}
-        {vkb.metadata.documentCount} documents
-      </p>
-    </div>
-    <div className="flex items-center gap-2">
-      {editMode ? (
-        <>
-          <button
-            onClick={onSave}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-          >
-            💾 Save
-          </button>
-          <button
-            onClick={() => setEditMode(false)}
-            className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-          >
-            Cancel
-          </button>
-        </>
-      ) : (
+  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+    <HeaderCloseSlot
+      close={
         <button
-          onClick={() => setEditMode(true)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          aria-label="Close"
         >
-          ✏️ Edit
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
         </button>
-      )}
-      <button
-        onClick={onExport}
-        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-      >
-        📥 Export
-      </button>
-      <button
-        onClick={onClose}
-        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-        aria-label="Close"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      }
+    >
+      <div className="min-w-0">
+        <h2
+          id="vkb-viewer-title"
+          className="text-2xl font-bold text-gray-900 dark:text-gray-100"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
+          📚 Veteran Knowledge Base
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Completeness: {vkb.metadata.completeness}% •{" "}
+          {vkb.metadata.documentCount} documents
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {editMode ? (
+          <>
+            <button
+              onClick={onSave}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+            >
+              💾 Save
+            </button>
+            <button
+              onClick={() => setEditMode(false)}
+              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setEditMode(true)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          >
+            ✏️ Edit
+          </button>
+        )}
+        <button
+          onClick={onExport}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+        >
+          📥 Export
+        </button>
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -780,14 +868,62 @@ const ViewerModal = ({
   </ResponsiveModal>
 );
 
-const VKBViewer = ({ isOpen, onClose }) => {
-  const { _t } = useLanguage();
+const VKB_VIEWER_REASON_MESSAGES = {
+  invalid_date: "that isn't a valid date.",
+  period_not_found: "the linked service period no longer exists.",
+  no_period_for_document: "it couldn't be matched to a service period.",
+  no_document_value: "there is no document value to revert to.",
+};
 
+// ADR-007: the ONE place the VKB viewer writes anything - the entry date
+// goes through setServiceEntryDate (via: 'vkb_viewer'), applying the
+// correction to the canonical period instead of the VKB's own top-level
+// field; every other editable field is copied onto a FRESHLY loaded VKB
+// (never a stale `vkb` state object saveVKB(vkb0) would silently clobber
+// any service-entry projection written since this modal was opened).
+export async function saveVkbViewerEdits({ edited, loaded }) {
+  const loadedEntryDate = loaded?.serviceHistory?.entryDate;
+  const editedEntryDate = edited?.serviceHistory?.entryDate;
+  if (!isSameCalendarDay(editedEntryDate, loadedEntryDate)) {
+    const result = setServiceEntryDate({
+      date: editedEntryDate,
+      via: "vkb_viewer",
+      periodId: loaded?.serviceHistory?.entryPeriodId || undefined,
+    });
+    if (!result.ok) {
+      const reason =
+        VKB_VIEWER_REASON_MESSAGES[result.reason] || "please try again.";
+      alert(`Your entry date couldn't be saved: ${reason}`);
+      return { ok: false };
+    }
+  }
+
+  const fresh = await loadVKB();
+  fresh.personal.fullName = edited.personal.fullName;
+  fresh.personal.dateOfBirth = edited.personal.dateOfBirth;
+  fresh.personal.email = edited.personal.email;
+  fresh.personal.phone = edited.personal.phone;
+  fresh.serviceHistory.branch = edited.serviceHistory.branch;
+  fresh.serviceHistory.characterOfService =
+    edited.serviceHistory.characterOfService;
+  fresh.serviceHistory.separationDate = edited.serviceHistory.separationDate;
+  const saveResult = await saveVKB(fresh);
+  if (!saveResult.success) {
+    alert(
+      `Your changes couldn't be saved: ${saveResult.error || "please try again."}`,
+    );
+    return { ok: false };
+  }
+  return { ok: true, vkb: fresh };
+}
+
+const VKBViewer = ({ isOpen, onClose }) => {
   const [vkb, setVkb] = useState(null);
   const [activeSection, setActiveSection] = useState("personal");
   const [showLLMContext, setShowLLMContext] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const loadedRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -795,6 +931,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
       loadVKB()
         .then((loaded) => {
           setVkb(loaded);
+          loadedRef.current = loaded;
           setLoading(false);
         })
         .catch((err) => {
@@ -807,23 +944,39 @@ const VKBViewer = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const handleSave = async () => {
-    const result = await saveVKB(vkb);
-    if (result.success) {
-      setEditMode(false);
-    }
+    const result = await saveVkbViewerEdits({
+      edited: vkb,
+      loaded: loadedRef.current,
+    });
+    if (!result.ok) return;
+    setVkb(result.vkb);
+    loadedRef.current = result.vkb;
+    setEditMode(false);
   };
 
   const handleExport = () => {
     exportVKB();
   };
 
+  // Decision B: deletes everything the full data delete deletes (reuses
+  // AtomicWipe's wipeAllLocalData, not a VKB-only clear), without the decoy
+  // redirect (Quick Exit keeps that job - this just reloads), and
+  // propagates to every open tab so a stale tab cannot re-save deleted data.
   const handleClear = async () => {
-    if (
-      confirm("⚠️ This will delete your entire Knowledge Base. Are you sure?")
-    ) {
-      const newVKB = await clearVKB();
-      setVkb(newVKB);
+    if (!confirm(CLEAR_ALL_DATA_CONFIRM_TEXT)) return;
+    try {
+      await wipeAllLocalData();
+    } catch (error) {
+      console.error("Error during Clear All Data wipe:", error);
+      // A silent reload here would look identical to a real success - the
+      // veteran needs to know the delete may not have fully landed, the same
+      // warning the VKB-only clear path this replaced used to give.
+      alert(
+        "Some data may not have been fully deleted and could return after this reload. If this device is shared, clearing your browser's site data for this page is the more thorough option.",
+      );
     }
+    broadcastDataWipe();
+    forceReloadWithCacheBypass();
   };
 
   return (

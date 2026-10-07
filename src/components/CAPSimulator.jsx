@@ -6,7 +6,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   X,
   ClipboardList,
@@ -24,6 +23,7 @@ import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import { getCalculatorFunction } from "../utils/capSimulatorLogic";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   getDbqLogicMap,
   getConditionDataset,
@@ -147,7 +147,7 @@ const BODY_SYSTEM_RULES = [
 ];
 
 const getBodySystem = (condition) => {
-  const code = parseInt(condition.diagnosticCode);
+  const code = Number.parseInt(condition.diagnosticCode);
   const schedule = condition.ratingSchedule || "";
   const match = BODY_SYSTEM_RULES.find(
     (rule) =>
@@ -1352,7 +1352,7 @@ function _addGeneralFallbackQuestions(conditionName, questions) {
     ];
 
     generalQuestions.forEach((gq) => {
-      if (!questions.find((q) => q.id === gq.id)) {
+      if (!questions.some((q) => q.id === gq.id)) {
         questions.push(gq);
       }
     });
@@ -1361,9 +1361,6 @@ function _addGeneralFallbackQuestions(conditionName, questions) {
 
 const generateGenericQuestions = (condition) => {
   const ratings = condition.ratingCriteria?.ratings || {};
-  const _ratingKeys = Object.keys(ratings).sort(
-    (a, b) => parseInt(b) - parseInt(a),
-  );
   const bodySystem = getBodySystem(condition);
   const conditionName = condition.conditionName;
 
@@ -1449,72 +1446,54 @@ function _buildRatingGaps(predictedRating, ratingKeys, ratings) {
   const higherRatings = ratingKeys.filter((r) => r > predictedRating);
 
   if (higherRatings.length > 0) {
-    gaps.push("**Understanding the Gap to Higher Ratings:**");
     gaps.push(
+      "**Understanding the Gap to Higher Ratings:**",
       "Your current answers suggest symptom severity at the " +
         predictedRating +
         "% level. To qualify for a higher rating, the VA requires documented evidence of more severe impairment.",
+      "",
     );
-    gaps.push("");
 
     // Only show next 1-2 higher ratings (most actionable)
     const relevantHigherRatings = higherRatings.slice(-2).reverse();
 
     relevantHigherRatings.forEach((higherRating) => {
       const higherCriteria = ratings[higherRating] || "";
-      gaps.push(`**What ${higherRating}% Requires:**`);
-      gaps.push(higherCriteria);
-      gaps.push("");
+      gaps.push(`**What ${higherRating}% Requires:**`, higherCriteria, "");
 
       // Add specific actionable guidance based on the rating difference
       if (higherRating >= 70) {
         gaps.push(
           "• This rating level typically requires evidence of severe occupational impairment - document any job losses, demotions, or inability to work",
-        );
-        gaps.push(
           "• Gather statements from employers, coworkers, or supervisors about work limitations",
-        );
-        gaps.push(
           "• Document any hospitalizations, emergency visits, or intensive treatments",
         );
       } else if (higherRating >= 50) {
         gaps.push(
           "• This rating level requires more than occasional symptoms - document frequency and duration of flare-ups",
-        );
-        gaps.push(
           "• Track days missed from work or activities you can no longer perform",
-        );
-        gaps.push(
           "• Bring treatment records showing regular/ongoing medical care",
         );
       } else if (higherRating >= 30) {
         gaps.push(
           "• This rating level requires regular impairment - keep a symptom diary showing daily or weekly impact",
-        );
-        gaps.push(
           "• Document how the condition affects routine daily activities",
-        );
-        gaps.push(
           "• Note any assistive devices, medications, or accommodations you need",
         );
       }
       gaps.push("");
     });
 
-    gaps.push("**Key Questions to Ask Yourself:**");
     gaps.push(
+      "**Key Questions to Ask Yourself:**",
       '• Are my symptoms worse on "bad days" than what I described? If so, describe your WORST days to the examiner',
-    );
-    gaps.push(
       "• Do I have additional symptoms I didn't mention? List ALL symptoms, even ones you think are minor",
-    );
-    gaps.push(
       "• Is my condition getting worse over time? Document any progression of symptoms",
     );
   } else {
     // At max rating
-    gaps.push("**You are at the maximum rating for this condition.**");
     gaps.push(
+      "**You are at the maximum rating for this condition.**",
       "Your answers align with the highest available rating. Focus on maintaining documentation of your condition's severity and any secondary conditions that may have developed.",
     );
   }
@@ -1621,15 +1600,15 @@ function _buildRatingWarnings(
 
 const calculateGenericRating = (answers, condition) => {
   const totalWeight = Object.values(answers).reduce((sum, val) => {
-    const weight = parseInt(val) || 0;
+    const weight = Number.parseInt(val) || 0;
     return sum + weight;
   }, 0);
 
   const avgWeight = totalWeight / Object.keys(answers).length;
   const ratings = condition.ratingCriteria?.ratings || {};
   const ratingKeys = Object.keys(ratings)
-    .map((k) => parseInt(k))
-    .filter((k) => !isNaN(k))
+    .map((k) => Number.parseInt(k))
+    .filter((k) => !Number.isNaN(k))
     .sort((a, b) => b - a);
   const conditionNameLower = (
     condition.conditionName ||
@@ -1669,8 +1648,31 @@ const calculateGenericRating = (answers, condition) => {
 
 function CAPIntroHeader({ onClose, onReportBug }) {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 relative">
-      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6">
+      <HeaderCloseSlot
+        className="mb-2"
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/20 transition-colors"
+            aria-label="Close C&P Simulator"
+          >
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 shrink-0" />
+          <h2
+            id="cap-simulator-title"
+            className="text-xl sm:text-3xl font-bold"
+          >
+            C&P Exam Simulator{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+        </div>
         {onReportBug && (
           <ReportBugLink
             onClick={onReportBug}
@@ -1678,24 +1680,8 @@ function CAPIntroHeader({ onClose, onReportBug }) {
             moduleName="C&P Exam Simulator"
           />
         )}
-        <button
-          onClick={onClose}
-          className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-          aria-label="Close C&P Simulator"
-        >
-          <X className="h-5 w-5 sm:h-6 sm:w-6" />
-        </button>
-      </div>
-      <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
-        <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
-        <h2 id="cap-simulator-title" className="text-xl sm:text-3xl font-bold">
-          C&P Exam Simulator{" "}
-          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-            BETA
-          </span>
-        </h2>
-      </div>
-      <p className="text-emerald-100 text-sm sm:text-lg pr-8">
+      </HeaderCloseSlot>
+      <p className="text-emerald-100 text-sm sm:text-lg">
         Turn the &quot;Black Box&quot; of the C&P Exam into an Open-Book Test
       </p>
     </div>
@@ -1928,17 +1914,17 @@ function CAPIntroView({ onClose, onReportBug, setMode, conditionCount }) {
 
 function CAPExamPrepListHeader({ onClose, setMode }) {
   return (
-    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-start justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-3">
         <button
           onClick={() => setMode("intro")}
-          className="text-white hover:text-cyan-200 transition-colors"
+          className="shrink-0 text-white hover:text-cyan-200 transition-colors"
           aria-label="Go back"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <FileText className="h-8 w-8 text-white" />
-        <div>
+        <FileText className="h-8 w-8 shrink-0 text-white" />
+        <div className="min-w-0">
           <h1 id="exam-prep-title" className="text-xl font-bold text-white">
             Exam Prep Room
           </h1>
@@ -1949,7 +1935,7 @@ function CAPExamPrepListHeader({ onClose, setMode }) {
       </div>
       <button
         onClick={onClose}
-        className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
+        className="shrink-0 text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
         aria-label="Close"
       >
         ×
@@ -1973,7 +1959,7 @@ function CAPExamPrepIntroBox() {
             <span className="font-bold text-white">
               Disability Benefits Questionnaire (DBQ)
             </span>
-            .
+            {"."}
           </p>
           <p className="text-gray-300">
             This tool shows you the{" "}
@@ -2053,7 +2039,6 @@ function CAPExamPrepListView({
   setMode,
   searchTerm,
   setSearchTerm,
-  setExamPrepCondition,
   setExamPrepDBQ,
   setExamPrepTips,
 }) {
@@ -2072,7 +2057,6 @@ function CAPExamPrepListView({
 
   const handleExamPrepConditionSelect = (conditionKey) => {
     const dbq = dbqLogicMap[conditionKey];
-    setExamPrepCondition(conditionKey);
     setExamPrepDBQ(dbq);
 
     // Determine relevant tips based on condition type
@@ -2119,27 +2103,29 @@ function CAPSelectConditionHeader({
   setSearchTerm,
 }) {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
-      <button
-        onClick={() => setMode("intro")}
-        className="absolute top-4 left-4 text-white hover:text-gray-200"
-        aria-label="Go back"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-white hover:text-gray-200"
-        aria-label="Close"
-      >
-        <X className="h-6 w-6" />
-      </button>
-      <h2
-        id="cap-condition-select-title"
-        className="text-2xl font-bold text-center mb-4"
-      >
-        Select a Condition to Simulate
-      </h2>
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
+      <div className="flex items-start gap-2 mb-4">
+        <button
+          onClick={() => setMode("intro")}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <h2
+          id="cap-condition-select-title"
+          className="min-w-0 flex-1 text-center text-2xl font-bold"
+        >
+          Select a Condition to Simulate
+        </h2>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Close"
+        >
+          <X className="h-6 w-6" />
+        </button>
+      </div>
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-200" />
@@ -2156,10 +2142,9 @@ function CAPSelectConditionHeader({
 }
 
 function CAPSelectConditionCard({ condition, onSelect }) {
-  const dbqKey = Object.keys(dbqLogicMap).find(
+  const isPremium = Object.keys(dbqLogicMap).some(
     (key) => dbqLogicMap[key].diagnostic_code === condition.diagnosticCode,
   );
-  const isPremium = !!dbqKey;
 
   return (
     <button
@@ -2990,8 +2975,8 @@ function CAPExamPrepQuestionDetail({ q }) {
             ✅ Possible Answers:
           </h4>
           <div className="space-y-2">
-            {q.options.map((opt, i) => (
-              <CAPExamPrepAnswerOption key={i} opt={opt} />
+            {q.options.map((opt) => (
+              <CAPExamPrepAnswerOption key={opt} opt={opt} />
             ))}
           </div>
         </div>
@@ -3044,23 +3029,23 @@ function CAPExamPrepDetailHeader({
   examPrepDBQ,
 }) {
   return (
-    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-start justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-3">
         <button
           onClick={() => {
             setMode("exam-prep");
             setExpandedQuestion(null);
           }}
-          className="text-white hover:text-cyan-200 transition-colors"
+          className="shrink-0 text-white hover:text-cyan-200 transition-colors"
           aria-label="Go back"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <FileText className="h-8 w-8 text-white" />
-        <div>
+        <FileText className="h-8 w-8 shrink-0 text-white" />
+        <div className="min-w-0">
           <h1
             id="exam-prep-detail-title"
-            className="text-xl font-bold text-white"
+            className="text-xl font-bold text-white break-words"
           >
             {examPrepDBQ.condition_name}
           </h1>
@@ -3071,7 +3056,7 @@ function CAPExamPrepDetailHeader({
       </div>
       <button
         onClick={onClose}
-        className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
+        className="shrink-0 text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
         aria-label="Close"
       >
         ×
@@ -3242,26 +3227,31 @@ function CAPFlashcardHeader({
   onCollapseAll,
 }) {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
-      <button
-        onClick={() => setMode("intro")}
-        className="absolute top-4 left-4 text-white hover:text-gray-200"
-        aria-label="Go back"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-white hover:text-gray-200"
-        aria-label="Close"
-      >
-        <X className="h-6 w-6" />
-      </button>
-      <div className="flex items-center gap-3 justify-center">
-        <BookOpen className="h-8 w-8" />
-        <h2 id="cap-terminology-title" className="text-2xl font-bold">
-          VA Claims Terminology
-        </h2>
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
+      <div className="flex items-start gap-2">
+        <button
+          onClick={() => setMode("intro")}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
+          <BookOpen className="h-8 w-8 shrink-0" />
+          <h2
+            id="cap-terminology-title"
+            className="min-w-0 break-words text-2xl font-bold"
+          >
+            VA Claims Terminology
+          </h2>
+        </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Close"
+        >
+          <X className="h-6 w-6" />
+        </button>
       </div>
       <p className="text-emerald-100 text-center mt-2">
         {totalTerms} essential terms from 38 CFR Part 4 and VA claims process
@@ -3323,9 +3313,9 @@ function CAPTermCategoryCard({ category, isExpanded, onToggle }) {
 
       {isExpanded && (
         <div className="p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
-          {category.terms.map((item, index) => (
+          {category.terms.map((item) => (
             <div
-              key={index}
+              key={item.term}
               className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5"
             >
               <h3 className="text-lg font-bold text-teal-700 dark:text-teal-300 mb-3 flex items-center gap-2">
@@ -3489,9 +3479,9 @@ function CAPFlashcardView({
             </div>
           )}
 
-          {filteredCategories.map((category, catIndex) => (
+          {filteredCategories.map((category) => (
             <CAPTermCategoryCard
-              key={catIndex}
+              key={category.category}
               category={category}
               isExpanded={isCategoryExpanded(category.category)}
               onToggle={() => toggleCategory(category.category)}
@@ -3522,28 +3512,33 @@ function CAPSimulationHeader({
   getProgress,
 }) {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
-      <button
-        onClick={() => setMode("select-condition")}
-        className="absolute top-4 left-4 text-white hover:text-gray-200"
-        aria-label="Go back"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-white hover:text-gray-200"
-        aria-label="Close"
-      >
-        <X className="h-6 w-6" />
-      </button>
-      <div className="text-center mb-4">
-        <h2 id="cap-question-title" className="text-2xl font-bold mb-1">
-          {conditionName}
-        </h2>
-        <p className="text-emerald-100 text-sm">
-          Question {currentQuestionIndex + 1} of {currentQuestions.length}
-        </p>
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
+      <div className="flex items-start gap-2 mb-4">
+        <button
+          onClick={() => setMode("select-condition")}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <div className="min-w-0 flex-1 text-center">
+          <h2
+            id="cap-question-title"
+            className="break-words text-2xl font-bold mb-1"
+          >
+            {conditionName}
+          </h2>
+          <p className="text-emerald-100 text-sm">
+            Question {currentQuestionIndex + 1} of {currentQuestions.length}
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Close"
+        >
+          <X className="h-6 w-6" />
+        </button>
       </div>
       {/* Progress bar */}
       <div className="w-full bg-emerald-900/50 rounded-full h-2">
@@ -3850,19 +3845,8 @@ function CAPResultsView({
   );
 }
 
-function _loadSavedPacketAndConditions(setSavedPacket, setAllConditions) {
-  const stored = localStorage.getItem("vet_rate_saved_claims");
-  if (stored && stored !== "undefined") {
-    try {
-      const parsed = JSON.parse(stored);
-      setSavedPacket(parsed);
-    } catch (e) {
-      console.error("Error loading saved packet:", e);
-    }
-  }
-
-  // Load all conditions from disabilityData
-  if (disabilityDataFile && disabilityDataFile.disabilities) {
+function _loadAllConditions(setAllConditions) {
+  if (disabilityDataFile?.disabilities) {
     setAllConditions(disabilityDataFile.disabilities);
   }
 }
@@ -4008,7 +3992,6 @@ const CAP_MODE_ROUTES = [
         setMode={s.setMode}
         searchTerm={s.searchTerm}
         setSearchTerm={s.setSearchTerm}
-        setExamPrepCondition={s.setExamPrepCondition}
         setExamPrepDBQ={s.setExamPrepDBQ}
         setExamPrepTips={s.setExamPrepTips}
       />
@@ -4111,34 +4094,23 @@ function CAPSimulatorRouter(props) {
 }
 
 const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
-  const { _t } = useLanguage();
   const [mode, setMode] = useState("intro"); // intro, select-condition, flashcard, simulation, results, exam-prep, exam-prep-detail
   const [selectedConditionKey, setSelectedConditionKey] = useState(null);
   const [selectedCondition, setSelectedCondition] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [simulationResult, setSimulationResult] = useState(null);
-  const [_savedPacket, setSavedPacket] = useState([]);
-  const [flashcardTerm, setFlashcardTerm] = useState(null);
+  const [flashcardTerm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [allConditions, setAllConditions] = useState([]);
   const [expandedCategories, setExpandedCategories] = useState({});
 
   // Exam Prep mode state
-  const [_examPrepCondition, setExamPrepCondition] = useState(null);
   const [examPrepDBQ, setExamPrepDBQ] = useState(null);
   const [examPrepTips, setExamPrepTips] = useState([]);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
 
-  useEffect(
-    () => _loadSavedPacketAndConditions(setSavedPacket, setAllConditions),
-    [],
-  );
-
-  // Show flashcard for a term
-  const _showFlashcard = (term) => {
-    setFlashcardTerm(term);
-  };
+  useEffect(() => _loadAllConditions(setAllConditions), []);
 
   return (
     <CAPSimulatorRouter
@@ -4163,7 +4135,6 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
       allConditions={allConditions}
       expandedCategories={expandedCategories}
       setExpandedCategories={setExpandedCategories}
-      setExamPrepCondition={setExamPrepCondition}
       examPrepDBQ={examPrepDBQ}
       setExamPrepDBQ={setExamPrepDBQ}
       examPrepTips={examPrepTips}

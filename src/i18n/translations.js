@@ -9,6 +9,34 @@
 export const APP_TRANSLATIONS = {
   // Navigation & Common UI
   common: {
+    unsavedEditTitle: {
+      en: "Close without saving?",
+      es: "¿Cerrar sin guardar?",
+      tl: "Isara nang hindi sine-save?",
+      vi: "Đóng mà không lưu?",
+      ko: "저장하지 않고 닫으시겠습니까?",
+    },
+    unsavedEditStay: {
+      en: "Stay and keep my edits",
+      es: "Quedarme y conservar mis cambios",
+      tl: "Manatili at panatilihin ang mga edit ko",
+      vi: "Ở lại và giữ các chỉnh sửa của tôi",
+      ko: "머물러서 수정 내용 유지",
+    },
+    unsavedEditClose: {
+      en: "Close and lose my edits",
+      es: "Cerrar y perder mis cambios",
+      tl: "Isara at mawala ang mga edit ko",
+      vi: "Đóng và bỏ các chỉnh sửa của tôi",
+      ko: "닫고 수정 내용 버리기",
+    },
+    unsavedEditBody: {
+      en: "You edited this draft and have not saved it. Closing now loses your edits. To keep them, stay, then save or download the draft.",
+      es: "Usted editó este borrador y no lo ha guardado. Si cierra ahora, perderá sus cambios. Para conservarlos, quédese y luego guarde o descargue el borrador.",
+      tl: "In-edit mo ang draft na ito at hindi mo pa ito nase-save. Mawawala ang mga edit mo kapag isinara ngayon. Para mapanatili ang mga ito, manatili, saka i-save o i-download ang draft.",
+      vi: "Bạn đã chỉnh sửa bản nháp này và chưa lưu. Đóng bây giờ sẽ làm mất các chỉnh sửa của bạn. Để giữ lại, hãy ở lại, rồi lưu hoặc tải bản nháp xuống.",
+      ko: "이 초안을 수정하셨지만 아직 저장하지 않으셨습니다. 지금 닫으면 수정 내용이 사라집니다. 유지하려면 머물러서 초안을 저장하거나 내려받으세요.",
+    },
     close: { en: "Close", es: "Cerrar", tl: "Isara", vi: "Đóng", ko: "닫기" },
     save: { en: "Save", es: "Guardar", tl: "I-save", vi: "Lưu", ko: "저장" },
     cancel: {
@@ -2044,6 +2072,29 @@ export const APP_TRANSLATIONS = {
   },
 
   // Neural Engine / AI
+  smallModelCaveat: {
+    title: {
+      en: "This device runs a smaller AI model",
+      es: "Este dispositivo usa un modelo de IA más pequeño",
+      tl: "Mas maliit na AI model ang gumagana sa device na ito",
+      vi: "Thiết bị này chạy mô hình AI nhỏ hơn",
+      ko: "이 기기는 더 작은 AI 모델을 실행합니다",
+    },
+    body: {
+      en: "Check every statement against your own documents, and confirm filing steps with an accredited VSO or on VA.gov before acting.",
+      es: "Compare cada afirmación con sus propios documentos y confirme los pasos para presentar su reclamo con un VSO acreditado o en VA.gov antes de actuar.",
+      tl: "Suriin ang bawat pahayag laban sa sarili mong mga dokumento, at kumpirmahin ang mga hakbang sa pag-file sa isang accredited na VSO o sa VA.gov bago kumilos.",
+      vi: "Hãy đối chiếu mọi nhận định với tài liệu của chính bạn, và xác nhận các bước nộp hồ sơ với nhân viên VSO được công nhận hoặc trên VA.gov trước khi thực hiện.",
+      ko: "모든 내용을 본인의 문서와 대조하고, 조치하기 전에 공인 VSO 또는 VA.gov에서 신청 절차를 확인하세요.",
+    },
+    rewordingOff: {
+      en: "The AI on this device is a small one, and small ones changed the meaning of what people wrote, so it is not used to reword statements. Your draft is in your own words, as you typed them.",
+      es: "La IA de este dispositivo es pequeña, y las IA pequeñas cambiaron el sentido de lo que la gente escribió, así que no se usa para reformular declaraciones. Su borrador está en sus propias palabras, tal como las escribió.",
+      tl: "Maliit ang AI sa device na ito, at binago ng maliliit na AI ang kahulugan ng isinulat ng mga tao, kaya hindi ito ginagamit para baguhin ang pananalita ng mga pahayag. Ang draft mo ay nasa sarili mong mga salita, gaya ng pagkaka-type mo.",
+      vi: "AI trên thiết bị này là loại nhỏ, và các AI nhỏ đã làm thay đổi ý nghĩa những gì người dùng viết, nên nó không được dùng để viết lại lời khai. Bản nháp của bạn giữ nguyên lời của chính bạn, đúng như bạn đã gõ.",
+      ko: "이 기기의 AI는 소형 모델이며, 소형 모델은 사람들이 쓴 글의 의미를 바꾼 적이 있어 진술서 문장을 고쳐 쓰는 데 사용하지 않습니다. 초안은 입력하신 그대로 본인의 말로 되어 있습니다.",
+    },
+  },
   ai: {
     selectNeuralEngine: {
       en: "Select Neural Engine",
@@ -3408,19 +3459,12 @@ export const APP_TRANSLATIONS = {
       vi: "Phần Trăm Xếp Hạng Mới",
       ko: "새 등급 비율",
     },
-    wouldBeBilateral: {
-      en: "This would be a bilateral condition",
-      es: "Esta sería una condición bilateral",
-      tl: "Ito ay magiging bilateral condition",
-      vi: "Đây sẽ là tình trạng song phương",
-      ko: "이것은 양측 상태가 될 것입니다",
-    },
-    addsBilateralBoost: {
-      en: "Adds 10% bilateral factor boost",
-      es: "Agrega 10% de impulso de factor bilateral",
-      tl: "Nagdadagdag ng 10% bilateral factor boost",
-      vi: "Thêm 10% hệ số song phương",
-      ko: "10% 양측 요인 부스트 추가",
+    whatIfBilateralRule: {
+      en: "The bilateral factor applies only when both arms or both legs have a compensable rating (38 CFR § 4.26). Choose the body part and side of the new condition so the calculator can check.",
+      es: "El factor bilateral solo se aplica cuando ambos brazos o ambas piernas tienen un rating compensable (38 CFR § 4.26). Elige la parte del cuerpo y el lado de la nueva condición para que la calculadora pueda comprobarlo.",
+      tl: "Ang bilateral factor ay nag-a-apply lamang kapag parehong braso o parehong binti ay may compensable na rating (38 CFR § 4.26). Piliin ang bahagi ng katawan at panig ng bagong kondisyon para ma-check ito ng calculator.",
+      vi: "Hệ số song phương chỉ áp dụng khi cả hai tay hoặc cả hai chân đều có mức đánh giá được bồi thường (38 CFR § 4.26). Hãy chọn bộ phận cơ thể và bên của tình trạng mới để máy tính kiểm tra.",
+      ko: "양측 요인은 양쪽 팔 또는 양쪽 다리 모두에 보상 대상 등급이 있을 때만 적용됩니다 (38 CFR § 4.26). 계산기가 확인할 수 있도록 새 상태의 신체 부위와 측면을 선택하세요.",
     },
     projectedImpact: {
       en: "Projected Impact",
@@ -3771,11 +3815,11 @@ export const APP_TRANSLATIONS = {
       ko: "양쪽",
     },
     bilateralExplanation: {
-      en: "If you have the same condition on both left and right (e.g., both knees), mark each as Left/Right to automatically apply the 10% Bilateral Factor per 38 CFR § 4.26",
-      es: "Si tienes la misma condición en ambos lados (ej., ambas rodillas), marca cada uno como Izquierda/Derecha para aplicar automáticamente el Factor Bilateral del 10% según 38 CFR § 4.26",
-      tl: "Kung pareho ang kondisyon sa kaliwa at kanan (hal., parehong tuhod), markahan ang bawat isa bilang Left/Right para awtomatikong mag-apply ang 10% Bilateral Factor ayon sa 38 CFR § 4.26",
-      vi: "Nếu bạn có cùng tình trạng ở cả hai bên trái và phải (ví dụ: cả hai đầu gối), đánh dấu mỗi bên là Trái/Phải để tự động áp dụng Hệ Số Song Phương 10% theo 38 CFR § 4.26",
-      ko: "좌우 양쪽에 동일한 상태가 있는 경우(예: 양쪽 무릎), 38 CFR § 4.26에 따라 10% 양측 요인을 자동으로 적용하려면 각각 왼쪽/오른쪽으로 표시하세요",
+      en: "The bilateral factor (38 CFR § 4.26) applies when each arm, or each leg, has a compensable disability. They do not have to be the same condition or the same joint. Enter each one separately as Left or Right; use Both Sides only for a single rating that already covers both sides.",
+      es: "El factor bilateral (38 CFR § 4.26) se aplica cuando cada brazo, o cada pierna, tiene una discapacidad compensable. No tienen que ser la misma condición ni la misma articulación. Ingresa cada una por separado como Izquierda o Derecha; usa Ambos Lados solo para un único rating que ya cubre ambos lados.",
+      tl: "Ang bilateral factor (38 CFR § 4.26) ay nag-a-apply kapag ang bawat braso, o bawat binti, ay may compensable na kapansanan. Hindi kailangang parehong kondisyon o parehong kasukasuan. Ilagay ang bawat isa nang hiwalay bilang Kaliwa o Kanan; gamitin ang Parehong Panig para lamang sa iisang rating na sumasaklaw na sa parehong panig.",
+      vi: "Hệ số song phương (38 CFR § 4.26) áp dụng khi mỗi tay, hoặc mỗi chân, đều có một khuyết tật được bồi thường. Chúng không cần là cùng một tình trạng hay cùng một khớp. Hãy nhập riêng từng tình trạng là Trái hoặc Phải; chỉ dùng Cả Hai Bên cho một mức đánh giá duy nhất đã bao gồm cả hai bên.",
+      ko: "양측 요인(38 CFR § 4.26)은 양쪽 팔 각각 또는 양쪽 다리 각각에 보상 대상 장애가 있을 때 적용됩니다. 같은 상태나 같은 관절일 필요는 없습니다. 각각을 왼쪽 또는 오른쪽으로 따로 입력하고, 양쪽은 이미 양쪽을 모두 포함하는 하나의 등급에만 사용하세요.",
     },
     bilateralWillApply: {
       en: "Bilateral Factor Will Apply",
@@ -3783,6 +3827,76 @@ export const APP_TRANSLATIONS = {
       tl: "Mag-aaply ang Bilateral Factor",
       vi: "Hệ Số Song Phương Sẽ Được Áp Dụng",
       ko: "양측 요인이 적용됩니다",
+    },
+    ratingUnreadable: {
+      en: "This rating could not be read, so it is not counted in the combined rating.",
+      es: "No se pudo leer este rating, por lo que no se cuenta en el rating combinado.",
+      tl: "Hindi mabasa ang rating na ito, kaya hindi ito kasama sa combined rating.",
+      vi: "Không đọc được mức đánh giá này, nên nó không được tính vào mức đánh giá kết hợp.",
+      ko: "이 등급을 읽을 수 없어 통합 등급에 포함되지 않았습니다.",
+    },
+    bilateralIssuesTitle: {
+      en: "Bilateral factor not applied (38 CFR § 4.26)",
+      es: "Factor bilateral no aplicado (38 CFR § 4.26)",
+      tl: "Hindi na-apply ang bilateral factor (38 CFR § 4.26)",
+      vi: "Không áp dụng hệ số song phương (38 CFR § 4.26)",
+      ko: "양측 요인 미적용 (38 CFR § 4.26)",
+    },
+    bilateralIssueLimbUnknown: {
+      en: "Vet-Rate could not tell whether this is an arm or a leg condition, so it got no bilateral factor. Edit it and choose its body part.",
+      es: "Vet-Rate no pudo determinar si esta es una condición de brazo o de pierna, por lo que no recibió factor bilateral. Edítala y elige la parte del cuerpo.",
+      tl: "Hindi matukoy ng Vet-Rate kung ito ay kondisyon sa braso o sa binti, kaya wala itong bilateral factor. I-edit ito at piliin ang bahagi ng katawan.",
+      vi: "Vet-Rate không xác định được đây là tình trạng ở tay hay ở chân, nên không áp dụng hệ số song phương. Hãy chỉnh sửa và chọn bộ phận cơ thể.",
+      ko: "Vet-Rate가 이 상태가 팔인지 다리인지 판단할 수 없어 양측 요인을 적용하지 않았습니다. 편집하여 신체 부위를 선택하세요.",
+    },
+    bilateralIssueSideUnknown: {
+      en: "Vet-Rate did not recognise the side entered for this condition, so it got no bilateral factor. Edit it and choose Left, Right or Both.",
+      es: "Vet-Rate no reconoció el lado ingresado para esta condición, por lo que no recibió factor bilateral. Edítala y elige Izquierda, Derecha o Ambos.",
+      tl: "Hindi nakilala ng Vet-Rate ang panig na inilagay para sa kondisyong ito, kaya wala itong bilateral factor. I-edit ito at piliin ang Kaliwa, Kanan o Pareho.",
+      vi: "Vet-Rate không nhận ra bên đã nhập cho tình trạng này, nên không áp dụng hệ số song phương. Hãy chỉnh sửa và chọn Trái, Phải hoặc Cả Hai.",
+      ko: "Vet-Rate가 이 상태에 입력된 측면을 인식하지 못해 양측 요인을 적용하지 않았습니다. 편집하여 왼쪽, 오른쪽 또는 양쪽을 선택하세요.",
+    },
+    bilateralIssueSideNotSet: {
+      en: "The name gives a side, but no side is set for this condition, so it got no bilateral factor. Edit it and choose its body part and side.",
+      es: "El nombre indica un lado, pero esta condición no tiene lado asignado, por lo que no recibió factor bilateral. Edítala y elige la parte del cuerpo y el lado.",
+      tl: "May binabanggit na panig ang pangalan, pero walang nakatakdang panig para sa kondisyong ito, kaya wala itong bilateral factor. I-edit ito at piliin ang bahagi ng katawan at panig.",
+      vi: "Tên có nêu một bên, nhưng tình trạng này chưa được chọn bên, nên không áp dụng hệ số song phương. Hãy chỉnh sửa và chọn bộ phận cơ thể và bên.",
+      ko: "이름에 측면이 나와 있지만 이 상태에 측면이 설정되지 않아 양측 요인을 적용하지 않았습니다. 편집하여 신체 부위와 측면을 선택하세요.",
+    },
+    bilateralIssueSideUnspecified: {
+      en: "No side is set for this condition. If it and another arm or leg condition are on different sides (left and right), edit them and set the side.",
+      es: "Esta condición no tiene lado asignado. Si esta y otra condición de brazo o pierna están en lados distintos (izquierda y derecha), edítalas y elige el lado.",
+      tl: "Walang nakatakdang panig para sa kondisyong ito. Kung ito at ang isa pang kondisyon sa braso o binti ay nasa magkaibang panig (kaliwa at kanan), i-edit ang mga ito at itakda ang panig.",
+      vi: "Tình trạng này chưa được chọn bên. Nếu tình trạng này và một tình trạng khác ở tay hoặc chân nằm ở hai bên khác nhau (trái và phải), hãy chỉnh sửa và chọn bên.",
+      ko: "이 상태에 측면이 설정되지 않았습니다. 이 상태와 다른 팔 또는 다리 상태가 서로 다른 쪽(왼쪽과 오른쪽)에 있다면 편집하여 측면을 설정하세요.",
+    },
+    bilateralIssueSeparateEntry: {
+      en: "This entry's body part is not an arm or a leg, so it got no bilateral factor. If the arm or leg condition it mentions is rated separately, add it as its own entry with a body part and side.",
+      es: "La parte del cuerpo de esta entrada no es un brazo ni una pierna, por lo que no recibió factor bilateral. Si la condición de brazo o pierna que menciona tiene su propio rating, agrégala como una entrada aparte con su parte del cuerpo y su lado.",
+      tl: "Ang bahagi ng katawan ng entry na ito ay hindi braso o binti, kaya wala itong bilateral factor. Kung may sariling rating ang kondisyon sa braso o binti na binabanggit nito, idagdag ito bilang hiwalay na entry na may bahagi ng katawan at panig.",
+      vi: "Bộ phận cơ thể của mục này không phải tay hay chân, nên không áp dụng hệ số song phương. Nếu tình trạng ở tay hoặc chân mà mục này nhắc đến được đánh giá riêng, hãy thêm nó thành một mục riêng với bộ phận cơ thể và bên.",
+      ko: "이 항목의 신체 부위는 팔이나 다리가 아니어서 양측 요인을 적용하지 않았습니다. 여기에 언급된 팔 또는 다리 상태가 따로 등급을 받았다면 신체 부위와 측면을 지정해 별도 항목으로 추가하세요.",
+    },
+    bilateralIssueSingleEvaluation: {
+      en: "One rating that already covers both sides gets no bilateral factor by itself. If each side has its own rating, enter them as separate Left and Right conditions.",
+      es: "Un solo rating que ya cubre ambos lados no recibe factor bilateral por sí solo. Si cada lado tiene su propio rating, ingrésalos como condiciones separadas de Izquierda y Derecha.",
+      tl: "Ang iisang rating na sumasaklaw na sa parehong panig ay walang bilateral factor kung mag-isa. Kung may sariling rating ang bawat panig, ilagay ang mga ito bilang magkahiwalay na Kaliwa at Kanan na kondisyon.",
+      vi: "Một mức đánh giá đã bao gồm cả hai bên thì tự nó không được hệ số song phương. Nếu mỗi bên có mức đánh giá riêng, hãy nhập thành hai tình trạng Trái và Phải riêng biệt.",
+      ko: "이미 양쪽을 모두 포함하는 하나의 등급은 그것만으로는 양측 요인을 받지 않습니다. 각 측면에 별도의 등급이 있다면 왼쪽과 오른쪽 상태로 따로 입력하세요.",
+    },
+    bilateralIssueNotChecked: {
+      en: "There are too many paired conditions to check whether leaving some out of the bilateral factor would give a higher rating (38 CFR § 4.26(d)).",
+      es: "Hay demasiadas condiciones emparejadas para comprobar si excluir algunas del factor bilateral daría un rating más alto (38 CFR § 4.26(d)).",
+      tl: "Masyadong maraming magkapares na kondisyon para ma-check kung mas mataas ang rating kapag inalis ang ilan sa bilateral factor (38 CFR § 4.26(d)).",
+      vi: "Có quá nhiều tình trạng theo cặp để kiểm tra liệu việc loại bớt một số khỏi hệ số song phương có cho mức đánh giá cao hơn hay không (38 CFR § 4.26(d)).",
+      ko: "짝을 이루는 상태가 너무 많아, 일부를 양측 요인에서 제외하면 더 높은 등급이 되는지 확인하지 못했습니다 (38 CFR § 4.26(d)).",
+    },
+    bilateralNotApplied: {
+      en: "No bilateral factor for this condition as entered. It applies only when both arms or both legs have a compensable rating (38 CFR § 4.26).",
+      es: "Sin factor bilateral para esta condición tal como está ingresada. Solo se aplica cuando ambos brazos o ambas piernas tienen un rating compensable (38 CFR § 4.26).",
+      tl: "Walang bilateral factor para sa kondisyong ito ayon sa inilagay. Nag-a-apply lamang ito kapag parehong braso o parehong binti ay may compensable na rating (38 CFR § 4.26).",
+      vi: "Không có hệ số song phương cho tình trạng này như đã nhập. Hệ số chỉ áp dụng khi cả hai tay hoặc cả hai chân đều có mức đánh giá được bồi thường (38 CFR § 4.26).",
+      ko: "입력된 대로는 이 상태에 양측 요인이 적용되지 않습니다. 양쪽 팔 또는 양쪽 다리 모두에 보상 대상 등급이 있을 때만 적용됩니다 (38 CFR § 4.26).",
     },
     bilateralApplyDesc: {
       en: "Per 38 CFR § 4.26, if you have paired extremities rated (left + right), you'll get an additional 10% boost to the combined bilateral rating.",
@@ -3883,16 +3997,23 @@ export const APP_TRANSLATIONS = {
       ko: "측면 (양측 요인)",
     },
     bilateralHint: {
-      en: "If you have the same condition on both left and right (e.g., both knees), mark each as Left/Right to automatically apply the 10% Bilateral Factor per 38 CFR § 4.26",
-      es: "Si tienes la misma condición en ambos lados (ej., ambas rodillas), marca cada uno como Izquierda/Derecha para aplicar automáticamente el Factor Bilateral del 10% según 38 CFR § 4.26",
-      tl: "Kung pareho ang kondisyon sa kaliwa at kanan (hal., parehong tuhod), markahan ang bawat isa bilang Left/Right para awtomatikong mag-apply ang 10% Bilateral Factor ayon sa 38 CFR § 4.26",
-      vi: "Nếu bạn có cùng tình trạng ở cả hai bên trái và phải (ví dụ: cả hai đầu gối), đánh dấu mỗi bên là Trái/Phải để tự động áp dụng Hệ Số Song Phương 10% theo 38 CFR § 4.26",
-      ko: "좌우 양쪽에 동일한 상태가 있는 경우(예: 양쪽 무릎), 38 CFR § 4.26에 따라 10% 양측 요인을 자동으로 적용하려면 각각 왼쪽/오른쪽으로 표시하세요",
+      en: "The bilateral factor (38 CFR § 4.26) applies when each arm, or each leg, has a compensable disability. They do not have to be the same condition or the same joint. Enter each one separately as Left or Right; use Both Sides only for a single rating that already covers both sides.",
+      es: "El factor bilateral (38 CFR § 4.26) se aplica cuando cada brazo, o cada pierna, tiene una discapacidad compensable. No tienen que ser la misma condición ni la misma articulación. Ingresa cada una por separado como Izquierda o Derecha; usa Ambos Lados solo para un único rating que ya cubre ambos lados.",
+      tl: "Ang bilateral factor (38 CFR § 4.26) ay nag-a-apply kapag ang bawat braso, o bawat binti, ay may compensable na kapansanan. Hindi kailangang parehong kondisyon o parehong kasukasuan. Ilagay ang bawat isa nang hiwalay bilang Kaliwa o Kanan; gamitin ang Parehong Panig para lamang sa iisang rating na sumasaklaw na sa parehong panig.",
+      vi: "Hệ số song phương (38 CFR § 4.26) áp dụng khi mỗi tay, hoặc mỗi chân, đều có một khuyết tật được bồi thường. Chúng không cần là cùng một tình trạng hay cùng một khớp. Hãy nhập riêng từng tình trạng là Trái hoặc Phải; chỉ dùng Cả Hai Bên cho một mức đánh giá duy nhất đã bao gồm cả hai bên.",
+      ko: "양측 요인(38 CFR § 4.26)은 양쪽 팔 각각 또는 양쪽 다리 각각에 보상 대상 장애가 있을 때 적용됩니다. 같은 상태나 같은 관절일 필요는 없습니다. 각각을 왼쪽 또는 오른쪽으로 따로 입력하고, 양쪽은 이미 양쪽을 모두 포함하는 하나의 등급에만 사용하세요.",
     },
   },
 
   // My Packet
   myPacketSection: {
+    ratingPercent: {
+      en: "Rating percent",
+      es: "Porcentaje de calificación",
+      tl: "Porsiyento ng rating",
+      vi: "Phần trăm xếp hạng",
+      ko: "등급 퍼센트",
+    },
     title: {
       en: "My Packet",
       es: "Mi Paquete",
@@ -3934,6 +4055,13 @@ export const APP_TRANSLATIONS = {
       tl: "Mga Rating",
       vi: "Xếp Hạng",
       ko: "등급",
+    },
+    combinedRating: {
+      en: "Combined Rating",
+      es: "Rating Combinado",
+      tl: "Combined Rating",
+      vi: "Đánh Giá Kết Hợp",
+      ko: "통합 등급",
     },
     serviceHistory: {
       en: "Service History",
@@ -4894,6 +5022,13 @@ export const APP_TRANSLATIONS = {
       tl: "Kasalukuyan",
       vi: "Hiện Tại",
       ko: "현재",
+    },
+    calculatedFromNetService: {
+      en: "calculated from net service",
+      es: "calculado a partir del servicio neto",
+      tl: "hinango mula sa netong serbisyo",
+      vi: "được tính từ thời gian phục vụ ròng",
+      ko: "순 복무 기간에서 계산됨",
     },
     // Awards
     awardsDecorations: {
@@ -6008,6 +6143,13 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       tl: "Anong ebidensya ang kailangan ko para sa TDIU?",
       vi: "Tôi cần bằng chứng gì cho TDIU?",
       ko: "TDIU에 어떤 증거가 필요한가요?",
+    },
+    nameNotSavedNotice: {
+      en: "The app does not have your name saved, so it cannot remove your name from what you type.",
+      es: "La aplicación no tiene su nombre guardado, así que no puede quitar su nombre de lo que usted escribe.",
+      tl: "Walang naka-save na pangalan mo sa app, kaya hindi nito maalis ang pangalan mo sa mga tina-type mo.",
+      vi: "Ứng dụng chưa lưu tên của bạn nên không thể xóa tên bạn khỏi nội dung bạn nhập.",
+      ko: "앱에 저장된 이름이 없어 입력하신 내용에서 이름을 지울 수 없습니다.",
     },
   },
 
@@ -8438,6 +8580,13 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
   // Nexus Builder Component
   nexusBuilder: {
+    statementOutOfStep: {
+      en: "You kept your edited statement, so it does not include the answer you changed. The notes for your doctor below use your current answers. Edit the statement here if it should say the same.",
+      es: "Usted conservó su declaración editada, así que no incluye la respuesta que cambió. Las notas para su médico que aparecen abajo usan sus respuestas actuales. Edite aquí la declaración si debe decir lo mismo.",
+      tl: "Pinanatili mo ang in-edit mong pahayag, kaya wala rito ang sagot na binago mo. Ginagamit ng mga tala para sa doktor mo sa ibaba ang kasalukuyan mong mga sagot. I-edit dito ang pahayag kung dapat pareho ang sinasabi nito.",
+      vi: "Bạn đã giữ lời khai đã chỉnh sửa, nên nó không có câu trả lời bạn vừa thay đổi. Phần ghi chú cho bác sĩ của bạn bên dưới dùng các câu trả lời hiện tại của bạn. Hãy sửa lời khai tại đây nếu nó cần nói giống như vậy.",
+      ko: "수정하신 진술서를 유지하셨으므로, 바꾸신 답변은 진술서에 반영되어 있지 않습니다. 아래의 의사용 메모는 현재 답변을 사용합니다. 진술서도 같은 내용이어야 한다면 여기에서 수정하세요.",
+    },
     // Header
     title: {
       en: "Nexus Builder",
@@ -8930,6 +9079,29 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại hoặc sử dụng mẫu tiêu chuẩn.",
       ko: "예기치 않은 오류가 발생했습니다. 다시 시도하거나 표준 템플릿을 사용하세요.",
     },
+
+    // Cold-open condition picker. English-only: no verified es/tl/vi/ko
+    // translation yet - falls back to en via the t() lookup's
+    // `keyData[language] || keyData.en` chain (LanguageContext.jsx
+    // resolveTranslation).
+    pickerTitle: {
+      en: "Which condition is this statement for?",
+    },
+    pickerHintChoices: {
+      en: "We filled this in from your records — pick one, or type your own below.",
+    },
+    pickerHintEmpty: {
+      en: "We didn't find any saved ratings or claims yet. Type the condition below to get started.",
+    },
+    pickerManualLabel: {
+      en: "Or type a condition name",
+    },
+    pickerManualPlaceholder: {
+      en: "e.g. Tinnitus",
+    },
+    pickerContinue: {
+      en: "Continue",
+    },
   },
 
   // VSO Finder Component
@@ -9333,6 +9505,139 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
   // Forms Helper Component
   formsHelper: {
+    officialPdfRest: {
+      en: "For you to complete on the form: anything still blank, any boxes to tick, your signature and the date.",
+      es: "Lo que le queda por completar en el formulario: todo lo que siga en blanco, las casillas que deba marcar, su firma y la fecha.",
+      tl: "Ikaw ang kukumpleto sa form: anumang blangko pa, anumang kahong dapat i-tsek, ang iyong pirma at ang petsa.",
+      vi: "Phần bạn cần tự hoàn tất trên biểu mẫu: mọi chỗ còn trống, các ô cần đánh dấu, chữ ký của bạn và ngày tháng.",
+      ko: "양식에서 직접 작성하실 부분: 아직 비어 있는 칸, 체크해야 할 칸, 서명과 날짜.",
+    },
+    officialPdfNotePersonal: {
+      en: "Filled in from your answers: your name and contact details, and your statement goes in Remarks and carries over to the page 2 box when it is long. If it is too long for both boxes, this screen tells you and the rest is in the text downloads.",
+      es: "Se completó con sus respuestas: su nombre y sus datos de contacto; su declaración va en Remarks (Observaciones) y continúa en el recuadro de la página 2 cuando es larga. Si es demasiado larga para ambos recuadros, esta pantalla se lo indica y el resto queda en las descargas de texto.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan at contact details mo, at ang pahayag mo ay nasa Remarks at itutuloy sa kahon sa pahina 2 kapag mahaba. Kung masyadong mahaba para sa dalawang kahon, sasabihin ito ng screen na ito at ang natitira ay nasa mga text download.",
+      vi: "Đã điền từ câu trả lời của bạn: tên và thông tin liên lạc của bạn; lời khai của bạn nằm trong mục Remarks (Ghi chú) và chuyển tiếp sang ô ở trang 2 khi dài. Nếu quá dài so với cả hai ô, màn hình này sẽ báo cho bạn và phần còn lại nằm trong các bản tải xuống dạng văn bản.",
+      ko: "답변으로 채워진 부분: 이름과 연락처. 진술서는 Remarks(비고) 칸에 들어가며, 길면 2쪽의 칸으로 이어집니다. 두 칸에 모두 넣기에도 너무 길면 이 화면에서 알려 드리며, 나머지는 텍스트 다운로드에 있습니다.",
+    },
+    officialPdfNotePtsd: {
+      en: "Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. An answer too long for its box is written in full in Remarks, and its box says to look there. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre y sus datos de contacto, el suceso, su fecha y su lugar, y el tipo de suceso cuando el formulario tiene una casilla que corresponde. Sus demás respuestas van en Remarks (Observaciones). Una respuesta demasiado larga para su recuadro se escribe completa en Remarks, y su recuadro indica que se consulte allí. Lo que le queda por completar en el formulario: las casillas de consentimiento sobre el aviso a la VHA (no se marca ninguna por usted), las secciones sobre cambios de conducta, informes y tratamiento, todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan at contact details mo, ang pangyayari, ang petsa at lugar nito, at ang uri ng pangyayari kapag may katugmang kahon ang form. Ang iba mo pang sagot ay nasa Remarks. Ang sagot na masyadong mahaba para sa kahon nito ay isinusulat nang buo sa Remarks, at sinasabi ng kahon nito na doon tumingin. Ikaw ang kukumpleto sa form: ang mga kahon ng pahintulot tungkol sa pag-abiso sa VHA (walang naka-tsek para sa iyo), ang mga seksyon tungkol sa mga pagbabago sa ugali, mga ulat at paggamot, anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên và thông tin liên lạc của bạn, sự việc, ngày và nơi xảy ra, và loại sự việc khi biểu mẫu có ô tương ứng. Các câu trả lời khác của bạn nằm trong mục Remarks (Ghi chú). Câu trả lời quá dài so với ô của nó được ghi đầy đủ trong Remarks, và ô đó ghi chú là xem ở đó. Phần bạn cần tự hoàn tất trên biểu mẫu: các ô đồng ý về việc thông báo cho VHA (không ô nào được đánh dấu thay bạn), các mục về thay đổi hành vi, báo cáo và điều trị, mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 이름과 연락처, 사건, 사건의 날짜와 장소, 그리고 양식에 해당하는 칸이 있는 경우 사건 유형. 그 밖의 답변은 Remarks(비고)에 들어갑니다. 칸에 넣기에 너무 긴 답변은 Remarks에 전체가 적히고, 해당 칸에는 그곳을 보라고 적힙니다. 양식에서 직접 작성하실 부분: VHA 통지에 관한 동의 칸(대신 체크된 칸은 없습니다), 행동 변화·신고·치료에 관한 부분, 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNoteBuddy: {
+      en: "Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box and carries over to the box on the next page when it is long. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.",
+      es: "Se completó con sus respuestas: los nombres y datos de contacto del veterano y del testigo, la casilla de relación, y la declaración va en el recuadro de la declaración y continúa en el recuadro de la página siguiente cuando es larga. Lo que queda por completar en el formulario: la sección del reclamante si el reclamante no es el veterano, todo lo que siga en blanco, la firma del testigo y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang mga pangalan at contact details ng beterano at ng saksi, ang kahon ng relasyon, at ang pahayag ay nasa kahon ng pahayag at itutuloy sa kahon sa susunod na pahina kapag mahaba. Kukumpletuhin sa form: ang seksyon ng claimant kung hindi ang beterano ang claimant, anumang blangko pa, ang pirma ng saksi at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên và thông tin liên lạc của cựu chiến binh và của nhân chứng, ô quan hệ, và lời khai nằm trong ô lời khai, chuyển tiếp sang ô ở trang sau khi dài. Phần cần tự hoàn tất trên biểu mẫu: mục người yêu cầu nếu người yêu cầu không phải là cựu chiến binh, mọi chỗ còn trống, chữ ký của nhân chứng và ngày tháng.",
+      ko: "답변으로 채워진 부분: 재향군인과 증인의 이름 및 연락처, 관계 칸. 진술서는 진술 칸에 들어가며, 길면 다음 쪽의 칸으로 이어집니다. 양식에서 직접 작성하실 부분: 청구인이 재향군인이 아닌 경우 청구인 부분, 아직 비어 있는 칸, 증인의 서명과 날짜.",
+    },
+    officialPdfNoteVso: {
+      en: "Filled in from your answers: your name, contact details and address in the veteran's section, and the organization's name. The organization's address has no place on this form and is not on it. For you to complete on the form: the claimant section if the claimant is not you, every authorization box (none is ticked for you), anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre, sus datos de contacto y su dirección en la sección del veterano, y el nombre de la organización. La dirección de la organización no tiene lugar en este formulario y no figura en él. Lo que le queda por completar en el formulario: la sección del reclamante si el reclamante no es usted, todas las casillas de autorización (no se marca ninguna por usted), todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan, contact details at address mo sa seksyon ng beterano, at ang pangalan ng organisasyon. Walang lugar sa form na ito para sa address ng organisasyon kaya wala ito roon. Ikaw ang kukumpleto sa form: ang seksyon ng claimant kung hindi ikaw ang claimant, bawat kahon ng awtorisasyon (walang naka-tsek para sa iyo), anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, thông tin liên lạc và địa chỉ của bạn trong mục dành cho cựu chiến binh, và tên của tổ chức. Biểu mẫu này không có chỗ cho địa chỉ của tổ chức nên địa chỉ đó không có trên biểu mẫu. Phần bạn cần tự hoàn tất trên biểu mẫu: mục người yêu cầu nếu người yêu cầu không phải là bạn, mọi ô ủy quyền (không ô nào được đánh dấu thay bạn), mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 재향군인 부분의 이름, 연락처, 주소와 단체 이름. 이 양식에는 단체 주소를 적는 곳이 없어 주소는 들어가지 않습니다. 양식에서 직접 작성하실 부분: 청구인이 본인이 아닌 경우 청구인 부분, 모든 위임 동의 칸(대신 체크된 칸은 없습니다), 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNoteIntentToFile: {
+      en: "Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone, e-mail and the type of benefit. Your list of conditions has no place on this form and is not on it. For you to complete on the form: anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre, número de Seguro Social, fecha de nacimiento, número de expediente del VA, dirección postal, teléfono, correo electrónico y el tipo de beneficio. Su lista de afecciones no tiene lugar en este formulario y no figura en él. Lo que le queda por completar en el formulario: todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan mo, Social Security number, petsa ng kapanganakan, VA file number, mailing address, telepono, e-mail at ang uri ng benepisyo. Walang lugar sa form na ito para sa listahan mo ng mga kondisyon kaya wala ito roon. Ikaw ang kukumpleto sa form: anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, số An sinh Xã hội, ngày sinh, số hồ sơ VA, địa chỉ gửi thư, điện thoại, e-mail và loại quyền lợi. Biểu mẫu này không có chỗ cho danh sách tình trạng bệnh của bạn nên danh sách đó không có trên biểu mẫu. Phần bạn cần tự hoàn tất trên biểu mẫu: mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 이름, 사회보장번호, 생년월일, VA 파일 번호, 우편 주소, 전화번호, 이메일, 혜택 유형. 이 양식에는 질환 목록을 적는 곳이 없어 목록은 들어가지 않습니다. 양식에서 직접 작성하실 부분: 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNoteMedicalRelease: {
+      en: "Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address and phone, and for each provider its name, address, dates of treatment and the conditions treated. The form has no box for a provider's phone or fax number, so those are not on it. For you to complete on the form: the kinds of records and any instructions, which are in the text downloads to copy from, then anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre, número de Seguro Social, fecha de nacimiento, número de expediente del VA, dirección postal y teléfono, y de cada proveedor su nombre, dirección, fechas de tratamiento y las afecciones tratadas. El formulario no tiene recuadro para el teléfono ni el fax de un proveedor, así que no figuran en él. Lo que le queda por completar en el formulario: los tipos de expedientes y las instrucciones, que están en las descargas de texto para copiarlos, y luego todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan mo, Social Security number, petsa ng kapanganakan, VA file number, mailing address at telepono, at para sa bawat provider ang pangalan, address, mga petsa ng paggamot at ang mga kondisyong ginamot. Walang kahon ang form para sa telepono o fax ng provider kaya wala ang mga iyon doon. Ikaw ang kukumpleto sa form: ang mga uri ng rekord at anumang tagubilin, na nasa mga text download para makopya mo, saka ang anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, số An sinh Xã hội, ngày sinh, số hồ sơ VA, địa chỉ gửi thư và điện thoại, và với mỗi nơi điều trị là tên, địa chỉ, thời gian điều trị và các tình trạng được điều trị. Biểu mẫu không có ô cho số điện thoại hoặc số fax của nơi điều trị nên các số đó không có trên biểu mẫu. Phần bạn cần tự hoàn tất trên biểu mẫu: các loại hồ sơ và mọi chỉ dẫn, có sẵn trong các bản tải xuống dạng văn bản để bạn chép lại, sau đó là mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 이름, 사회보장번호, 생년월일, VA 파일 번호, 우편 주소, 전화번호, 그리고 각 의료기관의 이름, 주소, 치료 기간, 치료받은 질환. 양식에는 의료기관의 전화번호나 팩스 번호를 적는 칸이 없어 그 번호들은 들어가지 않습니다. 양식에서 직접 작성하실 부분: 기록의 종류와 지시 사항(옮겨 적으실 수 있도록 텍스트 다운로드에 있습니다), 그다음 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNotePriority: {
+      en: "Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone and e-mail, and a box in item 17 for each of these reasons you chose: former prisoner of war, very seriously or seriously injured or ill, ALS, extreme financial hardship, terminal illness, Medal of Honor or Purple Heart, age 85 or older. For you to complete on the form: the housing questions in item 16 if you are homeless or at risk, the dates of confinement if you were a prisoner of war, the medical treatment section, anything still blank, your signature and the date. Your other reasons, the details of your pending claim, your explanation, your supporting documents and your urgent contact have no place on this form; they are in the text downloads to attach.",
+      es: "Se completó con sus respuestas: su nombre, número de Seguro Social, fecha de nacimiento, número de expediente del VA, dirección postal, teléfono y correo electrónico, y una casilla del punto 17 por cada uno de estos motivos que haya elegido: ex prisionero de guerra, herido o enfermo grave o muy grave, ELA (ALS), dificultad económica extrema, enfermedad terminal, Medalla de Honor o Corazón Púrpura, 85 años o más. Lo que le queda por completar en el formulario: las preguntas sobre vivienda del punto 16 si no tiene hogar o está en riesgo de perderlo, las fechas de cautiverio si fue prisionero de guerra, la sección de tratamiento médico, todo lo que siga en blanco, su firma y la fecha. Sus demás motivos, los datos de su reclamación pendiente, su explicación, sus documentos de respaldo y su contacto urgente no tienen lugar en este formulario; están en las descargas de texto para adjuntarlos.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan mo, Social Security number, petsa ng kapanganakan, VA file number, mailing address, telepono at e-mail, at isang kahon sa item 17 para sa bawat isa sa mga dahilang ito na pinili mo: dating bihag ng digmaan, malubha o napakalubhang nasugatan o nagkasakit, ALS, matinding kahirapan sa pananalapi, sakit na wala nang lunas, Medal of Honor o Purple Heart, edad 85 pataas. Ikaw ang kukumpleto sa form: ang mga tanong tungkol sa tirahan sa item 16 kung wala kang tirahan o nanganganib mawalan, ang mga petsa ng pagkakabihag kung naging bihag ka ng digmaan, ang seksyon ng medikal na paggamot, anumang blangko pa, ang iyong pirma at ang petsa. Ang iba mo pang dahilan, ang mga detalye ng nakabinbin mong claim, ang paliwanag mo, ang mga sumusuporta mong dokumento at ang contact mo para sa agarang bagay ay walang lugar sa form na ito; nasa mga text download ang mga ito para mailakip mo.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, số An sinh Xã hội, ngày sinh, số hồ sơ VA, địa chỉ gửi thư, điện thoại và e-mail, và một ô ở mục 17 cho mỗi lý do sau mà bạn đã chọn: cựu tù binh chiến tranh, bị thương hoặc bệnh nặng hay rất nặng, ALS, khó khăn tài chính nghiêm trọng, bệnh giai đoạn cuối, Huân chương Danh dự hoặc Trái tim Tím, từ 85 tuổi trở lên. Phần bạn cần tự hoàn tất trên biểu mẫu: các câu hỏi về nhà ở tại mục 16 nếu bạn vô gia cư hoặc có nguy cơ, thời gian bị giam giữ nếu bạn từng là tù binh chiến tranh, mục điều trị y tế, mọi chỗ còn trống, chữ ký của bạn và ngày tháng. Các lý do khác của bạn, chi tiết về yêu cầu đang chờ xử lý, lời giải thích, tài liệu hỗ trợ và người liên lạc khẩn cấp của bạn không có chỗ trên biểu mẫu này; chúng nằm trong các bản tải xuống dạng văn bản để bạn đính kèm.",
+      ko: "답변으로 채워진 부분: 이름, 사회보장번호, 생년월일, VA 파일 번호, 우편 주소, 전화번호, 이메일, 그리고 선택하신 다음 사유마다 17번 항목의 칸 하나: 전쟁 포로 경력, 중상·중증 또는 매우 심한 부상·질병, ALS, 극심한 재정적 어려움, 말기 질환, 명예훈장 또는 퍼플 하트, 85세 이상. 양식에서 직접 작성하실 부분: 노숙 상태이거나 그럴 위험이 있는 경우 16번 항목의 주거 질문, 전쟁 포로였던 경우 억류 기간, 의료 치료 부분, 아직 비어 있는 칸, 서명과 날짜. 그 밖의 사유, 진행 중인 청구의 세부 내용, 설명, 증빙 서류, 긴급 연락처는 이 양식에 적는 곳이 없으며, 첨부하실 수 있도록 텍스트 다운로드에 있습니다.",
+    },
+    officialPdfNoteIndividualRep: {
+      en: "Filled in from your answers: your name, contact details and address in the veteran's section, and your representative's name and address. The firm or organization name is not written on the form, because its organization line is only for a service organization representative. For you to complete on the form: the claimant section if the claimant is not you, the type of representative, every authorization box (none is ticked for you), anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre, sus datos de contacto y su dirección en la sección del veterano, y el nombre y la dirección de su representante. El nombre del bufete u organización no se escribe en el formulario, porque su línea de organización es solo para un representante de una organización de servicio. Lo que le queda por completar en el formulario: la sección del reclamante si el reclamante no es usted, el tipo de representante, todas las casillas de autorización (no se marca ninguna por usted), todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan, contact details at address mo sa seksyon ng beterano, at ang pangalan at address ng kinatawan mo. Hindi isinusulat sa form ang pangalan ng firm o organisasyon, dahil ang linya nito para sa organisasyon ay para lang sa kinatawan ng isang service organization. Ikaw ang kukumpleto sa form: ang seksyon ng claimant kung hindi ikaw ang claimant, ang uri ng kinatawan, bawat kahon ng awtorisasyon (walang naka-tsek para sa iyo), anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, thông tin liên lạc và địa chỉ của bạn trong mục dành cho cựu chiến binh, cùng tên và địa chỉ của người đại diện của bạn. Tên công ty luật hoặc tổ chức không được ghi trên biểu mẫu, vì dòng tổ chức của biểu mẫu chỉ dành cho người đại diện của một tổ chức phục vụ cựu chiến binh. Phần bạn cần tự hoàn tất trên biểu mẫu: mục người yêu cầu nếu người yêu cầu không phải là bạn, loại người đại diện, mọi ô ủy quyền (không ô nào được đánh dấu thay bạn), mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 재향군인 부분의 이름, 연락처, 주소와 대리인의 이름 및 주소. 법률사무소나 단체의 이름은 양식에 적히지 않습니다. 양식의 단체 기재란은 봉사 단체 소속 대리인만을 위한 것이기 때문입니다. 양식에서 직접 작성하실 부분: 청구인이 본인이 아닌 경우 청구인 부분, 대리인 유형, 모든 위임 동의 칸(대신 체크된 칸은 없습니다), 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNoteOther: {
+      en: "Filled in from your answers where the form has a place for them.",
+      es: "Se completó con sus respuestas donde el formulario tiene lugar para ellas.",
+      tl: "Napunan mula sa mga sagot mo kung saan may lugar ang form para sa mga ito.",
+      vi: "Đã điền từ câu trả lời của bạn ở những chỗ biểu mẫu có chỗ cho chúng.",
+      ko: "양식에 적는 곳이 있는 답변은 채워졌습니다.",
+    },
+    officialPdfEdits: {
+      en: "The official PDF is built from the answers you gave in the steps, not from edits typed into the statement box.",
+      es: "El PDF oficial se arma con las respuestas que dio en los pasos, no con los cambios escritos en el recuadro de la declaración.",
+      tl: "Ang opisyal na PDF ay binubuo mula sa mga sagot na ibinigay mo sa mga hakbang, hindi mula sa mga pagbabagong tinype sa kahon ng pahayag.",
+      vi: "Bản PDF chính thức được tạo từ các câu trả lời bạn đã nhập ở các bước, không phải từ những chỉnh sửa gõ vào ô lời khai.",
+      ko: "공식 PDF는 각 단계에서 입력하신 답변으로 만들어지며, 진술서 칸에 직접 입력한 수정 내용은 반영되지 않습니다.",
+    },
+    textOnlyNote: {
+      en: "The app cannot fill in the official form for this one. These downloads are a text draft of your answers, not the official VA form. Get the official form from VA.gov and copy your answers onto it.",
+      es: "La aplicación no puede completar el formulario oficial en este caso. Estas descargas son un borrador de texto con sus respuestas, no el formulario oficial del VA. Obtenga el formulario oficial en VA.gov y copie en él sus respuestas.",
+      tl: "Hindi kayang punan ng app ang opisyal na form para dito. Ang mga download na ito ay text draft ng mga sagot mo, hindi ang opisyal na form ng VA. Kunin ang opisyal na form sa VA.gov at kopyahin doon ang mga sagot mo.",
+      vi: "Ứng dụng không thể điền biểu mẫu chính thức cho mục này. Các bản tải xuống này là bản nháp văn bản các câu trả lời của bạn, không phải biểu mẫu chính thức của VA. Hãy lấy biểu mẫu chính thức trên VA.gov và chép các câu trả lời của bạn vào đó.",
+      ko: "이 항목은 앱이 공식 양식을 작성해 드릴 수 없습니다. 이 다운로드는 답변을 정리한 텍스트 초안이며 공식 VA 양식이 아닙니다. VA.gov에서 공식 양식을 받아 답변을 옮겨 적으세요.",
+    },
+    officialPdfOverflow: {
+      en: "Your statement was too long for the boxes the form has for it. The official PDF holds the first part and says where it stops. The rest is not on the form: download the full statement as text (.TXT, .DOCX or .PDF) and attach it.",
+      es: "Su declaración era demasiado larga para los recuadros que el formulario le destina. El PDF oficial contiene la primera parte e indica dónde se interrumpe. El resto no está en el formulario: descargue la declaración completa como texto (.TXT, .DOCX o .PDF) y adjúntela.",
+      tl: "Masyadong mahaba ang pahayag mo para sa mga kahong inilaan ng form. Nasa opisyal na PDF ang unang bahagi at sinasabi nito kung saan ito huminto. Wala sa form ang natitira: i-download ang buong pahayag bilang text (.TXT, .DOCX o .PDF) at ilakip ito.",
+      vi: "Lời khai của bạn quá dài so với các ô mà biểu mẫu dành cho nó. Bản PDF chính thức chứa phần đầu và ghi rõ chỗ dừng. Phần còn lại không có trên biểu mẫu: hãy tải toàn bộ lời khai dưới dạng văn bản (.TXT, .DOCX hoặc .PDF) và đính kèm.",
+      ko: "진술서가 양식에 마련된 칸에 넣기에 너무 깁니다. 공식 PDF에는 앞부분이 들어가며 어디에서 끊겼는지 표시됩니다. 나머지는 양식에 없습니다. 전체 진술서를 텍스트(.TXT, .DOCX 또는 .PDF)로 내려받아 첨부하세요.",
+    },
+    officialPdfFailed: {
+      en: "The official PDF could not be made. Use one of the text downloads instead.",
+      es: "No se pudo crear el PDF oficial. Use en su lugar una de las descargas de texto.",
+      tl: "Hindi nagawa ang opisyal na PDF. Gamitin na lang ang isa sa mga text download.",
+      vi: "Không thể tạo bản PDF chính thức. Hãy dùng một trong các bản tải xuống dạng văn bản.",
+      ko: "공식 PDF를 만들 수 없었습니다. 대신 텍스트 다운로드 중 하나를 사용하세요.",
+    },
+    officialPdfMoved: {
+      en: "Some answers were too long for their boxes on the form, so they are written in full in the Remarks section and their boxes point there:",
+      es: "Algunas respuestas eran demasiado largas para sus recuadros del formulario, así que están escritas completas en la sección Remarks (Observaciones) y sus recuadros remiten allí:",
+      tl: "May mga sagot na masyadong mahaba para sa mga kahon nito sa form, kaya isinulat nang buo ang mga ito sa seksyong Remarks at itinuturo roon ng mga kahon nito:",
+      vi: "Một số câu trả lời quá dài so với ô của chúng trên biểu mẫu, nên được ghi đầy đủ trong mục Remarks (Ghi chú) và các ô đó chỉ dẫn đến mục ấy:",
+      ko: "일부 답변은 양식의 해당 칸에 넣기에 너무 길어 Remarks(비고) 부분에 전체가 적혔으며, 해당 칸에는 그곳을 보라고 적혀 있습니다:",
+    },
+    officialPdfTextOnly: {
+      en: "Some answers were too long for their boxes and for the Remarks section, so they are not on the official PDF. They are in the text downloads (.TXT, .DOCX or .PDF): attach one, or write the answer on the form. Not on the form:",
+      es: "Algunas respuestas eran demasiado largas para sus recuadros y para la sección Remarks (Observaciones), así que no están en el PDF oficial. Están en las descargas de texto (.TXT, .DOCX o .PDF): adjunte una, o escriba la respuesta en el formulario. No están en el formulario:",
+      tl: "May mga sagot na masyadong mahaba para sa mga kahon nito at para sa seksyong Remarks, kaya wala ang mga ito sa opisyal na PDF. Nasa mga text download ang mga ito (.TXT, .DOCX o .PDF): ilakip ang isa, o isulat ang sagot sa form. Wala sa form:",
+      vi: "Một số câu trả lời quá dài so với ô của chúng và cả mục Remarks (Ghi chú), nên không có trên bản PDF chính thức. Chúng nằm trong các bản tải xuống dạng văn bản (.TXT, .DOCX hoặc .PDF): hãy đính kèm một bản, hoặc viết câu trả lời lên biểu mẫu. Không có trên biểu mẫu:",
+      ko: "일부 답변은 해당 칸과 Remarks(비고) 부분에 넣기에도 너무 길어 공식 PDF에 들어가지 않았습니다. 텍스트 다운로드(.TXT, .DOCX 또는 .PDF)에 있으니 하나를 첨부하거나 양식에 직접 적으세요. 양식에 없는 답변:",
+    },
+    officialPdfLeftBlank: {
+      en: "Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in:",
+      es: "Algunas respuestas eran demasiado largas para sus recuadros del formulario. Esos recuadros se dejaron en blanco para que usted los complete a mano:",
+      tl: "May mga sagot na masyadong mahaba para sa mga kahon nito sa form. Iniwang blangko ang mga kahong iyon para ikaw ang magsulat:",
+      vi: "Một số câu trả lời quá dài so với ô của chúng trên biểu mẫu. Các ô đó được để trống để bạn tự viết vào:",
+      ko: "일부 답변은 양식의 해당 칸에 넣기에 너무 깁니다. 직접 적으실 수 있도록 다음 칸은 비워 두었습니다:",
+    },
+    officialPdfNotPlaced: {
+      en: "The app could not put these answers into the form's boxes as you typed them, so their boxes are blank for you to write in:",
+      es: "La aplicación no pudo poner estas respuestas en los recuadros del formulario tal como usted las escribió, así que sus recuadros quedan en blanco para que los complete a mano:",
+      tl: "Hindi nailagay ng app ang mga sagot na ito sa mga kahon ng form ayon sa pagkaka-type mo, kaya blangko ang mga kahon nito para ikaw ang magsulat:",
+      vi: "Ứng dụng không thể đưa các câu trả lời này vào các ô của biểu mẫu theo đúng cách bạn đã gõ, nên các ô đó được để trống để bạn tự viết vào:",
+      ko: "다음 답변은 입력하신 형태로는 양식의 칸에 넣을 수 없어, 직접 적으실 수 있도록 해당 칸을 비워 두었습니다:",
+    },
+    draftOutOfStep: {
+      en: "You kept your edited draft, so it does not include the answer you changed. The official PDF uses your current answers. Edit the draft here if it should say the same.",
+      es: "Usted conservó su borrador editado, así que no incluye la respuesta que cambió. El PDF oficial usa sus respuestas actuales. Edite aquí el borrador si debe decir lo mismo.",
+      tl: "Pinanatili mo ang in-edit mong draft, kaya wala rito ang sagot na binago mo. Ginagamit ng opisyal na PDF ang kasalukuyan mong mga sagot. I-edit dito ang draft kung dapat pareho ang sinasabi nito.",
+      vi: "Bạn đã giữ bản nháp đã chỉnh sửa, nên nó không có câu trả lời bạn vừa thay đổi. Bản PDF chính thức dùng các câu trả lời hiện tại của bạn. Hãy sửa bản nháp tại đây nếu nó cần nói giống như vậy.",
+      ko: "수정하신 초안을 유지하셨으므로, 바꾸신 답변은 초안에 반영되어 있지 않습니다. 공식 PDF는 현재 답변을 사용합니다. 초안도 같은 내용이어야 한다면 여기에서 수정하세요.",
+    },
     // Header
     title: {
       en: "VA Forms Helper",
@@ -9822,11 +10127,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "명세서가 생성되었습니다!",
     },
     reviewStatementDesc: {
-      en: "Review your statement below, then download. You can get a ready-to-sign PDF or text formats.",
-      es: "Revisa tu declaración abajo, luego descarga. Puedes obtener un PDF listo para firmar o formatos de texto.",
-      tl: "Suriin ang statement mo sa ibaba, pagkatapos i-download. Makukuha mo ang ready-to-sign PDF o text formats.",
-      vi: "Xem lại tuyên bố bên dưới, sau đó tải xuống. Bạn có thể nhận PDF sẵn sàng ký hoặc định dạng văn bản.",
-      ko: "아래에서 명세서를 검토한 후 다운로드하세요. 서명 준비된 PDF 또는 텍스트 형식을 받을 수 있습니다.",
+      en: "Review your draft below, then download it. Read every line before you sign anything.",
+      es: "Revisa tu borrador abajo y luego descárgalo. Lee cada línea antes de firmar.",
+      tl: "Suriin ang draft mo sa ibaba, pagkatapos i-download. Basahin ang bawat linya bago pumirma.",
+      vi: "Xem lại bản nháp bên dưới, sau đó tải xuống. Hãy đọc từng dòng trước khi ký.",
+      ko: "아래 초안을 검토한 후 다운로드하세요. 서명하기 전에 모든 줄을 읽어 보세요.",
     },
 
     // AI Enhancement
@@ -10110,11 +10415,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "공식 VA 양식 PDF",
     },
     readyToSign: {
-      en: "Ready to sign & submit",
-      es: "Listo para firmar y enviar",
-      tl: "Handa nang pirmahan at isumite",
-      vi: "Sẵn sàng ký và gửi",
-      ko: "서명 및 제출 준비 완료",
+      en: "Partly filled in from your answers",
+      es: "Llenado en parte con sus respuestas",
+      tl: "Bahagyang napunan mula sa iyong mga sagot",
+      vi: "Đã điền một phần từ câu trả lời của bạn",
+      ko: "답변을 바탕으로 일부만 작성됨",
     },
     saveToPacketBtn: {
       en: "Save to Packet",
@@ -10126,11 +10431,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
     // Statement Generated
     statementGeneratedDesc: {
-      en: "Review your statement below, then download. You can get a ready-to-sign PDF or text formats.",
-      es: "Revisa tu declaración abajo, luego descarga. Puedes obtener un PDF listo para firmar o formatos de texto.",
-      tl: "Suriin ang statement mo sa ibaba, pagkatapos i-download. Makukuha mo ang ready-to-sign PDF o text formats.",
-      vi: "Xem lại tuyên bố bên dưới, sau đó tải xuống. Bạn có thể nhận PDF sẵn sàng ký hoặc định dạng văn bản.",
-      ko: "아래에서 명세서를 검토한 후 다운로드하세요. 서명 준비된 PDF 또는 텍스트 형식을 받을 수 있습니다.",
+      en: "Review your draft below, then download it. Read every line before you sign anything.",
+      es: "Revisa tu borrador abajo y luego descárgalo. Lee cada línea antes de firmar.",
+      tl: "Suriin ang draft mo sa ibaba, pagkatapos i-download. Basahin ang bawat linya bago pumirma.",
+      vi: "Xem lại bản nháp bên dưới, sau đó tải xuống. Hãy đọc từng dòng trước khi ký.",
+      ko: "아래 초안을 검토한 후 다운로드하세요. 서명하기 전에 모든 줄을 읽어 보세요.",
     },
     yourGeneratedStatement: {
       en: "Your Generated Statement",
@@ -10172,11 +10477,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "제출",
     },
     nextStepDownload: {
-      en: 'the "Official VA Form PDF" above - it\'s already filled out!',
-      es: 'el "PDF del Formulario VA Oficial" arriba - ¡ya está llenado!',
-      tl: 'ang "Official VA Form PDF" sa itaas - naka-fill na!',
-      vi: '"PDF Biểu Mẫu VA Chính Thức" ở trên - đã được điền sẵn!',
-      ko: '위의 "공식 VA 양식 PDF" - 이미 작성되어 있습니다!',
+      en: 'the "Official VA Form PDF" above. It is partly filled in from your answers. You complete the rest by hand.',
+      es: 'el "PDF del Formulario VA Oficial" arriba. Está llenado en parte con sus respuestas. Usted completa el resto a mano.',
+      tl: 'ang "Official VA Form PDF" sa itaas. Bahagya itong napunan mula sa iyong mga sagot. Ikaw ang kukumpleto sa natitira.',
+      vi: '"PDF Biểu Mẫu VA Chính Thức" ở trên. Biểu mẫu đã được điền một phần từ câu trả lời của bạn. Bạn tự điền phần còn lại.',
+      ko: '위의 "공식 VA 양식 PDF". 답변을 바탕으로 일부만 작성되어 있습니다. 나머지는 직접 작성하셔야 합니다.',
     },
     nextStepReview: {
       en: "the PDF to make sure all information is correct",
@@ -10297,11 +10602,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
     },
     aiTip: { en: "Tip:", es: "Consejo:", tl: "Tip:", vi: "Mẹo:", ko: "팁:" },
     aiTipText: {
-      en: "All AI models analyze your ratings quickly. Strategy generation takes just seconds!",
-      es: "Todos los modelos de IA analizan tus calificaciones rápidamente. ¡La generación de estrategia toma solo segundos!",
-      tl: "Lahat ng AI models ay nag-aanalyze ng iyong ratings nang mabilis. Ang strategy generation ay ilang segundo lang!",
-      vi: "Tất cả các mô hình AI phân tích xếp hạng của bạn nhanh chóng. Việc tạo chiến lược chỉ mất vài giây!",
-      ko: "모든 AI 모델은 등급을 빠르게 분석합니다. 전략 생성은 몇 초면 됩니다!",
+      en: "Every AI model can analyze your ratings. How long a strategy takes depends on your device.",
+      es: "Todos los modelos de IA analizan tus calificaciones rápidamente.",
+      tl: "Lahat ng AI models ay nag-aanalyze ng iyong ratings nang mabilis.",
+      vi: "Tất cả các mô hình AI phân tích xếp hạng của bạn nhanh chóng.",
+      ko: "모든 AI 모델은 등급을 빠르게 분석합니다.",
     },
 
     // Input Section
@@ -10318,6 +10623,13 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       tl: "I-load ang Aking Ratings",
       vi: "Tải Xếp Hạng Của Tôi",
       ko: "내 등급 불러오기",
+    },
+    // English-only: no verified es/tl/vi/ko translation for this exact
+    // "Reload" (vs. "Load") nuance yet. Falls back to en via the t()
+    // lookup's `keyData[language] || keyData.en` chain - see
+    // LanguageContext.jsx resolveTranslation.
+    reloadMyRatings: {
+      en: "Reload My Ratings",
     },
     pasteFromVaGov: {
       en: "Paste from VA.gov",
@@ -10339,6 +10651,14 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       tl: "I-load mula sa My Packet",
       vi: "Tải từ Hồ Sơ Của Tôi",
       ko: "내 패킷에서 불러오기",
+    },
+    // English-only - see reloadMyRatings above for why.
+    reloadFromPacket: {
+      en: "Reload from My Packet",
+    },
+    // English-only - see reloadMyRatings above for why.
+    autoSeededFromRatings: {
+      en: "We filled this in from your ratings on file. Add anything that's missing.",
     },
     loadedFromPacket: {
       en: "Loaded conditions from your saved packet. Add rating percentages if known.",
@@ -11103,6 +11423,20 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "trường hồ sơ đã nhập",
       ko: "프로필 필드 가져옴",
     },
+    nothingSavedYet: {
+      en: "Nothing from this analysis has been saved yet. You choose what to import in the next step.",
+      es: "Todavía no se ha guardado nada de este análisis. Usted elige qué importar en el siguiente paso.",
+      tl: "Wala pang na-save mula sa pagsusuring ito. Ikaw ang pipili kung ano ang i-import sa susunod na hakbang.",
+      vi: "Chưa có gì từ phân tích này được lưu. Bạn chọn nội dung cần nhập ở bước tiếp theo.",
+      ko: "이 분석에서 아직 저장된 내용이 없습니다. 다음 단계에서 가져올 항목을 직접 선택하세요.",
+    },
+    importSavedNote: {
+      en: "Saved. The fields you ticked went to your profile; the document was filed in your Knowledge Base and My Packet.",
+      es: "Guardado. Los campos que marcó se enviaron a su perfil; el documento se archivó en su Base de Conocimiento y en Mi Paquete.",
+      tl: "Na-save na. Ang mga field na minarkahan mo ay napunta sa iyong profile; ang dokumento ay inilagay sa iyong Knowledge Base at My Packet.",
+      vi: "Đã lưu. Các trường bạn chọn đã vào hồ sơ của bạn; tài liệu được lưu trong Knowledge Base và My Packet.",
+      ko: "저장되었습니다. 선택한 항목은 프로필에 저장되었고, 문서는 지식 베이스와 My Packet에 보관되었습니다.",
+    },
   },
 
   // Exam Prep Room
@@ -11468,6 +11802,27 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
   // Witness Bench (Buddy Letter Wizard)
   witnessBench: {
+    builtInQuestionsTitle: {
+      en: "Built-in questions",
+      es: "Preguntas incorporadas",
+      tl: "Mga nakahandang tanong",
+      vi: "Câu hỏi có sẵn",
+      ko: "기본 질문",
+    },
+    builtInQuestionsDesc: {
+      en: "This interview uses the built-in questions.",
+      es: "Esta entrevista usa las preguntas incorporadas.",
+      tl: "Ginagamit ng interview na ito ang mga nakahandang tanong.",
+      vi: "Cuộc phỏng vấn này dùng các câu hỏi có sẵn.",
+      ko: "이 인터뷰는 기본으로 준비된 질문을 사용합니다.",
+    },
+    smallModelQuestionsNote: {
+      en: "The AI on this device is a small one, so it is not asked to write questions. These are the built-in questions.",
+      es: "La IA de este dispositivo es pequeña, así que no se le pide que escriba preguntas. Estas son las preguntas incorporadas.",
+      tl: "Maliit ang AI sa device na ito, kaya hindi ito hinihilingang sumulat ng mga tanong. Ito ang mga nakahandang tanong.",
+      vi: "AI trên thiết bị này là loại nhỏ, nên nó không được yêu cầu soạn câu hỏi. Đây là các câu hỏi có sẵn.",
+      ko: "이 기기의 AI는 소형 모델이므로 질문 작성을 맡기지 않습니다. 아래는 기본으로 준비된 질문입니다.",
+    },
     // Header
     title: {
       en: "The Witness Bench",
@@ -12210,11 +12565,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "{total}개 청크를 최종 보고서로 병합 중...",
     },
     largeFileDetected: {
-      en: "Large file detected! Processing in {total} chunks. On-device AI takes ~2 min per section - see the time estimate above. Please keep this tab open.",
-      es: "¡Archivo grande detectado! Procesando en {total} fragmentos. La IA local toma ~2 min por sección. Por favor mantén esta pestaña abierta.",
-      tl: "Malaking file ang na-detect! Pinoproseso sa {total} chunks. Ang on-device AI ay tumatagal ng ~2 min bawat seksyon. Mangyaring panatilihing bukas ang tab na ito.",
-      vi: "Phát hiện tệp lớn! Đang xử lý trong {total} phần. AI trên thiết bị mất ~2 phút mỗi phần. Vui lòng giữ tab này mở.",
-      ko: "큰 파일이 감지되었습니다! {total}개 청크로 처리 중. 온디바이스 AI는 섹션당 약 2분 소요됩니다. 이 탭을 열어두세요.",
+      en: "Large file detected! Processing in {total} chunks, one at a time - see the time estimate above. Please keep this tab open.",
+      es: "¡Archivo grande detectado! Procesando en {total} fragmentos. Por favor mantén esta pestaña abierta.",
+      tl: "Malaking file ang na-detect! Pinoproseso sa {total} chunks. Mangyaring panatilihing bukas ang tab na ito.",
+      vi: "Phát hiện tệp lớn! Đang xử lý trong {total} phần. Vui lòng giữ tab này mở.",
+      ko: "큰 파일이 감지되었습니다! {total}개 청크로 처리 중. 이 탭을 열어두세요.",
     },
     largeFileMayTake: {
       en: "Large files may take several minutes. Please keep this tab open.",
@@ -12231,6 +12586,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       tl: "Tapos na ang Analysis",
       vi: "Phân Tích Hoàn Tất",
       ko: "분석 완료",
+    },
+    // D19-2: shown instead of analysisComplete when the built-in document
+    // scan found nothing - never claim success over an empty result.
+    analysisNoFindings: {
+      en: "No Conditions Found",
     },
     pagesAnalyzed: {
       en: "pages analyzed",

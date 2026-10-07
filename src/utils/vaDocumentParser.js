@@ -21,6 +21,8 @@
  * The "fluff" is predictable, so we can skip it programmatically.
  */
 
+import { latestRatingCodeSheet } from "./vaCodeSheet.js";
+
 /**
  * VA Document Section Headers (Regex Anchors)
  * These are the standardized headings used across VA correspondence
@@ -135,16 +137,15 @@ const CONDITION_PATTERNS = {
 
   // Effective date pattern
   EFFECTIVE_DATE:
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: \w+/\d{1,2}/\d{4} alternatives are disjoint from the [:\s]* prefix, no overlapping quantifiers; run unbounded against 100k+ char no-match text in vaDocumentParser.test.js
-    /effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/gi,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the two date-format alternatives, not backtracking; bounded for S8786 above
+    /effective\s{0,10}(?:date)?[:\s]{0,20}(\w{1,30}\s{1,10}\d{1,2},?\s{1,10}\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/gi,
 
   // Diagnostic code pattern
   DIAGNOSTIC_CODE: /(?:diagnostic\s*code|DC)[:\s#]*(\d{4})/gi,
 
   // Combined rating
   COMBINED_RATING:
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: run unbounded against 100k+ char no-match text in vaDocumentParser.test.js
-    /(?:combined|overall|total)\s*(?:service[- ]?connected)?\s*(?:evaluation|rating|disability)[:\s]*(\d{1,3})\s*percent/gi,
+    /(?:combined|overall|total)\s{0,10}(?:service[- ]?connected)?\s{0,10}(?:evaluation|rating|disability)[:\s]{0,20}(\d{1,3})\s{0,10}percent/gi,
 };
 
 // Matches "N percent" — deliberately simple (digit class then a literal word,
@@ -154,8 +155,8 @@ const PERCENT_RE = /(\d{1,3})\s*percent/gi;
 // Looks backward from a "percent" hit, within a bounded window, for the
 // separator (dot-leader or dash) and captures everything after it as the
 // condition name.
-// eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: always run against a <=500-char window (CONDITION_NAME_LOOKBACK_WINDOW), never the raw document; 2000 back-to-back worst-case (dash-filled, non-matching) windows measured 164ms in vaDocumentParser.test.js
-const CONDITION_NAME_BEFORE_SEP_RE = /([A-Z\s,()-]*?)(?:\.{2,}|–|-)\s*$/i;
+const CONDITION_NAME_BEFORE_SEP_RE =
+  /([A-Z\s,()-]{0,500}?)(?:\.{2,500}|–|-)\s{0,20}$/i;
 const CONDITION_NAME_LOOKBACK_WINDOW = 500;
 
 // Fast pre-check for extractEvidenceSection — see usage site for why.
@@ -165,8 +166,7 @@ const EVIDENCE_KEYWORD_RE =
 // Shared by parseSOC and extractCFRCitations (previously duplicated
 // verbatim in both places).
 const CFR_CITATION_RE =
-  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: runs unbounded against full document text; measured 0ms against ~120k adversarial (many non-matching "38 ..." triggers) input in vaDocumentParser.test.js
-  /38\s*(?:C\.?F\.?R\.?|CFR)\s*§?\s*([\d.]+)/g;
+  /38\s{0,10}(?:C\.?F\.?R\.?|CFR)\s{0,10}§?\s{0,10}([\d.]{1,20})/g;
 
 /**
  * Security review note: this replaces a single combined regex
@@ -241,7 +241,7 @@ function extractCombinedRating(text) {
   const combinedMatch = text.match(CONDITION_PATTERNS.COMBINED_RATING);
   if (combinedMatch) {
     const percentMatch = combinedMatch[0].match(/(\d{1,3})\s*percent/i);
-    if (percentMatch) return parseInt(percentMatch[1]);
+    if (percentMatch) return Number.parseInt(percentMatch[1]);
   }
   return null;
 }
@@ -269,12 +269,12 @@ function extractDecisionSection(
   const conditionMatches = findConditionsWithPercent(sectionText);
   for (const match of conditionMatches) {
     const conditionName = match.name;
-    const percent = parseInt(match.percent);
+    const percent = Number.parseInt(match.percent);
 
     // Extract diagnostic code if present nearby
     const codeMatch = sectionText.match(
       new RegExp(
-        `${conditionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^]*?DC[:\\s#]*(\\d{4})`,
+        String.raw`${conditionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^]*?DC[:\s#]*(\d{4})`,
         "i",
       ),
     );
@@ -323,8 +323,8 @@ function extractEvidenceSection(
     if (!EVIDENCE_KEYWORD_RE.test(line)) continue;
     // Look for document references
     const docMatch = line.match(
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- the pre-check above guarantees a keyword is present, and the slow path only occurs when it's absent (verified: 0ms even at 5000 chars when the keyword exists)
-      /(?:•|\d+\.|-)?\s*(.+?(?:record|report|statement|exam|letter|rating|decision|medical|treatment|VA|private|physician|doctor)[^.]*)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the document-keyword alternation count, not backtracking; the pre-check above guarantees a keyword is present, and bounded below for S8786 (line can be up to 5000 chars per evidenceEnd cap above)
+      /(?:•|\d{1,10}\.|-)?\s{0,10}(.{0,5000}?(?:record|report|statement|exam|letter|rating|decision|medical|treatment|VA|private|physician|doctor)[^.]{0,5000})/i,
     );
     if (docMatch && docMatch[1].length > 10) {
       evidenceConsidered.push(docMatch[1].trim());
@@ -399,8 +399,7 @@ function detectDeniedConditions(text, conditions) {
       match.index + 200,
     );
     const condMatch = context.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: `context` above is capped at 300 chars (index-100 to index+200), never the raw document; measured 11ms worst case at that bound
-      /([A-Z\s\-,()]+?)(?:\s+(?:is|was))?\s+(?:denied|not\s+established)/i,
+      /([A-Z\s\-,()]{1,300}?)(?:\s{1,10}(?:is|was))?\s{1,10}(?:denied|not\s{1,10}established)/i,
     );
     if (condMatch) {
       const existingCond = conditions.find((c) =>
@@ -596,8 +595,8 @@ function extractDiagnoses(text) {
   const diagSection = text.substring(diagnosisStart, diagnosisStart + 1000);
   // Look for ICD codes or diagnosis statements
   const diagMatches = diagSection.matchAll(
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: diagSection above is capped at 1000 chars, never the raw document
-    /(?:\d+\.|•|-)?\s*([A-Z\s-]+)(?:\s*\(?\s*(?:ICD[:\s]*)?([A-Z]\d{2}(?:\.\d+)?)\)?)?/gi,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the bullet/ICD-format alternation count, not backtracking; diagSection is capped at 1000 chars and bounded for S8786 above
+    /(?:\d{1,10}\.|•|-)?\s{0,10}([A-Z\s-]{1,300})(?:\s{0,10}\(?\s{0,10}(?:ICD[:\s]{0,10})?([A-Z]\d{2}(?:\.\d{1,5})?)\)?)?/gi,
   );
   for (const match of diagMatches) {
     if (
@@ -774,8 +773,8 @@ export function parseVADocument(text) {
 
   // Decision Letter indicators
   if (
-    textSample.match(
-      /rating\s*decision|service\s*connection|combined.*evaluation|percent.*disab/i,
+    /rating\s*decision|service\s*connection|combined.*evaluation|percent.*disab/i.exec(
+      textSample,
     )
   ) {
     return parseDecisionLetter(text);
@@ -783,8 +782,8 @@ export function parseVADocument(text) {
 
   // DBQ indicators
   if (
-    textSample.match(
-      /disability\s*benefits\s*questionnaire|dbq|c&p\s*exam|compensation.*pension/i,
+    /disability\s*benefits\s*questionnaire|dbq|c&p\s*exam|compensation.*pension/i.exec(
+      textSample,
     )
   ) {
     return parseDBQReport(text);
@@ -792,17 +791,15 @@ export function parseVADocument(text) {
 
   // Code Sheet indicators
   if (
-    textSample.match(
-      /code\s*sheet|rating.*code.*sheet|diagnostic.*code.*\d{4}/i,
-    )
+    /code\s*sheet|rating.*code.*sheet|diagnostic.*code.*\d{4}/i.exec(textSample)
   ) {
     return parseCodeSheet(text);
   }
 
   // BVA Decision
   if (
-    textSample.match(
-      /board\s*of\s*veterans|bva|findings\s*of\s*fact|conclusions\s*of\s*law/i,
+    /board\s*of\s*veterans|bva|findings\s*of\s*fact|conclusions\s*of\s*law/i.exec(
+      textSample,
     )
   ) {
     return parseBVADecision(text);
@@ -810,15 +807,15 @@ export function parseVADocument(text) {
 
   // Statement of the Case
   if (
-    textSample.match(/statement\s*of\s*the\s*case|soc|issues?\s*on\s*appeal/i)
+    /statement\s*of\s*the\s*case|soc|issues?\s*on\s*appeal/i.exec(textSample)
   ) {
     return parseSOC(text);
   }
 
   // Higher Level Review (HLR)
   if (
-    textSample.match(
-      /higher[\s-]*level\s*review|hlr\s*decision|informal\s*conference|duty\s*to\s*assist\s*error/i,
+    /higher[\s-]*level\s*review|hlr\s*decision|informal\s*conference|duty\s*to\s*assist\s*error/i.exec(
+      textSample,
     )
   ) {
     return parseHLR(text);
@@ -852,25 +849,42 @@ export function parseCodeSheet(text) {
     confidence: 0,
   };
 
+  const sheet = latestRatingCodeSheet(text);
+  if (sheet) {
+    return {
+      ...result,
+      sheetDate: sheet.sheetDate,
+      combinedRating: sheet.combinedRating,
+      conditions: sheet.conditions.map((c) => ({
+        diagnosticCode: c.diagnosticCode,
+        name: c.name,
+        percent: c.rating,
+      })),
+      ratingHistory: sheet.combinedRatingHistory,
+      confidence: 95,
+    };
+  }
+
   try {
-    // Code sheets have a very specific format with DC codes
+    // Simple "DC - name NN%" lists. Diagnostic codes run 5000-9999 (38 CFR
+    // Part 4), which keeps years and page numbers out. Re-characterized
+    // conditions ("... (previously rated as ...)") run past 370 characters.
     const dcPattern =
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: runs unbounded against full document text; measured 3ms against ~150k adversarial (dash-heavy, no-percent) input in vaDocumentParser.test.js
-      /(\d{4})\s*[:-]?\s*([A-Za-z\s\-,()]+?)\s*[:-]?\s*(\d{1,3})%/g;
+      /\b([5-9]\d{3})\s{0,10}[:-]?\s{0,10}([A-Za-z][A-Za-z\s\-,()]{0,999}?)\s{0,10}[:-]?\s{0,10}(\d{1,3})%/g;
     const matches = text.matchAll(dcPattern);
 
     for (const match of matches) {
       result.conditions.push({
         diagnosticCode: match[1],
         name: match[2].trim(),
-        percent: parseInt(match[3]),
+        percent: Number.parseInt(match[3]),
       });
     }
 
     // Extract combined rating
     const combinedMatch = text.match(/(?:combined|total)[:\s]*(\d{1,3})%/i);
     if (combinedMatch) {
-      result.combinedRating = parseInt(combinedMatch[1]);
+      result.combinedRating = Number.parseInt(combinedMatch[1]);
     }
 
     result.confidence = result.conditions.length > 0 ? 85 : 20;
@@ -908,8 +922,8 @@ export function parseBVADecision(text) {
   try {
     // Extract docket number
     const docketMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: runs unbounded against full document text; measured 0ms against ~90k adversarial (many non-matching "docket"/"citation" triggers) input in vaDocumentParser.test.js
-      /(?:docket|citation)\s*(?:no\.?|number)?[:\s]*(\d{2}-\d{2}\s*\d{3}|\d{7})/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the docket/citation-format alternation count, not backtracking; bounded for S8786 above
+      /(?:docket|citation)\s{0,10}(?:no\.?|number)?[:\s]{0,20}(\d{2}-\d{2}\s{0,10}\d{3}|\d{7})/i,
     );
     if (docketMatch) result.docketNumber = docketMatch[1];
 
@@ -921,8 +935,7 @@ export function parseBVADecision(text) {
     if (factStart !== -1 && lawStart !== -1) {
       const factSection = text.substring(factStart, lawStart);
       const factMatches = factSection.matchAll(
-        // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: bullet-anchored (?:\d+\.|•) prefix keeps match attempts non-overlapping; measured 9ms against a ~6MB adversarial (bullets, no period anywhere) section in vaDocumentParser.test.js, far past any real BVA decision's FINDINGS OF FACT section
-        /(?:\d+\.|•)\s*([^.]+\.)/g,
+        /(?:\d{1,10}\.|•)\s{0,10}([^.]{1,2000}\.)/g,
       );
       for (const match of factMatches) {
         result.findingsOfFact.push(match[1].trim());
@@ -974,8 +987,7 @@ export function parseSOC(text) {
     if (issueStart !== -1) {
       const issueSection = text.substring(issueStart, issueStart + 2000);
       const issueMatches = issueSection.matchAll(
-        // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: issueSection above is capped at 2000 chars, never the raw document
-        /(?:\d+\.|•|-)?\s*((?:Entitlement|Service\s*connection|Increased)[^.\n]+)/gi,
+        /(?:\d{1,10}\.|•|-)?\s{0,10}((?:Entitlement|Service\s{0,10}connection|Increased)[^.\n]{1,2000})/gi,
       );
       for (const match of issueMatches) {
         result.issuesOnAppeal.push(match[1].trim());
@@ -1141,8 +1153,8 @@ export function parseHLR(text) {
 
     // Extract effective date
     const effectiveDateMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: runs unbounded against full document text; measured 0ms against ~100k adversarial (many non-matching "effective" triggers) input in vaDocumentParser.test.js
-      /effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the two date-format alternatives, not backtracking; bounded for S8786 above
+      /effective\s{0,10}(?:date)?[:\s]{0,20}(\w{1,30}\s{1,10}\d{1,2},?\s{1,10}\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
     );
     if (effectiveDateMatch) {
       result.effectiveDate = effectiveDateMatch[1];
@@ -1153,7 +1165,7 @@ export function parseHLR(text) {
       /(?:increased|changed|revised)\s*(?:to\s*)?(\d{1,3})\s*percent/i,
     );
     if (ratingMatch) {
-      result.newRating = parseInt(ratingMatch[1]);
+      result.newRating = Number.parseInt(ratingMatch[1]);
     }
 
     // Extract CFR citations
@@ -1182,8 +1194,8 @@ const BIG_THREE_NAME_BEFORE_SEP_RE =
   /([A-Z\s,()-]{5,50}?)(?:\.{2,}|–|-|:)\s*$/i;
 const BIG_THREE_NAME_LOOKBACK_WINDOW = 60; // name is bounded to 5-50 chars plus a short separator
 const BIG_THREE_DATE_AFTER_RE =
-  // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- only ever run against a slice already capped to ~620 chars (see call site), worst case ~620² ops; measured 0ms even at 100k total input
-  /^[^]{0,600}?effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i;
+  // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the two date-format alternatives, not backtracking; only ever run against a slice already capped to ~620 chars (see call site) and bounded for S8786 above
+  /^[^]{0,600}?effective\s{0,10}(?:date)?[:\s]{0,20}(\w{1,30}\s{1,10}\d{1,2},?\s{1,10}\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i;
 const BIG_THREE_DATE_LOOKAHEAD_WINDOW = 600;
 
 /**
@@ -1230,7 +1242,7 @@ export function extractBigThree(text) {
 
     results.push({
       condition: nameMatch[1].trim(),
-      percent: parseInt(match[1]),
+      percent: Number.parseInt(match[1]),
       effectiveDate: dateMatch[1],
     });
   }

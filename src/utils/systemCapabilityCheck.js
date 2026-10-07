@@ -42,11 +42,7 @@ const REQUIRED_CAPABILITIES = {
  */
 function testCryptoAPI() {
   try {
-    return !!(
-      window.crypto &&
-      window.crypto.subtle &&
-      typeof window.crypto.subtle.encrypt === "function"
-    );
+    return typeof window.crypto?.subtle?.encrypt === "function";
   } catch {
     return false;
   }

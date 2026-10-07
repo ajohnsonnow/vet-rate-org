@@ -11,6 +11,7 @@
 import FormationLineup from "../FormationLineup";
 import PlatoonSergeantReview from "../PlatoonSergeantReview";
 import DocumentIntelligenceBriefing from "../DocumentIntelligenceBriefing";
+import MusterCallCompletionSummary from "./MusterCallCompletionSummary";
 
 // Conflict detection is not yet implemented for Muster Call, so this is
 // always empty — but it MUST be a stable reference. DocumentIntelligenceBriefing's
@@ -19,9 +20,31 @@ import DocumentIntelligenceBriefing from "../DocumentIntelligenceBriefing";
 // that effect and silently reset the user's in-progress field verification.
 const NO_CONFLICTS = [];
 
+function FormationProcessingStatus({ stats, formation }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700"
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+          <span aria-hidden="true">📋</span> Processing {stats?.completed || 0}{" "}
+          of {formation.length} documents
+        </span>
+        <span className="text-xs text-blue-600 dark:text-blue-400">
+          {stats?.waiting || 0} waiting • {stats?.skipped || 0} skipped •{" "}
+          {stats?.errors || 0} errors
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function MusterCallFormationSection({
   shouldShowFormation,
   showProcessingView,
+  showCompletionSummary,
   formationQueue,
   ai,
   flow,
@@ -60,23 +83,7 @@ export default function MusterCallFormationSection({
       {/* Platoon Sergeant Review (SEQUENTIAL MODE - Active Processing) */}
       {showProcessingView && (
         <div className="space-y-4">
-          {/* Show compact formation status */}
-          <div
-            role="status"
-            aria-live="polite"
-            className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                <span aria-hidden="true">📋</span> Processing{" "}
-                {stats?.completed || 0} of {formation.length} documents
-              </span>
-              <span className="text-xs text-blue-600 dark:text-blue-400">
-                {stats?.waiting || 0} waiting • {stats?.skipped || 0} skipped •{" "}
-                {stats?.errors || 0} errors
-              </span>
-            </div>
-          </div>
+          <FormationProcessingStatus stats={stats} formation={formation} />
 
           <PlatoonSergeantReview
             document={activeEntry.file}
@@ -86,6 +93,14 @@ export default function MusterCallFormationSection({
             onSkip={handleSkipDocument}
           />
         </div>
+      )}
+
+      {showCompletionSummary && (
+        <MusterCallCompletionSummary
+          formation={formation}
+          onRetry={flow.retryDocumentSave}
+          canRetry={flow.canRetryDocumentSave}
+        />
       )}
 
       {/* Intelligence Briefing Modal (SEQUENTIAL MODE - User Verification) */}

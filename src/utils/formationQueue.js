@@ -332,6 +332,8 @@ const summarizeExtractedData = (extractedData) => {
   ["decisions", "conditions", "awards"].forEach((key) => {
     if (Array.isArray(extractedData[key])) {
       summary[`${key}Count`] = extractedData[key].length;
+    } else if (Number.isInteger(extractedData[`${key}Count`])) {
+      summary[`${key}Count`] = extractedData[`${key}Count`];
     }
   });
   return summary;
@@ -361,6 +363,45 @@ const slimResult = (result) => {
         })
       : result.verifiedData,
   };
+};
+
+const COVERAGE_KEYS = [
+  "pageCount",
+  "pagesRead",
+  "pagesOCRd",
+  "pagesBlank",
+  "pagesSkipped",
+  "pagesFailed",
+  "coverageNote",
+];
+
+// What a finished document's queue entry keeps in memory. The text and the
+// full extraction are already saved to the knowledge base and My Packet; the
+// completion summary needs only the reading notices (page coverage and the AI
+// analysis note), so those are kept and nothing else of the document is, which
+// keeps a 39-document import from holding every document's text until the
+// page closes.
+export const slimCompletedResult = (result) => {
+  if (!result || typeof result !== "object") return result;
+  const slim = slimResult(result);
+  COVERAGE_KEYS.forEach((key) => {
+    if (result[key] !== undefined) slim[key] = result[key];
+  });
+  slim.extractedData = {
+    ...slim.extractedData,
+    ...pickNotices(result.extractedData),
+  };
+  return slim;
+};
+
+const pickNotices = (extractedData) => {
+  const notices = {};
+  ["pageCoverageNote", "aiAnalysisNotice"].forEach((key) => {
+    if (typeof extractedData?.[key] === "string") {
+      notices[key] = extractedData[key];
+    }
+  });
+  return notices;
 };
 
 /**
@@ -435,7 +476,7 @@ export const loadFormationState = () => {
         status = FORMATION_STATUS.WAITING;
         // eslint-disable-next-line no-console
         console.log(
-          `   ⏸️ Reset ${entry.filename} from ${entry.status} to WAITING`,
+          `   ⏸️ Reset a ${entry.estimatedType || "UNKNOWN"} document from ${entry.status} to WAITING`,
         );
       }
 

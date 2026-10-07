@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 function makeFakeResponse(data) {
-  const bytes = new TextEncoder().encode(JSON.stringify(data));
+  const text = typeof data === "string" ? data : JSON.stringify(data);
+  const bytes = new TextEncoder().encode(text);
   let alreadyRead = false;
   return {
     ok: true,
@@ -61,6 +62,13 @@ function createFakeIndexedDB(store) {
               store.set(value.id, value);
               return {};
             },
+            get: (key) => {
+              const req = {};
+              req.result = store.get(key);
+              attachAsyncHandler(req, "onsuccess");
+              req.onerror = null;
+              return req;
+            },
           };
           tx.objectStore = () => objectStore;
           return tx;
@@ -83,7 +91,7 @@ describe("downloadFullDKB - single-flight", () => {
     store = new Map();
     fetchSpy = vi
       .fn()
-      .mockResolvedValue(
+      .mockImplementation(async () =>
         makeFakeResponse({ entries: [{ id: "a" }, { id: "b" }] }),
       );
     vi.stubGlobal("fetch", fetchSpy);
@@ -116,5 +124,58 @@ describe("downloadFullDKB - single-flight", () => {
     await downloadFullDKB();
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("only ever fetches the web-optimized file, never the Git LFS full file", async () => {
+    const { downloadFullDKB } = await import("../../utils/dkbIndexedDB");
+
+    await downloadFullDKB();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url] = fetchSpy.mock.calls[0];
+    expect(url).toBe("/data/diamond_knowledge.json");
+    expect(url).not.toContain("_full");
+  });
+});
+
+describe("isFullDKBCached", () => {
+  let store;
+
+  beforeEach(() => {
+    vi.resetModules();
+    store = new Map();
+    vi.stubGlobal("indexedDB", createFakeIndexedDB(store));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("is false when nothing is cached", async () => {
+    const { isFullDKBCached } = await import("../../utils/dkbIndexedDB");
+
+    expect(await isFullDKBCached()).toBe(false);
+  });
+
+  it("is true once a web-optimized-sized download is cached", async () => {
+    const { WEB_DATABASE_COUNT, isFullDKBCached } =
+      await import("../../utils/dkbIndexedDB");
+    store.set("dkb_metadata", {
+      id: "dkb_metadata",
+      entryCount: WEB_DATABASE_COUNT,
+    });
+
+    expect(await isFullDKBCached()).toBe(true);
+  });
+
+  it("still recognizes a genuine full cache left by a pre-fix build", async () => {
+    const { FULL_DATABASE_COUNT, isFullDKBCached } =
+      await import("../../utils/dkbIndexedDB");
+    store.set("dkb_metadata", {
+      id: "dkb_metadata",
+      entryCount: FULL_DATABASE_COUNT,
+    });
+
+    expect(await isFullDKBCached()).toBe(true);
   });
 });

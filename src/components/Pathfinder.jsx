@@ -18,11 +18,13 @@ import {
 } from "../utils/pathfinderEngine";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
+import { normalizeConditionName } from "../utils/conditionName";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import VAGovRatingPaster from "./VAGovRatingPaster";
+import SmallModelCaveat from "./SmallModelCaveat";
 import {
   analyzeDocument,
   isFileSupported,
@@ -267,6 +269,57 @@ const SIDED_BODY_PART_LABELS = {
   shoulder: "Shoulder Condition",
 };
 
+// Left/right/bilateral qualifier for a mapped condition label that doesn't
+// already carry one (SIDED_BODY_PART_LABELS' "Left Hip Condition" etc.
+// already does). Real letters rate left and right radiculopathy separately
+// ("radiculopathy, left lower extremity (femoral)" 20% / "... right lower
+// extremity (femoral)" 10%), but mapSavedRatingToCondition's keyword match
+// collapses both onto the same generic "Radiculopathy" label - without a
+// side-qualified label, normalizeConditionName-only dedup below treats them
+// as the same row and silently drops the second rating.
+const SIDE_QUALIFIER = { left: "Left", right: "Right", bilateral: "Bilateral" };
+
+function qualifyConditionLabelWithSide(name, side) {
+  const qualifier = SIDE_QUALIFIER[side];
+  if (!qualifier) return name;
+  if (new RegExp(`\\b${qualifier}\\b`, "i").test(name)) return name;
+  return `${name} (${qualifier})`;
+}
+
+// Seeds the auto-fill effect below from getMyRatings() only - actual
+// service-connected ratings. Saved claims are pending, not-yet-decided
+// claims; they don't belong under "Your Current Service-Connected Ratings"
+// (that's what the separate "Reload from My Packet" button is for), so this
+// deliberately never reads getSavedClaims(). Deduped by condition name AND
+// side (getMyRatings() always returns a sanitized side of
+// left/right/bilateral/none) so a rating already covered by a preset/keyword
+// match doesn't also seed its raw name as a second row, while left and right
+// ratings of the same condition both survive as distinct rows.
+function buildSeedRatingsFromMyRatings() {
+  const seen = new Set();
+  const seeded = [];
+
+  getMyRatings().forEach((r) => {
+    const name = mapSavedRatingToCondition(r);
+    // Keyed on the saved rating's own name, not the preset it maps to: two
+    // different ratings can map to one preset and must both survive.
+    const key = normalizeConditionName(r.name || name);
+    if (!key) return;
+    const side = r.side || "none";
+    const dedupeKey = `${key}|${side}`;
+    if (seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
+    seeded.push({
+      condition: qualifyConditionLabelWithSide(name, side),
+      rating:
+        r.rating !== null && r.rating !== undefined ? String(r.rating) : "",
+      side,
+    });
+  });
+
+  return seeded;
+}
+
 function mapSavedRatingToCondition(saved) {
   const name = (saved.name || "").trim();
 
@@ -275,8 +328,16 @@ function mapSavedRatingToCondition(saved) {
   );
   if (exactMatch) return exactMatch;
 
+  // Match only the diagnosis itself: VA notes like "(claimed as ... post
+  // traumatic ...)" on a spine rating must not map it to PTSD, and a hip
+  // rating "associated with lumbosacral strain, degenerative disc disease"
+  // must not map to the spine.
+  const open = name.indexOf("(");
+  const diagnosis = (open === -1 ? name : name.slice(0, open)).split(
+    / (?:associated with|secondary to) /i,
+  )[0];
   const keywordMatch = CONDITION_NAME_KEYWORD_MAP.find(([pattern]) =>
-    pattern.test(name),
+    pattern.test(diagnosis),
   );
   if (keywordMatch) return keywordMatch[1];
 
@@ -515,7 +576,7 @@ const PathfinderInputToolbar = ({
         onClick={handleLoadMyRatings}
         className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
       >
-        📊 {t("pathfinder", "loadMyRatings")}
+        📊 {t("pathfinder", "reloadMyRatings")}
       </button>
     )}
     <button
@@ -537,7 +598,7 @@ const PathfinderInputToolbar = ({
       onClick={loadFromPacket}
       className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
     >
-      {t("pathfinder", "loadFromPacket")}
+      {t("pathfinder", "reloadFromPacket")}
     </button>
   </div>
 );
@@ -554,7 +615,7 @@ const PathfinderAnalyzeButton = ({
     disabled={
       isAnalyzing ||
       !isAnyAIAvailable() ||
-      ratings.filter((r) => r.condition && r.condition.trim()).length === 0
+      ratings.filter((r) => r.condition?.trim()).length === 0
     }
     className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
   >
@@ -616,42 +677,76 @@ const PathfinderRatingsList = ({
   </>
 );
 
+// Split out of PathfinderInputSection to keep it under the repo's
+// line-count ceiling.
+const PathfinderInputSectionHeader = ({
+  t,
+  headingRef,
+  hasMyRatings,
+  handleLoadMyRatings,
+  setShowVAGovPaster,
+  setShowDropInModal,
+  loadFromPacket,
+}) => (
+  <div className="flex items-center justify-between mb-4">
+    <h2
+      ref={headingRef}
+      tabIndex={-1}
+      className="text-lg font-semibold text-gray-900 dark:text-white focus-visible:ring-2 focus-visible:ring-teal-500 rounded"
+    >
+      {t("pathfinder", "currentRatingsTitle")}
+    </h2>
+    <PathfinderInputToolbar
+      t={t}
+      hasMyRatings={hasMyRatings}
+      handleLoadMyRatings={handleLoadMyRatings}
+      setShowVAGovPaster={setShowVAGovPaster}
+      setShowDropInModal={setShowDropInModal}
+      loadFromPacket={loadFromPacket}
+    />
+  </div>
+);
+
 const PathfinderInputSection = ({
   t,
+  headingRef,
   hasMyRatings,
   handleLoadMyRatings,
   setShowVAGovPaster,
   setShowDropInModal,
   loadFromPacket,
   loadedFromPacket,
+  autoSeededFromRatings,
   ratings,
   updateRating,
   removeRating,
   addRating,
   additionalContext,
-  setAdditionalContext,
+  handleAdditionalContextChange,
   handleClear,
   handleAnalyze,
   isAnalyzing,
 }) => (
   <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-        {t("pathfinder", "currentRatingsTitle")}
-      </h2>
-      <PathfinderInputToolbar
-        t={t}
-        hasMyRatings={hasMyRatings}
-        handleLoadMyRatings={handleLoadMyRatings}
-        setShowVAGovPaster={setShowVAGovPaster}
-        setShowDropInModal={setShowDropInModal}
-        loadFromPacket={loadFromPacket}
-      />
-    </div>
+    <PathfinderInputSectionHeader
+      t={t}
+      headingRef={headingRef}
+      hasMyRatings={hasMyRatings}
+      handleLoadMyRatings={handleLoadMyRatings}
+      setShowVAGovPaster={setShowVAGovPaster}
+      setShowDropInModal={setShowDropInModal}
+      loadFromPacket={loadFromPacket}
+    />
 
     {loadedFromPacket && (
       <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
         ✓ {t("pathfinder", "loadedFromPacket")}
+      </div>
+    )}
+
+    {autoSeededFromRatings && !loadedFromPacket && (
+      <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
+        ✓ {t("pathfinder", "autoSeededFromRatings")}
       </div>
     )}
 
@@ -670,7 +765,7 @@ const PathfinderInputSection = ({
       </label>
       <textarea
         value={additionalContext}
-        onChange={(e) => setAdditionalContext(e.target.value)}
+        onChange={(e) => handleAdditionalContextChange(e.target.value)}
         placeholder={t("pathfinder", "additionalContextPlaceholder")}
         className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 resize-none"
       />
@@ -752,9 +847,9 @@ const PathfinderOpportunities = ({
         {results.data.opportunities.length})
       </h3>
       <div className="grid md:grid-cols-2 gap-4">
-        {results.data.opportunities.map((opp, index) => (
+        {results.data.opportunities.map((opp) => (
           <OpportunityCard
-            key={index}
+            key={`${opp.proposed_condition}-${opp.primary_source}`}
             opportunity={opp}
             onBuildNexus={handleBuildNexus}
             onPracticeExam={handlePracticeExam}
@@ -773,8 +868,11 @@ const PathfinderMissingDiagnoses = ({ results, t }) =>
         <LightbulbIcon /> {t("pathfinder", "potentialUndiagnosedConditions")}
       </h3>
       <div className="space-y-4">
-        {results.data.missing_diagnoses.map((item, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+        {results.data.missing_diagnoses.map((item) => (
+          <div
+            key={item.condition}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4"
+          >
             <div className="font-semibold text-gray-900 dark:text-white mb-1">
               {item.condition}
             </div>
@@ -803,8 +901,11 @@ const PathfinderIncreaseOpportunities = ({ results, t }) =>
         <TrendingUpIcon /> {t("pathfinder", "potentialRatingIncreases")}
       </h3>
       <div className="space-y-4">
-        {results.data.increase_opportunities.map((item, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+        {results.data.increase_opportunities.map((item) => (
+          <div
+            key={item.current_condition}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4"
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="font-semibold text-gray-900 dark:text-white">
                 {item.current_condition}
@@ -836,9 +937,9 @@ const PathfinderResultsSection = ({
   handlePracticeExam,
   setResults,
 }) =>
-  results &&
-  results.success && (
+  results?.success && (
     <div className="space-y-6">
+      <SmallModelCaveat />
       <PathfinderStrategyOverview results={results} t={t} />
 
       <PathfinderOpportunities
@@ -1092,13 +1193,11 @@ const PathfinderDropInModal = ({
   );
 };
 
-function _extractRatingsFromText(text) {
+export function _extractRatingsFromText(text) {
   // Look for patterns like "PTSD - 70%" or "Condition: PTSD, Rating: 70%"
   const ratingPatterns = [
-    // eslint-disable-next-line sonarjs/slow-regex -- nested quantifier already removed; empirically verified O(n^2) via .exec() loop restarts, not exponential (see PR notes)
-    /([A-Z][a-z\s]+)\s*[-:]\s*(\d+)%?/gi, // "PTSD - 70%" or "PTSD: 70"
-    // eslint-disable-next-line sonarjs/slow-regex -- same as above; single quantifier, no nesting, no catastrophic backtracking
-    /(\d+)%?\s+for\s+([A-Z][a-z\s]+)/gi, // "70% for PTSD"
+    /([A-Z][a-z\s]{1,100})\s{0,10}[-:]\s{0,10}(\d{1,3})%?/gi, // "PTSD - 70%" or "PTSD: 70"
+    /(\d{1,3})%?\s{1,10}for\s{1,10}([A-Z][a-z\s]{1,100})/gi, // "70% for PTSD"
   ];
 
   const extractedRatings = [];
@@ -1121,10 +1220,13 @@ function _extractRatingsFromText(text) {
 function usePathfinderInitEffects({
   initialConditions,
   setApiKey,
+  hasConsented,
   setHasConsented,
   setAIStatus,
+  ratings,
   setRatings,
   setLoadedFromPacket,
+  setAutoSeededFromRatings,
 }) {
   // Load API key, check consent, and monitor AI status
   useEffect(() => {
@@ -1166,6 +1268,38 @@ function usePathfinderInitEffects({
       setLoadedFromPacket(true); // Show indicator that conditions were loaded
     }
   }, [initialConditions, setRatings, setLoadedFromPacket]);
+
+  // Auto-seed from My Ratings only once the consent screen is passed, so the
+  // veteran never has to click "Reload My Ratings" just to see data the app
+  // already has. Runs once per mount, only when nothing else (BlueButtonXRay
+  // conditions above, a paste, a file drop) has already populated the form.
+  const autoSeededRef = useRef(false);
+  useEffect(() => {
+    if (autoSeededRef.current) return;
+    if (!hasConsented) return;
+    if (initialConditions && initialConditions.length > 0) {
+      autoSeededRef.current = true;
+      return;
+    }
+    const isPristine =
+      ratings.length === 1 && !ratings[0].condition && !ratings[0].rating;
+    if (!isPristine) {
+      autoSeededRef.current = true;
+      return;
+    }
+    autoSeededRef.current = true;
+    const seeded = buildSeedRatingsFromMyRatings();
+    if (seeded.length > 0) {
+      setRatings(seeded);
+      setAutoSeededFromRatings(true);
+    }
+  }, [
+    hasConsented,
+    initialConditions,
+    ratings,
+    setRatings,
+    setAutoSeededFromRatings,
+  ]);
 }
 
 async function _processUploadedFile({
@@ -1176,6 +1310,7 @@ async function _processUploadedFile({
   setFileProgress,
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
   setShowDropInModal,
   setUploadedFile,
 }) {
@@ -1196,6 +1331,9 @@ async function _processUploadedFile({
       setAdditionalContext(result.text);
       alert(t("pathfinder", "noRatingsExtracted"));
     }
+    // ADR-009: this text came straight from the uploaded file's OCR/extraction
+    // output - a document call, so analyzeStrategy must not route it off-device.
+    setAdditionalContextIsDocument(true);
 
     setShowDropInModal(false);
     setUploadedFile(null);
@@ -1211,15 +1349,19 @@ async function _processUploadedFile({
 function _clearPathfinder({
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
   setResults,
   setError,
   setLoadedFromPacket,
+  setAutoSeededFromRatings,
 }) {
   setRatings([{ condition: "", rating: "" }]);
   setAdditionalContext("");
+  setAdditionalContextIsDocument(false);
   setResults(null);
   setError(null);
   setLoadedFromPacket(false);
+  setAutoSeededFromRatings(false);
 }
 
 function _selectDroppedFile({
@@ -1268,6 +1410,7 @@ async function _runStrategyAnalysis({
   ratings,
   apiKey,
   additionalContext,
+  additionalContextIsDocument,
   t,
   onOpenAISettings,
   setError,
@@ -1297,9 +1440,19 @@ async function _runStrategyAnalysis({
       apiKey,
       validRatings,
       additionalContext,
+      {
+        additionalContextIsDocument,
+      },
     );
     setResults(result);
   } catch (err) {
+    // ADR-009: a DocumentOffDeviceBlockedError is only reachable now when
+    // additionalContext actually came from an uploaded document AND no
+    // on-device AI is configured - plain-typed analysis
+    // (additionalContextIsDocument: false) is never blocked here anymore.
+    // err.message is already the plain, veteran-facing notice text; the
+    // ratings already extracted from the document stay visible above, so
+    // this is a missing AI opinion, not a dead end.
     setError(err.message);
   } finally {
     setIsAnalyzing(false);
@@ -1410,6 +1563,7 @@ function createPathfinderFileHandlers({
   setFileProgress,
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
 }) {
   return {
     handleFileSelect: (files) =>
@@ -1429,6 +1583,7 @@ function createPathfinderFileHandlers({
         setFileProgress,
         setRatings,
         setAdditionalContext,
+        setAdditionalContextIsDocument,
         setShowDropInModal,
         setUploadedFile,
       }),
@@ -1439,6 +1594,7 @@ function createPathfinderActionHandlers({
   ratings,
   apiKey,
   additionalContext,
+  additionalContextIsDocument,
   t,
   onNavigate,
   onOpenAISettings,
@@ -1447,7 +1603,9 @@ function createPathfinderActionHandlers({
   setResults,
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
   setLoadedFromPacket,
+  setAutoSeededFromRatings,
 }) {
   return {
     handleAnalyze: () =>
@@ -1455,6 +1613,7 @@ function createPathfinderActionHandlers({
         ratings,
         apiKey,
         additionalContext,
+        additionalContextIsDocument,
         t,
         onOpenAISettings,
         setError,
@@ -1467,9 +1626,11 @@ function createPathfinderActionHandlers({
       _clearPathfinder({
         setRatings,
         setAdditionalContext,
+        setAdditionalContextIsDocument,
         setResults,
         setError,
         setLoadedFromPacket,
+        setAutoSeededFromRatings,
       }),
   };
 }
@@ -1481,14 +1642,17 @@ function usePathfinderHandlers({
   ratings,
   apiKey,
   additionalContext,
+  additionalContextIsDocument,
   uploadedFile,
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
   setIsAnalyzing,
   setResults,
   setError,
   setHasConsented,
   setLoadedFromPacket,
+  setAutoSeededFromRatings,
   setShowVAGovPaster,
   setShowDropInModal,
   setUploadedFile,
@@ -1513,12 +1677,14 @@ function usePathfinderHandlers({
     setFileProgress,
     setRatings,
     setAdditionalContext,
+    setAdditionalContextIsDocument,
   });
 
   const actionHandlers = createPathfinderActionHandlers({
     ratings,
     apiKey,
     additionalContext,
+    additionalContextIsDocument,
     t,
     onNavigate,
     onOpenAISettings,
@@ -1527,11 +1693,20 @@ function usePathfinderHandlers({
     setResults,
     setRatings,
     setAdditionalContext,
+    setAdditionalContextIsDocument,
     setLoadedFromPacket,
+    setAutoSeededFromRatings,
   });
 
   return {
     handleConsent: () => _consentToAI(setHasConsented),
+    // A manual edit always means "typed", never "document" - see
+    // additionalContextIsDocument's declaration for why that distinction
+    // controls whether analyzeStrategy's call can reach an off-device AI.
+    handleAdditionalContextChange: (value) => {
+      setAdditionalContext(value);
+      setAdditionalContextIsDocument(false);
+    },
     ...ratingsHandlers,
     ...fileHandlers,
     ...actionHandlers,
@@ -1543,17 +1718,20 @@ function _consentToAI(setHasConsented) {
   setHasConsented(true);
 }
 
-function usePathfinderState({
-  onNavigate,
-  onOpenAISettings,
-  initialConditions,
-}) {
-  const { t } = useLanguage();
-
+// Owns all of Pathfinder's plain useState declarations (ratings, packet/AI
+// consent, modal toggles, file-drop state). Split out of usePathfinderState
+// purely to keep its function body under the line-count/complexity limits.
+// Same logic, same order of operations, same initial values.
+function usePathfinderCoreState() {
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
-
   const [ratings, setRatings] = useState([{ condition: "", rating: "" }]);
   const [additionalContext, setAdditionalContext] = useState("");
+  // ADR-009: does the CURRENT additionalContext text come from an uploaded
+  // document (_processUploadedFile) rather than the veteran typing it
+  // directly? Only the document case may be blocked off-device - a typed
+  // symptom/evidence note is "context", not "document" (see analyzeStrategy).
+  const [additionalContextIsDocument, setAdditionalContextIsDocument] =
+    useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -1561,6 +1739,7 @@ function usePathfinderState({
   const [apiKey, setApiKey] = useState("");
   const [hasConsented, setHasConsented] = useState(false);
   const [loadedFromPacket, setLoadedFromPacket] = useState(false);
+  const [autoSeededFromRatings, setAutoSeededFromRatings] = useState(false);
   const [, setAIStatus] = useState(getAIStatus());
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
@@ -1570,51 +1749,37 @@ function usePathfinderState({
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [fileProgress, setFileProgress] = useState(null);
   const fileInputRef = useRef(null);
-
-  usePathfinderInitEffects({
-    initialConditions,
-    setApiKey,
-    setHasConsented,
-    setAIStatus,
-    setRatings,
-    setLoadedFromPacket,
-  });
-
-  const handlers = usePathfinderHandlers({
-    t,
-    onNavigate,
-    onOpenAISettings,
-    ratings,
-    apiKey,
-    additionalContext,
-    uploadedFile,
-    setRatings,
-    setAdditionalContext,
-    setIsAnalyzing,
-    setResults,
-    setError,
-    setHasConsented,
-    setLoadedFromPacket,
-    setShowVAGovPaster,
-    setShowDropInModal,
-    setUploadedFile,
-    setIsProcessingFile,
-    setFileProgress,
-  });
+  // Passing consent unmounts PathfinderConsentGate's button (the element
+  // that had focus), stranding focus on <body> - outside the dialog, so
+  // useFocusTrap's keydown listener (attached to the dialog element) stops
+  // seeing Tab/Escape. Focused onto the authenticated view's own heading
+  // once consent is granted, see the effect in usePathfinderState.
+  const authHeadingRef = useRef(null);
 
   return {
-    t,
     ratings,
+    setRatings,
     additionalContext,
     setAdditionalContext,
+    additionalContextIsDocument,
+    setAdditionalContextIsDocument,
     isAnalyzing,
+    setIsAnalyzing,
     results,
     setResults,
     error,
+    setError,
     showPrivacy,
     setShowPrivacy,
+    apiKey,
+    setApiKey,
     hasConsented,
+    setHasConsented,
     loadedFromPacket,
+    setLoadedFromPacket,
+    autoSeededFromRatings,
+    setAutoSeededFromRatings,
+    setAIStatus,
     showVAGovPaster,
     setShowVAGovPaster,
     showDropInModal,
@@ -1622,9 +1787,91 @@ function usePathfinderState({
     uploadedFile,
     setUploadedFile,
     isProcessingFile,
+    setIsProcessingFile,
     fileProgress,
     setFileProgress,
     fileInputRef,
+    authHeadingRef,
+  };
+}
+
+function usePathfinderState({
+  onNavigate,
+  onOpenAISettings,
+  initialConditions,
+}) {
+  const { t } = useLanguage();
+  const s = usePathfinderCoreState();
+
+  usePathfinderInitEffects({
+    initialConditions,
+    setApiKey: s.setApiKey,
+    hasConsented: s.hasConsented,
+    setHasConsented: s.setHasConsented,
+    setAIStatus: s.setAIStatus,
+    ratings: s.ratings,
+    setRatings: s.setRatings,
+    setLoadedFromPacket: s.setLoadedFromPacket,
+    setAutoSeededFromRatings: s.setAutoSeededFromRatings,
+  });
+
+  const handlers = usePathfinderHandlers({
+    t,
+    onNavigate,
+    onOpenAISettings,
+    ratings: s.ratings,
+    apiKey: s.apiKey,
+    additionalContext: s.additionalContext,
+    additionalContextIsDocument: s.additionalContextIsDocument,
+    uploadedFile: s.uploadedFile,
+    setRatings: s.setRatings,
+    setAdditionalContext: s.setAdditionalContext,
+    setAdditionalContextIsDocument: s.setAdditionalContextIsDocument,
+    setIsAnalyzing: s.setIsAnalyzing,
+    setResults: s.setResults,
+    setError: s.setError,
+    setHasConsented: s.setHasConsented,
+    setLoadedFromPacket: s.setLoadedFromPacket,
+    setAutoSeededFromRatings: s.setAutoSeededFromRatings,
+    setShowVAGovPaster: s.setShowVAGovPaster,
+    setShowDropInModal: s.setShowDropInModal,
+    setUploadedFile: s.setUploadedFile,
+    setIsProcessingFile: s.setIsProcessingFile,
+    setFileProgress: s.setFileProgress,
+  });
+
+  useEffect(() => {
+    if (s.hasConsented) s.authHeadingRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.hasConsented]);
+
+  return {
+    t,
+    ratings: s.ratings,
+    additionalContext: s.additionalContext,
+    setAdditionalContext: s.setAdditionalContext,
+    additionalContextIsDocument: s.additionalContextIsDocument,
+    setAdditionalContextIsDocument: s.setAdditionalContextIsDocument,
+    isAnalyzing: s.isAnalyzing,
+    results: s.results,
+    setResults: s.setResults,
+    error: s.error,
+    showPrivacy: s.showPrivacy,
+    setShowPrivacy: s.setShowPrivacy,
+    hasConsented: s.hasConsented,
+    loadedFromPacket: s.loadedFromPacket,
+    autoSeededFromRatings: s.autoSeededFromRatings,
+    showVAGovPaster: s.showVAGovPaster,
+    setShowVAGovPaster: s.setShowVAGovPaster,
+    showDropInModal: s.showDropInModal,
+    setShowDropInModal: s.setShowDropInModal,
+    uploadedFile: s.uploadedFile,
+    setUploadedFile: s.setUploadedFile,
+    isProcessingFile: s.isProcessingFile,
+    fileProgress: s.fileProgress,
+    setFileProgress: s.setFileProgress,
+    fileInputRef: s.fileInputRef,
+    authHeadingRef: s.authHeadingRef,
     ...handlers,
   };
 }
@@ -1683,12 +1930,13 @@ const PathfinderAuthenticatedContent = ({
   setShowDropInModal,
   loadFromPacket,
   loadedFromPacket,
+  autoSeededFromRatings,
   ratings,
   updateRating,
   removeRating,
   addRating,
   additionalContext,
-  setAdditionalContext,
+  handleAdditionalContextChange,
   handleClear,
   handleAnalyze,
   isAnalyzing,
@@ -1699,24 +1947,27 @@ const PathfinderAuthenticatedContent = ({
   handlePracticeExam,
   showPrivacy,
   setShowPrivacy,
+  authHeadingRef,
 }) => (
   <>
     <PathfinderAIBanner t={t} />
 
     <PathfinderInputSection
       t={t}
+      headingRef={authHeadingRef}
       hasMyRatings={hasMyRatings}
       handleLoadMyRatings={handleLoadMyRatings}
       setShowVAGovPaster={setShowVAGovPaster}
       setShowDropInModal={setShowDropInModal}
       loadFromPacket={loadFromPacket}
       loadedFromPacket={loadedFromPacket}
+      autoSeededFromRatings={autoSeededFromRatings}
       ratings={ratings}
       updateRating={updateRating}
       removeRating={removeRating}
       addRating={addRating}
       additionalContext={additionalContext}
-      setAdditionalContext={setAdditionalContext}
+      handleAdditionalContextChange={handleAdditionalContextChange}
       handleClear={handleClear}
       handleAnalyze={handleAnalyze}
       isAnalyzing={isAnalyzing}

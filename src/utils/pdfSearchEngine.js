@@ -61,8 +61,11 @@ export async function searchPdfForKeyword(pdfData, searchTerm, options = {}) {
     if (searchTerm instanceof RegExp) {
       pattern = searchTerm;
     } else {
-      const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const wordBoundary = wholeWord ? "\\b" : "";
+      const escapedTerm = searchTerm.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        String.raw`\$&`,
+      );
+      const wordBoundary = wholeWord ? String.raw`\b` : "";
       const flags = caseSensitive ? "g" : "gi";
       pattern = new RegExp(
         `${wordBoundary}${escapedTerm}${wordBoundary}`,
@@ -170,8 +173,11 @@ export async function searchPdfForMultipleKeywords(
 
     // Build search patterns for all keywords
     const patterns = keywords.map((keyword) => {
-      const escapedTerm = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const wordBoundary = wholeWord ? "\\b" : "";
+      const escapedTerm = keyword.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        String.raw`\$&`,
+      );
+      const wordBoundary = wholeWord ? String.raw`\b` : "";
       const flags = caseSensitive ? "g" : "gi";
       return {
         keyword,
@@ -309,13 +315,16 @@ export function highlightSearchTerm(
 ) {
   // Sanitize context to prevent XSS via dangerouslySetInnerHTML
   const sanitized = context
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 
   const flags = caseSensitive ? "g" : "gi";
-  const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedTerm = searchTerm.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    String.raw`\$&`,
+  );
   const pattern = new RegExp(`(${escapedTerm})`, flags);
 
   return sanitized.replace(

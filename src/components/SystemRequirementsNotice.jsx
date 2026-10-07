@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { detectDeviceCapabilities } from "../utils/deviceCapabilityDetector";
+import {
+  detectDeviceCapabilities,
+  describeDeviceModel,
+} from "../utils/deviceCapabilityDetector";
+import { formatDownloadSize } from "../utils/localModelLabels";
+import {
+  describeDeviceClass,
+  TABLET_UNTESTED_SENTENCE,
+} from "../utils/deviceLabels";
 import {
   AI_WARMUP,
   AI_REQUIREMENTS,
@@ -11,20 +19,19 @@ import {
  * Strips ANGLE/driver wrapper from WebGPU adapter description strings.
  * "ANGLE (NVIDIA, NVIDIA GeForce RTX 4080 SUPER Direct3D11 ...)" → "NVIDIA GeForce RTX 4080 SUPER"
  */
-function friendlyGpuName(desc) {
+export function friendlyGpuName(desc) {
   if (!desc) return null;
   // Apple Silicon: bare "Apple M1" / "Apple M2 Pro" - no ANGLE wrapper
   if (/^Apple M\d/i.test(desc)) return desc.trim().slice(0, 50);
   // Windows/Linux: "ANGLE (NVIDIA, NVIDIA GeForce RTX 4080 SUPER Direct3D11...)"
   const angleMatch = desc.match(
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- character classes ([^,]) and stop-alternatives don't overlap, so backtracking is bounded; rewriting risks mis-parsing real-world GPU description strings
-    /ANGLE\s*\([^,]+,\s*([^,]+?)(?:\s+Direct3D|\s+Metal|\s+Vulkan|\s+vs_|\s*Direct|\s*,)/i,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the count of stop-alternatives (5 GPU-API suffixes), not backtracking; bounded below for S8786
+    /ANGLE\s{0,10}\([^,]{1,200},\s{0,10}([^,]{1,200}?)(?:\s{1,10}Direct3D|\s{1,10}Metal|\s{1,10}Vulkan|\s{1,10}vs_|\s{0,10}Direct|\s{0,10},)/i,
   );
   if (angleMatch) return angleMatch[1].trim();
   return (
     desc
-      // eslint-disable-next-line sonarjs/slow-regex -- \s and \S are disjoint character classes with no overlap, so this cannot backtrack catastrophically
-      .replace(/\s*(Direct3D|Metal|Vulkan|OpenGL)\S*/gi, "")
+      .replace(/\s{0,10}(Direct3D|Metal|Vulkan|OpenGL)\S{0,50}/gi, "")
       .trim()
       .slice(0, 50) || null
   );
@@ -54,9 +61,10 @@ export default function SystemRequirementsNotice({
 
   if (!profile) return null;
 
-  const blocked = profile.isMobile || profile.isTablet || !profile.hasWebGPU;
+  const blocked = profile.isMobile || !profile.hasWebGPU;
+  const tablet = profile.isTablet && profile.hasWebGPU;
   const limited = !blocked && profile.tier === "laptop";
-  const noWebGpu = !profile.hasWebGPU && !profile.isMobile && !profile.isTablet;
+  const noWebGpu = !profile.hasWebGPU && !profile.isMobile;
 
   const gpuName = friendlyGpuName(profile.gpuDescription);
   const tierRate =
@@ -75,16 +83,16 @@ export default function SystemRequirementsNotice({
       <CompactNotice
         profile={profile}
         noWebGpu={noWebGpu}
+        tablet={tablet}
         limited={limited}
         gpuName={gpuName}
-        warmup={warmup}
       />
     );
   }
 
   // ── Full card variant ────────────────────────────────────────────────────
 
-  // Blocked: mobile / tablet / no WebGPU
+  // Blocked: phone / no WebGPU
   if (blocked) {
     return (
       <BlockedNotice
@@ -95,10 +103,14 @@ export default function SystemRequirementsNotice({
     );
   }
 
+  if (tablet)
+    return <TabletNotice deviceModel={describeDeviceModel(profile)} />;
+
   // Warning: laptop / integrated GPU
   if (limited) {
     return (
       <LimitedNotice
+        deviceModel={describeDeviceModel(profile)}
         gpuName={gpuName}
         tierRate={tierRate}
         timeEstimate={timeEstimate}
@@ -116,7 +128,6 @@ export default function SystemRequirementsNotice({
     <CompatibleNotice
       profile={profile}
       gpuName={gpuName}
-      warmup={warmup}
       timeEstimate={timeEstimate}
       showWhy={showWhy}
       setShowWhy={setShowWhy}
@@ -126,15 +137,21 @@ export default function SystemRequirementsNotice({
   );
 }
 
-function CompactNotice({ profile, noWebGpu, limited, gpuName, warmup }) {
-  if (profile.isMobile || profile.isTablet) {
+function CompactNotice({ profile, noWebGpu, limited, gpuName, tablet }) {
+  const deviceModel = describeDeviceModel(profile);
+  if (profile.isMobile) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
         <span aria-hidden="true">🚫</span>
-        <span>
-          On-device AI requires a desktop or laptop with a dedicated GPU. Phones
-          and tablets are not supported.
-        </span>
+        <span>On-device AI is not available on phones.</span>
+      </div>
+    );
+  }
+  if (tablet) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-300">
+        <span aria-hidden="true">⚠</span>
+        <span>{tabletSummary(deviceModel)}</span>
       </div>
     );
   }
@@ -164,17 +181,34 @@ function CompactNotice({ profile, noWebGpu, limited, gpuName, warmup }) {
       <span aria-hidden="true">✓</span>
       <span>
         {gpuName ? `Compatible - ${gpuName}` : "Compatible GPU detected"}
-        {" · "}First run: {warmup.minMin}-{warmup.maxMin} min browser setup
+        {" · "}First run: one-time download and browser setup
       </span>
     </div>
   );
 }
 
+function tabletSummary(deviceModel) {
+  const model = deviceModel
+    ? `${deviceModel.displayName} (${formatDownloadSize(deviceModel)})`
+    : "a smaller AI model";
+  return `Tablet detected. On-device AI loads ${model} when your browser has WebGPU. ${TABLET_UNTESTED_SENTENCE}`;
+}
+
+function TabletNotice({ deviceModel }) {
+  return (
+    <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 p-4 space-y-2">
+      <p className="text-yellow-800 dark:text-yellow-200 text-sm font-semibold">
+        {tabletSummary(deviceModel)}
+      </p>
+      <RequirementsList deviceModel={deviceModel} />
+    </div>
+  );
+}
+
 function BlockedNotice({ profile, toolName, supportsExtractionOnly }) {
-  const reason =
-    profile.isMobile || profile.isTablet
-      ? "Phone and tablet detected - on-device AI requires a desktop or laptop computer with a dedicated GPU."
-      : "Your browser does not expose a WebGPU adapter. On-device AI requires Chrome 113+ or Edge 113+.";
+  const reason = profile.isMobile
+    ? "Phone detected - on-device AI is not available on phones."
+    : "Your browser does not expose a WebGPU adapter. On-device AI requires Chrome 113+ or Edge 113+.";
 
   return (
     <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 space-y-2">
@@ -214,6 +248,7 @@ function BlockedNotice({ profile, toolName, supportsExtractionOnly }) {
 }
 
 function LimitedNotice({
+  deviceModel,
   gpuName,
   tierRate,
   timeEstimate,
@@ -267,7 +302,7 @@ function LimitedNotice({
         open={showReqs}
         onToggle={() => setShowReqs((v) => !v)}
       >
-        <RequirementsList />
+        <RequirementsList deviceModel={deviceModel} />
       </ExpandSection>
     </div>
   );
@@ -276,7 +311,6 @@ function LimitedNotice({
 function CompatibleNotice({
   profile,
   gpuName,
-  warmup,
   timeEstimate,
   showWhy,
   setShowWhy,
@@ -284,6 +318,7 @@ function CompatibleNotice({
   setShowReqs,
 }) {
   const isHigh = profile.tier === "desktop-high";
+  const deviceModel = describeDeviceModel(profile);
   return (
     <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4 space-y-2">
       <div className="flex items-start gap-3">
@@ -292,7 +327,7 @@ function CompatibleNotice({
         </span>
         <div className="flex-1">
           <p className="font-semibold text-green-800 dark:text-green-200 text-sm">
-            Compatible{isHigh ? " - high-performance GPU" : " - mid-range GPU"}
+            Compatible - {describeDeviceClass(profile).gpuClass}
             {gpuName && (
               <span className="font-normal ml-2 text-green-700 dark:text-green-400">
                 ({gpuName})
@@ -303,11 +338,12 @@ function CompatibleNotice({
             On-device AI is supported. No data leaves your device.
           </p>
           <p className="text-green-700 dark:text-green-300 text-xs mt-1">
-            <strong>First run:</strong> allow {warmup.minMin}-{warmup.maxMin}{" "}
-            minutes for one-time browser setup (compiling GPU programs +
-            downloading the {AI_REQUIREMENTS.model.sizeGB} GB AI model).{" "}
-            <strong>After that:</strong> {AI_WARMUP.subsequentRun.minMin}-
-            {AI_WARMUP.subsequentRun.maxMin} min to start each session.
+            <strong>First run:</strong> a one-time download of{" "}
+            {deviceModel?.displayName ?? "the AI model"} (
+            {formatDownloadSize(deviceModel)}) and one-time browser setup
+            (compiling GPU programs). This can take several minutes, or longer
+            on slower devices. <strong>After that:</strong> the model loads from
+            your device each session, with no new download.
           </p>
           {timeEstimate && (
             <p className="text-green-700 dark:text-green-300 text-xs mt-1 font-medium">
@@ -329,7 +365,7 @@ function CompatibleNotice({
         open={showReqs}
         onToggle={() => setShowReqs((v) => !v)}
       >
-        <RequirementsList />
+        <RequirementsList deviceModel={deviceModel} />
       </ExpandSection>
     </div>
   );
@@ -343,7 +379,7 @@ function ExpandSection({ label, open, onToggle, children }) {
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center gap-1 text-xs font-medium opacity-70 hover:opacity-100 transition-opacity"
+        className="flex min-h-[44px] items-center gap-1 text-xs font-medium opacity-70 hover:opacity-100 transition-opacity"
         aria-expanded={open}
       >
         <span
@@ -377,22 +413,15 @@ function WhyExplanation({ warmup }) {
   return (
     <div className="space-y-2">
       <p>
-        WebLLM runs a {AI_REQUIREMENTS.model.sizeGB} GB AI model entirely inside
-        your browser using your GPU - your documents never leave your device.
+        WebLLM runs an AI model entirely inside your browser using your GPU -
+        your documents never leave your device.
       </p>
       <p>
-        <strong>
-          First-run setup ({warmup.minMin}-{warmup.maxMin} min, one time only):
-        </strong>{" "}
-        {warmup.reason} After this, subsequent sessions skip compilation
-        entirely.
+        <strong>First-run setup (one time only):</strong> {warmup.reason} After
+        this, subsequent sessions skip compilation entirely.
       </p>
       <p>
-        <strong>
-          Per-session load ({AI_WARMUP.subsequentRun.minMin}-
-          {AI_WARMUP.subsequentRun.maxMin} min):
-        </strong>{" "}
-        {AI_WARMUP.subsequentRun.reason}
+        <strong>Loading each session:</strong> {AI_WARMUP.subsequentRun.reason}
       </p>
       <p>
         Large C-Files are split into sections (chunks) and analyzed one at a
@@ -405,7 +434,7 @@ function WhyExplanation({ warmup }) {
   );
 }
 
-function RequirementsList() {
+function RequirementsList({ deviceModel = null }) {
   return (
     <ul className="space-y-1">
       <li>
@@ -428,7 +457,10 @@ function RequirementsList() {
         <strong>Note:</strong> {AI_REQUIREMENTS.browserNote}
       </li>
       <li>
-        <strong>First-time download:</strong> {AI_REQUIREMENTS.model.sizeGB} GB
+        <strong>First-time download:</strong>{" "}
+        {deviceModel?.downloadGB
+          ? `about ${deviceModel.downloadGB} GB`
+          : "size varies"}{" "}
         - {AI_REQUIREMENTS.model.note}
       </li>
     </ul>

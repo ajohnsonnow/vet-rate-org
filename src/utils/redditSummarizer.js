@@ -10,6 +10,7 @@
  */
 
 import { generateAI } from "./unifiedAIService";
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 import { REDDIT_SUMMARY_PROMPT, SUMMARY_TRIGGERS } from "./redditPrompts";
 
 // Word count threshold - if response exceeds this, auto-summarize
@@ -77,7 +78,10 @@ export const autoSummarizeIfLong = async (
     // eslint-disable-next-line no-console
     console.log(`📋 Reddit Summary Triggered: ${reason} (${wordCount} words)`);
 
+    // ADR-009: "context" - summarizes a prior AI response, never a
+    // veteran-uploaded document.
     const summary = await generateAI(REDDIT_SUMMARY_PROMPT(originalResponse), {
+      dataClass: AI_DATA_CLASS.CONTEXT,
       systemPrompt: isExplicitRequest
         ? "The user specifically asked for a Reddit-style summary. Format this with proper Reddit markdown, BLUF format, and preserve all citations."
         : "Generate a concise Reddit-style summary with BLUF format. Preserve all CFR citations and diagnostic codes.",

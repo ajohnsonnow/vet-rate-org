@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   APP_MODULES,
   BUG_SEVERITY,
@@ -10,10 +9,13 @@ import {
   getConsoleErrors,
   formatBugReport,
   copyToClipboard,
+  cleanReportData,
+  cleanReportText,
 } from "../utils/bugReportUtils";
 import { saveBugReport, saveToLocalStorage } from "../utils/bugReportStorage";
 import { scrubText } from "../utils/piiScrubber";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 // Developer contact email for bug reports
 const DEVELOPER_EMAIL = "Anth@StructuredForGrowth.com";
@@ -75,7 +77,7 @@ const MODULE_FLAG_MAP = [
   ["showTermsOfService", APP_MODULES.TERMS_OF_SERVICE],
 ];
 
-async function _saveBugReportLocally(reportId, formData, appState) {
+export async function _saveBugReportLocally(reportId, formData, appState) {
   try {
     const systemInfo = formData.includeSystemInfo ? getSystemInfo() : {};
     const currentAppState = formData.includeAppState
@@ -87,23 +89,28 @@ async function _saveBugReportLocally(reportId, formData, appState) {
       : [];
 
     // Save to IndexedDB (sanitized automatically)
-    await saveBugReport({
-      report_id: reportId,
-      severity: formData.severity,
-      category: formData.category,
-      module: formData.module,
-      diagnosticCode: formData.diagnosticCode,
-      userDescription: formData.userDescription,
-      stepsToReproduce: formData.stepsToReproduce,
-      expectedBehavior: formData.expectedBehavior,
-      actualBehavior: formData.actualBehavior,
-      additionalContext: formData.additionalContext,
-      veteranEmail: formData.veteranEmail || null,
-      systemInfo,
-      appState: currentAppState,
-      storageInfo,
-      consoleErrors,
-    });
+    // A file name can hold a surname or the last four of an SSN, so the
+    // veteran's own text and the app error are cleaned the same way the
+    // formatted report is before anything is stored.
+    await saveBugReport(
+      cleanReportData({
+        report_id: reportId,
+        severity: formData.severity,
+        category: formData.category,
+        module: formData.module,
+        diagnosticCode: formData.diagnosticCode,
+        userDescription: formData.userDescription,
+        stepsToReproduce: formData.stepsToReproduce,
+        expectedBehavior: formData.expectedBehavior,
+        actualBehavior: formData.actualBehavior,
+        additionalContext: formData.additionalContext,
+        veteranEmail: formData.veteranEmail || null,
+        systemInfo,
+        appState: currentAppState,
+        storageInfo,
+        consoleErrors,
+      }),
+    );
 
     // eslint-disable-next-line no-console
     console.log(`✅ Bug report ${reportId} saved to My Tickets (Safe-Squash)`);
@@ -118,13 +125,19 @@ async function _saveBugReportLocally(reportId, formData, appState) {
       severity: formData.severity?.value,
       category: formData.category,
       module: formData.module,
-      userDescription: formData.userDescription,
+      userDescription: cleanReportText(formData.userDescription),
       created_at: new Date().toISOString(),
     });
   }
 }
 
-async function _sendBugReportRemote(reportId, formData, generatedReport) {
+const _outbound = (text) => scrubText(cleanReportText(text));
+
+export async function _sendBugReportRemote(
+  reportId,
+  formData,
+  generatedReport,
+) {
   try {
     const severityLabel = formData.severity?.label || "Unknown";
 
@@ -136,13 +149,13 @@ async function _sendBugReportRemote(reportId, formData, generatedReport) {
       category: formData.category,
       module: formData.module,
       diagnostic_code: formData.diagnosticCode || "N/A",
-      description: scrubText(formData.userDescription),
-      steps_to_reproduce: scrubText(
+      description: _outbound(formData.userDescription),
+      steps_to_reproduce: _outbound(
         formData.stepsToReproduce || "Not provided",
       ),
-      expected_behavior: scrubText(formData.expectedBehavior || "Not provided"),
-      actual_behavior: scrubText(formData.actualBehavior || "Not provided"),
-      additional_context: scrubText(formData.additionalContext || "None"),
+      expected_behavior: _outbound(formData.expectedBehavior || "Not provided"),
+      actual_behavior: _outbound(formData.actualBehavior || "Not provided"),
+      additional_context: _outbound(formData.additionalContext || "None"),
       veteran_email: formData.veteranEmail || "Anonymous (no reply requested)",
       submitted_at: new Date().toISOString(),
       full_report: scrubText(generatedReport),
@@ -344,8 +357,30 @@ function _computeWizardNav(step, formData, submitted, onClose, setStep) {
 function BugSquasherHeader({ step, onClose }) {
   return (
     <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="Close bug reporter"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
           <div className="bg-white/20 rounded-xl p-2">
             <svg
               className="w-8 h-8"
@@ -361,33 +396,14 @@ function BugSquasherHeader({ step, onClose }) {
               />
             </svg>
           </div>
-          <div>
+          <div className="min-w-0">
             <h2 id="bug-squasher-title" className="text-2xl font-bold">
               🐛 Bug Squasher
             </h2>
             <p className="text-red-100 text-sm">Help me fix issues quickly</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
-          aria-label="Close bug reporter"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+      </HeaderCloseSlot>
 
       {/* Progress Steps */}
       <div className="flex items-center justify-between mt-6">
@@ -1106,8 +1122,6 @@ function BugSquasherStep3Review({
 }
 
 function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
-  const { t: _t } = useLanguage();
-
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);

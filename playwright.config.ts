@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const LATENCY_SPECS =
+  /(?:cfile-segmentation-latency|dkb-import-latency)\.spec\.ts$/;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -98,17 +101,55 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: LATENCY_SPECS,
+      // `--project=chromium` is the scope of preflight and pdca-check; the
+      // dependency makes the panic-key latency specs part of that gate.
+      dependencies: ["latency"],
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "firefox",
+      testIgnore: LATENCY_SPECS,
       use: { ...devices["Desktop Firefox"] },
       // axe page.evaluate() can be slow on large dialogs in Firefox — double the timeout.
       timeout: 60_000,
     },
     {
       name: "mobile-chrome",
+      testIgnore: LATENCY_SPECS,
       use: { ...devices["Pixel 5"] },
+    },
+    // The panic-key latency specs import multi-million-character documents,
+    // so they are CPU-bound by design and read the main thread's own
+    // responsiveness. They get their own project limited to one worker, so
+    // two of them never run at once and compete with each other; the
+    // measurement itself is taken inside the page (see
+    // tests/e2e/panic-latency-timing.ts), not across the test runner.
+    // Desktop only: both specs skip mobile, and the 4x CPU-throttle cases
+    // are Chromium-only.
+    {
+      name: "latency",
+      testMatch: LATENCY_SPECS,
+      fullyParallel: false,
+      workers: 1,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    // Firefox latency waits for Chromium latency, so the two never overlap.
+    // It is deliberately a dependent project and not a teardown of `latency`:
+    // a teardown rides along with every run that selects `latency`, and
+    // `chromium` depends on it, so the blocking CI jobs that run
+    // `--project=chromium` with only Chromium installed would start Firefox.
+    // Cost: a failing Chromium latency run skips this one. To run Firefox
+    // latency alone (or with --repeat-each / -g) add --no-deps:
+    //   npx playwright test --project=latency-firefox --no-deps
+    {
+      name: "latency-firefox",
+      testMatch: LATENCY_SPECS,
+      dependencies: ["latency"],
+      fullyParallel: false,
+      workers: 1,
+      timeout: 60_000,
+      use: { ...devices["Desktop Firefox"] },
     },
   ],
 
@@ -116,8 +157,16 @@ export default defineConfig({
   // normal dev server (5173) and any other long-running Vite processes.
   // reuseExistingServer is always false: silently reusing a foreign server (e.g.
   // a different project's dev server) produces axe results for the wrong app.
+  //
+  // --mode e2e activates vite.config.js's @mlc-ai/web-llm alias (a
+  // deterministic fake under tests/e2e/fakes/), so ai.aiReady-gated flows
+  // (Muster Call's Start Formation) are reachable here: headless Chromium
+  // reports navigator.gpu but requestAdapter() resolves null, so the real
+  // engine never loads in this suite regardless of how long a test waits.
+  // Every other mode ("development", "production", "test") is unaffected -
+  // `npm run dev`/`npm run build` never pass --mode e2e.
   webServer: {
-    command: "npm run dev -- --port 5197 --host 127.0.0.1",
+    command: "npm run dev -- --port 5197 --host 127.0.0.1 --mode e2e",
     url: "http://127.0.0.1:5197",
     reuseExistingServer: false,
     timeout: 30_000,

@@ -7,7 +7,8 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { parseServiceRecord } = await import("./musterCallProcessor");
+const { parseServiceRecord, buildDD214ProfileUpdate } =
+  await import("./musterCallProcessor");
 
 const REALISTIC_DD214 = `
 1. NAME (Last, First, Middle): WILLIAMS, ROBERT LEE
@@ -483,5 +484,256 @@ describe("musterCallProcessor: parseServiceRecord ReDoS regression guards", () =
     const elapsed = Date.now() - start;
     expect(result.error).toBeUndefined();
     expect(elapsed).toBeLessThan(1000);
+  });
+});
+
+describe("FIX: deployment mention outside a truncated Box 18 is still found", () => {
+  it("finds a real deployment when a stray '19a.' heading truncates Box 18 before the real remarks line", async () => {
+    // Real OCR reading-order scrambling on a multi-column form can put a
+    // later box's heading ahead of Box 18's actual end in the linearized
+    // text stream, so the lazy Box-18 isolation regex stops early - here,
+    // "19a. MAILING ADDRESS" cuts the isolated substring down to a single
+    // boilerplate sentence, and the real deployment mention lands inside
+    // what gets read as Box 28's narrative instead.
+    const text = `
+1. NAME (Last, First, Middle): SMITH, JANE MARIE
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+18. REMARKS: DATA HEREIN SUBJECT TO CHANGE.
+19a. MAILING ADDRESS AFTER SEPARATION
+100 MAIN ST
+28. NARRATIVE REASON FOR SEPARATION: SOLDIER SERVED IN KUWAIT.
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.deployments.map((d) => d.location)).toContain("KUWAIT");
+  });
+
+  it("still does not fabricate a deployment from boilerplate when the fallback triggers", async () => {
+    // Same truncated-Box-18 shape as above, but this time the only thing
+    // elsewhere in the document is preprinted boilerplate, not a real
+    // deployment - the fallback scan must still run the boilerplate strip
+    // before matching, same as the Box-18-scoped path.
+    const text = `
+1. NAME (Last, First, Middle): SMITH, JANE MARIE
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+18. REMARKS: DATA HEREIN SUBJECT TO CHANGE.
+19a. MAILING ADDRESS AFTER SEPARATION
+100 MAIN ST
+15a. MEMBER CONTRIBUTED TO POST-VIETNAM ERA VETERAN'S EDUCATIONAL ASSISTANCE PROGRAM
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.deployments).toEqual([]);
+  });
+});
+
+describe("FIX: foreignService stays null (unknown) instead of becoming a fabricated false", () => {
+  it("parseServiceRecord never sets foreignService itself (stays null - not currently extracted)", async () => {
+    const result = await parseServiceRecord(REALISTIC_DD214);
+    expect(result.foreignService).toBeNull();
+  });
+
+  it("buildDD214ProfileUpdate preserves an explicit false instead of coercing it", () => {
+    const candidate = buildDD214ProfileUpdate({
+      extractedData: { foreignService: false },
+    });
+    expect(candidate.foreignService).toBe(false);
+  });
+
+  it("buildDD214ProfileUpdate preserves an explicit true instead of dropping it", () => {
+    const candidate = buildDD214ProfileUpdate({
+      extractedData: { foreignService: true },
+    });
+    expect(candidate.foreignService).toBe(true);
+  });
+
+  it("buildDD214ProfileUpdate reports null, not false, when foreignService was never extracted", () => {
+    const candidate = buildDD214ProfileUpdate({ extractedData: {} });
+    expect(candidate.foreignService).toBeNull();
+  });
+});
+
+describe("FIX: Navy-rate MOS fallback no longer fires on an Army form", () => {
+  it("does not fabricate an MOS from OCR noise shaped like a Navy rate code", async () => {
+    // The Navy-rate pattern ([A-Z]{2,4} + a digit) used to run
+    // unconditionally and could match OCR noise anywhere in the document,
+    // not just a real Box 11 value - a synthetic stand-in for the real
+    // corpus repro (Tesseract read "THIS IS" as "THI3 1S" on an Army
+    // DD214's boilerplate header, fabricating MOS "THI3").
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+18. REMARKS: ANNEX4 SEE ATTACHED SHEET FOR DETAILS
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.mos).toBeFalsy();
+  });
+
+  it("still extracts a real Navy rate code when the branch actually is Navy", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: NAVY
+18. REMARKS: BM2 BOATSWAIN MATE SECOND CLASS
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.mos).toBe("BM2");
+  });
+});
+
+describe("FIX: generic MOS fallback no longer matches Box 4a's own label", () => {
+  // Regression (Vera re-verification, 2026-09-24): the generic
+  // "(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})..." fallback's "RATE"
+  // alternative matched Box 4a's own printed label ("GRADE, RATE OR
+  // RANK"), which a real scan OCR's as "GRADE RATE QO" - "QO", the two
+  // letters right after "RATE", satisfied the old loose class and was
+  // stored as the veteran's MOS.
+  it("does not fabricate an MOS from Box 4a's 'GRADE, RATE OR RANK' label", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+4a. GRADE RATE QO             b PAY GRADE
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.mos).toBeFalsy();
+  });
+
+  it("still extracts a real MOS explicitly labeled 'MOS:' with no title following", async () => {
+    // No title text follows "11B10" here (the next token is the "23."
+    // box number, a digit) - the shape-specific pattern above this one in
+    // the list requires a 6+ letter title and would not match, so this
+    // exercises the generic MOS-shape-gated label fallback specifically.
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+18. REMARKS: MOS: 11B10
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.mos).toBe("11B10");
+  });
+});
+
+describe("FIX: pay grade extraction reads the real Box 4b value", () => {
+  it("does not fabricate a pay grade from an unrelated two-letter word elsewhere in the document", async () => {
+    // The old fallback pattern carried a stray /g flag while reading
+    // match[1]: with /g, String.match() returns an array of whole matches
+    // with no capture groups, so match[1] was actually the *second*
+    // "E"+letter occurrence found anywhere in the document, not this
+    // pattern's capture group. Here that would have been the "ES" in Box
+    // 18, discarding the real (garbled) Box 4b value "Ed" and fabricating
+    // pay grade "E-5" instead of the correct "E-4".
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+4b. PAY GRADE: Ed
+18. REMARKS: ES CANNOT BE VERIFIED AT THIS TIME
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.payGrade).toBe("E-4");
+  });
+});
+
+describe("FIX: NGB-22 fields the parser already targets but was missing", () => {
+  it("recognizes the parenthetical NGB22 rendering of Box 24 (GENERAL (UNDER HONORABLE CONDITIONS))", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+24. CHARACTER OF SERVICE: GENERAL (UNDER HONORABLE CONDITIONS)
+25. SEPARATION AUTHORITY: NGR 600-200
+`;
+    const result = await parseServiceRecord(text, "NGB22");
+    expect(result.error).toBeUndefined();
+    expect(result.dischargeType).toBe("GENERAL UNDER HONORABLE CONDITIONS");
+  });
+
+  it("finds the date of birth when a pay-grade value sits between the Box 5 label and the digits", async () => {
+    // A real column-scrambled scan renders the row below the Box 5 header
+    // as "<pay grade>  <DOB digits>" on one line - the old gap pattern
+    // (\D{0,50}, non-digit only) could never skip past the pay grade's own
+    // embedded digit to reach the real 8-digit date.
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+5. DATE OF BIRTH (YYYYMMDD)
+E-5 19900101
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBe("01/01/1990");
+  });
+});
+
+describe("FIX: fabricated date of birth", () => {
+  // Regression (Vera re-verification, 2026-09-24): the compact-format Box 5
+  // fallback anchored on a bare "5." - which also matches the tail of any
+  // OTHER box number ending in 5 ("15.", "25.") - so a later box's 8-digit
+  // date got read as the veteran's date of birth.
+  it("does not fabricate a DOB from a later box's date (Box 25 also ends in '5.')", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+25. SEPARATION AUTHORITY: ORDERS DATED 20100615
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBeNull();
+  });
+
+  it("discards a DOB that would make the veteran under 17 at the entry date", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+5. DATE OF BIRTH: 01/15/2010
+12a. DATE ENTERED AD THIS PERIOD: 06/01/2010
+12b. DATE OF SEPARATION: 05/30/2015
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBeNull();
+  });
+
+  it("discards a DOB that falls after the separation date, even with no entry date extracted", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+5. DATE OF BIRTH: 06/01/2016
+12b. DATE OF SEPARATION: 05/30/2015
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBeNull();
+  });
+
+  it("keeps a plausible DOB (adult at entry, before separation)", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+5. DATE OF BIRTH: 01/15/1990
+12a. DATE ENTERED AD THIS PERIOD: 06/01/2010
+12b. DATE OF SEPARATION: 05/30/2015
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBe("01/15/1990");
   });
 });

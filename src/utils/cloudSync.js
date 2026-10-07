@@ -58,7 +58,7 @@ function loadScript(src) {
 
 async function ensureGoogleApis() {
   const loads = [];
-  if (!_gapiScriptLoaded && typeof window.gapi === "undefined") {
+  if (!_gapiScriptLoaded && window.gapi === undefined) {
     loads.push(
       loadScript("https://apis.google.com/js/api.js").then(() => {
         _gapiScriptLoaded = true;
@@ -67,7 +67,7 @@ async function ensureGoogleApis() {
   }
   if (
     !_gisScriptLoaded &&
-    (typeof window.google === "undefined" || !window.google?.accounts)
+    (window.google === undefined || !window.google?.accounts)
   ) {
     loads.push(
       loadScript("https://accounts.google.com/gsi/client").then(() => {
@@ -83,7 +83,7 @@ async function ensureGoogleApis() {
  */
 function initializeGapiClient() {
   return new Promise((resolve, reject) => {
-    if (typeof window.gapi === "undefined") {
+    if (window.gapi === undefined) {
       reject(new Error("Google API (gapi) not loaded"));
       return;
     }
@@ -109,7 +109,7 @@ function initializeGapiClient() {
  */
 function initializeGisClient() {
   return new Promise((resolve, reject) => {
-    if (typeof window.google === "undefined" || !window.google.accounts) {
+    if (window.google === undefined || !window.google.accounts) {
       reject(
         new Error(
           'Google Identity Services (GIS) not loaded. Add: <script src="https://accounts.google.com/gsi/client"></script>',
@@ -397,13 +397,13 @@ export async function encryptData(text, password) {
   o += iv.length;
   out.set(new Uint8Array(encrypted), o);
 
-  return btoa(String.fromCharCode(...out));
+  return btoa(String.fromCodePoint(...out));
 }
 
 export async function decryptData(encryptedBase64, password) {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
-  const bytes = Uint8Array.from(atob(encryptedBase64), (c) => c.charCodeAt(0));
+  const bytes = Uint8Array.from(atob(encryptedBase64), (c) => c.codePointAt(0));
 
   if (_matchesMagic(bytes, CLOUDSYNC_V3_MAGIC)) {
     let o = CLOUDSYNC_V3_MAGIC.length;

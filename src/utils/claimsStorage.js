@@ -45,10 +45,12 @@ function findExistingClaimIndex(claims, claim) {
   if (claim.vaAppealId) {
     return claims.findIndex((c) => c.vaAppealId === claim.vaAppealId);
   }
+  // A claim saved with no parent condition is stored with null; one passed
+  // in without the field has undefined. They are the same claim.
   return claims.findIndex(
     (c) =>
       c.conditionName === claim.conditionName &&
-      c.parentCondition === claim.parentCondition,
+      (c.parentCondition || null) === (claim.parentCondition || null),
   );
 }
 
@@ -177,6 +179,35 @@ export const saveStatement = (claimId, statementData) => {
     console.error("Error saving statement:", error);
     return false;
   }
+};
+
+// Save a statement under the claim for its condition, creating that claim
+// when the veteran typed a condition that was never saved from another tool.
+export const saveStatementForCondition = (statementData) => {
+  const target = {
+    conditionName: statementData.condition,
+    parentCondition: statementData.primaryCondition || null,
+  };
+  const matches = (c) =>
+    c.conditionName === target.conditionName &&
+    (c.parentCondition || null) === target.parentCondition;
+
+  let claim = getSavedClaims().find(matches);
+  if (!claim) {
+    if (!saveClaim(target)) return false;
+    claim = getSavedClaims().find(matches);
+  }
+  return claim ? saveStatement(claim.id, statementData) : false;
+};
+
+// The statement saved for a condition, or null when there is none.
+export const getStatementForCondition = (condition, primaryCondition) => {
+  const claim = getSavedClaims().find(
+    (c) =>
+      c.conditionName === condition &&
+      (c.parentCondition || null) === (primaryCondition || null),
+  );
+  return claim ? getStatement(claim.id) : null;
 };
 
 // Get statement for a claim

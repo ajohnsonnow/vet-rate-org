@@ -15,7 +15,6 @@
  */
 
 import { useState, useCallback, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   Upload,
   CheckCircle,
@@ -604,7 +603,6 @@ const ClaimEvidenceUpload = ({
   onClose,
   claimDetails = null,
 }) => {
-  const { _t } = useLanguage();
   const {
     selectedFile,
     documentType,

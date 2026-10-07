@@ -14,8 +14,16 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
-import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getDocumentAIRouting,
+} from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  DocumentOffDeviceBlockedError,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
 import {
   CONSISTENCY_CHECK_PROMPT,
   SOLO_STATEMENT_ANALYSIS_PROMPT,
@@ -77,8 +85,7 @@ function AnalyzerHeader({ onBack }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <span className="text-4xl">🔍</span>
-            AI Cross-Examination
+            <span className="text-4xl">🔍</span> AI Cross-Examination{""}
             <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-bold rounded">
               AI BETA
             </span>
@@ -124,7 +131,7 @@ function ModeToggle({ mode, onSelectMode }) {
             : "bg-gray-700 text-gray-300 hover:bg-gray-600"
         }`}
       >
-        📋 Compare Mode
+        📋 Compare Mode{" "}
         <span className="block text-xs font-normal opacity-75">
           Evidence vs Statement
         </span>
@@ -137,7 +144,7 @@ function ModeToggle({ mode, onSelectMode }) {
             : "bg-gray-700 text-gray-300 hover:bg-gray-600"
         }`}
       >
-        📝 Solo Mode
+        📝 Solo Mode{" "}
         <span className="block text-xs font-normal opacity-75">
           Statement Only
         </span>
@@ -217,8 +224,8 @@ function AnalyzeButton({
       >
         {loading ? (
           <span className="flex items-center gap-2">
-            <span className="animate-spin">⚙️</span>
-            Running Cross-Examination...
+            <span className="animate-spin">⚙️</span> Running
+            Cross-Examination...
           </span>
         ) : (
           "🔍 Analyze Consistency"
@@ -302,7 +309,11 @@ function IssuesPanel({ analysis }) {
           <NoIssuesFound />
         ) : (
           issues.map((issue, idx) => (
-            <IssueCard key={idx} issue={issue} index={idx} />
+            <IssueCard
+              key={issue.quote_target || issue.explanation}
+              issue={issue}
+              index={idx}
+            />
           ))
         )}
       </div>
@@ -325,9 +336,9 @@ function StrengthsSection({ mode, analysis }) {
         <span>💪</span> Strengths
       </h3>
       <ul className="space-y-2">
-        {analysis.strengths.map((strength, idx) => (
+        {analysis.strengths.map((strength) => (
           <li
-            key={idx}
+            key={strength}
             className="flex items-start gap-2 text-green-300 text-sm"
           >
             <span>✓</span>
@@ -393,7 +404,35 @@ function ResultsDashboard({ mode, analysis, targetText }) {
 /**
  * Run the AI consistency check
  */
-async function performConsistencyCheck(
+// Split out of performConsistencyCheck purely to keep it under the
+// line-count limit - same fields, same behavior (fire-and-forget save).
+function _saveConsistencyResults(mode, referenceText, targetText, result) {
+  const consistencyScore = result.overall_score || result.score || null;
+  const contradictionsFound =
+    result.issues?.length || result.contradictions?.length || 0;
+
+  saveAnalysisResults({
+    toolName: "AI Cross-Examination",
+    classification: PACKET_DOC_TYPES.OTHER,
+    rawText:
+      mode === "compare"
+        ? `REFERENCE:\n${referenceText}\n\nSTATEMENT:\n${targetText}`
+        : targetText,
+    extractedData: result,
+    vkbMergeData: {
+      aiInsights: { consistencyScore, contradictionsFound },
+      keyFacts: [
+        {
+          source: "AI Cross-Examination",
+          fact: `Consistency score: ${consistencyScore ?? "N/A"}, Issues: ${contradictionsFound}`,
+          date: new Date().toISOString(),
+        },
+      ],
+    },
+  }).catch((err) => console.warn("Failed to save consistency results:", err));
+}
+
+export async function performConsistencyCheck(
   mode,
   referenceText,
   targetText,
@@ -406,6 +445,18 @@ async function performConsistencyCheck(
   if (mode === "solo" && !targetText) {
     setError("Please provide a statement to analyze.");
     return;
+  }
+
+  // ADR-009 spec item 5: "compare" mode's referenceText is document-derived
+  // evidence text, so a cloud-only veteran must get a plain notice instead
+  // of a dead-end error that invites an unwinnable retry - pre-flight check
+  // before spending a call on a routing decision that can't change.
+  if (mode === "compare") {
+    const routing = getDocumentAIRouting();
+    if (!routing.onDeviceReady) {
+      setError(buildDocumentOffDeviceNotice(routing.blockedProviderLabel));
+      return;
+    }
   }
 
   setLoading(true);
@@ -429,7 +480,13 @@ async function performConsistencyCheck(
       ? `You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.\n\nVETERAN CASE DATA (use to cross-reference known facts):\n${veteranContext}`
       : "You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.";
 
+    // ADR-009: "compare" mode's referenceText is evidence text the veteran
+    // pastes in (often lifted from a medical record/exam letter), so it is
+    // treated as "document"; "solo" mode only ever carries the veteran's
+    // own drafted statement, so it is "context".
     const response = await generateAI(prompt, {
+      dataClass:
+        mode === "compare" ? AI_DATA_CLASS.DOCUMENT : AI_DATA_CLASS.CONTEXT,
       systemPrompt: systemPromptWithContext,
       taskType: "analysis",
       maxTokens: 2000,
@@ -447,35 +504,17 @@ async function performConsistencyCheck(
     setAnalysis(result);
 
     // Save consistency analysis to VKB + My Packet
-    const consistencyScore = result.overall_score || result.score || null;
-    const contradictionsFound =
-      result.issues?.length || result.contradictions?.length || 0;
-
-    saveAnalysisResults({
-      toolName: "AI Cross-Examination",
-      classification: PACKET_DOC_TYPES.OTHER,
-      rawText:
-        mode === "compare"
-          ? `REFERENCE:\n${referenceText}\n\nSTATEMENT:\n${targetText}`
-          : targetText,
-      extractedData: result,
-      vkbMergeData: {
-        aiInsights: {
-          consistencyScore,
-          contradictionsFound,
-        },
-        keyFacts: [
-          {
-            source: "AI Cross-Examination",
-            fact: `Consistency score: ${consistencyScore ?? "N/A"}, Issues: ${contradictionsFound}`,
-            date: new Date().toISOString(),
-          },
-        ],
-      },
-    }).catch((err) => console.warn("Failed to save consistency results:", err));
+    _saveConsistencyResults(mode, referenceText, targetText, result);
   } catch (err) {
     console.error("AI Consistency Check Failed:", err);
-    setError(`Analysis failed: ${err.message}. Please try again.`);
+    // A DocumentOffDeviceBlockedError's message is already the plain,
+    // veteran-facing notice and retrying it cannot succeed - don't wrap it
+    // in "Analysis failed... Please try again."
+    setError(
+      err instanceof DocumentOffDeviceBlockedError
+        ? err.message
+        : `Analysis failed: ${err.message}. Please try again.`,
+    );
   } finally {
     setLoading(false);
   }
@@ -485,7 +524,6 @@ async function performConsistencyCheck(
  * AIConsistencyAnalyzer - The Cross-Examination Tool
  */
 const AIConsistencyAnalyzer = ({ onBack }) => {
-  const { _t } = useLanguage();
   const [referenceText, setReferenceText] = useState("");
   const [targetText, setTargetText] = useState("");
   const [analysis, setAnalysis] = useState(null);

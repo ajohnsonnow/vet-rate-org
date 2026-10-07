@@ -17,6 +17,7 @@ import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import ReportBugLink from "./ReportBugLink";
 import VoiceInputButton from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 // Red Team Analysis Logic - Simulates skeptical VA examiner. Each checker
 // inspects the claim text and returns a { weakness, question } pair, or
@@ -25,7 +26,7 @@ const checkTimelineGap = (text) => {
   const yearPattern = /\b(19|20)\d{2}\b/g;
   const years = text
     .match(yearPattern)
-    ?.map((y) => parseInt(y))
+    ?.map((y) => Number.parseInt(y))
     .sort();
 
   if (!years || years.length < 2) return null;
@@ -292,26 +293,48 @@ const analyzeClaimWeaknesses = (claim) => {
 };
 
 const StressTestHeader = ({ onClose, onReportBug }) => (
-  <div className="flex items-start justify-between gap-3 border-b border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-    <div>
-      <h2
-        id="claim-stress-title"
-        className="mb-2 flex items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
-      >
-        ⚔️ The War Game - Red Team Simulator
-        <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-          AI
-        </span>
-        <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-          BETA
-        </span>
-      </h2>
-      <p className="text-sm text-gray-700 dark:text-gray-300">
-        Stress-test your claim. See the tough questions{" "}
-        <span className="font-bold">before</span> the C&P examiner asks them.
-      </p>
-    </div>
-    <div className="flex flex-shrink-0 items-center gap-2">
+  <div className="border-b border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          aria-label="Close dialog"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
+      <div className="min-w-0">
+        <h2
+          id="claim-stress-title"
+          className="mb-2 flex flex-wrap items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
+        >
+          ⚔️ The War Game - Red Team Simulator{" "}
+          <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+            AI
+          </span>
+          <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+            BETA
+          </span>
+        </h2>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
+          Stress-test your claim. See the tough questions{" "}
+          <span className="font-bold">before</span> the C&P examiner asks them.
+        </p>
+      </div>
       {onReportBug && (
         <ReportBugLink
           onClick={onReportBug}
@@ -319,26 +342,7 @@ const StressTestHeader = ({ onClose, onReportBug }) => (
           moduleName="The War Game"
         />
       )}
-      <button
-        onClick={onClose}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        aria-label="Close dialog"
-      >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -435,8 +439,8 @@ const LoadFromPacketSection = ({
       onClick={() => setShowPacketSelector(!showPacketSelector)}
       className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded transition flex items-center justify-center gap-2"
     >
-      📁 Load from My Packet
-      <span className="text-blue-200 text-sm">
+      📁 Load from My Packet{" "}
+      <span className="text-white text-sm">
         ({savedClaims.length} claims, {savedForms.length} forms)
       </span>
     </button>
@@ -551,9 +555,9 @@ const WeaknessesPanel = ({ weaknesses, getSeverityColor }) => (
       🚨 Weaknesses Detected: {weaknesses.length}
     </h3>
     <div className="space-y-3">
-      {weaknesses.map((weakness, idx) => (
+      {weaknesses.map((weakness) => (
         <div
-          key={idx}
+          key={weakness.description}
           className={`border-l-4 ${getSeverityColor(weakness.severity)} rounded bg-gray-100 p-4 dark:bg-gray-800`}
         >
           <div className="flex items-center justify-between mb-2">
@@ -594,7 +598,7 @@ const PracticeQuestionsPanel = ({
     <div className="space-y-4">
       {questions.map((q, idx) => (
         <div
-          key={idx}
+          key={q.question}
           className="rounded border border-gray-200 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800"
         >
           {/* Question */}
@@ -772,7 +776,7 @@ const useStressTestState = (claimData) => {
   const [savedClaims, setSavedClaims] = useState([]);
   const [savedStatements, setSavedStatements] = useState([]);
   const [savedForms, setSavedForms] = useState([]);
-  const [_veteranProfile, setVeteranProfile] = useState({});
+  const [, setVeteranProfile] = useState({});
   const [showPacketSelector, setShowPacketSelector] = useState(false);
   const [selectedPacketItem, setSelectedPacketItem] = useState(null);
 
@@ -859,8 +863,8 @@ const StressTestMissionBrief = () => (
       <span className="font-bold text-red-600 dark:text-red-400">
         Skeptical VA Rater
       </span>
-      . It will identify logical gaps, timeline issues, and missing evidence in
-      your claim.
+      {"."} It will identify logical gaps, timeline issues, and missing evidence
+      in your claim.
     </p>
     <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
       Better to panic now in the safety of this app than freeze up in the exam

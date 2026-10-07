@@ -8,6 +8,7 @@
  * max-lines-per-function / complexity budget.
  */
 
+import { logger } from "../utils/logger";
 import { useState, useRef, useCallback } from "react";
 import { validateFilesBatch } from "../utils/musterCallProcessor";
 
@@ -17,15 +18,44 @@ import { validateFilesBatch } from "../utils/musterCallProcessor";
  * Extracted from useMusterCallFileIntake's handleFileSelect useCallback so
  * that callback stays a thin wrapper; closes only over `ctx`.
  */
+// Route a batch that has at least one valid file into Formation queue init
+// (sequential mode) or plain selection (legacy mode), then surface toasts.
+function _handleValidFileBatch(validationResult, fileArray, ctx) {
+  const { useSequentialMode, formationQueue, toast, setError, setFiles } = ctx;
+
+  setFiles(fileArray);
+
+  // Initialize formation if in sequential mode
+  if (useSequentialMode) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "🎯 Calling initializeFormation with",
+      validationResult.valid.length,
+      "files",
+    );
+    const result = formationQueue.initializeFormation(validationResult.valid);
+    // eslint-disable-next-line no-console
+    console.log("🎯 initializeFormation returned:", result?.length, "entries");
+    toast.success(
+      `${validationResult.valid.length} document${validationResult.valid.length !== 1 ? "s" : ""} added to Formation queue`,
+    );
+  } else {
+    toast.info(
+      `${validationResult.valid.length} file${validationResult.valid.length !== 1 ? "s" : ""} selected`,
+    );
+  }
+
+  if (validationResult.invalid.length > 0) {
+    toast.warning(
+      `${validationResult.invalid.length} file${validationResult.invalid.length !== 1 ? "s" : ""} skipped (unsupported format)`,
+    );
+  }
+
+  setError(null);
+}
+
 function runFileSelect(selectedFiles, ctx) {
-  const {
-    useSequentialMode,
-    formationQueue,
-    toast,
-    setError,
-    setValidation,
-    setFiles,
-  } = ctx;
+  const { toast, setError, setValidation } = ctx;
 
   // eslint-disable-next-line no-console
   console.log(
@@ -39,44 +69,16 @@ function runFileSelect(selectedFiles, ctx) {
 
   // Validate files
   const validationResult = validateFilesBatch(fileArray);
-  // eslint-disable-next-line no-console
-  console.log("🎯 validationResult:", validationResult);
+  logger.info("🎯 validationResult:", {
+    valid: validationResult.valid.length,
+    invalid: validationResult.invalid.length,
+    warnings: validationResult.warnings.length,
+    errors: validationResult.errors.length,
+  });
   setValidation(validationResult);
 
   if (validationResult.valid.length > 0) {
-    setFiles(fileArray);
-
-    // Initialize formation if in sequential mode
-    if (useSequentialMode) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "🎯 Calling initializeFormation with",
-        validationResult.valid.length,
-        "files",
-      );
-      const result = formationQueue.initializeFormation(validationResult.valid);
-      // eslint-disable-next-line no-console
-      console.log(
-        "🎯 initializeFormation returned:",
-        result?.length,
-        "entries",
-      );
-      toast.success(
-        `${validationResult.valid.length} document${validationResult.valid.length !== 1 ? "s" : ""} added to Formation queue`,
-      );
-    } else {
-      toast.info(
-        `${validationResult.valid.length} file${validationResult.valid.length !== 1 ? "s" : ""} selected`,
-      );
-    }
-
-    if (validationResult.invalid.length > 0) {
-      toast.warning(
-        `${validationResult.invalid.length} file${validationResult.invalid.length !== 1 ? "s" : ""} skipped (unsupported format)`,
-      );
-    }
-
-    setError(null);
+    _handleValidFileBatch(validationResult, fileArray, ctx);
   } else {
     setError("No valid files selected. Please select PDF, DOCX, or TXT files.");
     toast.error(

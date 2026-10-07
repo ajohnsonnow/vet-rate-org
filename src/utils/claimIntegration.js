@@ -8,7 +8,10 @@
  * - Two-way sync for evidence tracking
  *
  * Built by a fellow veteran. "One mission, one data source."
+
  */
+
+import { readVeteranProfileQuiet } from "./veteranProfile";
 
 // ============================================
 // STORAGE KEY MAPPINGS
@@ -287,12 +290,8 @@ export const getExistingNexusLetters = () => {
  * @returns {Object|null} Profile data or null
  */
 export const getVeteranProfile = () => {
-  try {
-    const profile = localStorage.getItem(MILESTONE_KEYS.PROFILE);
-    return profile ? JSON.parse(profile) : null;
-  } catch {
-    return null;
-  }
+  const stored = readVeteranProfileQuiet();
+  return stored.status === "ok" ? stored.profile : null;
 };
 
 /**

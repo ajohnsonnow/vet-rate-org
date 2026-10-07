@@ -1,6 +1,5 @@
 ﻿import { useState } from "react";
 import { useHelperMode, TERMINOLOGY } from "../contexts/HelperModeContext";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
@@ -14,7 +13,6 @@ import ResponsiveModal from "./common/ResponsiveModal";
  */
 
 const HelperModeToggle = ({ compact = false }) => {
-  const { _t } = useLanguage();
   const {
     isHelperMode,
     toggleHelperMode,
@@ -167,8 +165,7 @@ function FullModeToggle({
               onClick={() => setShowInfo(!showInfo)}
               className="text-sm text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1"
             >
-              <span>{showInfo ? "▼" : "▶"}</span>
-              What changes in Helper Mode?
+              <span>{showInfo ? "▼" : "▶"}</span> What changes in Helper Mode?
             </button>
 
             {showInfo && (
@@ -221,7 +218,7 @@ function HelperModeHeader({ isHelperMode, onToggleClick }) {
   return (
     <div className="flex items-center justify-between mb-2">
       <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-        Helper Mode
+        Helper Mode{" "}
         <span className="px-2 py-0.5 bg-pink-500 text-white text-xs font-bold rounded-full">
           FOR CAREGIVERS
         </span>

@@ -309,7 +309,7 @@ function identifyPotentialViolations(report, decisionData) {
   );
   const wasDenied = decisionData.conditions?.some((c) => c.status === "DENIED");
   if (hasNexusLetter && wasDenied) {
-    const nexusEvidence = report.gaps.find(
+    const nexusEvidence = report.gaps.some(
       (g) =>
         g.preview.toLowerCase().includes("nexus") ||
         g.preview.toLowerCase().includes("likely"),

@@ -38,8 +38,7 @@ const HIGH_PRIORITY_THRESHOLD = 85;
 
 // Signals compiled once at module load
 const PAGE_ONE_OF_N = /\bpage\s+1\s+of\s+\d+\b/i;
-// eslint-disable-next-line sonarjs/slow-regex -- each \s* run is bounded by a disjoint literal/digit char (1, /, \d) that \s cannot match, so there is no ambiguous overlap between quantifiers and backtracking stays linear
-const PAGE_SLASH_N = /^\s*1\s*\/\s*\d{1,4}\s*$/m;
+const PAGE_SLASH_N = /^\s{0,10}1\s{0,10}\/\s{0,10}\d{1,4}\s{0,10}$/m;
 const LETTERHEAD_REFER_TO = /In\s+Reply\s+Refer\s+To/i;
 const CLAIM_NUMBER = /\bC[-\s]?\d{7,9}\b/;
 
@@ -180,6 +179,48 @@ export function segmentPages(pages) {
  * @returns {Array<Chunk>}
  *   Chunk: { text, startPage, endPage, chunkIndex, pageNums, docType, segmentIds }
  */
+/**
+ * Split a single oversized segment into page-bounded chunks with a 1-page
+ * overlap between consecutive chunks (same docType throughout).
+ */
+function splitOversizedSegment(seg, maxChars) {
+  const oversizedChunks = [];
+  let pageBuffer = [];
+  let bufSz = 0;
+  for (let i = 0; i < seg.pages.length; i++) {
+    const page = seg.pages[i];
+    if (bufSz + page.text.length > maxChars && pageBuffer.length > 0) {
+      oversizedChunks.push({
+        text: pageBuffer.map((p) => p.text).join(""),
+        startPage: pageBuffer[0].pageNum,
+        endPage: pageBuffer.at(-1).pageNum,
+        chunkIndex: oversizedChunks.length,
+        pageNums: pageBuffer.map((p) => p.pageNum),
+        docType: seg.docType,
+        segmentIds: [seg.id],
+      });
+      // 1-page overlap within the same document
+      const overlap = pageBuffer.at(-1);
+      pageBuffer = [overlap];
+      bufSz = overlap.text.length;
+    }
+    pageBuffer.push(page);
+    bufSz += page.text.length;
+  }
+  if (pageBuffer.length > 0) {
+    oversizedChunks.push({
+      text: pageBuffer.map((p) => p.text).join(""),
+      startPage: pageBuffer[0].pageNum,
+      endPage: pageBuffer.at(-1).pageNum,
+      chunkIndex: oversizedChunks.length,
+      pageNums: pageBuffer.map((p) => p.pageNum),
+      docType: seg.docType,
+      segmentIds: [seg.id],
+    });
+  }
+  return oversizedChunks;
+}
+
 export function chunkBySegment(segments, maxChars) {
   const chunks = [];
   let bufPages = [];
@@ -192,7 +233,7 @@ export function chunkBySegment(segments, maxChars) {
     chunks.push({
       text: bufPages.map((p) => p.text).join(""),
       startPage: bufPages[0].pageNum,
-      endPage: bufPages[bufPages.length - 1].pageNum,
+      endPage: bufPages.at(-1).pageNum,
       chunkIndex: chunks.length,
       pageNums: bufPages.map((p) => p.pageNum),
       docType: bufDocType,
@@ -208,39 +249,7 @@ export function chunkBySegment(segments, maxChars) {
     if (seg.charLength > maxChars) {
       // Oversized segment: flush buffer, then split this segment internally
       flush();
-      let pageBuffer = [];
-      let bufSz = 0;
-      for (let i = 0; i < seg.pages.length; i++) {
-        const page = seg.pages[i];
-        if (bufSz + page.text.length > maxChars && pageBuffer.length > 0) {
-          chunks.push({
-            text: pageBuffer.map((p) => p.text).join(""),
-            startPage: pageBuffer[0].pageNum,
-            endPage: pageBuffer[pageBuffer.length - 1].pageNum,
-            chunkIndex: chunks.length,
-            pageNums: pageBuffer.map((p) => p.pageNum),
-            docType: seg.docType,
-            segmentIds: [seg.id],
-          });
-          // 1-page overlap within the same document
-          const overlap = pageBuffer[pageBuffer.length - 1];
-          pageBuffer = [overlap];
-          bufSz = overlap.text.length;
-        }
-        pageBuffer.push(page);
-        bufSz += page.text.length;
-      }
-      if (pageBuffer.length > 0) {
-        chunks.push({
-          text: pageBuffer.map((p) => p.text).join(""),
-          startPage: pageBuffer[0].pageNum,
-          endPage: pageBuffer[pageBuffer.length - 1].pageNum,
-          chunkIndex: chunks.length,
-          pageNums: pageBuffer.map((p) => p.pageNum),
-          docType: seg.docType,
-          segmentIds: [seg.id],
-        });
-      }
+      chunks.push(...splitOversizedSegment(seg, maxChars));
     } else if (bufSize + seg.charLength <= maxChars) {
       // Fits — pack into current buffer
       bufPages.push(...seg.pages);

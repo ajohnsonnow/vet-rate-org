@@ -7,7 +7,8 @@
  * - WRITER: Personal statements, nexus letters, buddy statements
  * - RATER: Rating calculations, bilateral factor, TDIU assessment
  *
- * All agents are fine-tuned on official VA regulations and procedures.
+ * The agents are stock open models guided by role prompts and the app's
+ * knowledge base of VA regulations and procedures.
  */
 
 import { PROJECT_STATS } from "../data/projectStats";
@@ -169,7 +170,7 @@ export const TOOL_LLM_RECOMMENDATIONS = {
       {
         modelId: "diamond-writer",
         modelName: "🎖️ CW4 Writer",
-        reason: "Fine-tuned on successful VA nexus letter formats",
+        reason: "Writing role prompt for medical-legal nexus letters",
       },
     ],
     tips: [
@@ -265,7 +266,7 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     alternatives: [],
     tips: [
       "PACT Act has specific presumptive conditions lists",
-      "🎖️ CW5 Auditor is fine-tuned on official VA regulations",
+      "🎖️ CW5 Auditor is guided by a VA claim-review role prompt",
       "Date-of-service windows are critical - verify AI outputs",
     ],
   },
@@ -644,7 +645,7 @@ export const analyzeCurrentModel = (toolId, currentModelId) => {
   }
 
   // Null safety: ensure tool.primary exists
-  if (!tool.primary || !tool.primary.modelId) {
+  if (!tool.primary?.modelId) {
     return { isOptimal: true, suggestion: null };
   }
 

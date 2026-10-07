@@ -41,7 +41,7 @@ describe("DutyStationMap - rendering", () => {
     const { container } = render(<DutyStationMap stations={[]} t={t} />);
     expect(container.querySelector("svg")).toBeTruthy();
     // sphere (1) + graticule (1) + 241 countries = 243 <path> elements
-    expect(container.querySelectorAll("path").length).toBe(243);
+    expect(container.querySelectorAll("path")).toHaveLength(243);
   });
 
   it("plots only stations with finite, in-range coordinates (criterion 8)", () => {
@@ -49,7 +49,7 @@ describe("DutyStationMap - rendering", () => {
       <DutyStationMap stations={FIXTURE_STATIONS} t={t} />,
     );
     // 2 valid stations, the null-coordinate one is skipped
-    expect(container.querySelectorAll("circle").length).toBe(2);
+    expect(container.querySelectorAll("circle")).toHaveLength(2);
   });
 
   it("reports the plotted count in aria-label, not the raw station count", () => {
@@ -69,7 +69,7 @@ describe("DutyStationMap - rendering", () => {
         t={t}
       />,
     );
-    expect(container.querySelectorAll("circle").length).toBe(3); // 2 stations + draft
+    expect(container.querySelectorAll("circle")).toHaveLength(3); // 2 stations + draft
   });
 
   it("renders no draft marker when draft coordinates are out of range", () => {
@@ -81,6 +81,6 @@ describe("DutyStationMap - rendering", () => {
         t={t}
       />,
     );
-    expect(container.querySelectorAll("circle").length).toBe(0);
+    expect(container.querySelectorAll("circle")).toHaveLength(0);
   });
 });

@@ -27,6 +27,34 @@ describe("documentClassifier: classifyDocument", () => {
   });
 });
 
+describe("documentClassifier: personal statement detection", () => {
+  // Covers the PERSONAL_STATEMENT /I.{0,200}DECLARE/i pattern (bounded from
+  // /I.*DECLARE/i for sonarjs/super-linear-regex) against realistic phrasing.
+  it("classifies a VA Form 21-4138 statement with an 'I ... declare' closing", () => {
+    const text =
+      "STATEMENT IN SUPPORT OF CLAIM (VA Form 21-4138)\n\n" +
+      "My name is Jordan A. Sample. I am writing to describe the in-service " +
+      "event that caused my current knee condition.\n\n" +
+      "I, Jordan A. Sample, do solemnly declare that the foregoing statement " +
+      "is true and correct to the best of my knowledge and belief.";
+    const result = classifyDocument(text, "statement.pdf");
+    expect(result.type).toBe(DOCUMENT_TYPES.PERSONAL_STATEMENT);
+  });
+
+  it("still matches when the declaration sits close to the 200-char bound", () => {
+    const filler = "the same in-service event described above ".repeat(4);
+    const text = `STATEMENT IN SUPPORT OF CLAIM\nI hereby state that ${filler}and I declare this to be true.`;
+    const result = classifyDocument(text, "statement2.pdf");
+    expect(result.type).toBe(DOCUMENT_TYPES.PERSONAL_STATEMENT);
+  });
+
+  it("does not match when no 'declare' language is present at all", () => {
+    expect(
+      /I.{0,200}DECLARE/i.test("I served honorably and left in 2010."),
+    ).toBe(false);
+  });
+});
+
 // Real decision letters open with a cover page that matches a dozen generic
 // CLAIM_LETTER patterns and outscores RATING_DECISION every time; 8 of 8 in
 // a real corpus classified as plain correspondence and yielded no conditions.

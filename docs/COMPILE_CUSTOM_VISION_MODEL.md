@@ -5,11 +5,13 @@ This guide walks you through compiling a custom Phi 3.5 Vision model for Vet-Rat
 ## 🎯 Why Compile Your Own Model?
 
 **Current Problem:**
+
 - MLC-AI's prebuilt Phi 3.5 Vision uses `u8` shader types
 - Requires `chromium-experimental-subgroup-matrix` (not available in stable Chrome)
 - Limits accessibility for your users
 
 **Your Solution:**
+
 - Compile **"Vet-Rate Vision Phi"** - your own optimized version
 - Configure to avoid experimental shader features
 - Works in stable Chrome out of the box
@@ -37,12 +39,14 @@ Storage: 10TB total NVMe        ✅ Plenty for model files
 #### Windows-Specific Setup:
 
 1. **Visual Studio 2022** (required for C++ compiler)
+
    ```powershell
    # Download from: https://visualstudio.microsoft.com/downloads/
    # Install with "Desktop development with C++" workload
    ```
 
 2. **CUDA Toolkit 12.x** (for NVIDIA GPU support)
+
    ```powershell
    # Download from: https://developer.nvidia.com/cuda-downloads
    # Choose Windows > x86_64 > 12.x version
@@ -50,17 +54,20 @@ Storage: 10TB total NVMe        ✅ Plenty for model files
    ```
 
 3. **Miniconda or Anaconda**
+
    ```powershell
    # Download from: https://docs.conda.io/en/latest/miniconda.html
    # Choose Windows 64-bit installer
    ```
 
 4. **Git** (if not already installed)
+
    ```powershell
    winget install Git.Git
    ```
 
 5. **CMake 3.24+**
+
    ```powershell
    winget install Kitware.CMake
    ```
@@ -176,6 +183,7 @@ python -m mlc_llm.cli build_web_lib \
 ### Option A: Host on Your Server (Recommended)
 
 1. **Upload to your web server:**
+
    ```powershell
    # Upload these files to your server:
    dist/Vet-Rate-Vision-Phi-q4f16_1-MLC/          # Model weights & config
@@ -187,15 +195,16 @@ python -m mlc_llm.cli build_web_lib \
 ```javascript
 // src/components/LocalAIPanel.jsx
 const CUSTOM_VET_RATE_MODEL = {
-  id: 'Vet-Rate-Vision-Phi-q4f16_1-MLC',
-  name: 'Vet-Rate Vision Phi (Custom) 👁️🇺🇸',
-  size: '3.5 GB',
-  description: 'Custom vision model optimized for veteran documents',
-  bestFor: '👁️ Vision - DD214 & Medical Records',
-  contextInfo: 'Vet-Rate exclusive: Optimized for DD214s, medical records, works in stable Chrome',
-  vramRequired: '6 GB',
+  id: "Vet-Rate-Vision-Phi-q4f16_1-MLC",
+  name: "Vet-Rate Vision Phi (Custom) 👁️🇺🇸",
+  size: "3.5 GB",
+  description: "Custom vision model optimized for veteran documents",
+  bestFor: "👁️ Vision - DD214 & Medical Records",
+  contextInfo:
+    "Vet-Rate exclusive: Optimized for DD214s, medical records, works in stable Chrome",
+  vramRequired: "6 GB",
   recommended: true,
-  category: 'vision',
+  category: "vision",
   isNew: true,
   hasVision: true,
   isCustom: true,
@@ -214,14 +223,15 @@ const customAppConfig = {
     {
       model: "https://your-server.com/models/Vet-Rate-Vision-Phi-q4f16_1-MLC",
       model_id: "Vet-Rate-Vision-Phi-q4f16_1-MLC",
-      model_lib: "https://your-server.com/libs/Vet-Rate-Vision-Phi-q4f16_1-webgpu.wasm",
+      model_lib:
+        "https://your-server.com/libs/Vet-Rate-Vision-Phi-q4f16_1-webgpu.wasm",
       vram_required_MB: 3952,
       model_type: "VLM",
       overrides: {
         context_window_size: 4096,
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 ```
 
@@ -230,19 +240,21 @@ const customAppConfig = {
 1. **Create HuggingFace account** (if you don't have one)
 
 2. **Upload your model:**
+
    ```powershell
    # Install HuggingFace CLI
    pip install huggingface-hub
-   
+
    # Login
    huggingface-cli login
-   
+
    # Create repo and upload
    huggingface-cli repo create Vet-Rate-Vision-Phi --type model
    huggingface-cli upload ajohnsonnow/Vet-Rate-Vision-Phi dist/Vet-Rate-Vision-Phi-q4f16_1-MLC
    ```
 
 3. **Update config to point to HuggingFace:**
+
    ```javascript
    model: "https://huggingface.co/ajohnsonnow/Vet-Rate-Vision-Phi-q4f16_1-MLC",
    model_lib: "https://huggingface.co/ajohnsonnow/Vet-Rate-Vision-Phi-q4f16_1-MLC/resolve/main/Vet-Rate-Vision-Phi-q4f16_1-webgpu.wasm",
@@ -256,14 +268,14 @@ const customAppConfig = {
 
 ```javascript
 // Test script
-import { CreateMLCEngine } from '@mlc-ai/web-llm';
+import { CreateMLCEngine } from "@mlc-ai/web-llm";
 
-const engine = await CreateMLCEngine('Vet-Rate-Vision-Phi-q4f16_1-MLC', {
+const engine = await CreateMLCEngine("Vet-Rate-Vision-Phi-q4f16_1-MLC", {
   appConfig: customAppConfig,
-  initProgressCallback: (progress) => console.log(progress)
+  initProgressCallback: (progress) => console.log(progress),
 });
 
-console.log('✅ Model loaded successfully!');
+console.log("✅ Model loaded successfully!");
 ```
 
 ### Test 2: Image Recognition (DD214)
@@ -271,25 +283,26 @@ console.log('✅ Model loaded successfully!');
 ```javascript
 const messages = [
   {
-    role: 'user',
+    role: "user",
     content: [
-      { type: 'text', text: 'Extract all service dates from this DD214:' },
-      { type: 'image_url', image_url: { url: 'path/to/test-dd214.jpg' } }
-    ]
-  }
+      { type: "text", text: "Extract all service dates from this DD214:" },
+      { type: "image_url", image_url: { url: "path/to/test-dd214.jpg" } },
+    ],
+  },
 ];
 
 const response = await engine.chat.completions.create({ messages });
-console.log('DD214 Analysis:', response.choices[0].message.content);
+console.log("DD214 Analysis:", response.choices[0].message.content);
 ```
 
 ### Test 3: Browser Compatibility Check
 
 Open Chrome DevTools console and run:
+
 ```javascript
 const adapter = await navigator.gpu.requestAdapter();
 const features = Array.from(adapter.features);
-console.log('Available features:', features);
+console.log("Available features:", features);
 // Should NOT require: chromium-experimental-subgroup-matrix
 ```
 
@@ -303,11 +316,13 @@ console.log('Available features:', features);
 // src/components/LocalAIPanel.jsx
 
 // Add a special badge for your custom model
-{model.isCustom && (
-  <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded">
-    🇺🇸 VET-RATE EXCLUSIVE
-  </span>
-)}
+{
+  model.isCustom && (
+    <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded">
+      🇺🇸 VET-RATE EXCLUSIVE
+    </span>
+  );
+}
 
 // Highlight in model description
 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -317,7 +332,7 @@ console.log('Available features:', features);
       ⚡ Optimized by veterans, for veterans. Works in all browsers.
     </span>
   )}
-</p>
+</p>;
 ```
 
 ### Marketing Points:
@@ -344,6 +359,7 @@ console.log('Available features:', features);
 ### Issue: Compilation Fails with Memory Error
 
 **Solution:**
+
 ```powershell
 # Reduce parallel compilation threads
 set MLC_NUM_THREADS=8
@@ -354,6 +370,7 @@ python -m mlc_llm.cli compile ... --num-threads 8
 
 **Solution:**
 Check your config has:
+
 ```json
 {
   "use_experimental_features": false,
@@ -367,6 +384,7 @@ Recompile with `--no-experimental-features` flag.
 
 **Solution:**
 Try more aggressive quantization:
+
 ```powershell
 python -m mlc_llm.cli compile ... --quantization q4f32_1
 # Or even: q3f16_1 (smaller, slightly lower quality)
@@ -376,6 +394,7 @@ python -m mlc_llm.cli compile ... --quantization q4f32_1
 
 **Solution:**
 Use Git LFS for large files:
+
 ```powershell
 git lfs install
 cd your-model-repo
@@ -391,15 +410,16 @@ git commit -m "Add LFS tracking"
 
 With your hardware compiling the model:
 
-| Phase | Time | Hardware Used |
-|-------|------|---------------|
-| Model Download | 15-30 min | Internet + NVMe |
-| Weight Quantization | 20-45 min | CPU + GPU |
-| Shader Compilation | 30-60 min | GPU (CUDA) |
-| WASM Building | 15-30 min | CPU |
-| **Total** | **1.5-3 hours** | All |
+| Phase               | Time            | Hardware Used   |
+| ------------------- | --------------- | --------------- |
+| Model Download      | 15-30 min       | Internet + NVMe |
+| Weight Quantization | 20-45 min       | CPU + GPU       |
+| Shader Compilation  | 30-60 min       | GPU (CUDA)      |
+| WASM Building       | 15-30 min       | CPU             |
+| **Total**           | **1.5-3 hours** | All             |
 
 In-browser performance (user experience):
+
 - **Download:** ~3.5 GB (first time only, cached after)
 - **Load Time:** 20-40 seconds on fast connection
 - **Inference:** 2-5 tokens/second on RTX 4070 Ti SUPER class GPU
@@ -436,6 +456,7 @@ In-browser performance (user experience):
 Once compiled and tested, update your marketing:
 
 ### Homepage:
+
 ```
 🇺🇸 NEW: Vet-Rate Vision Phi LLM
 The ONLY AI vision model built specifically for veterans.
@@ -443,10 +464,11 @@ Analyze your DD214 instantly - 100% private, 100% local.
 ```
 
 ### GitHub README:
+
 ```markdown
 ## 🎯 Custom AI Technology
 
-Vet-Rate.org features **Vet-Rate Vision Phi** - our custom-compiled 
+Vet-Rate.org features **Vet-Rate Vision Phi** - our custom-compiled
 vision language model optimized specifically for veteran documents:
 
 - ✅ Recognizes DD214 forms instantly
@@ -457,13 +479,14 @@ vision language model optimized specifically for veteran documents:
 ```
 
 ### Social Media:
+
 ```
 🚀 Introducing Vet-Rate Vision Phi LLM!
 
 We didn't just use AI - we BUILT our own.
 
 ✨ Custom vision model for DD214s
-🔒 100% private, runs in YOUR browser  
+🔒 100% private, runs in YOUR browser
 ⚡ No cloud, no uploads, no tracking
 🇺🇸 Made for veterans, by veterans
 

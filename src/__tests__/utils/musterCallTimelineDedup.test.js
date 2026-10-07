@@ -14,13 +14,13 @@
  * proof (re-importing real DD214s twice via the browser's real IndexedDB)
  * comes from the Playwright real-document-corpus run, not this file.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { findDuplicateTimelineEntry } =
+const { findDuplicateTimelineEntry, resolveTimelineDate, _toIsoDay } =
   await import("../../utils/musterCallProcessor");
 
 const importEntry = (overrides = {}) => ({
@@ -99,5 +99,55 @@ describe("FIX-12: findDuplicateTimelineEntry", () => {
       }
     }
     expect(timeline).toHaveLength(4);
+  });
+});
+
+describe("resolveTimelineDate", () => {
+  it.each([
+    ["July 31, 2015", "2015-07-31"],
+    ["4/20/2023", "2023-04-20"],
+    ["2024-05-08", "2024-05-08"],
+  ])("stores the letter date %s as %s", (decisionDate, expected) => {
+    const { date, dateIsProcessingDate } = resolveTimelineDate(
+      { extractedData: { decisionDate } },
+      "ClaimLetter-2010-1-1.pdf",
+    );
+    expect(date).toBe(expected);
+    expect(dateIsProcessingDate).toBe(false);
+  });
+});
+
+// D-4 (final7 QA, 2026-09-24): appendMusterCallTimelineEntry's "imported"
+// fallback date used new Date().toISOString().split("T")[0] - the UTC
+// calendar day, already tomorrow for an evening import anywhere west of
+// UTC. It now uses _toIsoDay(new Date()), which reads the LOCAL calendar
+// day instead.
+describe("_toIsoDay: today's fallback date is a local calendar day, not UTC", () => {
+  const originalTZ = process.env.TZ;
+
+  afterEach(() => {
+    vi.useRealTimers();
+    process.env.TZ = originalTZ;
+  });
+
+  it("reports the previous local day for a late-evening US-Pacific instant already past UTC midnight", () => {
+    process.env.TZ = "America/Los_Angeles";
+    vi.useFakeTimers();
+    // 7:30 PM Sep 24 Pacific == 2:30 AM Sep 25 UTC.
+    vi.setSystemTime(new Date("2026-09-25T02:30:00Z"));
+
+    const now = new Date();
+    expect(now.toISOString().split("T")[0]).toBe("2026-09-25");
+    expect(_toIsoDay(now)).toBe("2026-09-24");
+  });
+
+  it("agrees with the UTC day when local and UTC calendar days coincide", () => {
+    process.env.TZ = "America/Los_Angeles";
+    vi.useFakeTimers();
+    // Midday Pacific has no UTC/local day mismatch either way.
+    vi.setSystemTime(new Date("2026-09-24T18:00:00Z"));
+
+    const now = new Date();
+    expect(_toIsoDay(now)).toBe(now.toISOString().split("T")[0]);
   });
 });

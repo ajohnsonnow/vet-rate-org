@@ -1,10 +1,9 @@
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const TermsHeader = ({ onClose }) => (
   <div className="bg-red-700 dark:bg-red-800 text-white px-6 py-5 border-b-4 border-red-900 dark:border-red-950">
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <svg
           className="w-8 h-8 flex-shrink-0"
           fill="none"
@@ -18,7 +17,7 @@ const TermsHeader = ({ onClose }) => (
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <div>
+        <div className="min-w-0">
           <h1
             id="terms-of-service-page-title"
             className="text-2xl sm:text-3xl font-bold"
@@ -33,7 +32,7 @@ const TermsHeader = ({ onClose }) => (
       {onClose && (
         <button
           onClick={onClose}
-          className="flex-shrink-0 text-white hover:bg-red-800 p-2 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-red-800 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -162,7 +161,7 @@ const NonAccreditationResponsibility = () => (
         <span className="font-bold underline">
           You remain solely responsible for
         </span>
-        : filing your own claims, verifying the accuracy of all information,
+        {":"} filing your own claims, verifying the accuracy of all information,
         making legal decisions, and ensuring compliance with VA regulations.
         Vet-Rate.org does not file claims on your behalf, represent you before
         the VA, or make legal determinations about your eligibility.
@@ -443,9 +442,9 @@ const DataStorageIntro = () => (
       </p>
       <p className="text-gray-800">
         Vet-Rate.org is intentionally designed as a{" "}
-        <strong>serverless, browser-based application</strong>
-        to protect your privacy. Vet-Rate.org does not store your data on any
-        servers, in cloud databases, or in any remote location.
+        <strong>serverless, browser-based application</strong> to protect your
+        privacy. Vet-Rate.org does not store your data on any servers, in cloud
+        databases, or in any remote location.
       </p>
     </div>
 
@@ -574,9 +573,9 @@ const NoGuaranteesList = () => (
       </p>
       <p className="text-gray-800">
         Use of Vet-Rate.org, completion of any tools or forms, or implementation
-        of any suggestions does
-        <strong> NOT guarantee, promise, or predict</strong> any specific
-        outcome from the Department of Veterans Affairs.
+        of any suggestions does{" "}
+        <strong>NOT guarantee, promise, or predict</strong> any specific outcome
+        from the Department of Veterans Affairs.
       </p>
     </div>
 
@@ -882,8 +881,6 @@ const FinalStatementSection = () => (
 );
 
 const TermsOfServicePage = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   return (
     <ResponsiveModal
       isOpen
@@ -894,7 +891,7 @@ const TermsOfServicePage = ({ onClose }) => {
       footer={<TermsFooter onClose={onClose} />}
     >
       {/* Content */}
-      <div className="space-y-8 text-gray-800 dark:text-gray-200">
+      <div className="mx-auto max-w-[62ch] space-y-8 text-gray-800 dark:text-gray-200">
         {/* Effective Date */}
         <EffectiveDateBanner />
 

@@ -18,6 +18,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatLocalDate } from "../utils/dateUtils";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -313,28 +314,25 @@ const useClaimImportExport = (loadClaims) => {
     }
   };
 
-  const handleImport = (event) => {
+  const handleImport = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const result = importClaimsData(e.target.result, true);
-        if (result.success) {
-          loadClaims();
-          alert(
-            `Imported ${result.imported} claim(s). ${result.skipped} skipped (duplicates).`,
-          );
-        } else {
-          alert("Import failed: " + result.error);
-        }
-      } catch (error) {
-        console.error("Import failed:", error);
-        alert("Import failed: Invalid file format");
+    try {
+      const text = await file.text();
+      const result = importClaimsData(text, true);
+      if (result.success) {
+        loadClaims();
+        alert(
+          `Imported ${result.imported} claim(s). ${result.skipped} skipped (duplicates).`,
+        );
+      } else {
+        alert("Import failed: " + result.error);
       }
-    };
-    reader.readAsText(file);
+    } catch (error) {
+      console.error("Import failed:", error);
+      alert("Import failed: Invalid file format");
+    }
   };
 
   return { handleExport, handleImport };
@@ -412,13 +410,7 @@ const NavigatorViewToggle = ({ view, setView }) => (
   </div>
 );
 
-const NavigatorActions = ({
-  onReportBug,
-  onShowHelp,
-  onExport,
-  onImport,
-  onClose,
-}) => (
+const NavigatorActions = ({ onReportBug, onShowHelp, onExport, onImport }) => (
   <>
     {onReportBug && (
       <ReportBugLink
@@ -456,15 +448,17 @@ const NavigatorActions = ({
         className="hidden"
       />
     </label>
-
-    <button
-      onClick={onClose}
-      className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-      aria-label="Close"
-    >
-      <X className="w-5 h-5" />
-    </button>
   </>
+);
+
+const NavigatorCloseButton = ({ onClose }) => (
+  <button
+    onClick={onClose}
+    className="p-2 text-slate-400 hover:text-red-400 transition-colors"
+    aria-label="Close"
+  >
+    <X className="w-5 h-5" />
+  </button>
 );
 
 const NavigatorHeader = ({
@@ -476,20 +470,29 @@ const NavigatorHeader = ({
   onImport,
   onClose,
 }) => (
-  <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex items-center justify-between flex-shrink-0">
-    <div className="flex items-center gap-3">
-      <Map className="w-6 h-6 text-amber-500" />
-      <div>
-        <h1 id="claim-navigator-title" className="text-lg font-bold text-white">
-          Claim Navigator
-        </h1>
-        <p className="text-xs text-slate-400">
-          Mission Control for Your VA Claims
-        </p>
+  // The close × stays pinned to the header's top-right corner
+  // (HeaderCloseSlot); title + the view toggle + the other action buttons
+  // wrap onto their own line inside their own wrapping column when they
+  // don't all fit on one row at 320px (same overflow pattern as the
+  // Observation fix in MusterCallHeader.jsx/AboutUs.jsx - this instance
+  // wasn't QA-named but the DOM-enumerated e2e spec caught it too).
+  <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex-shrink-0 sm:pr-28">
+    <HeaderCloseSlot close={<NavigatorCloseButton onClose={onClose} />}>
+      <div className="flex min-w-0 items-center gap-3">
+        <Map className="w-6 h-6 shrink-0 text-amber-500" />
+        <div className="min-w-0">
+          <h1
+            id="claim-navigator-title"
+            className="text-lg font-bold text-white"
+          >
+            Claim Navigator
+          </h1>
+          <p className="text-xs text-slate-400">
+            Mission Control for Your VA Claims
+          </p>
+        </div>
       </div>
-    </div>
 
-    <div className="flex items-center gap-2">
       {/* View Toggle */}
       <NavigatorViewToggle view={view} setView={setView} />
 
@@ -499,9 +502,8 @@ const NavigatorHeader = ({
         onShowHelp={onShowHelp}
         onExport={onExport}
         onImport={onImport}
-        onClose={onClose}
       />
-    </div>
+    </HeaderCloseSlot>
   </header>
 );
 
@@ -604,7 +606,15 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
   return (
     <div
       ref={dialogRef}
-      className="fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col"
+      // Full-bleed app screen at every width (unlike ResponsiveModal, which
+      // centers with margin at `sm:` and so never sits flush against the
+      // fixed top-left/top-right Quick Exit button). `pt-20` below `sm`
+      // reserves the same gutter ResponsiveModal.jsx uses (D3, 52a1edd8) so
+      // Quick Exit doesn't cover the title; NavigatorHeader's own
+      // `sm:pr-28` reserves matching space on the right at `sm:` and up,
+      // where Quick Exit moves to top-right and would otherwise sit over
+      // this header's close button.
+      className="fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col pt-20 sm:pt-0"
       role="dialog"
       aria-modal="true"
       aria-labelledby="claim-navigator-title"
@@ -675,8 +685,8 @@ const CriticalAlertsPanel = ({ criticalActions }) => {
         URGENT ACTIONS REQUIRED
       </h2>
       <div className="space-y-2">
-        {criticalActions.map((action, idx) => (
-          <div key={idx} className="bg-red-900/40 rounded-lg p-3">
+        {criticalActions.map((action) => (
+          <div key={action.title} className="bg-red-900/40 rounded-lg p-3">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-white font-semibold">{action.title}</p>
@@ -994,8 +1004,8 @@ const generateRedditSummary = (analysis, claim) => {
   // BLUF (Bottom Line Up Front)
   lines.push(
     `**BLUF**: ${claim.conditionName} claim - ${analysis.overallStatus || "In Progress"} (${analysis.completeness || 0}% ready)`,
+    "",
   );
-  lines.push("");
 
   // Claim Type
   const claimTypeLabels = {
@@ -1008,8 +1018,8 @@ const generateRedditSummary = (analysis, claim) => {
   };
   lines.push(
     `**Claim Type**: ${claimTypeLabels[claim.claimType] || claim.claimType}`,
+    "",
   );
-  lines.push("");
 
   // Warnings (if any)
   if (analysis.warnings?.length > 0) {
@@ -1036,17 +1046,18 @@ const generateRedditSummary = (analysis, claim) => {
   const hasNexus = checklist.nexus ? "✅" : "❌";
   const hasEvent = checklist.inServiceEvent ? "✅" : "❌";
 
-  lines.push("**Big 3 Evidence**:");
-  lines.push(`| Evidence | Status |`);
-  lines.push(`|:--|:--:|`);
-  lines.push(`| Current Diagnosis | ${hasDiagnosis} |`);
-  lines.push(`| Nexus Letter | ${hasNexus} |`);
-  lines.push(`| In-Service Event | ${hasEvent} |`);
-  lines.push("");
-
-  // Footer
-  lines.push("---");
-  lines.push("*Generated by [Vet-Rate.org](https://vet-rate.org) Navigator*");
+  lines.push(
+    "**Big 3 Evidence**:",
+    `| Evidence | Status |`,
+    `|:--|:--:|`,
+    `| Current Diagnosis | ${hasDiagnosis} |`,
+    `| Nexus Letter | ${hasNexus} |`,
+    `| In-Service Event | ${hasEvent} |`,
+    "",
+    // Footer
+    "---",
+    "*Generated by [Vet-Rate.org](https://vet-rate.org) Navigator*",
+  );
 
   return lines.join("\n");
 };
@@ -1560,11 +1571,11 @@ const ClaimWarningsList = ({ warnings }) => {
   if (!warnings?.length) return null;
   return (
     <div className="space-y-2">
-      {warnings.map((warning, idx) => {
+      {warnings.map((warning) => {
         const UrgencyIcon = UrgencyIcons[warning.urgency] || AlertCircle;
         return (
           <div
-            key={idx}
+            key={warning.title}
             className={`rounded-lg p-4 ${URGENCY_LEVELS[warning.urgency]?.bgColor || "bg-slate-800"} border ${URGENCY_LEVELS[warning.urgency]?.borderColor || "border-slate-700"}`}
           >
             <div className="flex items-start gap-3">
@@ -1600,11 +1611,11 @@ const ClaimNextStepsList = ({ actions }) => (
       </h2>
     </div>
     <div className="divide-y divide-slate-700">
-      {actions?.map((action, idx) => {
+      {actions?.map((action) => {
         const UrgencyIcon = UrgencyIcons[action.urgency] || Circle;
         return (
           <div
-            key={idx}
+            key={action.title}
             className="p-4 hover:bg-slate-700/30 transition-colors"
           >
             <div className="flex items-start gap-3">

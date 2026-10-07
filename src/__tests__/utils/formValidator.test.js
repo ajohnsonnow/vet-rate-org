@@ -47,7 +47,7 @@ describe("validateVAForms - hallucination blocking", () => {
     const result = validateVAForms(
       "99-99999 again 99-99999 once more 99-99999",
     );
-    expect(result.invalidForms.length).toBe(1);
+    expect(result.invalidForms).toHaveLength(1);
   });
 
   it("returns both valid and invalid forms in mixed text", () => {

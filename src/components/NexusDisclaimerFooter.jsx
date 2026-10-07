@@ -7,10 +7,13 @@
  * Makes clear this is NOT medical diagnosis
  */
 
-import { useLanguage } from "../contexts/LanguageContext";
-
-const NexusDisclaimerFooter = ({ className = "" }) => {
-  const { _t } = useLanguage();
+// `showCitationWarning` is for a screen that can tell whether any text on
+// it came from a model: the warning about AI-generated references is shown
+// only when it did.
+const NexusDisclaimerFooter = ({
+  className = "",
+  showCitationWarning = true,
+}) => {
   return (
     <div
       role="note"
@@ -27,20 +30,22 @@ const NexusDisclaimerFooter = ({ className = "" }) => {
           </p>
           <p className="text-xs text-orange-800 dark:text-orange-300">
             This document outlines medical logic based on your inputs.{" "}
-            <strong>It is NOT a medical diagnosis.</strong>
-            It must be reviewed, modified as appropriate, and signed by a
-            qualified medical professional before it can be submitted to the VA.
+            <strong>It is NOT a medical diagnosis.</strong> It must be reviewed,
+            modified as appropriate, and signed by a qualified medical
+            professional before it can be submitted to the VA.
           </p>
-          <p className="text-xs text-orange-800 dark:text-orange-300 mt-2">
-            <strong>Citation warning:</strong> AI-generated literature
-            references and study types are research starting points only. They
-            have not been independently verified and{" "}
-            <strong>
-              must not be cited to the VA as established medical fact
-            </strong>{" "}
-            without physician confirmation. Do not present AI output verbatim in
-            any VA claim or medical record.
-          </p>
+          {showCitationWarning && (
+            <p className="text-xs text-orange-800 dark:text-orange-300 mt-2">
+              <strong>Citation warning:</strong> AI-generated literature
+              references and study types are research starting points only. They
+              have not been independently verified and{" "}
+              <strong>
+                must not be cited to the VA as established medical fact
+              </strong>{" "}
+              without physician confirmation. Do not present AI output verbatim
+              in any VA claim or medical record.
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -8,9 +8,14 @@
  * a thin `useLocalAIProviderState() -> <Context.Provider>` wrapper.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { registerLocalAIEngine } from "../utils/unifiedAIService";
 import { gpuManager } from "../utils/WebGPUManager";
+import { loadWithStallWatchdog } from "../utils/engineLoadStall";
+import {
+  buildPanelRoleModels,
+  useDeviceModel,
+} from "../utils/localModelLabels";
 
 // Storage key for GPU preference
 const GPU_PREFERENCE_KEY = "vet_rate_gpu_preference";
@@ -391,70 +396,10 @@ export const checkWebGPUSupport = async (_forcePowerPreference = null) => {
   return await webGPUInitPromise;
 };
 
-// Available models organized by RECOMMENDED USE CASE
-// 💎 Diamond Swarm agents are the ONLY recommended choice for VA claims processing
-// All legacy WebLLM models have been removed - Diamond Swarm provides superior results
-const AVAILABLE_MODELS = [
-  // === 💎 DIAMOND SWARM AGENTS - Specialized for VA Claims ===
-  {
-    id: "diamond-auditor",
-    name: "🎖️ CW5 Auditor (Recommended)",
-    size: "4.0 GB",
-    description:
-      "Specialized agent for claim review, compliance, and document analysis",
-    bestFor: "🔍 Claim Review & Analysis",
-    contextInfo:
-      "Best for: DD214, C-File, Blue Button, Decision Decoder, compliance checking",
-    vramRequired: "6 GB",
-    recommended: true,
-    category: "diamond",
-    isDiamond: true,
-    // Base model transparency - let veterans know what powers their AI
-    baseModel: "Qwen2.5-7B-Instruct",
-    baseModelInfo:
-      "Fine-tuned from Alibaba's Qwen 2.5 (7B parameters) - Open source, privacy-respecting",
-    trainingFocus: "VA regulations, 38 CFR, claim evidence analysis",
-  },
-  {
-    id: "diamond-writer",
-    name: "🎖️ CW4 Writer (Creative)",
-    size: "4.0 GB",
-    description:
-      "Specialized agent for personal statements, nexus letters, buddy statements",
-    bestFor: "✍️ Statement Writing",
-    contextInfo:
-      "Best for: Personal statements, nexus letters, witness statements",
-    vramRequired: "6 GB",
-    recommended: true,
-    category: "diamond",
-    isDiamond: true,
-    // Base model transparency
-    baseModel: "Qwen2.5-7B-Instruct",
-    baseModelInfo:
-      "Fine-tuned from Alibaba's Qwen 2.5 (7B parameters) - Open source, privacy-respecting",
-    trainingFocus:
-      "Veteran-voice writing, empathetic statements, legal phrasing",
-  },
-  {
-    id: "diamond-rater",
-    name: "🎖️ CW3 Rater (Calculations)",
-    size: "4.0 GB",
-    description:
-      "Specialized agent for VA rating calculations and bilateral factor",
-    bestFor: "🧮 Rating Calculations",
-    contextInfo:
-      "Best for: Combined ratings, bilateral factor, TDIU assessment",
-    vramRequired: "6 GB",
-    recommended: true,
-    category: "diamond",
-    isDiamond: true,
-    // Base model transparency
-    baseModel: "Qwen2.5-7B-Instruct",
-    baseModelInfo:
-      "Fine-tuned from Alibaba's Qwen 2.5 (7B parameters) - Open source, privacy-respecting",
-    trainingFocus: "VA math, bilateral factor, combined ratings table",
-  },
-];
+// Each entry selects an assistant role; initializeSwarm loads the stock model
+// the device profile recommends, so names and sizes come from that profile
+// (see utils/localModelLabels.js). Legacy WebLLM models were removed.
+const AVAILABLE_MODELS = buildPanelRoleModels(null);
 
 /**
  * Initializes a Diamond Swarm agent (as opposed to a legacy WebLLM model).
@@ -1286,7 +1231,19 @@ const loadLegacyWebLLMEngine = async (modelId, visionFlags, ctx) => {
       { setError, setIsReady, setEngine },
     );
 
-    const mlcEngine = await CreateMLCEngine(modelId, engineOptions);
+    // The main-thread engine cannot be cancelled; a stalled load is only
+    // abandoned, so the retry starts a fresh one.
+    const mlcEngine = await loadWithStallWatchdog(
+      (noteProgress) =>
+        CreateMLCEngine(modelId, {
+          ...engineOptions,
+          initProgressCallback: (report) => {
+            noteProgress(report);
+            initProgressCallback(report);
+          },
+        }),
+      () => {},
+    );
 
     setEngine(mlcEngine);
     setLoadedModelId(modelId);
@@ -1525,6 +1482,7 @@ function buildLocalAIProviderApi(deps) {
     generate,
     interruptGeneration,
     switchModel,
+    availableModels,
   } = deps;
 
   return {
@@ -1541,7 +1499,7 @@ function buildLocalAIProviderApi(deps) {
     // Model
     selectedModel,
     setSelectedModel,
-    availableModels: AVAILABLE_MODELS,
+    availableModels,
     installedModels,
     loadedModelId,
 
@@ -1657,6 +1615,11 @@ export const useLocalAIProviderState = () => {
     supported: false,
   });
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[1]); // Default to balanced
+  const deviceModel = useDeviceModel();
+  const availableModels = useMemo(
+    () => buildPanelRoleModels(deviceModel),
+    [deviceModel],
+  );
   const [installedModels, setInstalledModels] = useState(new Set());
   const [gpuPreference, setGpuPreferenceState] = useState(getGPUPreference());
   const [error, setError] = useState(null);
@@ -1729,5 +1692,6 @@ export const useLocalAIProviderState = () => {
     generate,
     interruptGeneration,
     switchModel,
+    availableModels,
   });
 };

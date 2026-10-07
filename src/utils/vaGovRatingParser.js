@@ -27,31 +27,30 @@ import { formatLocalDate } from "./dateUtils";
  * @returns {Object} Object with combinedRating, serviceConnected, notServiceConnected arrays
  */
 function _parseServiceConnectedSection(text) {
-  const serviceConnectedMatch = text.match(
+  const serviceConnectedMatch =
     // eslint-disable-next-line sonarjs/regex-complexity -- input is text the user pasted from their own VA.gov page (bounded, not attacker-controlled); a rewrite of this section-boundary matcher risks silently changing what counts as the "service-connected" block
-    /Service-connected\s+ratings?(.*?)(?:Conditions?\s+VA\s+determined\s+aren't\s+service-connected|Learn\s+about\s+VA\s+disability|Need\s+help\?|$)/is,
-  );
+    /Service-connected\s+ratings?(.*?)(?:Conditions?\s+VA\s+determined\s+aren't\s+service-connected|Learn\s+about\s+VA\s+disability|Need\s+help\?|$)/is.exec(
+      text,
+    );
 
   const serviceConnected = [];
-  if (!serviceConnectedMatch || !serviceConnectedMatch[1])
-    return serviceConnected;
+  if (!serviceConnectedMatch?.[1]) return serviceConnected;
 
   const serviceConnectedText = serviceConnectedMatch[1];
 
   // Find all rating patterns: "X% rating for [condition]"
   // Improved regex to handle newlines and effective dates better
-  // eslint-disable-next-line sonarjs/slow-regex -- input is user-pasted VA.gov text (bounded), and the lookahead prevents runaway matches
-  const ratingPattern = /(\d+)%\s+rating\s+for\s+([^\n\r]+?)(?=\s*\n|$)/gi;
+  const ratingPattern =
+    /(\d{1,3})%\s{1,5}rating\s{1,5}for\s{1,5}([^\n\r]{1,300}?)(?=\s{0,5}\n|$)/gi;
   let match;
 
   while ((match = ratingPattern.exec(serviceConnectedText)) !== null) {
-    const rating = parseInt(match[1], 10);
+    const rating = Number.parseInt(match[1], 10);
     let condition = match[2].trim();
 
     // Clean up condition name - remove any trailing punctuation or dates
     condition = condition
-      // eslint-disable-next-line sonarjs/slow-regex -- input is a single already-extracted condition line (a few dozen chars), not attacker-controlled length
-      .replace(/\s*Effective\s+date:.*$/i, "") // Remove effective date if captured
+      .replace(/\s{0,5}Effective\s{1,5}date:.{0,300}$/i, "") // Remove effective date if captured
       .replace(/\(previously rated as .+?\)/gi, "") // Remove "previously rated as" text
       .replace(/\(claimed as .+?\)/gi, "") // Remove "claimed as" text
       .trim();
@@ -62,12 +61,12 @@ function _parseServiceConnectedSection(text) {
     }
 
     // Try to find effective date on the next line
-    const effectiveDateMatch = serviceConnectedText
-      .substring(
+    const effectiveDateMatch = /Effective\s+date:\s*([^\n]+)/i.exec(
+      serviceConnectedText.substring(
         match.index + match[0].length,
         match.index + match[0].length + 200,
-      )
-      .match(/Effective\s+date:\s*([^\n]+)/i);
+      ),
+    );
     const effectiveDate = effectiveDateMatch
       ? parseDate(effectiveDateMatch[1].trim())
       : null;
@@ -89,8 +88,7 @@ function _parseNotServiceConnectedSection(text) {
   );
 
   const notServiceConnected = [];
-  if (!notServiceConnectedMatch || !notServiceConnectedMatch[1])
-    return notServiceConnected;
+  if (!notServiceConnectedMatch?.[1]) return notServiceConnected;
 
   const lines = notServiceConnectedMatch[1]
     .split("\n")
@@ -154,10 +152,10 @@ export function parseVAGovRatings(text) {
  * @returns {number|null} Combined rating percentage or null
  */
 function extractCombinedRating(text) {
-  const match = text.match(
-    /Your\s+combined\s+disability\s+rating\s+is\s+(\d+)%/i,
+  const match = /Your\s+combined\s+disability\s+rating\s+is\s+(\d+)%/i.exec(
+    text,
   );
-  return match ? parseInt(match[1], 10) : null;
+  return match ? Number.parseInt(match[1], 10) : null;
 }
 
 /**
@@ -251,7 +249,7 @@ function isNavigationOrChrome(line) {
 function parseDate(dateStr) {
   try {
     const date = new Date(dateStr);
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return null;
     }
     return date.toISOString().split("T")[0]; // Return YYYY-MM-DD format
@@ -293,6 +291,35 @@ export function validateParsedRatings(ratings) {
 }
 
 /**
+ * Format the legacy flat-array rating format (pre-dates the
+ * combinedRating/serviceConnected/notServiceConnected object shape).
+ * @param {Array} ratings
+ * @returns {string}
+ */
+function formatLegacyRatingsList(ratings) {
+  if (ratings.length === 0) {
+    return "No ratings found in pasted text.";
+  }
+
+  let text = `Found ${ratings.length} rating${ratings.length === 1 ? "" : "s"}:\n\n`;
+
+  ratings.forEach((r, i) => {
+    text += `${i + 1}. ${r.condition}`;
+    if (r.rating !== null) {
+      text += ` - ${r.rating}%`;
+    } else {
+      text += ` - (No rating found, please set manually)`;
+    }
+    if (r.effectiveDate) {
+      text += ` (Effective: ${formatLocalDate(r.effectiveDate).toLocaleDateString()})`;
+    }
+    text += "\n";
+  });
+
+  return text;
+}
+
+/**
  * Format parsed ratings for display
  * @param {Object} parseResult - Result from parseVAGovRatings with combinedRating, serviceConnected, notServiceConnected
  * @returns {string} Formatted text summary
@@ -300,27 +327,7 @@ export function validateParsedRatings(ratings) {
 export function formatParsedRatings(parseResult) {
   // Handle legacy array format for backwards compatibility
   if (Array.isArray(parseResult)) {
-    const ratings = parseResult;
-    if (ratings.length === 0) {
-      return "No ratings found in pasted text.";
-    }
-
-    let text = `Found ${ratings.length} rating${ratings.length === 1 ? "" : "s"}:\n\n`;
-
-    ratings.forEach((r, i) => {
-      text += `${i + 1}. ${r.condition}`;
-      if (r.rating !== null) {
-        text += ` - ${r.rating}%`;
-      } else {
-        text += ` - (No rating found, please set manually)`;
-      }
-      if (r.effectiveDate) {
-        text += ` (Effective: ${formatLocalDate(r.effectiveDate).toLocaleDateString()})`;
-      }
-      text += "\n";
-    });
-
-    return text;
+    return formatLegacyRatingsList(parseResult);
   }
 
   // New object format

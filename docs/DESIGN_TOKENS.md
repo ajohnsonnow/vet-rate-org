@@ -30,6 +30,7 @@ docs/DESIGN_TOKENS_REFERENCE.md  # generated reference table (this doc explains 
 ## How to add or edit a token
 
 1. Edit the relevant `tokens/source/*.json`. Format follows [Style Dictionary's spec](https://styledictionary.com/info/tokens/):
+
    ```json
    {
      "color": {
@@ -39,8 +40,9 @@ docs/DESIGN_TOKENS_REFERENCE.md  # generated reference table (this doc explains 
      }
    }
    ```
+
 2. Run `npm run build:tokens`. This invokes `npx --yes style-dictionary@^4.0.0` — Style Dictionary is **not** a `devDependency`; it's fetched on demand (see "Why npx-on-demand" below).
-3. Commit both the source file *and* the regenerated outputs in [src/generated/](../src/generated/).
+3. Commit both the source file _and_ the regenerated outputs in [src/generated/](../src/generated/).
 4. Tailwind picks the new palette up automatically — `bg-new-palette-500`, `text-new-palette-500`, etc. all work.
 
 ---
@@ -49,16 +51,16 @@ docs/DESIGN_TOKENS_REFERENCE.md  # generated reference table (this doc explains 
 
 The trade-off (mirrors [PREFLIGHT_EXTRAS.md](./PREFLIGHT_EXTRAS.md)):
 
-| | Always-on devDep | npx-on-demand (this approach) |
-|---|---|---|
-| `npm ci` time | +~3 s for Style Dictionary + transitive deps | unchanged |
-| `package.json` clutter | +1 devDep line | 0 devDep lines |
-| First-run latency | 0 s | ~20 s (npx fetch on first invocation) |
-| Subsequent runs | 0 s warmup | 0 s (npx cached) |
-| CI cache friendliness | excellent | good (npx caches between runs) |
-| Generated outputs committed | yes | yes |
+|                             | Always-on devDep                             | npx-on-demand (this approach)         |
+| --------------------------- | -------------------------------------------- | ------------------------------------- |
+| `npm ci` time               | +~3 s for Style Dictionary + transitive deps | unchanged                             |
+| `package.json` clutter      | +1 devDep line                               | 0 devDep lines                        |
+| First-run latency           | 0 s                                          | ~20 s (npx fetch on first invocation) |
+| Subsequent runs             | 0 s warmup                                   | 0 s (npx cached)                      |
+| CI cache friendliness       | excellent                                    | good (npx caches between runs)        |
+| Generated outputs committed | yes                                          | yes                                   |
 
-Because **the generated outputs are committed**, a clean clone builds the app *without* running `build:tokens`. The script is only needed when you edit tokens or want to verify drift in CI.
+Because **the generated outputs are committed**, a clean clone builds the app _without_ running `build:tokens`. The script is only needed when you edit tokens or want to verify drift in CI.
 
 This keeps Style Dictionary off the critical path while still giving us a real, audit-closing token pipeline.
 
@@ -69,7 +71,7 @@ This keeps Style Dictionary off the critical path while still giving us a real, 
 [tailwind.config.js](../tailwind.config.js) imports the generated CJS module and spreads it into `theme.extend.colors`:
 
 ```js
-const generatedTokens = require('./src/generated/design-tokens.js');
+const generatedTokens = require("./src/generated/design-tokens.js");
 
 module.exports = {
   theme: {
@@ -78,8 +80,8 @@ module.exports = {
         ...generatedTokens.colors,
         // Legacy aliases override the generated literals so runtime
         // theming via :root CSS vars still works.
-        'va-blue': 'var(--va-blue, #2d5016)',
-        'va-gold': 'var(--va-gold, #88b04b)',
+        "va-blue": "var(--va-blue, #2d5016)",
+        "va-gold": "var(--va-gold, #88b04b)",
       },
     },
   },
@@ -92,7 +94,7 @@ The generated `design-tokens.css` is **not** imported by default. It's available
 
 ## CI drift gate
 
-`npm run build:tokens:verify` re-runs the build and exits **2** if the generated files would change. Wire into CI to catch the case where someone edits tokens/source/*.json but forgets to regenerate:
+`npm run build:tokens:verify` re-runs the build and exits **2** if the generated files would change. Wire into CI to catch the case where someone edits tokens/source/\*.json but forgets to regenerate:
 
 ```yaml
 # .github/workflows/ci.yml (optional step)
@@ -123,4 +125,4 @@ Reopen this document if any of these happen:
 
 ---
 
-*Owner: Anthony Johnson. Last updated 2026-05-15. Closes [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) row 26 — promoted from partial to compliant. Figma Variables / Code Connect deferred as out-of-scope until a design partner is in scope.*
+_Owner: Anthony Johnson. Last updated 2026-05-15. Closes [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) row 26 — promoted from partial to compliant. Figma Variables / Code Connect deferred as out-of-scope until a design partner is in scope._

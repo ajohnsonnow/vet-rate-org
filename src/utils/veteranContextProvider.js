@@ -22,15 +22,21 @@ import {
   addDocumentToVKB,
   saveVKB,
 } from "./veteranKnowledgeBase";
-import {
-  saveDocumentToPacket,
-  generatePacketContext,
-  PACKET_DOC_TYPES,
-  PACKET_DOC_LABELS,
-} from "./myPacketManager";
+import { saveDocumentToPacket, generatePacketContext } from "./myPacketManager";
 import { getSavedClaims } from "./claimsStorage";
-import { getMyRatings } from "./veteranProfile";
+import { getMyRatings, getVeteranProfile } from "./veteranProfile";
 import { normalizeConditionName } from "./conditionName";
+import {
+  CFILE_EVENT_SOURCE,
+  CFILE_LEGACY_EVENT_SOURCE,
+  canonicalEventType,
+  eventDayKey,
+  eventIdentity,
+  isCFileToolSource,
+  isRealEventDate,
+  isVeteranEdited,
+} from "./eventIdentity";
+import { redactVeteranIdentifiers } from "./piiScrubber";
 
 // ============================================================
 // CONDITION NORMALIZATION + RECORD AGGREGATION
@@ -144,11 +150,12 @@ export const getVeteranAIContext = async (options = {}) => {
   } = options;
 
   let ctx = "";
+  let vkb = null;
 
   try {
     // 1) VKB — structured knowledge graph (service history, conditions, etc.)
     if (includeVKB) {
-      const vkb = await loadVKB();
+      vkb = await loadVKB();
       // Content gate (not a fullName gate): include VKB context whenever the
       // knowledge base holds anything an AI tool can use — document-derived
       // conditions, filed claims, a timeline, or a stored C-File — even before
@@ -182,7 +189,28 @@ export const getVeteranAIContext = async (options = {}) => {
     );
   }
 
-  return ctx;
+  // ADR-008 single enforcement point: generateLLMContext/generatePacketContext
+  // already self-redact, but this is the outermost boundary every caller of
+  // this module actually sees - a second pass here (using the SAME VKB
+  // identifiers, so it's a cheap no-op over already-redacted text) means a
+  // future piece concatenated onto `ctx` without its own redaction still
+  // can't leak a direct identifier past this function.
+  if (!vkb) {
+    try {
+      vkb = await loadVKB();
+    } catch {
+      // best-effort backstop only; nothing to redact against if this fails
+    }
+  }
+  const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+    .map((c) => c.claimNumber)
+    .filter(Boolean);
+  // ADR-008: VKB's .personal block never carries firstName/lastName/
+  // serviceNumber/mailingStreet/mailingCity - those live only on the flat
+  // legacy profile store. Merge both so a veteran ingested through a path
+  // that only ever populated one of the two stores is still fully covered.
+  const personal = { ...getVeteranProfile(), ...vkb?.personal };
+  return redactVeteranIdentifiers(ctx, personal, claimNumbers);
 };
 
 // ============================================================
@@ -202,7 +230,8 @@ export const getVeteranAIContext = async (options = {}) => {
 // (read-only, no rating so calculators exclude them). They are NEVER written to
 // vaClaimsHistory.claims, which is reserved for FILED claims from decision /
 // denial letters.
-const CFILE_SUGGESTION_SOURCE = "C-File Analysis";
+const CFILE_SUGGESTION_SOURCE = CFILE_EVENT_SOURCE;
+const CFILE_LEGACY_EVIDENCE_SOURCE = CFILE_LEGACY_EVENT_SOURCE;
 
 const _cfileConditionName = (c) => c.condition || c.name || "";
 
@@ -226,7 +255,15 @@ function _cfileCurrentConditions(claims, mhDiagnoses) {
         source: CFILE_SUGGESTION_SOURCE,
         serviceConnected: false,
       })),
-  ].filter((c) => c.name);
+  ]
+    .filter((c) => c.name)
+    .filter(
+      (c, i, all) =>
+        all.findIndex(
+          (o) =>
+            normalizeConditionName(o.name) === normalizeConditionName(c.name),
+        ) === i,
+    );
 }
 
 function _cfileMissingEvidence(claims) {
@@ -240,14 +277,162 @@ function _cfileMissingEvidence(claims) {
     }));
 }
 
-function _cfileEvidenceTimeline(timeline) {
-  return timeline.map((e) => ({
-    date: e.date || "",
-    eventType: e.category || "c_file_event",
-    description: e.description || e.event || e.quote || "",
-    source: CFILE_SUGGESTION_SOURCE,
-    significance: e.significance || "",
-  }));
+const _eventText = (e) =>
+  String(e.description || e.event || e.quote || "").trim();
+
+const _sameWords = (text) => text.toLowerCase().replaceAll(/\s+/g, " ");
+
+/**
+ * The events of one analysis that can be written, and those that cannot. An
+ * event without a real calendar date or without a description is never
+ * written; it is returned with the reason. Two entries naming the same day
+ * and words are one event, whatever category each names.
+ * @param {Array} timeline the analysis' timeline
+ * @returns {{events: object[], leftOut: {date: string, description: string, reason: string}[]}}
+ */
+export function splitCFileTimeline(timeline) {
+  const events = [];
+  const leftOut = [];
+  const seen = new Set();
+  for (const e of timeline) {
+    const date = String(e?.date || "").trim();
+    const description = _eventText(e || {});
+    const missing = [
+      !isRealEventDate(date) && "no real calendar date",
+      !description && "no description",
+    ].filter(Boolean);
+    if (missing.length > 0) {
+      leftOut.push({ date, description, reason: missing.join(" and ") });
+      continue;
+    }
+    const item = {
+      date,
+      eventType: e.category || "c_file_event",
+      description,
+      source: CFILE_SUGGESTION_SOURCE,
+      significance: e.significance || "",
+    };
+    const key = `${eventDayKey(date)}|${_sameWords(description)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    events.push(item);
+  }
+  return { events, leftOut };
+}
+
+const _cfileEvidenceTimeline = (timeline) =>
+  splitCFileTimeline(timeline).events;
+
+const _isCopyFromDocument = (e, source, sourceDocumentId) =>
+  e.source === source && e.sourceDocumentId === sourceDocumentId;
+
+// A copy saved before events carried a document id: same tool, same day, same
+// canonical type (a legacy evidence item has no type, so the day alone), never
+// already taken by another event of this save.
+const _isLegacyCopy = (e, source, item, claimed) =>
+  e.source === source &&
+  e.date &&
+  !e.sourceDocumentId &&
+  !claimed.has(e) &&
+  eventDayKey(e.date) === eventDayKey(item.date) &&
+  (!e.eventType ||
+    canonicalEventType(e.eventType) === canonicalEventType(item.eventType));
+
+// The tool-written events a save replaces: every unedited event this tool
+// wrote for the document, and each older copy saved before events carried a
+// document id.
+function _replacedCFileEvents(list, incoming, source, sourceDocumentId) {
+  const replaced = new Set(
+    list.filter(
+      (e) =>
+        _isCopyFromDocument(e, source, sourceDocumentId) && !isVeteranEdited(e),
+    ),
+  );
+  const claimed = new Set();
+  incoming.forEach((item) => {
+    const legacy = list.find((e) => _isLegacyCopy(e, source, item, claimed));
+    if (legacy) {
+      claimed.add(legacy);
+      replaced.add(legacy);
+    }
+  });
+  return replaced;
+}
+
+// The edited event that stands for an incoming one: the same day and type
+// first, else any other unpaired edited event on that day, because the model
+// names the type differently on each run and the veteran's copy must not gain a
+// second event beside it.
+function _standInFor(edited, stoodFor, item) {
+  const open = edited.filter((e) => !stoodFor.has(e));
+  return (
+    open.find((e) => eventIdentity(e) === eventIdentity(item)) ||
+    open.find((e) => eventDayKey(e.date) === eventDayKey(item.date))
+  );
+}
+
+// An event this tool wrote for another document does not stand for an incoming
+// one: each document owns its events, so replacing one document's set never
+// removes an event another document's save listed.
+const _standsFor = (e, source, sourceDocumentId) =>
+  !(
+    e.source === source &&
+    e.sourceDocumentId &&
+    e.sourceDocumentId !== sourceDocumentId
+  );
+
+// Writes one document's events from this tool as a set: the earlier set is
+// deleted and the new set written, so a re-analysis that words or counts its
+// events differently leaves exactly the events it lists. Only events this tool
+// wrote for this document are replaced; an event added by hand, taken from
+// another tool or document, or edited by the veteran is never deleted or
+// overwritten, and an incoming event the veteran's edited copy already stands
+// for (same day) is not written a second time. `alsoEdited` names edited
+// copies held in another list (the evidence timeline's, for the evidence
+// mirror), because an edit is flagged in one place only.
+function _replaceCFileEventSet({
+  list,
+  incoming,
+  source,
+  sourceDocumentId,
+  keyOf,
+  alsoEdited = [],
+}) {
+  const replaced = _replacedCFileEvents(
+    list,
+    incoming,
+    source,
+    sourceDocumentId,
+  );
+  const kept = list.filter((e) => !replaced.has(e));
+  const edited = [
+    ...kept.filter(
+      (e) =>
+        _isCopyFromDocument(e, source, sourceDocumentId) && isVeteranEdited(e),
+    ),
+    ...alsoEdited,
+  ];
+  const standing = new Set(
+    kept.filter((e) => _standsFor(e, source, sourceDocumentId)).map(keyOf),
+  );
+  const stoodFor = new Set();
+  const written = [];
+  incoming.forEach((item) => {
+    const mine = _standInFor(edited, stoodFor, item);
+    if (mine) {
+      stoodFor.add(mine);
+      return;
+    }
+    const key = keyOf(item);
+    if (standing.has(key)) return;
+    standing.add(key);
+    written.push(
+      sourceDocumentId && item.source === source
+        ? { ...item, sourceDocumentId }
+        : item,
+    );
+  });
+  return [...kept, ...written];
 }
 
 function _cfileEnvironmentalExposures(exposures) {
@@ -281,11 +466,13 @@ export const buildVkbMergeFromCFile = (analysis = {}, extraction = {}) => {
   const claims = Array.isArray(analysis.potential_claims)
     ? analysis.potential_claims
     : [];
-  const timeline = Array.isArray(analysis.timeline) ? analysis.timeline : [];
   const exposures = Array.isArray(analysis.exposures) ? analysis.exposures : [];
   const mhDiagnoses = Array.isArray(analysis.mentalHealth?.diagnoses)
     ? analysis.mentalHealth.diagnoses
     : [];
+  const evidenceTimeline = _cfileEvidenceTimeline(
+    Array.isArray(analysis.timeline) ? analysis.timeline : [],
+  );
 
   return {
     // ── Legacy off-schema (dual-write; kept until Wave 2 repoints readers) ──
@@ -296,11 +483,13 @@ export const buildVkbMergeFromCFile = (analysis = {}, extraction = {}) => {
       evidence: c.evidence || c.description || "",
       diagnosticCode: c.diagnosticCode || "",
     })),
-    evidence: timeline.map((e) => ({
+    evidence: evidenceTimeline.map((e) => ({
       date: e.date,
       type: "c_file_event",
-      description: e.event || e.description || "",
-      source: "C-File",
+      eventType: e.eventType,
+      description: e.description,
+      significance: e.significance,
+      source: CFILE_LEGACY_EVIDENCE_SOURCE,
     })),
     aiInsights: {
       cfileAnalysisSummary: analysis.summary || "",
@@ -315,7 +504,7 @@ export const buildVkbMergeFromCFile = (analysis = {}, extraction = {}) => {
     // ── Canonical VKB schema fields (new; merged by dedicated helpers) ──
     medicalConditionsCurrent: _cfileCurrentConditions(claims, mhDiagnoses),
     missingEvidence: _cfileMissingEvidence(claims),
-    evidenceTimeline: _cfileEvidenceTimeline(timeline),
+    evidenceTimeline,
     environmentalExposures: _cfileEnvironmentalExposures(exposures),
     presumptiveConditions: _cfilePresumptiveConditions(exposures),
   };
@@ -375,8 +564,29 @@ function _mergeEvidence(vkb, vkbMergeData, sourceDocumentId) {
   vkb.evidence = vkb.evidence || [];
   const evidenceKey = (e) =>
     `${e.date || ""}|${normalizeConditionName(e.description || e.text || "")}`;
+  const fromCFile = vkbMergeData.evidence.filter(
+    (item) => item.source === CFILE_LEGACY_EVIDENCE_SOURCE,
+  );
+  const others = vkbMergeData.evidence.filter(
+    (item) => item.source !== CFILE_LEGACY_EVIDENCE_SOURCE,
+  );
+  if (sourceDocumentId) {
+    vkb.evidence = _replaceCFileEventSet({
+      list: vkb.evidence,
+      incoming: fromCFile,
+      source: CFILE_LEGACY_EVIDENCE_SOURCE,
+      sourceDocumentId,
+      keyOf: evidenceKey,
+      alsoEdited: (vkb.evidenceTimeline || []).filter(
+        (e) =>
+          isCFileToolSource(e.source) &&
+          e.sourceDocumentId === sourceDocumentId &&
+          isVeteranEdited(e),
+      ),
+    });
+  }
   const existingEvidence = new Set(vkb.evidence.map(evidenceKey));
-  vkbMergeData.evidence.forEach((item) => {
+  (sourceDocumentId ? others : vkbMergeData.evidence).forEach((item) => {
     const key = evidenceKey(item);
     if (existingEvidence.has(key)) return;
     existingEvidence.add(key);
@@ -451,18 +661,32 @@ function _mergePresumptiveConditions(vkb, vkbMergeData) {
   });
 }
 
-function _mergeEvidenceTimeline(vkb, vkbMergeData) {
+function _mergeEvidenceTimeline(vkb, vkbMergeData, sourceDocumentId) {
   if (!Array.isArray(vkbMergeData.evidenceTimeline)) return;
   vkb.evidenceTimeline = vkb.evidenceTimeline || [];
   const timelineKey = (e) =>
     `${e.date || ""}|${(e.eventType || "").toLowerCase()}|${normalizeConditionName(e.description || "")}`;
+  const fromCFile = vkbMergeData.evidenceTimeline.filter(
+    (e) => e.source === CFILE_SUGGESTION_SOURCE,
+  );
+  const others = vkbMergeData.evidenceTimeline.filter(
+    (e) => e.source !== CFILE_SUGGESTION_SOURCE,
+  );
+  if (sourceDocumentId) {
+    vkb.evidenceTimeline = _replaceCFileEventSet({
+      list: vkb.evidenceTimeline,
+      incoming: fromCFile,
+      source: CFILE_SUGGESTION_SOURCE,
+      sourceDocumentId,
+      keyOf: timelineKey,
+    });
+  }
   const existing = new Set(vkb.evidenceTimeline.map(timelineKey));
-  vkbMergeData.evidenceTimeline.forEach((e) => {
+  (sourceDocumentId ? others : vkbMergeData.evidenceTimeline).forEach((e) => {
     const key = timelineKey(e);
-    if (!existing.has(key)) {
-      existing.add(key);
-      vkb.evidenceTimeline.push(e);
-    }
+    if (existing.has(key)) return;
+    existing.add(key);
+    vkb.evidenceTimeline.push(e);
   });
 }
 
@@ -543,6 +767,7 @@ async function _saveToVkb({
   vkbMergeData,
   sourceDocumentId,
   timestamp,
+  strict = false,
 }) {
   try {
     if (vkbDocument) {
@@ -556,7 +781,10 @@ async function _saveToVkb({
     if (!vkbMergeData) return;
 
     const vkb = await loadVKB();
-    if (!vkb) return;
+    if (!vkb) {
+      if (strict) throw new Error("The Knowledge Base could not be opened.");
+      return;
+    }
 
     _mergeAiInsightsAndKeyFacts(vkb, vkbMergeData);
     // Merge claims data (normalized names so "PTSD (chronic)" and "ptsd"
@@ -572,16 +800,22 @@ async function _saveToVkb({
     // populate the fields the AI-context builders and future readers consume.
     _mergeMedicalConditionsCurrent(vkb, vkbMergeData);
     _mergePresumptiveConditions(vkb, vkbMergeData);
-    _mergeEvidenceTimeline(vkb, vkbMergeData);
+    _mergeEvidenceTimeline(vkb, vkbMergeData, sourceDocumentId);
     _mergeMissingEvidence(vkb, vkbMergeData);
     _mergeEnvironmentalExposures(vkb, vkbMergeData);
 
     vkb.lastUpdated = timestamp;
-    await saveVKB(vkb);
+    const saved = await saveVKB(vkb);
+    if (strict && saved?.success === false) {
+      throw new Error(
+        saved.error || "The Knowledge Base save did not complete.",
+      );
+    }
     // eslint-disable-next-line no-console
     console.log(`[VeteranContextProvider] ✅ Merged ${toolName} data into VKB`);
   } catch (err) {
     console.error(`[VeteranContextProvider] ❌ Failed to save to VKB:`, err);
+    if (strict) throw err;
   }
 }
 
@@ -616,7 +850,27 @@ export const saveAnalysisResults = async ({
     sourceDocumentId,
     timestamp,
   });
+
+  return { documentId: sourceDocumentId };
 };
 
+// For a tool that has already filed its document: merges only the structured
+// findings (conditions, timeline events) into the Knowledge Base, without a
+// second My Packet record or Knowledge Base document. A merge that did not
+// reach storage throws, so the caller never reports it as saved.
+export const mergeAnalysisIntoVkb = ({
+  toolName,
+  vkbMergeData,
+  sourceDocumentId = null,
+}) =>
+  _saveToVkb({
+    toolName,
+    vkbDocument: null,
+    vkbMergeData,
+    sourceDocumentId,
+    timestamp: new Date().toISOString(),
+    strict: true,
+  });
+
 // Re-export commonly-used constants so tools only need ONE import line
-export { PACKET_DOC_TYPES, PACKET_DOC_LABELS };
+export { PACKET_DOC_TYPES, PACKET_DOC_LABELS } from "./myPacketManager";

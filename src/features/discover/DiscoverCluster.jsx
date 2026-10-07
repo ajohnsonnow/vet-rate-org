@@ -1,9 +1,9 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import ReportBugLink from "../../components/ReportBugLink";
 import ResponsiveModal from "../../components/common/ResponsiveModal";
+import HeaderCloseSlot from "../../components/common/HeaderCloseSlot";
 import {
-  saveStatement,
-  getSavedClaims,
+  saveStatementForCondition,
   getStatement,
 } from "../../utils/claimsStorage";
 
@@ -44,25 +44,17 @@ function useDiscoverEventListeners(
   useEffect(() => {
     const openLauncher = () => setShowSecondaryScoutLauncher(true);
     const openNexus = (e) => {
-      if (e?.detail) {
-        setNexusBuilderData(e.detail);
-      } else {
-        const saved = getSavedClaims();
-        const first = saved[0];
-        setNexusBuilderData(
-          first
-            ? {
-                condition: first.conditionName,
-                primaryCondition: first.parentCondition ?? null,
-                existingStatement: getStatement(first.id),
-              }
-            : {
-                condition: "",
-                primaryCondition: null,
-                existingStatement: null,
-              },
-        );
-      }
+      // No detail = a cold open (e.g. header nav, not a specific condition's
+      // card). NexusBuilder itself now offers the veteran's rated
+      // conditions + saved claims as one-click choices instead of us
+      // silently guessing the first saved claim here.
+      setNexusBuilderData(
+        e?.detail || {
+          condition: "",
+          primaryCondition: null,
+          existingStatement: null,
+        },
+      );
       setShowNexusBuilder(true);
     };
     const resumeFromPacket = (e) => {
@@ -96,11 +88,33 @@ function SecondaryScoutHeader({
 }) {
   return (
     <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 rounded-t-lg">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex-1 min-w-0">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="min-w-0">
           <h2
             id="secondary-scout-title"
-            className="text-xl sm:text-3xl font-bold truncate"
+            className="text-xl sm:text-3xl font-bold"
           >
             🔍 Secondary Scout Results
           </h2>
@@ -138,30 +152,10 @@ function SecondaryScoutHeader({
             onClick={onChangeConditions}
             className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm sm:text-base"
           >
-            <span className="hidden sm:inline">Change </span>
-            Conditions
-          </button>
-          <button
-            onClick={onClose}
-            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <span className="hidden sm:inline">Change </span>Conditions
           </button>
         </div>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -176,26 +170,6 @@ function SecondaryScoutLauncherModal({ onLaunch, onClose, onReportBug }) {
       />
     </Suspense>
   );
-}
-
-function findMatchingClaim(statementData) {
-  const savedClaims = getSavedClaims();
-  return savedClaims.find(
-    (c) =>
-      c.conditionName === statementData.condition &&
-      c.parentCondition === (statementData.primaryCondition || null),
-  );
-}
-
-function saveStatementOrAlert(statementData) {
-  const matchingClaim = findMatchingClaim(statementData);
-  if (matchingClaim) {
-    saveStatement(matchingClaim.id, statementData);
-  } else {
-    alert(
-      "Error: Could not find matching claim. Please save the claim first from Secondary Scout.",
-    );
-  }
 }
 
 function DiscoverNexusBuilderModal({
@@ -287,9 +261,12 @@ export default function DiscoverCluster({ userConditions, setUserConditions }) {
   };
 
   const handleSaveStatement = (statementData) => {
-    saveStatementOrAlert(statementData);
-    setShowNexusBuilder(false);
-    window.dispatchEvent(new CustomEvent("openMyPacket"));
+    const saved = saveStatementForCondition(statementData);
+    if (saved) {
+      setShowNexusBuilder(false);
+      window.dispatchEvent(new CustomEvent("openMyPacket"));
+    }
+    return saved;
   };
 
   return (

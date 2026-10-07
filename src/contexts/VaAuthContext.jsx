@@ -133,12 +133,12 @@ function useAuthInitFromStorage({
       if (storedAccessToken) {
         setAccessToken(storedAccessToken);
         setRefreshToken(storedRefreshToken);
-        setTokenExpiry(storedExpiry ? parseInt(storedExpiry, 10) : null);
+        setTokenExpiry(storedExpiry ? Number.parseInt(storedExpiry, 10) : null);
         setUserInfo(storedUserInfo ? JSON.parse(storedUserInfo) : null);
 
         // Check if token is expired
         const now = Date.now();
-        if (storedExpiry && parseInt(storedExpiry, 10) > now) {
+        if (storedExpiry && Number.parseInt(storedExpiry, 10) > now) {
           setIsAuthenticated(true);
         } else {
           // Token expired, clear it

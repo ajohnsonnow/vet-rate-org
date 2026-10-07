@@ -1,11 +1,13 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { getAllConditions } from "../services/knowledgeQuery";
 import { getMyRatings, addRating } from "../utils/veteranProfile";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
 import { calculateVARating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 import { searchDisabilityData } from "../utils/searchUtils";
 import disabilityData from "../data/disabilityData.json";
 
@@ -834,6 +836,54 @@ const exampleProfiles = [
   },
 ];
 
+const CONDITION_SKIP_WORDS = new Set([
+  "the",
+  "and",
+  "for",
+  "your",
+  "this",
+  "that",
+  "with",
+  "from",
+  "have",
+  "been",
+  "will",
+  "evidence",
+  "records",
+  "medical",
+  "examination",
+]);
+
+function _cleanConditionName(rawCondition) {
+  return (
+    rawCondition
+      .replace(/\s+/g, " ")
+      .replace(/^\d+%?\s*/, "")
+      // \s{0,20} not \s*: same load-bearing bound as above -- confirmed
+      // 3s+ at 80k chars unbounded, 0-12ms bounded.
+      .replace(/\s{0,20}[-–—:]\s{0,20}\d{1,3}%?\s*$/, "")
+      .replace(/^\s*for\s+/i, "")
+      .trim()
+  );
+}
+
+/** Clean, validate, dedupe, and (if novel) register one extracted condition. */
+function _registerCondition(rawCondition, conditions, seenConditions) {
+  const condition = _cleanConditionName(rawCondition);
+
+  // Skip if too short, too long, or common non-condition text
+  if (condition.length < 3 || condition.length > 100) return;
+  if (CONDITION_SKIP_WORDS.has(condition.toLowerCase())) return;
+
+  // Normalize for deduplication
+  const normalized = condition.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (seenConditions.has(normalized) || normalized.length <= 2) return;
+
+  seenConditions.add(normalized);
+  // Capitalize first letter of each word
+  conditions.push(condition.replace(/\b\w/g, (c) => c.toUpperCase()));
+}
+
 export function parseConditionsFromText(text) {
   const conditions = [];
   const seenConditions = new Set();
@@ -850,14 +900,11 @@ export function parseConditionsFromText(text) {
   // equivalent on realistic fixtures, 0-40ms even at 200k chars.
   const patterns = [
     // "XX% rating for [condition]" format
-    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
-    /(\d{1,3})%?\s+(?:rating|disability|service.connected)?\s*(?:for|:)?\s*([^,\n]{1,150})/gi,
+    /(\d{1,3})%?\s{1,10}(?:rating|disability|service.connected)?\s{0,10}(?:for|:)?\s{0,10}([^,\n]{1,150})/gi,
     // "Service connection for [condition] is granted/continued"
-    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
-    /service\s+connection\s+(?:for\s+)?([^,\n.]{1,150}?)(?:\s+is|\s+has been|\s+granted|\s+continued)/gi,
+    /service\s{1,10}connection\s{1,10}(?:for\s{1,10})?([^,\n.]{1,150}?)(?:\s{1,10}is|\s{1,10}has been|\s{1,10}granted|\s{1,10}continued)/gi,
     // "Your [condition] is rated at XX%"
-    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
-    /your\s+([^,\n]{1,150}?)\s+is\s+rated\s+at\s+(\d+)%/gi,
+    /your\s{1,10}([^,\n]{1,150}?)\s{1,10}is\s{1,10}rated\s{1,10}at\s{1,10}(\d{1,3})%/gi,
     // Diagnostic Code patterns: "[Condition], Diagnostic Code XXXX"
     // eslint-disable-next-line sonarjs/slow-regex -- all quantifiers bounded ({1,80}/{1,40}/{0,5}); measured 93ms at 500k chars (worst-case shape), not a real DoS
     /([A-Z][a-z\s]{1,80}(?:,\s*[a-z]{1,40}){0,5}),?\s+(?:DC|Diagnostic Code)\s*\d{4}/gi,
@@ -870,47 +917,9 @@ export function parseConditionsFromText(text) {
   for (const pattern of patterns) {
     let match;
     while ((match = pattern.exec(text)) !== null) {
-      let condition = match[1]?.trim() || match[2]?.trim();
-      if (condition) {
-        // Clean up the condition name
-        condition = condition
-          .replace(/\s+/g, " ")
-          .replace(/^\d+%?\s*/, "")
-          // \s{0,20} not \s*: same load-bearing bound as above -- confirmed
-          // 3s+ at 80k chars unbounded, 0-12ms bounded.
-          .replace(/\s{0,20}[-–—:]\s{0,20}\d{1,3}%?\s*$/, "")
-          .replace(/^\s*for\s+/i, "")
-          .trim();
-
-        // Skip if too short, too long, or common non-condition text
-        if (condition.length < 3 || condition.length > 100) continue;
-        const skipWords = [
-          "the",
-          "and",
-          "for",
-          "your",
-          "this",
-          "that",
-          "with",
-          "from",
-          "have",
-          "been",
-          "will",
-          "evidence",
-          "records",
-          "medical",
-          "examination",
-        ];
-        if (skipWords.some((w) => condition.toLowerCase() === w)) continue;
-
-        // Normalize for deduplication
-        const normalized = condition.toLowerCase().replace(/[^a-z0-9]/g, "");
-        if (!seenConditions.has(normalized) && normalized.length > 2) {
-          seenConditions.add(normalized);
-          // Capitalize first letter of each word
-          condition = condition.replace(/\b\w/g, (c) => c.toUpperCase());
-          conditions.push(condition);
-        }
+      const rawCondition = match[1]?.trim() || match[2]?.trim();
+      if (rawCondition) {
+        _registerCondition(rawCondition, conditions, seenConditions);
       }
     }
   }
@@ -918,7 +927,9 @@ export function parseConditionsFromText(text) {
   return conditions;
 }
 
-async function _processPdfFile(file, ctx) {
+// Exported for this function's own regression test (analyzePDF's result
+// shape) - not part of the component's public interface otherwise.
+export async function _processPdfFile(file, ctx) {
   const {
     setPdfFile,
     setPdfError,
@@ -935,7 +946,10 @@ async function _processPdfFile(file, ctx) {
       setPdfOcrProgress(progress);
     });
 
-    if (result.success && result.text) {
+    // analyzePDF (ocr.js) never returns a `success` field - it either
+    // resolves with the extracted result or throws, caught below. Same
+    // defect class fixed in DecisionDecoder.jsx's extractFileTextAndPreview.
+    if (result.text) {
       // Parse conditions from the extracted text
       const conditions = parseConditionsFromText(result.text);
       setExtractedPdfConditions(conditions);
@@ -1050,8 +1064,7 @@ function _extractDisplayCondition(condition, getDCCode) {
   // Extract DC code from condition name if present
   // Matches: (DC 7542), (DC 7542, 7543), (rated under DC 5024), (DC 5003, 5201)
   const dcMatch = condition.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-    /\s*\((?:rated under |rated analogously under )?DC\s*([\d,\s-]+)\)/i,
+    /\s{0,10}\((?:rated under |rated analogously under )?DC\s{0,10}([\d,\s-]{1,50})\)/i,
   );
   let displayDCCode = null;
   let displayCondition = condition;
@@ -1067,10 +1080,8 @@ function _extractDisplayCondition(condition, getDCCode) {
   ) {
     // Has a "rated under" clause but no specific DC - don't look up, just clean the display
     displayCondition = condition
-      // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-      .replace(/\s*\(rated under [^)]+\)/gi, "")
-      // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-      .replace(/\s*\(rated analogously[^)]*\)/gi, "")
+      .replace(/\s{0,10}\(rated under [^)]{1,200}\)/gi, "")
+      .replace(/\s{0,10}\(rated analogously[^)]{0,200}\)/gi, "")
       .trim();
   } else {
     // Try to look up DC code from disabilityData
@@ -1384,9 +1395,9 @@ function PdfExtractedConditionsList({
         {extractedPdfConditions.length !== 1 ? "s" : ""}
       </h4>
       <div className="max-h-48 overflow-y-auto space-y-2 mb-4">
-        {extractedPdfConditions.map((condition, index) => (
+        {extractedPdfConditions.map((condition) => (
           <div
-            key={index}
+            key={condition}
             className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg"
           >
             <span className="text-green-600 dark:text-green-400">•</span>
@@ -1680,9 +1691,9 @@ function SelectedConditionsSummary({
       </div>
       {selectedConditions.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1 max-h-16 overflow-y-auto">
-          {selectedConditions.map((condition, idx) => (
+          {selectedConditions.map((condition) => (
             <span
-              key={idx}
+              key={condition}
               className="inline-flex items-center px-2 py-0.5 bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-200 text-xs rounded-full"
             >
               {condition}
@@ -1770,10 +1781,10 @@ function ExampleProfilesPanel({ loadExampleProfile }) {
         Choose a sample veteran profile to see how Secondary Scout works:
       </p>
       <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2">
-        {exampleProfiles.map((profile, index) => (
+        {exampleProfiles.map((profile) => (
           <button
             type="button"
-            key={index}
+            key={profile.name}
             onClick={() => loadExampleProfile(profile.conditions)}
             className="w-full text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all group"
           >
@@ -1784,9 +1795,9 @@ function ExampleProfilesPanel({ loadExampleProfile }) {
               {profile.description}
             </p>
             <div className="flex flex-wrap gap-2">
-              {profile.conditions.slice(0, 5).map((condition, idx) => (
+              {profile.conditions.slice(0, 5).map((condition) => (
                 <span
-                  key={idx}
+                  key={condition}
                   className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full"
                 >
                   {condition}
@@ -1844,11 +1855,12 @@ function MyRatingsHeader({ savedRatings, calculateCombinedRating }) {
           <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
             Combined Rating:
           </span>
-          <span className="px-3 py-1 bg-yellow-600 text-white font-bold rounded-full">
+          <span className="px-3 py-1 bg-yellow-700 text-white font-bold rounded-full">
             {calculateCombinedRating(savedRatings)}%
           </span>
         </div>
       )}
+      <BilateralIssuesSummary conditions={savedRatings} />
     </div>
   );
 }
@@ -1984,33 +1996,12 @@ function MyRatingsPanel({
 function SecondaryScoutHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <h2
-            id="secondary-scout-launcher-title"
-            className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
-          >
-            🔍 Secondary Scout{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h2>
-          <p className="text-blue-100 text-sm sm:text-base">
-            Discover potential secondary claims based on your conditions
-          </p>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="Secondary Scout Launcher"
-            />
-          )}
+      <HeaderCloseSlot
+        close={
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg
@@ -2027,8 +2018,30 @@ function SecondaryScoutHeader({ onClose, onReportBug }) {
               />
             </svg>
           </button>
+        }
+      >
+        <div className="min-w-0">
+          <h2
+            id="secondary-scout-launcher-title"
+            className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
+          >
+            🔍 Secondary Scout{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-blue-100 text-sm sm:text-base">
+            Discover potential secondary claims based on your conditions
+          </p>
         </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Secondary Scout Launcher"
+          />
+        )}
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -2103,7 +2116,7 @@ function SecondaryScoutTabs({
               : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           }`}
         >
-          ⭐ My Ratings
+          ⭐ My Ratings{""}
           <span className="ml-1 px-1.5 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-full">
             {savedRatings.length}
           </span>
@@ -2154,8 +2167,9 @@ function _parseManualConditions(manualInput) {
   return lines
     .map((line) => {
       // Check if line matches VA.gov format: "XX% rating for [condition]"
-      // eslint-disable-next-line sonarjs/slow-regex -- single-line, non-nested quantifiers
-      const vaFormatMatch = line.match(/^\d+%\s+rating\s+for\s+(.+)$/i);
+      const vaFormatMatch = line.match(
+        /^\d{1,3}%\s{1,10}rating\s{1,10}for\s{1,10}(.{1,500})$/i,
+      );
       if (vaFormatMatch) {
         // Extract just the condition name, capitalize properly
         let condition = vaFormatMatch[1].trim();

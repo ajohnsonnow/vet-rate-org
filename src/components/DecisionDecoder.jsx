@@ -1,12 +1,29 @@
+import { logger } from "../utils/logger";
 import { useState, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import DecisionReviewOptions, {
+  FieldCorrections,
+} from "./DecisionReviewOptions";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
-import { getAIStatus, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { getAIStatus } from "../utils/unifiedAIService";
+import {
+  getDecodeTimeoutMs,
+  recordDecodeDuration,
+  SLOW_NOTICE_AFTER_MS,
+} from "../utils/decodeTiming";
+import { buildDocumentOffDeviceNotice } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
+import SmallModelCaveat from "./SmallModelCaveat";
+import {
+  SMALL_MODEL_FALLBACK_NOTE,
+  patternMatchDenial,
+} from "../utils/decisionPatternReading";
+import { readingWithoutModel } from "../utils/decisionDecodeAsShown";
 import { useVaBenefitsRef } from "../hooks/useVaBenefitsRef";
 import {
   analyzePDF,
@@ -78,6 +95,11 @@ function UploadedFileRow({ fileEntry, onRemove }) {
                 </span>
               )}
             </p>
+            {fileEntry.coverageNote && !fileEntry.error && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                📄 {fileEntry.coverageNote}
+              </p>
+            )}
           </div>
         </div>
         <button
@@ -131,215 +153,22 @@ function getOcrProgressMessage(ocrProgress) {
 
 // Keyword-based fallback used when no AI model is loaded. Each `test`
 // receives the raw denial text plus its lowercased form.
-const DENIAL_PATTERNS = [
-  {
-    test: (text) =>
-      /no nexus|does not establish a nexus|nexus between.*service|lacks.*nexus|absence of nexus/i.test(
-        text,
-      ),
-    decision_type: "Full Denial",
-    plain_english:
-      "The VA denied your claim because there is no documented medical link (nexus) between your current condition and your military service.",
-    va_reasoning:
-      "VA policy requires a 'nexus' - a medical opinion that explicitly links your current diagnosis to a specific event, injury, or illness during service.",
-    missing_elements: [
-      "A Nexus Letter from a licensed physician stating your condition is 'at least as likely as not' related to service",
-      "Medical records documenting in-service treatment or incident",
-    ],
-    action_plan: [
-      "Obtain a Nexus Letter from a private physician familiar with VA claims",
-      "Request an Independent Medical Opinion (IMO) from a doctor who reviews your service records",
-      "File a Supplemental Claim with the nexus letter as new and relevant evidence",
-      "Contact a Veterans Service Organization (VSO) for free claim assistance",
-    ],
-    appeal_options:
-      "File a Supplemental Claim (new evidence), request a Higher-Level Review (same evidence, new rater), or appeal to the Board of Veterans' Appeals.",
-    deadline_warning:
-      "You have 1 year from this decision date to file an appeal. Gather your nexus evidence immediately - do not wait.",
-  },
-  {
-    test: (text) =>
-      /not service.connected|no service connection|not connected to.*service|failed to establish service/i.test(
-        text,
-      ),
-    decision_type: "Full Denial",
-    plain_english:
-      "The VA decided your condition is not related to your military service.",
-    va_reasoning:
-      "The VA requires proof of three things: (1) a current diagnosis, (2) an in-service event or stressor, and (3) a nexus linking them. One or more of these is missing.",
-    missing_elements: [
-      "Evidence of an in-service event, injury, or stressor that caused the condition",
-      "A medical nexus linking service to the current diagnosis",
-      "Buddy letters or lay statements from fellow service members witnessing the event",
-    ],
-    action_plan: [
-      "Pull your service records (DD214, service treatment records) for documentation",
-      "Get a buddy letter from fellow veterans who witnessed the incident",
-      "Obtain a medical nexus letter from a private physician",
-      "Consider filing a direct service connection, secondary service connection, or aggravation claim",
-    ],
-    appeal_options:
-      "You can file a Supplemental Claim with new evidence, a Higher-Level Review, or a Board Appeal.",
-    deadline_warning:
-      "You have 1 year from this decision to appeal. Contact a VSO immediately if you are unsure how to proceed.",
-  },
-  {
-    test: (text) =>
-      /insufficient evidence|lack of.*evidence|no probative evidence|evidence does not|evidence is not/i.test(
-        text,
-      ),
-    decision_type: "Full Denial",
-    plain_english:
-      "The VA says there is not enough evidence in your claim file to approve your request.",
-    va_reasoning:
-      "VA adjudicators weigh the evidence of record. When the evidence for and against a claim is roughly equal, VA rules require denial.",
-    missing_elements: [
-      "Additional medical evidence supporting your claim",
-      "Private medical opinions or independent medical examinations (IME)",
-      "Buddy letters (lay statements) from people who observed your condition",
-    ],
-    action_plan: [
-      "Gather all private medical records not already in your file and submit them",
-      "Request a copy of your C-File to see exactly what VA has on record",
-      "Submit a personal statement describing your symptoms and their impact on daily life",
-      "Seek an IME from a private physician to counter the C&P exam findings",
-    ],
-    appeal_options:
-      "A Supplemental Claim is the right path if you have new, relevant evidence. A Higher-Level Review is appropriate if you believe the rater made a clear error.",
-    deadline_warning:
-      "Appeal deadlines apply. File within 1 year of this decision to preserve your effective date.",
-  },
-  {
-    test: (text, t) =>
-      // eslint-disable-next-line sonarjs/slow-regex -- keyword-alternation heuristic over short pasted denial text (local textarea input, not attacker-controlled); a mechanical rewrite risks silently breaking "Granted" detection for real VA letter phrasings
-      /granted|service.connected.*at.*%|assigned.*rating.*%|%.*(combined|combined rating)/i.test(
-        text,
-      ) && !/denied|not.*service.connected/i.test(t),
-    decision_type: "Granted",
-    plain_english:
-      "Congratulations - the VA approved at least part of your claim!",
-    va_reasoning:
-      "The VA found sufficient evidence to establish service connection and assigned a disability rating.",
-    missing_elements: [],
-    action_plan: [
-      "Review your rating decision carefully - ensure each condition is rated correctly",
-      "If you believe the rating percentage is too low, file a Supplemental Claim or Higher-Level Review",
-      "Consider secondary conditions that may be caused or aggravated by your service-connected condition",
-      "File an Intent to File immediately if you plan to claim additional conditions",
-    ],
-    appeal_options:
-      "If the rating percentage seems too low, compare against 38 CFR Part 4 diagnostic codes and file a Higher-Level Review citing a clear error.",
-    deadline_warning: null,
-  },
-  {
-    test: (text) =>
-      /deferred pending|claim deferred|examination.*scheduled/i.test(text),
-    decision_type: "Deferred",
-    plain_english:
-      "The VA has not yet made a final decision on your claim - it is waiting for additional information or a C&P exam.",
-    va_reasoning:
-      "VA defers claims when it needs additional evidence, such as a Compensation & Pension (C&P) exam or more medical records.",
-    missing_elements: [
-      "C&P exam results (if an exam has been scheduled)",
-      "Additional medical records requested by VA",
-    ],
-    action_plan: [
-      "Attend any scheduled C&P exam - missing it can result in denial",
-      "Prepare for your C&P exam using the C&P Simulator in Vet-Rate",
-      "Submit any outstanding evidence as soon as possible",
-      "Contact VA or your VSO to confirm the status of your deferred claim",
-    ],
-    appeal_options:
-      "No appeal action needed yet - wait for the final decision. Once issued, you have 1 year to appeal.",
-    deadline_warning:
-      "If a C&P exam is scheduled, attend it. Missing a C&P exam without good cause may result in a denial.",
-  },
-];
+const CIRCUIT_OPEN_RE = /AI_CIRCUIT_OPEN/;
 
-// Counts per-issue outcome verbs ("is granted", "is increased", "is
-// continued", "is denied") so a letter with both grants and denials isn't
-// misclassified as a "Full Denial" just because one denial phrase appears
-// somewhere in the text.
-function countDecisionOutcomes(text) {
-  const granted = (text.match(/\bis (?:granted|increased|continued)\b/gi) || [])
-    .length;
-  const denied = (text.match(/\bis denied\b/gi) || []).length;
-  return { granted, denied };
-}
+// Several failed or timed-out tries in a row pause the AI for a short while;
+// the service's own wording is about cloud settings, which does not apply to
+// an on-device decode.
+export const CIRCUIT_PAUSED_MESSAGE =
+  "The on-device AI did not finish the last few tries, so it is paused for about half a minute. Your text is still here. Wait a moment and try again, or paste only the Decision and Reasons for Decision sections.";
 
-function buildMixedDecisionResult(granted, denied) {
-  return {
-    decision_type: "Mixed Decision",
-    plain_english: `This decision is a mix of outcomes: ${granted} issue(s) granted or increased, and ${denied} issue(s) denied. Read each numbered item in your letter carefully - you don't need to appeal the parts that were already granted.`,
-    va_reasoning:
-      "The VA evaluated each claimed condition separately. Some had enough evidence to grant or increase; others did not.",
-    missing_elements: [
-      "Review the letter to identify exactly which issue(s) were denied - do not assume the whole claim was denied",
-    ],
-    action_plan: [
-      "Confirm your new combined rating and effective date for the granted/increased issues",
-      "For the denied issue(s) only, gather the specific evidence VA says is missing",
-      "File a Supplemental Claim or Higher-Level Review for just the denied issue(s) if you disagree",
-      "Contact a VSO to confirm you understand which parts of the decision are final vs. appealable",
-    ],
-    appeal_options:
-      "Only the denied issue(s) need an appeal. You can file a Supplemental Claim (new evidence) or Higher-Level Review (same evidence, new rater) for those specific issues within 1 year.",
-    deadline_warning:
-      "You have 1 year from this decision date to appeal the denied issue(s) while preserving your effective date.",
-  };
-}
-
-function patternMatchDenial(text) {
-  const t = text.toLowerCase();
-
-  const { granted, denied } = countDecisionOutcomes(text);
-  if (granted > 0 && denied > 0) {
-    return buildMixedDecisionResult(granted, denied);
-  }
-
-  for (const pattern of DENIAL_PATTERNS) {
-    if (pattern.test(text, t)) {
-      return pattern;
-    }
-  }
-
-  // Generic fallback when no specific pattern matches
-  const isDenied = /denied|denial|not.*granted|not.*service.connected/i.test(
-    text,
-  );
-  if (isDenied) {
-    return {
-      decision_type: "Full Denial",
-      plain_english:
-        "The VA denied your claim. Load the Warrant Council AI for a detailed analysis of the specific reasons.",
-      va_reasoning:
-        "Pattern matching identified a denial but could not determine the specific reason. AI analysis will provide more detail.",
-      missing_elements: [
-        "Specific denial reason not detected - load AI for full analysis",
-      ],
-      action_plan: [
-        "Load the Warrant Council AI (button above) for a full plain-English translation",
-        "Contact a VSO for free claim assistance",
-        "Request a copy of your C-File to understand what evidence VA used",
-        "You have 1 year from this decision to file an appeal",
-      ],
-      appeal_options:
-        "You can file a Supplemental Claim, Higher-Level Review, or Board Appeal within 1 year.",
-      deadline_warning:
-        "You have 1 year from this decision date to file an appeal. Do not let the deadline pass.",
-    };
-  }
-
-  return null;
-}
-
-function getDecodeErrorMessage(err) {
-  if (err.message && err.message.includes("TIMEOUT")) {
+function getDecodeErrorMessage(err, timeoutMs) {
+  if (CIRCUIT_OPEN_RE.test(err.message || "")) return CIRCUIT_PAUSED_MESSAGE;
+  if (/TIMEOUT|timed out/i.test(err.message || "")) {
     return (
-      "⏱️ The AI request timed out after 90 seconds. This usually means:\n\n" +
+      `⏱️ The AI request timed out after ${Math.round(timeoutMs / 1000)} seconds. This usually means:\n\n` +
       "• The AI model is still loading (wait a few more seconds and try again)\n" +
-      '• Your document is too large (try pasting only the "Reasons for Decision" section)\n' +
-      "• Network connection issues (check your internet connection)\n\n" +
+      "• This browser or computer runs the on-device AI slowly (a second try is allowed more time)\n" +
+      '• Your document is too large (try pasting only the "Reasons for Decision" section)\n\n' +
       "Please try again with a shorter excerpt, or wait for the AI model to fully load."
     );
   }
@@ -381,7 +210,53 @@ function createDecodeTimeout(ms, message) {
   return { timeoutPromise, clear: () => clearTimeout(timeoutId) };
 }
 
-function applyDecodeResponse(response, setResults, setError) {
+// ADR-009: only an off-device AI is configured - a decision letter is a
+// document, so it stays on-device only. Run the same pattern-match reader
+// already used when no AI is configured at all, and show a plain notice
+// instead of a dead end.
+export const NOTHING_FOUND_MESSAGE =
+  "The built-in reader found no decision language in this text, so there is nothing to translate yet. If this is a VA decision letter, paste the Decision and Reasons for Decision sections, or load an on-device AI to read the whole document.";
+
+export function applyOffDeviceFallback(denialText, providerLabel, setResults) {
+  const matched = patternMatchDenial(denialText);
+  setResults({
+    ...(matched || { plain_english: NOTHING_FOUND_MESSAGE }),
+    _usedFallback: true,
+    _fallbackReason: "off_device_blocked",
+    _fallbackNote: buildDocumentOffDeviceNotice(providerLabel),
+  });
+}
+
+// ADR-010 section 9: the small-model reading lives in
+// utils/decisionDecodeAsShown.js, shared with the evaluation runner.
+export { SMALL_MODEL_FALLBACK_NOTE };
+
+const RESULT_FIELDS = [
+  "decision_type",
+  "plain_english",
+  "va_reasoning",
+  "favorable_findings",
+  "missing_elements",
+  "action_plan",
+  "deadline_warning",
+];
+
+export const EMPTY_RESULT_MESSAGE =
+  "The AI finished but did not return anything readable, so there is no result to show. Please try again, or paste only the Decision and Reasons for Decision sections.";
+
+function hasReadableResult(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  return RESULT_FIELDS.some((field) => {
+    const value = data[field];
+    return Array.isArray(value) ? value.length > 0 : Boolean(value);
+  });
+}
+
+function applyDecodeResponse(response, denialText, setResults, setError) {
+  if (response.success && !hasReadableResult(response.data)) {
+    setError(EMPTY_RESULT_MESSAGE);
+    return;
+  }
   if (response.success) {
     setResults({
       ...response.data,
@@ -395,9 +270,17 @@ function applyDecodeResponse(response, setResults, setError) {
     });
     return;
   }
+  if (response.isOffDeviceBlocked) {
+    applyOffDeviceFallback(denialText, response.providerLabel, setResults);
+    return;
+  }
   // Check for context overflow error - show helpful message
   if (response.isContextOverflow) {
     setError(response.error);
+    return;
+  }
+  if (CIRCUIT_OPEN_RE.test(response.error || "")) {
+    setError(CIRCUIT_PAUSED_MESSAGE);
     return;
   }
   setError(response.error || "Failed to decode decision. Please try again.");
@@ -414,12 +297,70 @@ function logDecodeError(err) {
   console.error("[DecisionDecoder] Decode error:", errorDetails);
 }
 
+const TIMED_OUT_RE = /TIMEOUT|timed out/i;
+
+// Runs one AI decode against a time budget scaled to this engine's measured
+// pace. A completed on-device decode teaches the next budget; a timeout is a
+// lower bound on the pace, so the retry gets more room.
+async function runTimedDecode(denialText, timeoutMs) {
+  const { timeoutPromise, clear } = createDecodeTimeout(
+    timeoutMs,
+    `TIMEOUT: AI request exceeded ${Math.round(timeoutMs / 1000)} second limit`,
+  );
+  const startedAt = Date.now();
+  try {
+    // eslint-disable-next-line no-console
+    console.log(
+      "[DecisionDecoder] Starting AI decode with",
+      denialText.length,
+      "characters",
+    );
+    const response = await Promise.race([
+      decodeDecision(denialText, { timeout: timeoutMs }),
+      timeoutPromise,
+    ]);
+    // Model output is identifier-bearing free text: log its shape only.
+    logger.info("[DecisionDecoder] AI response", {
+      success: Boolean(response?.success),
+    });
+    if (response?.success && !response.usedFallback) {
+      recordDecodeDuration(Date.now() - startedAt);
+    } else if (TIMED_OUT_RE.test(response?.error || "")) {
+      recordDecodeDuration(timeoutMs);
+    }
+    return response;
+  } catch (err) {
+    if (TIMED_OUT_RE.test(err?.message || "")) {
+      recordDecodeDuration(timeoutMs);
+    }
+    throw err;
+  } finally {
+    clear();
+  }
+}
+
+function useElapsedWhile(active) {
+  const [elapsedMs, setElapsedMs] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      setElapsedMs(0);
+      return undefined;
+    }
+    const startedAt = Date.now();
+    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return elapsedMs;
+}
+
 // Owns the decode request lifecycle (pattern-match fallback + AI call with
 // timeout) so the component doesn't carry this async state machine inline.
-function useDecisionDecode() {
+export function useDecisionDecode() {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [budgetMs, setBudgetMs] = useState(null);
+  const elapsedMs = useElapsedWhile(isLoading);
 
   const handleDecode = async (denialText) => {
     if (!denialText.trim()) {
@@ -439,55 +380,57 @@ function useDecisionDecode() {
       return;
     }
 
+    const withoutModel = readingWithoutModel(denialText);
+    if (withoutModel) {
+      setError(null);
+      setResults(withoutModel);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setResults(null);
-
-    const { timeoutPromise, clear } = createDecodeTimeout(
-      90000,
-      "TIMEOUT: AI request exceeded 90 second limit",
-    );
+    const timeoutMs = getDecodeTimeoutMs();
+    setBudgetMs(timeoutMs);
 
     try {
-      // eslint-disable-next-line no-console
-      console.log(
-        "[DecisionDecoder] Starting AI decode with",
-        denialText.length,
-        "characters",
-      );
-
-      // Race between the actual call and timeout
-      const response = await Promise.race([
-        decodeDecision(denialText),
-        timeoutPromise,
-      ]);
-
-      clear();
-
-      // eslint-disable-next-line no-console
-      console.log("[DecisionDecoder] AI response:", response);
-
-      applyDecodeResponse(response, setResults, setError);
+      const response = await runTimedDecode(denialText, timeoutMs);
+      applyDecodeResponse(response, denialText, setResults, setError);
     } catch (err) {
-      clear();
       logDecodeError(err);
-      setError(getDecodeErrorMessage(err));
+      setError(getDecodeErrorMessage(err, timeoutMs));
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { results, isLoading, error, handleDecode };
+  return { results, isLoading, error, handleDecode, elapsedMs, budgetMs };
+}
+
+// ADR-008: a real dropped file's own name commonly carries the veteran's
+// own surname/first name (VA's own export naming convention) - this text
+// becomes `denialText`, sent straight to the AI via decodeDecision, so the
+// label here must be structural (index + type + upload date), never the
+// raw fileName, matching the same neutral-label convention
+// myPacketManager.js's _neutralDocLabel already uses for AI-context text.
+function _neutralDroppedFileLabel(f, index) {
+  const typeLabel = f.fileType === "pdf" ? "PDF" : "Image";
+  const date = (f.addedAt || "").split("T")[0] || "unknown date";
+  return `Document ${index + 1} (${typeLabel}, ${date})`;
 }
 
 // Joins extracted text from all successfully processed files into one blob.
-// `excludeProcessing` additionally drops files still mid-OCR.
-function computeCombinedText(fileList, { excludeProcessing = false } = {}) {
+// `excludeProcessing` additionally drops files still mid-OCR. Exported for
+// D16-6's own regression test (see processFile above).
+export function computeCombinedText(
+  fileList,
+  { excludeProcessing = false } = {},
+) {
   return fileList
     .filter((f) => f.extractedText && (!excludeProcessing || !f.processing))
     .map(
       (f, idx) =>
-        `--- Document ${idx + 1}: ${f.file.name} ---\n${f.extractedText}`,
+        `--- ${_neutralDroppedFileLabel(f, idx)} ---\n${f.extractedText}`,
     )
     .join("\n\n");
 }
@@ -510,7 +453,15 @@ async function extractFileTextAndPreview(file, fileType, setOcrProgress) {
     const result = await analyzePDF(file, (progress) => {
       setOcrProgress(progress);
     });
-    return { extractedText: result.text || "", preview: null, error: null };
+    return {
+      extractedText: result.text || "",
+      preview: null,
+      error: null,
+      // D-4: tell the veteran exactly how many pages were read, OCR'd and
+      // skipped - advancedOCR.js already computes this note, it just never
+      // reached the UI.
+      coverageNote: result.coverageNote || null,
+    };
   }
 
   // Create preview for images
@@ -523,15 +474,14 @@ async function extractFileTextAndPreview(file, fileType, setOcrProgress) {
   const result = await analyzeImage(file, (progress) => {
     setOcrProgress(progress);
   });
-  const extractedText = result.success ? result.text || "" : "";
-  const error = result.success
-    ? null
-    : result.error || "Failed to extract text";
 
-  return { extractedText, preview, error };
+  return { extractedText: result.text || "", preview, error: null };
 }
 
-async function processFile(
+// Exported for D16-6's own regression tests (Drop-In File accepting a real
+// PDF/image File object, and computeCombinedText's neutral AI-context
+// labeling) - not part of the component's public interface otherwise.
+export async function processFile(
   file,
   {
     setUploadedFiles,
@@ -541,11 +491,14 @@ async function processFile(
     setDenialText,
   },
 ) {
-  // Determine file type
+  // Determine file type. D16-6: isPDFFile/isImageFile match against a
+  // filename string (a `.pdf$`/image-extension regex) - passing the File
+  // object itself here coerced it to "[object File]" via the regex's
+  // implicit toString(), so every drop was rejected as "Unsupported file".
   let fileType = null;
-  if (isPDFFile(file)) {
+  if (isPDFFile(file.name)) {
     fileType = "pdf";
-  } else if (isImageFile(file)) {
+  } else if (isImageFile(file.name)) {
     fileType = "image";
   } else {
     setFileError(
@@ -560,8 +513,10 @@ async function processFile(
     id: fileId,
     file,
     fileType,
+    addedAt: new Date().toISOString(),
     preview: null,
     extractedText: "",
+    coverageNote: null,
     error: null,
     processing: true,
   };
@@ -571,11 +526,8 @@ async function processFile(
   setCurrentProcessingFile(file.name);
 
   try {
-    const { extractedText, preview, error } = await extractFileTextAndPreview(
-      file,
-      fileType,
-      setOcrProgress,
-    );
+    const { extractedText, preview, error, coverageNote } =
+      await extractFileTextAndPreview(file, fileType, setOcrProgress);
     if (error) {
       newFileEntry.error = error;
     }
@@ -588,6 +540,7 @@ async function processFile(
               ...f,
               extractedText,
               preview,
+              coverageNote: coverageNote || null,
               processing: false,
               error: extractedText ? null : "No text extracted",
             }
@@ -948,43 +901,13 @@ const DecisionDecoderHeader = ({ onClose, onReportBug, onOpenAISettings }) => (
   <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-3xl">🔓</span>
-        </div>
-        <div>
-          <h2
-            id="decoder-title"
-            className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
-          >
-            Decision Decoder
-            <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
-              AI
-            </span>
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-              BETA
-            </span>
-          </h2>
-          <p className="text-rose-100 text-sm sm:text-base mt-1">
-            The Denial Translator • VA Legalese → Plain English
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <LLMRecommendationBadge toolId="decision-decoder" />
-        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Decision Decoder"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           type="button"
           onClick={onClose}
-          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -1001,8 +924,42 @@ const DecisionDecoderHeader = ({ onClose, onReportBug, onOpenAISettings }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-3xl">🔓</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="decoder-title"
+            className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
+          >
+            Decision Decoder{""}
+            <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
+              AI
+            </span>
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              BETA
+            </span>
+          </h2>
+          <p className="text-rose-100 text-sm sm:text-base mt-1">
+            The Denial Translator • VA Legalese → Plain English
+          </p>
+        </div>
       </div>
-    </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <LLMRecommendationBadge toolId="decision-decoder" />
+        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Decision Decoder"
+          />
+        )}
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -1138,11 +1095,14 @@ const DecisionDecoderInputSection = ({
   </div>
 );
 
-const ResultsErrorNotice = ({ error }) => {
+const ResultsErrorNotice = ({ error, onRetry, isLoading }) => {
   if (!error) return null;
 
   return (
-    <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg mb-4">
+    <div
+      role="alert"
+      className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg mb-4"
+    >
       <div className="flex items-center gap-2">
         <svg
           className="w-5 h-5 text-red-500"
@@ -1157,8 +1117,37 @@ const ResultsErrorNotice = ({ error }) => {
             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <span className="text-red-700 dark:text-red-300">{error}</span>
+        <span className="text-red-700 dark:text-red-300 whitespace-pre-line">
+          {error}
+        </span>
       </div>
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={isLoading}
+          className="mt-3 min-h-[44px] px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold"
+        >
+          Try again
+        </button>
+      )}
+    </div>
+  );
+};
+
+const SMALL_MODEL_NOTICE_TITLE =
+  "Pattern-match reading: this device's AI model was not used";
+
+const SmallModelFallbackNotice = ({ results }) => {
+  if (results._fallbackReason !== "small_model") return null;
+  return (
+    <div
+      role="note"
+      aria-label={SMALL_MODEL_NOTICE_TITLE}
+      className="rounded-lg border-2 border-amber-700 bg-amber-50 p-3 text-amber-950 dark:border-amber-400 dark:bg-amber-950 dark:text-amber-50"
+    >
+      <p className="text-sm font-semibold">{SMALL_MODEL_NOTICE_TITLE}</p>
+      <p className="mt-1 text-sm">{results._fallbackNote}</p>
     </div>
   );
 };
@@ -1185,6 +1174,40 @@ const PatternMatchFallbackNotice = ({ results }) => {
   );
 };
 
+// ADR-009: shown when only an off-device AI was configured, so the
+// pattern-match reader ran instead of sending the letter off-device.
+export const OffDeviceFallbackNotice = ({ results }) => {
+  if (
+    !results._usedFallback ||
+    results._fallbackReason !== "off_device_blocked"
+  ) {
+    return null;
+  }
+
+  return (
+    <div
+      className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg"
+      role="status"
+    >
+      <div className="flex items-start gap-2">
+        <span className="text-amber-500" aria-hidden="true">
+          🔒
+        </span>
+        <div>
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            On-Device AI Only
+          </p>
+          {/* text-amber-700, not -600: #d97706 on #fffbeb is ~3.07:1, below
+              the 4.5:1 AA minimum for small text - #b45309 clears it (~4.85:1). */}
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+            {results._fallbackNote}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CloudAIFallbackNotice = ({ results }) => {
   if (
     !results._usedFallback ||
@@ -1203,7 +1226,7 @@ const CloudAIFallbackNotice = ({ results }) => {
           </p>
           <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
             {results._fallbackNote ||
-              "Your document was too large for Local AI (4096 tokens). Cloud AI with 1M token context was used instead."}
+              "This request was too long for the AI model on this device, so Cloud AI answered instead."}
           </p>
         </div>
       </div>
@@ -1249,6 +1272,7 @@ const DecisionTypeBadge = ({ results }) => {
       {results.decision_type === "Reduction" && "📉"}
       {results.decision_type === "Deferred" && "⏳"}
       {results.decision_type === "Granted" && "✅"}
+      {results.decision_type === "Rating Continued" && "↔️"}
       {results.decision_type}
     </div>
   );
@@ -1265,6 +1289,10 @@ const PlainEnglishSection = ({ results }) => {
       <p className="text-blue-700 dark:text-blue-300">
         {results.plain_english}
       </p>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="plain_english"
+      />
     </div>
   );
 };
@@ -1280,6 +1308,10 @@ const VaReasoningSection = ({ results }) => {
       <p className="text-sm text-gray-700 dark:text-gray-300">
         {results.va_reasoning}
       </p>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="va_reasoning"
+      />
     </div>
   );
 };
@@ -1299,8 +1331,8 @@ const FavorableFindingsSection = ({ results }) => {
         again!
       </p>
       <ul className="space-y-2">
-        {results.favorable_findings.map((finding, index) => (
-          <li key={index} className="flex items-start gap-2">
+        {results.favorable_findings.map((finding) => (
+          <li key={finding} className="flex items-start gap-2">
             <span className="text-emerald-500 mt-0.5">✓</span>
             <span className="text-sm text-emerald-700 dark:text-emerald-300">
               {finding}
@@ -1308,6 +1340,10 @@ const FavorableFindingsSection = ({ results }) => {
           </li>
         ))}
       </ul>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="favorable_findings"
+      />
     </div>
   );
 };
@@ -1323,8 +1359,8 @@ const MissingElementsSection = ({ results }) => {
         <span>🚨</span> What&apos;s Missing From Your Claim
       </h4>
       <ul className="space-y-2">
-        {results.missing_elements.map((element, index) => (
-          <li key={index} className="flex items-start gap-2">
+        {results.missing_elements.map((element) => (
+          <li key={element} className="flex items-start gap-2">
             <span className="text-red-500 mt-0.5">•</span>
             <span className="text-sm text-red-700 dark:text-red-300">
               {element}
@@ -1332,6 +1368,10 @@ const MissingElementsSection = ({ results }) => {
           </li>
         ))}
       </ul>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="missing_elements"
+      />
     </div>
   );
 };
@@ -1346,7 +1386,7 @@ const ActionPlanSection = ({ results }) => {
       </h4>
       <ol className="space-y-3">
         {results.action_plan.map((step, index) => (
-          <li key={index} className="flex items-start gap-3">
+          <li key={step} className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
               {index + 1}
             </span>
@@ -1356,32 +1396,10 @@ const ActionPlanSection = ({ results }) => {
           </li>
         ))}
       </ol>
-    </div>
-  );
-};
-
-const AppealOptionsSection = ({ results }) => {
-  if (!results.appeal_options) return null;
-
-  return (
-    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
-      <h4 className="font-semibold text-purple-800 dark:text-purple-200 flex items-center gap-2 mb-3">
-        <span>⚖️</span> Appeal Options
-      </h4>
-      <div className="space-y-2 text-sm text-purple-700 dark:text-purple-300">
-        {typeof results.appeal_options === "string" ? (
-          <p>{results.appeal_options}</p>
-        ) : (
-          results.appeal_options.map((option, index) => (
-            <div
-              key={index}
-              className="p-2 bg-white dark:bg-gray-800 rounded-lg"
-            >
-              {option}
-            </div>
-          ))
-        )}
-      </div>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="action_plan"
+      />
     </div>
   );
 };
@@ -1400,19 +1418,28 @@ const DeadlineWarningSection = ({ results }) => {
           <p className="text-sm text-yellow-700 dark:text-yellow-300">
             {results.deadline_warning}
           </p>
+          <FieldCorrections
+            corrections={results.review_corrections}
+            field="deadline_warning"
+          />
         </div>
       </div>
     </div>
   );
 };
 
-const ResultsContent = ({ results }) => {
+export const ResultsContent = ({ results }) => {
   if (!results) return null;
 
   return (
     <div className="space-y-4">
       {/* Pattern-Match Fallback Notice (when AI is not loaded) */}
       <PatternMatchFallbackNotice results={results} />
+
+      <SmallModelFallbackNotice results={results} />
+
+      {/* On-Device-Only Fallback Notice (when only an off-device AI is configured) */}
+      <OffDeviceFallbackNotice results={results} />
 
       {/* Cloud AI Fallback Notice (when document was too large for Local AI) */}
       <CloudAIFallbackNotice results={results} />
@@ -1438,8 +1465,8 @@ const ResultsContent = ({ results }) => {
       {/* Action Plan */}
       <ActionPlanSection results={results} />
 
-      {/* Appeal Options */}
-      <AppealOptionsSection results={results} />
+      {/* Review options: verified regulation text, not model output */}
+      <DecisionReviewOptions corrections={results.review_corrections} />
 
       {/* Deadline Warning */}
       <DeadlineWarningSection results={results} />
@@ -1447,7 +1474,30 @@ const ResultsContent = ({ results }) => {
   );
 };
 
-const DecodingLoadingState = () => (
+export const DecodeProgressNotice = ({ elapsedMs, budgetMs }) => {
+  const seconds = Math.floor((elapsedMs || 0) / 1000);
+  const slow = (elapsedMs || 0) >= SLOW_NOTICE_AFTER_MS;
+  return (
+    <div
+      role="status"
+      className="mt-4 text-xs text-amber-600 dark:text-amber-400"
+    >
+      <p>
+        {slow
+          ? `Still working (${seconds} s). On-device AI is slower in some browsers and on some computers.`
+          : `Working... ${seconds} s. This usually takes 10-30 seconds.`}
+      </p>
+      {slow && budgetMs && (
+        <p className="mt-1">
+          Waiting up to {Math.round(budgetMs / 1000)} seconds in total, then you
+          can try again.
+        </p>
+      )}
+    </div>
+  );
+};
+
+const DecodingLoadingState = ({ elapsedMs, budgetMs }) => (
   <div className="h-full flex items-center justify-center py-12 text-center">
     <div className="max-w-sm">
       <div className="relative mb-6">
@@ -1473,9 +1523,7 @@ const DecodingLoadingState = () => (
           <span className="animate-pulse">📋</span> Building your action plan...
         </p>
       </div>
-      <p className="text-xs text-amber-600 dark:text-amber-400 mt-4">
-        This usually takes 10-30 seconds
-      </p>
+      <DecodeProgressNotice elapsedMs={elapsedMs} budgetMs={budgetMs} />
     </div>
   </div>
 );
@@ -1492,14 +1540,24 @@ const DecoderEmptyState = () => (
   </div>
 );
 
-const DecisionDecoderResultsSection = ({ error, results, isLoading }) => (
+const DecisionDecoderResultsSection = ({
+  error,
+  results,
+  isLoading,
+  onRetry,
+  elapsedMs,
+  budgetMs,
+}) => (
   <div>
-    <ResultsErrorNotice error={error} />
+    <ResultsErrorNotice error={error} onRetry={onRetry} isLoading={isLoading} />
 
+    {results && <SmallModelCaveat className="mb-4" />}
     <ResultsContent results={results} />
 
     {/* Loading State - Shows progress while AI is working */}
-    {isLoading && <DecodingLoadingState />}
+    {isLoading && (
+      <DecodingLoadingState elapsedMs={elapsedMs} budgetMs={budgetMs} />
+    )}
 
     {/* Empty State */}
     {!results && !isLoading && !error && <DecoderEmptyState />}
@@ -1539,6 +1597,8 @@ function getDecisionTypeColor(type) {
       return "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700";
     case "granted":
       return "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700";
+    case "rating continued":
+      return "bg-sky-100 dark:bg-sky-900/50 text-sky-900 dark:text-sky-100 border-sky-300 dark:border-sky-600";
     default:
       return "bg-gray-100 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700";
   }
@@ -1670,9 +1730,9 @@ const SelectedPhaseDetails = ({ selectedPhase }) => {
             💡 Pro Tips
           </h6>
           <ul className="space-y-1">
-            {selectedPhase.tips.map((tip, i) => (
+            {selectedPhase.tips.map((tip) => (
               <li
-                key={i}
+                key={tip}
                 className="text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2"
               >
                 <span>•</span> {tip}
@@ -1699,8 +1759,8 @@ const ClaimPhaseExplainer = ({
       className="w-full flex items-center justify-between"
     >
       <h4 className="font-semibold text-teal-800 dark:text-teal-200 flex items-center gap-2">
-        <span>📊</span> Claim Status Phase Explainer
-        <span className="text-xs bg-teal-200 dark:bg-teal-800 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full">
+        <span>📊</span> Claim Status Phase Explainer{""}
+        <span className="text-xs bg-teal-200 dark:bg-teal-800 text-teal-900 dark:text-teal-100 px-2 py-0.5 rounded-full">
           VA Reference Data
         </span>
       </h4>
@@ -1740,12 +1800,32 @@ const ClaimPhaseExplainer = ({
   </div>
 );
 
+// aiStatus used to be set once at mount and only refreshed inside
+// SmartAILoadButton's onLoadComplete, so it never noticed AI becoming
+// available any other way (AI settings, a cloud key entered, a model loaded
+// elsewhere) or becoming unavailable again. Polls the same way
+// DD214Analyzer.jsx's useDD214AIStatus and BlueButtonXRay.jsx's
+// useAIStatusPolling already do.
+// Exported for this hook's own regression test - not part of the
+// component's public interface otherwise.
+export function useAIStatusPolling() {
+  const [aiStatus, setAIStatus] = useState(() => getAIStatus());
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setAIStatus(getAIStatus()), 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return { aiStatus, setAIStatus };
+}
+
 const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
 
   const [denialText, setDenialText] = useState("");
-  const { results, isLoading, error, handleDecode } = useDecisionDecode();
-  const [_aiStatus, setAIStatus] = useState(getAIStatus());
+  const { aiStatus, setAIStatus } = useAIStatusPolling();
+  const { results, isLoading, error, handleDecode, elapsedMs, budgetMs } =
+    useDecisionDecode();
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'file'
@@ -1754,14 +1834,6 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
 
   // Benefits Reference hook for claim phase explanations
   const { getAllClaimPhases } = useVaBenefitsRef();
-
-  // Monitor AI status changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   const footer = <DecisionDecoderFooter onClose={onClose} results={results} />;
 
@@ -1787,14 +1859,16 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
       <DecisionDecoderInfoBanner />
 
       {/* Smart AI Load Button */}
-      {!isAnyAIAvailable() && (
+      {!aiStatus.anyAvailable && (
         <div className="mb-6">
           <SmartAILoadButton
             toolId="decision-decoder"
-            onLoadComplete={(model) =>
-              // eslint-disable-next-line no-console
-              console.log("Smart AI loaded for Decision Decoder:", model?.name)
-            }
+            onLoadComplete={(model) => {
+              logger.info("Smart AI loaded for Decision Decoder", {
+                model: model?.name,
+              });
+              setAIStatus(getAIStatus());
+            }}
           />
         </div>
       )}
@@ -1816,6 +1890,9 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
           error={error}
           results={results}
           isLoading={isLoading}
+          onRetry={() => handleDecode(denialText)}
+          elapsedMs={elapsedMs}
+          budgetMs={budgetMs}
         />
       </div>
 

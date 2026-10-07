@@ -11,6 +11,8 @@
  * This manager does the best it can within browser constraints.
  */
 
+import { logger } from "./logger";
+
 // Helper: Get GPU info from WebGL (more reliable than WebGPU for name detection)
 function getWebGLGPUInfo() {
   try {
@@ -52,10 +54,9 @@ function getWebGLGPUInfo() {
 
     // Parse VRAM from renderer string (common patterns)
     let vram = null;
-    // eslint-disable-next-line sonarjs/slow-regex -- renderer is a short browser-provided GPU description string, not attacker-controlled
-    const vramMatch = renderer.match(/(\d+)\s*(GB|MB)/i);
+    const vramMatch = renderer.match(/(\d{1,6})\s{0,10}(GB|MB)/i);
     if (vramMatch) {
-      const amount = parseInt(vramMatch[1]);
+      const amount = Number.parseInt(vramMatch[1]);
       const unit = vramMatch[2].toUpperCase();
       vram = unit === "GB" ? amount : Math.round(amount / 1024);
     }
@@ -70,6 +71,13 @@ function getWebGLGPUInfo() {
     console.warn("🎮 WebGL GPU detection failed:", e);
     return null;
   }
+}
+
+// Helper: format a raw maxBufferSize (bytes) as a rounded "~X+ GB" estimate,
+// or "Unknown" when there's nothing usable to report.
+function estimateVRAMFromMaxBuffer(maxBuffer) {
+  const estimatedGB = Math.round((maxBuffer / 1024 ** 3) * 10) / 10;
+  return estimatedGB > 0 ? `~${estimatedGB}+ GB` : "Unknown";
 }
 
 class GPUDiscoveryEngine {
@@ -245,7 +253,7 @@ class GPUDiscoveryEngine {
 
     // 2. The "Filter" - Deduplicate adapters based on vendor/architecture signature
     for (const result of results) {
-      if (!result || !result.adapter) continue;
+      if (!result?.adapter) continue;
       this._registerAdapterResult(result);
     }
 
@@ -607,6 +615,53 @@ class GPUDiscoveryEngine {
     return Array.from(this.adapters.values());
   }
 
+  // Try to restore the previously-selected adapter from localStorage.
+  // Returns { device } on success, { adapters } when the saved adapter was
+  // consumed and a rescan produced a fresh list to auto-select from instead,
+  // or null when there's no saved adapter to restore. Re-throws on any other
+  // selectAdapter failure, matching the caller's original try/catch.
+  async _tryRestoreSavedAdapter() {
+    const savedId = localStorage.getItem("vet_rate_selected_gpu");
+    if (!savedId || !this.adapters.has(savedId)) return null;
+
+    logger.info("🎮 Restoring previous GPU selection");
+    try {
+      return { device: await this.selectAdapter(savedId) };
+    } catch (err) {
+      if (!err.message?.includes("consumed")) throw err;
+      console.warn(
+        "🎮 Saved adapter was consumed, rescanning for fresh adapters...",
+      );
+      this.adapters.clear();
+      return { adapters: await this.scanForAdapters() };
+    }
+  }
+
+  // Auto-select the "High Performance" adapter (falling back to the first
+  // one) from the given list, rescanning once if the choice was consumed.
+  // Returns the selected device, or null if no adapter was available at all.
+  async _selectBestAdapter(adapters) {
+    const best =
+      adapters.find((a) => a.tier === "High Performance") || adapters[0];
+    if (!best) return null;
+
+    logger.info("🎮 Auto-selecting best available GPU");
+    try {
+      return await this.selectAdapter(best.id);
+    } catch (err) {
+      if (!err.message?.includes("consumed")) throw err;
+      console.warn(
+        "🎮 Best adapter was consumed, rescanning for fresh adapters...",
+      );
+      this.adapters.clear();
+      const freshAdapters = await this.scanForAdapters();
+      const freshBest =
+        freshAdapters.find((a) => a.tier === "High Performance") ||
+        freshAdapters[0];
+      return freshBest ? await this.selectAdapter(freshBest.id) : null;
+    }
+  }
+
   async autoSelectBest() {
     // If we already have a valid device, return it (prevents React strict mode double-init)
     if (this.device) {
@@ -621,52 +676,12 @@ class GPUDiscoveryEngine {
       adapters = await this.scanForAdapters();
     }
 
-    // Try to restore previous selection
-    const savedId = localStorage.getItem("vet_rate_selected_gpu");
-    if (savedId && this.adapters.has(savedId)) {
-      // eslint-disable-next-line no-console
-      console.log("🎮 Restoring previous GPU selection");
-      try {
-        return await this.selectAdapter(savedId);
-      } catch (err) {
-        if (err.message?.includes("consumed")) {
-          console.warn(
-            "🎮 Saved adapter was consumed, rescanning for fresh adapters...",
-          );
-          this.adapters.clear();
-          adapters = await this.scanForAdapters();
-          // Continue to auto-select below
-        } else {
-          throw err;
-        }
-      }
-    }
+    const restored = await this._tryRestoreSavedAdapter();
+    if (restored?.device) return restored.device;
+    if (restored?.adapters) adapters = restored.adapters;
 
-    // Auto-select the "High Performance" one if available
-    const best =
-      adapters.find((a) => a.tier === "High Performance") || adapters[0];
-    if (best) {
-      // eslint-disable-next-line no-console
-      console.log("🎮 Auto-selecting best available GPU");
-      try {
-        return await this.selectAdapter(best.id);
-      } catch (err) {
-        if (err.message?.includes("consumed")) {
-          console.warn(
-            "🎮 Best adapter was consumed, rescanning for fresh adapters...",
-          );
-          this.adapters.clear();
-          const freshAdapters = await this.scanForAdapters();
-          const freshBest =
-            freshAdapters.find((a) => a.tier === "High Performance") ||
-            freshAdapters[0];
-          if (freshBest) {
-            return await this.selectAdapter(freshBest.id);
-          }
-        }
-        throw err;
-      }
-    }
+    const selected = await this._selectBestAdapter(adapters);
+    if (selected) return selected;
 
     throw new Error("No GPU adapters found");
   }
@@ -677,7 +692,7 @@ class GPUDiscoveryEngine {
       if (!adapterEntry) return "Unknown";
 
       // First, try WebGL info if available
-      if (adapterEntry.webglInfo && adapterEntry.webglInfo.vram) {
+      if (adapterEntry.webglInfo?.vram) {
         return `${adapterEntry.webglInfo.vram} GB`;
       }
 
@@ -691,25 +706,14 @@ class GPUDiscoveryEngine {
       const limits = rawAdapter.limits;
       if (!limits) {
         // Try to get limits from info if available
-        if (adapterEntry.info && adapterEntry.info.limits) {
-          const maxBuffer = adapterEntry.info.limits.maxBufferSize || 0;
-          if (maxBuffer > 0) {
-            const estimatedGB = Math.round((maxBuffer / 1024 ** 3) * 10) / 10;
-            return estimatedGB > 0 ? `~${estimatedGB}+ GB` : "Unknown";
-          }
-        }
-        return "Unknown";
+        const infoMaxBuffer = adapterEntry.info?.limits?.maxBufferSize || 0;
+        return infoMaxBuffer > 0
+          ? estimateVRAMFromMaxBuffer(infoMaxBuffer)
+          : "Unknown";
       }
 
       // Use maxBufferSize as a rough estimate (in GB)
-      const maxBuffer = limits.maxBufferSize || 0;
-      const estimatedGB = Math.round((maxBuffer / 1024 ** 3) * 10) / 10;
-
-      if (estimatedGB > 0) {
-        return `~${estimatedGB}+ GB`;
-      }
-
-      return "Unknown";
+      return estimateVRAMFromMaxBuffer(limits.maxBufferSize || 0);
     } catch (err) {
       console.warn("🎮 Error estimating VRAM:", err.message);
       return "Unknown";

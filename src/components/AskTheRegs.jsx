@@ -2,9 +2,24 @@ import { useState } from "react";
 import { Scale, AlertTriangle, ShieldAlert } from "lucide-react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { LegalCitationList } from "./LegalCitation";
-import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import {
+  generateAI,
+  getAIStatus,
+  isAnyAIAvailable,
+} from "../utils/unifiedAIService";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
+import {
+  REGULATION_SEARCH_DISCLOSURE,
+  SEARCH_RESULTS_LABEL,
+  isReservedPassage,
+  passageHeading,
+} from "../utils/regulationSearchNotes";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
-import { answer as answerLegalQuestion } from "../services/legalAnswerer";
+import {
+  answer as answerLegalQuestion,
+  retrieveRegulationText,
+} from "../services/legalAnswerer";
 
 const MAX_QUESTION_LENGTH = 500;
 
@@ -13,9 +28,19 @@ const MAX_QUESTION_LENGTH = 500;
  * legalAnswerer.js's dual-LLM split expects deps.generateAI to resolve a
  * string (dualLLM.js does String(raw) on it, so an unwrapped object would
  * silently coerce to "[object Object]" and every question would refuse).
+ *
+ * ADR-009: "context" - the extractor/synthesizer split here only ever
+ * handles retrieved eCFR regulation text (public, app-fetched) plus the
+ * veteran's own typed question, never an uploaded/pasted document. Declared
+ * explicitly so this legitimately off-device-eligible flow doesn't fail
+ * closed to "document" by omission.
  */
 async function generateAIText(prompt, options) {
-  const result = await generateAI(prompt, options);
+  const result = await generateAI(prompt, {
+    ...options,
+    dataClass: AI_DATA_CLASS.CONTEXT,
+    answerChecks: options?.taskType !== "extraction",
+  });
   if (typeof result === "string") return result;
   return result?.text ?? "";
 }
@@ -77,7 +102,50 @@ function AskTheRegsQuestionForm({
   );
 }
 
+const SEARCH_ONLY_TITLE = "Search results, not an AI answer";
+
+// ADR-010 sections 11 and 14: a small-class model is not asked to answer. The
+// veteran asked for this search, so it is shown, labelled as a search. Every
+// passage sits under its section number and heading, a reserved section is
+// never shown, and the first-use download of the search model is disclosed.
+function SearchOnlyResult({ passages }) {
+  const shown = passages.filter((passage) => !isReservedPassage(passage));
+  return (
+    <div className="space-y-3">
+      <div
+        role="note"
+        aria-label={SEARCH_ONLY_TITLE}
+        className="rounded-lg border-2 border-blue-700 bg-blue-50 p-3 text-sm text-blue-950 dark:border-blue-400 dark:bg-blue-950 dark:text-blue-50"
+      >
+        <p className="min-w-0">{SEARCH_RESULTS_LABEL}</p>
+        <p className="mt-2 min-w-0 text-xs">{REGULATION_SEARCH_DISCLOSURE}</p>
+      </div>
+      {shown.length === 0 && (
+        <p className="text-sm text-gray-800 dark:text-gray-200">
+          The search found no regulation text for that question. Try naming the
+          condition or the rule you are asking about.
+        </p>
+      )}
+      {shown.map((passage) => (
+        <div
+          key={`${passage.citation}-${passage.text.slice(0, 40)}`}
+          className="space-y-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+        >
+          <h3 className="min-w-0 break-words text-base font-bold text-gray-900 dark:text-white">
+            {passageHeading(passage)}
+          </h3>
+          <p className="min-w-0 whitespace-pre-wrap break-words text-sm text-gray-800 dark:text-gray-200">
+            {passage.text}
+          </p>
+          <LegalCitationList citations={[passage]} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function AskTheRegsResult({ aiAvailable, error, result }) {
+  if (result?.passages) return <SearchOnlyResult passages={result.passages} />;
   return (
     <>
       {!aiAvailable && (
@@ -142,9 +210,9 @@ export default function AskTheRegs({ onClose }) {
     setError(null);
     setResult(null);
     try {
-      const res = await answerLegalQuestion(trimmed, {
-        generateAI: generateAIText,
-      });
+      const res = smallModelAnswering(getAIStatus())
+        ? { passages: await retrieveRegulationText(trimmed) }
+        : await answerLegalQuestion(trimmed, { generateAI: generateAIText });
       setResult(res);
     } catch (err) {
       console.error("Ask the Regs error:", err);

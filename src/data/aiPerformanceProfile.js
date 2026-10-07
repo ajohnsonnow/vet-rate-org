@@ -26,24 +26,25 @@
 // Warmup phases (browser-side WebLLM initialization)
 // ---------------------------------------------------------------------------
 
+// What these figures rest on: the only recorded timing is the benchmark log
+// above, ~45 min first-run warmup with Qwen2.5-3B on the June 2026 build
+// (RTX 4080 SUPER). The earlier 20-45 and 3-8 minute ranges, and the Apple
+// Silicon 5-15 minute range, came in with a checkpoint commit and have no
+// recorded measurement in this repository, and none is for Qwen3.5. The
+// evaluation runs (Qwen3.5-4B from cache, 38 cases in about 9 minutes) do not
+// fit a 3-8 minute session start. The copy therefore states no minutes.
 export const AI_WARMUP = {
   firstRun: {
-    minMin: 20,
-    maxMin: 45,
     reason:
-      "WebGPU shader compilation (thousands of GPU programs, one-time per GPU driver version) + 1.7 GB model weight load from browser storage to GPU.",
+      "WebGPU shader compilation (thousands of GPU programs, one-time per GPU driver version) + model weight load from browser storage to GPU.",
   },
   firstRunAppleSilicon: {
-    minMin: 5,
-    maxMin: 15,
     reason:
-      "Metal Pipeline State Object (PSO) caching on Apple Silicon compiles shaders in 5-15 min (vs 20-45 min on Windows/NVIDIA). 1.7 GB model weight load is the same.",
+      "Metal Pipeline State Object (PSO) caching on Apple Silicon compiles shaders, usually faster than on Windows/NVIDIA. The model weight load is the same.",
   },
   subsequentRun: {
-    minMin: 3,
-    maxMin: 8,
     reason:
-      "Shaders already compiled and cached. Only 1.7 GB model weights need to load from IndexedDB to GPU.",
+      "Shaders already compiled and cached. Only the model weights need to load from IndexedDB to GPU.",
   },
 };
 
@@ -85,11 +86,11 @@ export const AI_REQUIREMENTS = {
   },
   ram: { minGB: 8, recGB: 16 },
   formFactor:
-    "Desktop or laptop - phones and tablets are not supported for on-device AI.",
+    "Desktop or laptop recommended. Tablets with WebGPU load a smaller model and have not been tested; phones are not supported.",
   model: {
-    sizeGB: 1.7,
+    sizeNote: "size varies by device",
     cachedAfterFirstDownload: true,
-    note: "Downloaded once to your browser storage. Subsequent sessions skip the download.",
+    note: "A one time download, kept on your device in browser storage. Later sessions skip the download.",
   },
 };
 

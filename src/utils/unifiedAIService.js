@@ -3,7 +3,8 @@
  * 💎 "The Diamond Standard" - 3-Model Swarm Architecture
  *
  * This service provides a unified interface for AI operations using the
- * Warrant Council - 3 specialized fine-tuned models:
+ * Warrant Council - 3 role personas (stock open models guided by role
+ * prompts and the Vet-Rate knowledge base, not fine-tuned on VA data):
  * - AUDITOR: Reviews claims for accuracy, compliance, and completeness
  * - WRITER: Generates compelling personal statements and nexus letters
  * - RATER: Calculates VA disability ratings using bilateral factor formula
@@ -12,17 +13,24 @@
  * 100% private local inference - no data leaves the device.
  */
 
+import { logger } from "./logger";
 import { interceptBeforeAICall } from "./crisisInterceptor";
 import {
   scrubPII,
+  scrubText,
   analyzePII,
   containsSignificantNonLatin,
+  redactVeteranIdentifiers,
+  collectKnownIdentifierValues,
 } from "./piiScrubber";
+import { loadVKB } from "./veteranKnowledgeBase";
+import { getVeteranProfile } from "./veteranProfile";
 import { stripUntrustedUrls } from "./sanitize";
 import { validateAIResponse as validateHallucinations } from "./hallucinationTrap";
 import { logModelCallWithDigests } from "./aiAuditLog";
 import { interpretGeminiResponse } from "./geminiResponse";
 import { isFeatureEnabled } from "./featureFlags";
+import { isFullDKBGroundingEnabled } from "./dkbGroundingFlag";
 import {
   SWARM_AGENTS,
   TOOL_AGENT_MAP,
@@ -42,7 +50,31 @@ import {
 import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
-import { calculateVARating } from "./vaCalculator";
+import { answerRatingQuestion } from "./ratingQuestion";
+import { openAdviceHeldAnswer } from "./openAdviceHold";
+import { smallModelAnswering } from "./smallModelAnswering";
+import { buildVerifiedReferenceBlock } from "./verifiedReference";
+import {
+  MIN_OUTPUT_TOKENS,
+  cannotFit,
+  fitOutputTokens,
+  planPromptFit,
+} from "./promptBudget";
+import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
+import { flagUnverifiedForms } from "./formCheck";
+import {
+  answerChecksApply,
+  contradictionRulesApply,
+} from "./answerCheckRoutes";
+import { trimToLastSentence } from "./outputCleanup";
+import { flagContradictions } from "./contradictionCheck";
+import {
+  AI_DATA_CLASS,
+  resolveDataClass,
+  isLoopbackHost,
+  assertDocumentCallAllowed,
+  DocumentOffDeviceBlockedError,
+} from "./aiDataClassPolicy";
 
 // Dynamic imports for code splitting
 let aiSystemPromptsModule = null;
@@ -366,18 +398,13 @@ export const registerLocalAIEngine = (
         detail: {
           ready: true,
           modelId,
-          // The full 130K+ sharded corpus (dkbShardedRag.js/queryCorpus) is
-          // downloaded and cached, but is not wired into AI answer
-          // generation for any mode - buildDKBContext/searchDKB (what
-          // actually feeds the AI's system prompt, for Local and Cloud
-          // alike) reads the same static ~8K-entry diamond_knowledge.json
-          // regardless. This was unconditionally `true`, which told the KB
-          // status UI to claim "complete 130K+ entry access" the moment any
-          // local backend loaded - false. Flip back to a real check once
-          // searchDKB is actually wired to query the full corpus for local
-          // modes (a deliberately separate, eval-gated integration - see
-          // knowledgeQuery.js's S30 header comment).
-          fullDKBAvailable: false,
+          // True only while the opt-in full-corpus grounding flag is on
+          // (dkbGroundingFlag.js); then buildDKBContext adds passages from
+          // the authoritative shards (queryCorpus) to every call's context.
+          // With the flag off, the AI's context comes solely from the static
+          // ~8K-entry diamond_knowledge.json, so the KB status UI must not
+          // claim "complete 130K+ entry access".
+          fullDKBAvailable: isFullDKBGroundingEnabled(),
         },
       }),
     );
@@ -757,55 +784,15 @@ const getGeminiApiKey = () => {
 };
 
 /**
- * Build the Cloud AI system prompt, including DKB (Diamond Knowledge Base)
- * context injection based on the user's prompt.
+ * Resolve the effective Cloud AI generation config (timeout/temperature/
+ * topK/topP/maxTokens), applying an AI_PRESETS override when requested. The
+ * system prompt is NOT resolved here (D15-2): `_buildFullPrompt` already
+ * assembled it - together with DKB context - into the request exactly once,
+ * before this backend ever sees it. Re-resolving/re-prepending it here was
+ * the double-send bug (ADR-008 §2.4.1).
  */
-const buildCloudSystemPrompt = async (prompt, options) => {
-  const { _buildSystemPromptWithDKB, buildSystemPrompt, buildDKBContext } =
-    await getAISystemPrompts();
-
-  let defaultSystemPrompt = buildSystemPrompt({
-    task: options.taskType || "general",
-    toolContext: options.toolContext,
-    includeAppContext: true,
-    includeRegulations: true,
-    includeVeteranData: true,
-  });
-
-  // 💎 Inject DKB context based on user's prompt (makes Gemini "smart" on VA data)
-  const useDKB = options.useDKB !== false; // Enabled by default
-  if (useDKB) {
-    try {
-      const dkbContext = await buildDKBContext(prompt, {
-        maxEntries: options.maxDKBEntries || 10,
-        maxChars: options.maxDKBChars || 8000,
-      });
-      if (dkbContext) {
-        defaultSystemPrompt += dkbContext;
-        // eslint-disable-next-line no-console
-        console.log(
-          "[Gemini] 💎 DKB context injected for enhanced VA knowledge",
-        );
-      }
-    } catch (dkbError) {
-      console.warn(
-        "[Gemini] DKB context injection failed, continuing without:",
-        dkbError.message,
-      );
-    }
-  }
-
-  return defaultSystemPrompt;
-};
-
-/**
- * Resolve the effective Cloud AI generation config (systemPrompt/timeout/
- * temperature/topK/topP/maxTokens), applying an AI_PRESETS override when
- * requested.
- */
-const resolveCloudGenerationConfig = (options, defaultSystemPrompt) => {
+const resolveCloudGenerationConfig = (options) => {
   const {
-    systemPrompt = defaultSystemPrompt,
     maxTokens = getUserTokenLimit(), // Use user-configured limit or default
     temperature = 0.7,
     topK = 40,
@@ -826,28 +813,35 @@ const resolveCloudGenerationConfig = (options, defaultSystemPrompt) => {
     };
   }
 
-  return { systemPrompt, finalConfig, timeout, scrubPIIEnabled };
+  return { finalConfig, timeout, scrubPIIEnabled };
 };
 
 /**
  * Scrub PII from the full Cloud AI prompt (Client-Side Privacy Firewall),
  * warning when non-Latin scripts limit scrubbing coverage.
+ *
+ * D15-1: this ALWAYS runs the aggressive pass directly - it used to gate the
+ * aggressive scrub behind `analyzePII(...).hasPII`, but `analyzePII` itself
+ * runs `scrubPII` in NON-aggressive mode. Every aggressive-only pattern (a
+ * bare SSN/DOB with no label) is therefore invisible to that pre-check, so
+ * a well-profiled veteran whose ONLY remaining PII was address/DOB/SSN in a
+ * bare, unlabeled form - because `_redactPiecesForSend` already replaced
+ * their name/known-SSN/known-file-number with `[REDACTED]` upstream - could
+ * make the gate see nothing left to trip and skip the aggressive pass
+ * entirely, sending that bare PII to the cloud verbatim.
  */
 const scrubCloudPromptPII = (fullPrompt, scrubPIIEnabled) => {
   if (!scrubPIIEnabled) return fullPrompt;
 
-  let scrubbed = fullPrompt;
-  const piiAnalysis = analyzePII(scrubbed);
+  const { scrubbedText, piiFound, details } = scrubPII(fullPrompt, {
+    aggressive: true, // Also scrub bare DOB/SSN/VA-file numbers
+    preservePartial: false, // Full redaction for safety
+  });
 
-  if (piiAnalysis.hasPII) {
-    console.warn(`⚠️ PII Detected before AI call:`, piiAnalysis.types);
-
-    const { scrubbedText, details } = scrubPII(scrubbed, {
-      aggressive: true, // Also scrub DOB and addresses
-      preservePartial: false, // Full redaction for safety
-    });
-
-    scrubbed = scrubbedText;
+  if (piiFound) {
+    console.warn(`⚠️ PII Detected before AI call:`, [
+      ...new Set(details.map((d) => d.type)),
+    ]);
     // eslint-disable-next-line no-console
     console.info(`🛡️ PII Scrubbed:`, details);
   }
@@ -856,7 +850,7 @@ const scrubCloudPromptPII = (fullPrompt, scrubPIIEnabled) => {
   // non-Latin (CJK/Arabic/Korean/Cyrillic) narratives, so a non-English document may
   // carry unredacted PII to the cloud. Flag it (conservative handling) rather than
   // over-redacting, which would corrupt the analysis. Prefer local AI for these.
-  if (containsSignificantNonLatin(scrubbed)) {
+  if (containsSignificantNonLatin(scrubbedText)) {
     console.warn(
       "⚠️ Non-Latin script detected: PII scrubbing has limited coverage for " +
         "non-English text; this cloud request may contain unredacted PII. " +
@@ -864,7 +858,7 @@ const scrubCloudPromptPII = (fullPrompt, scrubPIIEnabled) => {
     );
   }
 
-  return scrubbed;
+  return scrubbedText;
 };
 
 /**
@@ -1018,21 +1012,41 @@ const handleGeminiErrorResponse = async (response) => {
 };
 
 /**
- * Generate text using Cloud AI (Gemini)
- * 💎 Now enhanced with DKB (Diamond Knowledge Base) context injection
+ * Generate text using Cloud AI (Gemini).
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt` and `userPrompt` arrive already
+ * assembled (system prompt + DKB context, and the user request) and already
+ * known-value-redacted by `_buildFullPrompt`/`_redactPiecesForSend` in
+ * `generateAIInternal` - this backend has no native system-role field (the
+ * Gemini body below is one text blob), so the two halves are combined into
+ * ONE string here, exactly once, immediately before the pattern-scrub (the
+ * last defense before the network send).
+ *
+ * ADR-009 provider boundary: Gemini is always off-device (a third-party
+ * network endpoint), so a "document"-classed call is refused here,
+ * unconditionally, before anything is scrubbed/serialized/sent - this is
+ * the actual choke point every dispatch path (primary, context-overflow
+ * fallback, general fallback) converges on for this backend, so none of
+ * them can reach it another way.
  */
-const generateWithCloudAI = async (prompt, options = {}) => {
+const generateWithCloudAI = async (systemPrompt, userPrompt, options = {}) => {
+  assertDocumentCallAllowed(resolveDataClass(options), {
+    isOnDevice: false,
+    providerLabel: "Cloud AI (Gemini)",
+  });
+
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
     throw new Error("Gemini API key not configured");
   }
 
-  const defaultSystemPrompt = await buildCloudSystemPrompt(prompt, options);
-  const { systemPrompt, finalConfig, timeout, scrubPIIEnabled } =
-    resolveCloudGenerationConfig(options, defaultSystemPrompt);
+  const { finalConfig, timeout, scrubPIIEnabled } =
+    resolveCloudGenerationConfig(options);
 
-  let fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
-  fullPrompt = scrubCloudPromptPII(fullPrompt, scrubPIIEnabled);
+  const combinedPrompt = systemPrompt
+    ? `${systemPrompt}\n\n---\n\nUser Request:\n${userPrompt}`
+    : userPrompt;
+  const fullPrompt = scrubCloudPromptPII(combinedPrompt, scrubPIIEnabled);
 
   const requestBody = buildGeminiRequestBody(fullPrompt, finalConfig);
   const response = await fetchGeminiWithRetry(requestBody, apiKey, timeout);
@@ -1043,7 +1057,9 @@ const generateWithCloudAI = async (prompt, options = {}) => {
 
   const data = await response.json();
   // C-H05: surface safety blocks / truncation rather than "No response generated".
-  return interpretGeminiResponse(data);
+  return interpretGeminiResponse(data, {
+    onTruncated: () => _noteStoppedForLength(options, true),
+  });
 };
 
 /**
@@ -1080,66 +1096,6 @@ const scrubPromptForWarrantCouncil = (prompt, scrubPIIEnabled) => {
 };
 
 /**
- * 💎 Inject DKB context for Warrant Council (makes specialized agents VA-smart!)
- */
-const injectDKBForWarrantCouncil = async (prompt, options, useDKB) => {
-  if (!useDKB) return prompt;
-  try {
-    const { buildDKBContext } = await getAISystemPrompts();
-    const dkbContext = await buildDKBContext(prompt, {
-      maxEntries: options.maxDKBEntries || 6, // Smaller for fine-tuned models (they know more already)
-      maxChars: options.maxDKBChars || 4000,
-    });
-    if (dkbContext) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "[WarrantCouncil] 💎 DKB context injected - agents have live knowledge base access",
-      );
-      return prompt + dkbContext;
-    }
-  } catch (dkbError) {
-    console.warn(
-      "[WarrantCouncil] DKB context injection failed:",
-      dkbError.message,
-    );
-  }
-  return prompt;
-};
-
-/**
- * Ground a Rater-agent prompt in the deterministic combined-rating calculator
- * (38 CFR § 4.25/4.26 - vaCalculator.js) instead of letting the LLM freehand
- * the bilateral-factor arithmetic, which is the confirmed root cause of the
- * swarm's bilateral-pairing hallucinations. Only activates when the caller
- * supplies structured `options.conditions` ({name, rating, side, bodyPart}[]);
- * free-text-only prompts pass through unchanged - there's no reliable parse
- * step from prose to structured conditions, and a wrong parse would be worse
- * than no injection at all.
- */
-export const injectCalculatorForRater = (prompt, options) => {
-  if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
-    return prompt;
-  }
-
-  const result = calculateVARating(options.conditions);
-  const pairSummary = result.bilateralConditions.length
-    ? result.bilateralConditions
-        .map((c) => `${c.name} (${c.side}, ${c.rating}%)`)
-        .join(", ")
-    : "none";
-
-  return (
-    prompt +
-    `\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 - already calculated, do not recompute) ===
-Bilateral pair: ${pairSummary}
-Bilateral group rating: ${result.bilateralGroupRating || "n/a"}
-Combined rating: ${result.combinedRating}%
-Restate and explain this result. Do not perform your own bilateral-factor arithmetic or invent a different pairing.
-=== END COMPUTED RESULT ===\n`
-  );
-};
-
-/**
  * Determine the right Warrant Council agent based on tool or task type.
  */
 const resolveWarrantCouncilAgent = (toolId, taskType) => {
@@ -1166,34 +1122,71 @@ const resolveWarrantCouncilAgent = (toolId, taskType) => {
   return "auditor";
 };
 
+const _isRaterRoute = (options, effectiveMode) =>
+  resolveWarrantCouncilAgent(options.toolId, options.taskType) === "rater" ||
+  (effectiveMode === AI_MODES.WLLAMA &&
+    Boolean(wllamaCurrentModel?.startsWith("rater")));
+
 /**
  * Generate text using Warrant Council (Primary AI Engine)
  * Routes to the appropriate specialized agent based on task type
  * 💎 Now enhanced with DKB context injection
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt` and `userPrompt` arrive already
+ * assembled (system prompt + DKB context, and the user request) and already
+ * known-value-redacted by `_buildFullPrompt`/`_redactPiecesForSend`. This
+ * backend HAS a native system-role field (`generateWithSwarm`'s own
+ * `systemPrompt` option, which analyzeChunk relies on to swap in the
+ * compact C-File prompt for XGrammar constrained decoding) - so, when the
+ * CALLER explicitly asked for a custom systemPrompt, it's forwarded there
+ * directly and `userPrompt` never has it baked in a second time (that
+ * double-send + redaction-bypass was the original D15-2 bug).
+ *
+ * When there was no caller override, `systemPrompt` here is just
+ * `_buildFullPrompt`'s generic app-context+DKB default - NOT forwarding
+ * that as an override lets `generateWithSwarm` fall back to the agent's
+ * OWN persona (CW3 Rater / CW4 Writer / CW5 Auditor, including the Rater's
+ * bilateral-pairing hardening), which a blanket forward would silently
+ * replace on every one of the ~25 call sites that don't supply their own
+ * systemPrompt. The default text still reaches the model - folded into the
+ * user turn instead of overriding the system turn - so DKB context isn't
+ * lost, it's just no longer competing with the agent's persona.
  */
-const generateWithWarrantCouncil = async (prompt, options = {}) => {
+const runWarrantCouncil = async (systemPrompt, userPrompt, options = {}) => {
   const {
     taskType = "general",
     toolId = null,
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
-    useDKB = true, // Enable DKB by default
     timeout = null,
+    _hadCallerSystemPrompt = false,
   } = options;
 
-  const scrubbedPrompt = scrubPromptForWarrantCouncil(prompt, scrubPIIEnabled);
-  const dkbEnhancedPrompt = await injectDKBForWarrantCouncil(
-    scrubbedPrompt,
-    options,
-    useDKB,
+  // ADR-009 decision E: SWARM is unconditionally on-device (a Web Worker
+  // WebLLM engine, no network send), so a "document"-classed call is exempt
+  // from PII scrubbing here - the model needs the real name/DOB/SSN printed
+  // on a DD-214 to extract them, and nothing leaves the device either way.
+  const effectiveScrubPIIEnabled =
+    scrubPIIEnabled && resolveDataClass(options) !== AI_DATA_CLASS.DOCUMENT;
+  const scrubbedSystemPrompt = systemPrompt
+    ? scrubPromptForWarrantCouncil(systemPrompt, effectiveScrubPIIEnabled)
+    : systemPrompt;
+  const scrubbedUserPrompt = scrubPromptForWarrantCouncil(
+    userPrompt,
+    effectiveScrubPIIEnabled,
   );
 
+  const forwardSystemPrompt = _hadCallerSystemPrompt
+    ? scrubbedSystemPrompt
+    : null;
+  const basePrompt = _hadCallerSystemPrompt
+    ? scrubbedUserPrompt
+    : [scrubbedSystemPrompt, scrubbedUserPrompt]
+        .filter(Boolean)
+        .join(SWARM_PROMPT_SEPARATOR);
+
   const agentId = resolveWarrantCouncilAgent(toolId, taskType);
-  const enhancedPrompt =
-    agentId === "rater"
-      ? injectCalculatorForRater(dkbEnhancedPrompt, options)
-      : dkbEnhancedPrompt;
 
   // eslint-disable-next-line no-console
   console.log(
@@ -1203,18 +1196,18 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
   try {
     swarmGenerating = true;
 
-    // 💎 Use enhanced prompt with DKB context
-    const inferencePromise = generateWithSwarm(enhancedPrompt, {
+    const inferencePromise = generateWithSwarm(basePrompt, {
       agentId,
       toolId,
       maxTokens,
       temperature,
-      // Thread caller-supplied system prompt and schema through so analyzeChunk
-      // can replace the AUDITOR default prompt with the compact C-File version
-      // and enable XGrammar constrained decoding for the chunk loop.
-      ...(options.systemPrompt ? { systemPrompt: options.systemPrompt } : {}),
+      ...(forwardSystemPrompt ? { systemPrompt: forwardSystemPrompt } : {}),
       ...(options.responseFormat
         ? { responseFormat: options.responseFormat }
+        : {}),
+      ...(options.thinking !== undefined ? { thinking: options.thinking } : {}),
+      ...(options.frequencyPenalty !== undefined
+        ? { frequencyPenalty: options.frequencyPenalty }
         : {}),
     });
 
@@ -1239,7 +1232,12 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
       : await inferencePromise;
 
     swarmGenerating = false;
-    return result.text;
+    _noteStoppedForLength(
+      options,
+      result.truncated === true,
+      Boolean(result.outputCleanup?.trimmed),
+    );
+    return { text: result.text, agent: result.agent || agentId };
   } catch (err) {
     swarmGenerating = false;
     throw new Error(
@@ -1248,30 +1246,49 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
   }
 };
 
+const generateWithWarrantCouncil = async (
+  systemPrompt,
+  userPrompt,
+  options = {},
+) => (await runWarrantCouncil(systemPrompt, userPrompt, options)).text;
+
 /**
  * 🌐 Generate text using Wllama (Browser WASM inference)
- * 💎 Now enhanced with DKB context injection
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt`/`userPrompt` are already assembled
+ * (system + DKB context, and the user request) and already known-value-
+ * redacted. wllamaService's `chatCompletion` has no separate system-role
+ * parameter, so the two halves are combined into ONE string here, exactly
+ * once, before the pattern-scrub.
  */
-const generateWithWllama = async (prompt, options = {}) => {
+const generateWithWllama = async (systemPrompt, userPrompt, options = {}) => {
   const {
-    _taskType = "general",
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
     onStream = null,
-    useDKB = true,
   } = options;
 
+  const combinedPrompt = systemPrompt
+    ? `${systemPrompt}\n\n---\n\nUser Request:\n${userPrompt}`
+    : userPrompt;
+
+  // ADR-009 decision E: Wllama is unconditionally on-device (in-page WASM),
+  // so a "document"-classed call is exempt from PII scrubbing - see
+  // generateWithWarrantCouncil's identical exemption for why.
+  const effectiveScrubPIIEnabled =
+    scrubPIIEnabled && resolveDataClass(options) !== AI_DATA_CLASS.DOCUMENT;
+
   // PII Scrubbing
-  let scrubbedPrompt = prompt;
-  if (scrubPIIEnabled) {
-    const piiAnalysis = analyzePII(prompt);
+  let scrubbedPrompt = combinedPrompt;
+  if (effectiveScrubPIIEnabled) {
+    const piiAnalysis = analyzePII(combinedPrompt);
     if (piiAnalysis.hasPII) {
       console.warn(`⚠️ PII Detected before Wllama call:`, piiAnalysis.types);
       // Not aggressive - wllama is in-page WASM inference, not an egress
       // boundary. See scrubPromptForWarrantCouncil for why aggressive mode
       // destroys the dates a C-File analysis depends on.
-      const { scrubbedText, details } = scrubPII(prompt, {
+      const { scrubbedText, details } = scrubPII(combinedPrompt, {
         aggressive: false,
         preservePartial: false,
       });
@@ -1281,37 +1298,13 @@ const generateWithWllama = async (prompt, options = {}) => {
     }
   }
 
-  // Ground the Rater model in the deterministic calculator before the LLM
-  // ever sees the prompt - see injectCalculatorForRater for why.
-  let enhancedPrompt = wllamaCurrentModel?.startsWith("rater")
-    ? injectCalculatorForRater(scrubbedPrompt, options)
-    : scrubbedPrompt;
-
-  // 💎 Inject DKB context for Wllama
-  if (useDKB) {
-    try {
-      const { buildDKBContext } = await getAISystemPrompts();
-      const dkbContext = await buildDKBContext(scrubbedPrompt, {
-        maxEntries: options.maxDKBEntries || 6,
-        maxChars: options.maxDKBChars || 4000,
-      });
-      if (dkbContext) {
-        enhancedPrompt = enhancedPrompt + dkbContext;
-        // eslint-disable-next-line no-console
-        console.log("[Wllama] 💎 DKB context injected");
-      }
-    } catch (dkbError) {
-      console.warn("[Wllama] DKB context injection failed:", dkbError.message);
-    }
-  }
-
   try {
     // eslint-disable-next-line no-console
     console.log(
       `🌐 Wllama: Generating with ${wllamaCurrentModel || "auditor"} model...`,
     );
 
-    const result = await wllamaService.chatCompletion(enhancedPrompt, {
+    const result = await wllamaService.chatCompletion(scrubbedPrompt, {
       maxTokens,
       temperature,
       onToken: onStream ? (token) => onStream(token) : null,
@@ -1329,75 +1322,91 @@ const generateWithWllama = async (prompt, options = {}) => {
 
 /**
  * 🖥️ Generate text using Local Server (llama.cpp API)
- * 💎 Now enhanced with DKB context injection
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt`/`userPrompt` are already assembled
+ * (system + DKB context, and the user request) and already known-value-
+ * redacted. Combined into ONE string here, exactly once, before the
+ * pattern-scrub (the last defense before this local-engine call).
+ *
+ * ADR-009 provider boundary: this is the ONE backend whose transport is
+ * off-device or on-device depending on user configuration (a llama.cpp
+ * server the veteran points at ANY host/port, not necessarily their own
+ * machine) - so "on-device" is re-checked live against the CURRENT
+ * `localServerClient.getServerConfig()` host every call, via real URL
+ * parsing (`isLoopbackHost`), never a cached flag or a substring check a
+ * lookalike host ("localhost.evil.com") could pass.
  */
-const generateWithLocalServer = async (prompt, options = {}) => {
+const generateWithLocalServer = async (
+  systemPrompt,
+  userPrompt,
+  options = {},
+) => {
+  const dataClass = resolveDataClass(options);
+  const isOnDevice = isLoopbackHost(localServerClient.getServerConfig().host);
+  assertDocumentCallAllowed(dataClass, {
+    isOnDevice,
+    providerLabel: `Local Server (${localServerClient.getServerConfig().host})`,
+  });
+
   const {
-    _taskType = "general",
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
     onStream = null,
-    useDKB = true,
   } = options;
 
-  // PII Scrubbing
-  let scrubbedPrompt = prompt;
-  if (scrubPIIEnabled) {
-    const piiAnalysis = analyzePII(prompt);
-    if (piiAnalysis.hasPII) {
-      console.warn(
-        `⚠️ PII Detected before Local Server call:`,
-        piiAnalysis.types,
-      );
-      const { scrubbedText, details } = scrubPII(prompt, {
-        aggressive: true,
-        preservePartial: false,
-      });
-      scrubbedPrompt = scrubbedText;
+  const combinedPrompt = systemPrompt
+    ? `${systemPrompt}\n\n---\n\nUser Request:\n${userPrompt}`
+    : userPrompt;
+
+  // PII Scrubbing — D15-1: always run the aggressive pass directly rather
+  // than gating it behind a non-aggressive `analyzePII` pre-check (see
+  // `scrubCloudPromptPII` above for why that gate misses bare-PII-only
+  // prompts). The local llama.cpp server is a separate process reached over
+  // localhost HTTP, so this is an egress boundary the same as cloud.
+  //
+  // ADR-009 decision E exception: the assertDocumentCallAllowed call above
+  // already guarantees that if we reach this point with dataClass DOCUMENT,
+  // isOnDevice is true (a loopback host) - nothing leaves the machine, so
+  // scrubbing here would only destroy the identifiers on-device extraction
+  // depends on, for no privacy benefit.
+  const isOnDeviceDocumentCall =
+    dataClass === AI_DATA_CLASS.DOCUMENT && isOnDevice;
+  let scrubbedPrompt = combinedPrompt;
+  if (scrubPIIEnabled && !isOnDeviceDocumentCall) {
+    const { scrubbedText, piiFound, details } = scrubPII(combinedPrompt, {
+      aggressive: true,
+      preservePartial: false,
+    });
+    if (piiFound) {
+      console.warn(`⚠️ PII Detected before Local Server call:`, [
+        ...new Set(details.map((d) => d.type)),
+      ]);
       // eslint-disable-next-line no-console
       console.info(`🛡️ PII Scrubbed (Local Server):`, details);
     }
-  }
-
-  // 💎 Inject DKB context for Local Server
-  let enhancedPrompt = scrubbedPrompt;
-  if (useDKB) {
-    try {
-      const { buildDKBContext } = await getAISystemPrompts();
-      const dkbContext = await buildDKBContext(scrubbedPrompt, {
-        maxEntries: options.maxDKBEntries || 8,
-        maxChars: options.maxDKBChars || 6000,
-      });
-      if (dkbContext) {
-        enhancedPrompt = scrubbedPrompt + dkbContext;
-        // eslint-disable-next-line no-console
-        console.log("[LocalServer] 💎 DKB context injected");
-      }
-    } catch (dkbError) {
-      console.warn(
-        "[LocalServer] DKB context injection failed:",
-        dkbError.message,
-      );
-    }
+    scrubbedPrompt = scrubbedText;
   }
 
   try {
     // eslint-disable-next-line no-console
     console.log("🖥️ Local Server: Generating via llama.cpp API...");
 
-    const result = await localServerClient.chatCompletion(enhancedPrompt, {
-      maxTokens,
-      temperature,
-      stream: !!onStream,
-      onChunk: onStream,
-    });
+    // chatCompletion's real signature is (messages, systemPrompt, options)
+    // and it resolves to the completion text directly (or null on abort) -
+    // not a {success, text, error} object. The system prompt is already
+    // folded into scrubbedPrompt by the time this backend runs.
+    const result = await localServerClient.chatCompletion(
+      [{ role: "user", content: scrubbedPrompt }],
+      "",
+      { maxTokens, temperature, onToken: onStream },
+    );
 
-    if (!result.success) {
-      throw new Error(result.error || "Local server generation failed");
+    if (result === null) {
+      throw new Error("Local server generation failed");
     }
 
-    return result.text;
+    return result;
   } catch (err) {
     throw new Error(`Local Server error: ${_describeThrown(err)}`);
   }
@@ -1425,51 +1434,13 @@ const assertLocalAIReady = () => {
 };
 
 /**
- * Build the Local AI system prompt, including DKB context injection.
- */
-const buildLocalAISystemPrompt = async (prompt, options) => {
-  const { buildSystemPrompt, buildDKBContext } = await getAISystemPrompts();
-  let defaultSystemPrompt = buildSystemPrompt({
-    task: options.taskType || "general",
-    toolContext: options.toolContext,
-    includeAppContext: true,
-    includeRegulations: true,
-    includeVeteranData: true,
-  });
-
-  // 💎 Inject DKB context for Local AI (makes local models VA-smart!)
-  const useDKB = options.useDKB !== false; // Enabled by default
-  if (useDKB) {
-    try {
-      const dkbContext = await buildDKBContext(prompt, {
-        maxEntries: options.maxDKBEntries || 8, // Slightly less than cloud due to context limits
-        maxChars: options.maxDKBChars || 6000, // Smaller context for local models
-      });
-      if (dkbContext) {
-        defaultSystemPrompt += dkbContext;
-        // eslint-disable-next-line no-console
-        console.log(
-          "[LocalAI] 💎 DKB context injected - local model now has VA knowledge base access",
-        );
-      }
-    } catch (dkbError) {
-      console.warn(
-        "[LocalAI] DKB context injection failed, continuing without:",
-        dkbError.message,
-      );
-    }
-  }
-
-  return defaultSystemPrompt;
-};
-
-/**
  * Resolve the effective Local AI generation config, applying an AI_PRESETS
- * override when requested.
+ * override when requested. The system prompt is NOT resolved here (D15-2):
+ * `_buildFullPrompt` already assembled it - together with DKB context -
+ * exactly once, before this backend ever sees it.
  */
-const resolveLocalAIConfig = (options, defaultSystemPrompt) => {
+const resolveLocalAIConfig = (options) => {
   const {
-    systemPrompt = defaultSystemPrompt,
     maxTokens = getUserTokenLimit(), // Use user-configured limit or default
     temperature = 0.7,
     topK = 40,
@@ -1490,7 +1461,7 @@ const resolveLocalAIConfig = (options, defaultSystemPrompt) => {
     };
   }
 
-  return { systemPrompt, finalConfig, scrubPIIEnabled, onStream };
+  return { finalConfig, scrubPIIEnabled, onStream };
 };
 
 /**
@@ -1589,7 +1560,12 @@ const cleanLocalAIResponse = (text) => {
  * Run a streaming Local AI generation, aborting early if degenerate
  * (repetition-collapsed) output is detected.
  */
-const runLocalAIStreaming = async (generationConfig, onStream, releaseLock) => {
+const runLocalAIStreaming = async (
+  generationConfig,
+  onStream,
+  releaseLock,
+  options,
+) => {
   let fullResponse = "";
   const chunks = await localAIEngine.chat.completions.create({
     ...generationConfig,
@@ -1599,6 +1575,12 @@ const runLocalAIStreaming = async (generationConfig, onStream, releaseLock) => {
   for await (const chunk of chunks) {
     const delta = chunk.choices[0]?.delta?.content || "";
     fullResponse += delta;
+    if (chunk.choices[0]?.finish_reason) {
+      _noteStoppedForLength(
+        options,
+        chunk.choices[0].finish_reason === "length",
+      );
+    }
 
     // Clean and send the streamed response
     const cleanedResponse = cleanLocalAIResponse(fullResponse);
@@ -1630,19 +1612,20 @@ const runLocalAIStreaming = async (generationConfig, onStream, releaseLock) => {
 /**
  * Run a non-streaming Local AI generation.
  */
-const runLocalAINonStreaming = async (generationConfig, releaseLock) => {
-  // eslint-disable-next-line no-console
-  console.log(
-    "🔧 Local AI generation config:",
-    JSON.stringify(generationConfig, null, 2).substring(0, 500),
-  );
+const runLocalAINonStreaming = async (
+  generationConfig,
+  releaseLock,
+  options,
+) => {
+  // Model input and output are never logged: bugReportUtils captures console
+  // output into reports a veteran can send off-device, and DD-214 text and
+  // model JSON carry identifiers. Shape and length only.
+  logger.info("🔧 Local AI generation", {
+    messages: generationConfig.messages?.length ?? 0,
+    max_tokens: generationConfig.max_tokens,
+  });
   const response =
     await localAIEngine.chat.completions.create(generationConfig);
-  // eslint-disable-next-line no-console
-  console.log(
-    "🔧 Local AI raw response:",
-    JSON.stringify(response, null, 2).substring(0, 1000),
-  );
 
   localAIGenerating = false;
 
@@ -1660,11 +1643,8 @@ const runLocalAINonStreaming = async (generationConfig, releaseLock) => {
     );
   }
 
-  // eslint-disable-next-line no-console
-  console.log(
-    "🔧 Local AI rawContent:",
-    rawContent.substring(0, 500) || "(empty)",
-  );
+  _noteStoppedForLength(options, finishReason === "length");
+  logger.info("🔧 Local AI response", { length: rawContent.length });
   releaseLock();
   return cleanLocalAIResponse(rawContent);
 };
@@ -1706,15 +1686,23 @@ const mapLocalAIError = (err) => {
 
 /**
  * Generate text using Local AI (Legacy WebLLM - fallback only)
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt`/`userPrompt` arrive already
+ * assembled (system + DKB context, and the user request) and already
+ * known-value-redacted. This backend has a native system-role message, so
+ * each half is delivered exactly once, in its own role - previously this
+ * function ALSO rebuilt its own system prompt (with a second DKB injection)
+ * and sent it as `messages[0]`, while the SAME text (built once already by
+ * `_buildFullPrompt`) sat baked into `messages[1]`'s content too.
  */
-const generateWithLocalAI = async (prompt, options = {}) => {
+const generateWithLocalAI = async (systemPrompt, userPrompt, options = {}) => {
   // First try Warrant Council if available
   if (isDiamondSwarmReady()) {
     // eslint-disable-next-line no-console
     console.log(
       "🎖️ Routing to Warrant Council (upgraded from legacy local AI)",
     );
-    return generateWithWarrantCouncil(prompt, options);
+    return generateWithWarrantCouncil(systemPrompt, userPrompt, options);
   }
 
   assertLocalAIReady();
@@ -1734,21 +1722,32 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     );
   }
 
-  // Build comprehensive system prompt if not provided (lazy load)
-  // 💎 Now also injects DKB context for enhanced VA knowledge (same as cloud AI)
-  const defaultSystemPrompt = await buildLocalAISystemPrompt(prompt, options);
-  const { systemPrompt, finalConfig, scrubPIIEnabled, onStream } =
-    resolveLocalAIConfig(options, defaultSystemPrompt);
+  const { finalConfig, scrubPIIEnabled, onStream } =
+    resolveLocalAIConfig(options);
 
-  const scrubbedPrompt = scrubPromptForLocalAI(prompt, scrubPIIEnabled);
+  // ADR-009 decision E: legacy LOCAL (in-page WebLLM) is unconditionally
+  // on-device, so a "document"-classed call is exempt from PII scrubbing -
+  // see generateWithWarrantCouncil's identical exemption for why.
+  const effectiveScrubPIIEnabled =
+    scrubPIIEnabled && resolveDataClass(options) !== AI_DATA_CLASS.DOCUMENT;
+
+  const scrubbedSystemPrompt = systemPrompt
+    ? scrubPromptForLocalAI(systemPrompt, effectiveScrubPIIEnabled)
+    : systemPrompt;
+  const scrubbedUserPrompt = scrubPromptForLocalAI(
+    userPrompt,
+    effectiveScrubPIIEnabled,
+  );
 
   try {
     localAIGenerating = true;
 
-    const messages = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: scrubbedPrompt },
-    ];
+    const messages = scrubbedSystemPrompt
+      ? [
+          { role: "system", content: scrubbedSystemPrompt },
+          { role: "user", content: scrubbedUserPrompt },
+        ]
+      : [{ role: "user", content: scrubbedUserPrompt }];
 
     // Generation config with repetition penalty to prevent degenerate output
     const generationConfig = {
@@ -1765,9 +1764,14 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     };
 
     if (onStream) {
-      return await runLocalAIStreaming(generationConfig, onStream, releaseLock);
+      return await runLocalAIStreaming(
+        generationConfig,
+        onStream,
+        releaseLock,
+        options,
+      );
     }
-    return await runLocalAINonStreaming(generationConfig, releaseLock);
+    return await runLocalAINonStreaming(generationConfig, releaseLock, options);
   } catch (err) {
     localAIGenerating = false;
     releaseLock();
@@ -1902,9 +1906,8 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
 
   const images = normalizeVisionImages(imageUrls);
 
-  // eslint-disable-next-line no-console
-  console.log(
-    `🖼️ generateAIWithImage: ${images.length} image(s), prompt: ${prompt.substring(0, 100)}...`,
+  logger.info(
+    `🖼️ generateAIWithImage: ${images.length} image(s), prompt length: ${prompt.length}`,
   );
 
   const {
@@ -1931,11 +1934,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
 
     localAIGenerating = false;
     const rawContent = response.choices[0]?.message?.content || "";
-    // eslint-disable-next-line no-console
-    console.log(
-      "🖼️ Vision model response:",
-      rawContent.substring(0, 500) || "(empty)",
-    );
+    logger.info("🖼️ Vision model response", { length: rawContent.length });
 
     // Check for empty response - this indicates the model failed to process the image
     if (!rawContent || rawContent.trim().length === 0) {
@@ -1946,6 +1945,11 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
         mode: "local",
         isVisionResponse: true,
         isEmpty: true,
+        // ADR-009 §4: this path only ever runs against the in-browser
+        // legacy WebLLM engine (localAIEngine) - unconditionally on-device
+        // by construction, so it must say so. Every consumer treats a
+        // response missing this flag as off-device (fail closed).
+        onDevice: true,
       };
     }
 
@@ -1953,6 +1957,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
       text: rawContent,
       mode: "local",
       isVisionResponse: true,
+      onDevice: true,
     };
   } catch (err) {
     localAIGenerating = false;
@@ -1996,8 +2001,15 @@ export const resetAICircuitBreaker = () => {
 };
 
 function _recordGenerationFailure(err) {
-  // Crisis interception is a safety block, not an engine failure
-  if (err.message !== "CRISIS_DETECTED") {
+  // Crisis interception is a safety block, not an engine failure. Same for
+  // a fail-closed document-routing refusal (ADR-009) - a veteran who only
+  // has cloud AI configured hitting a document tool repeatedly must not
+  // trip the shared circuit breaker and lock out their unrelated "context"
+  // calls (e.g. the AI Assistant) for the cooldown window.
+  if (
+    err.message !== "CRISIS_DETECTED" &&
+    err.code !== "DOCUMENT_OFF_DEVICE_BLOCKED"
+  ) {
     consecutiveGenerationFailures++;
     if (consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD) {
       circuitBreakerOpenedAt = Date.now();
@@ -2009,6 +2021,7 @@ function _recordGenerationFailure(err) {
 // audit log (SHA-256 digests only - never raw prompt/output PII). Fire-and-
 // forget so a logging failure can never break the AI response.
 function _logAiCallAudit(prompt, result, options, startedAt) {
+  if (result?.modelCalled === false) return;
   const auditOutput =
     typeof result === "string" ? result : (result?.text ?? "");
   logModelCallWithDigests({
@@ -2037,7 +2050,24 @@ function _stripUrlsFromResult(result, options) {
   return result;
 }
 
+export const EMPTY_PROMPT_REPLY =
+  "I didn't get a question. Tell me what you need help with, for example a question about your claim, your rating, or a form, and I will help from there.";
+
+const _isEmptyPrompt = (prompt) =>
+  prompt === undefined ||
+  prompt === null ||
+  (typeof prompt === "string" && prompt.trim() === "");
+
 export const generateAI = async (prompt, options = {}) => {
+  if (_isEmptyPrompt(prompt)) {
+    const mode = getEffectiveAIMode();
+    return {
+      text: EMPTY_PROMPT_REPLY,
+      mode,
+      onDevice: _isModeOnDevice(mode),
+    };
+  }
+
   if (
     consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD &&
     Date.now() - circuitBreakerOpenedAt < CIRCUIT_BREAKER_COOLDOWN_MS
@@ -2084,7 +2114,7 @@ export const generateAI = async (prompt, options = {}) => {
     _recordGenerationFailure(err);
 
     // Enhance timeout errors with helpful message
-    if (err.message && err.message.includes("AI_TIMEOUT")) {
+    if (err.message?.includes("AI_TIMEOUT")) {
       throw new Error(
         `AI request timed out after ${TIMEOUT_MS / 1000} seconds. ` +
           `This usually means the AI model is still loading, your document is too large, or there are network issues. ` +
@@ -2099,7 +2129,7 @@ export const generateAI = async (prompt, options = {}) => {
 async function _checkAiFeatureFlags(options) {
   if (options.skipFeatureCheck) return;
 
-  const aiEnabled = await isFeatureEnabled("ai_enabled");
+  const aiEnabled = isFeatureEnabled("ai");
   if (!aiEnabled) {
     throw new Error(
       "AI features are temporarily disabled. Please try again later.",
@@ -2109,14 +2139,14 @@ async function _checkAiFeatureFlags(options) {
   // Check mode-specific flags
   const effectiveMode = getEffectiveAIMode();
   if (effectiveMode === AI_MODES.LOCAL) {
-    const localEnabled = await isFeatureEnabled("local_ai");
+    const localEnabled = isFeatureEnabled("local_ai");
     if (!localEnabled) {
       throw new Error(
         "Local AI is temporarily disabled. Please use Cloud AI or try again later.",
       );
     }
   } else if (effectiveMode === AI_MODES.CLOUD) {
-    const cloudEnabled = await isFeatureEnabled("cloud_ai");
+    const cloudEnabled = isFeatureEnabled("cloud_ai");
     if (!cloudEnabled) {
       throw new Error(
         "Cloud AI is temporarily disabled. Please use Local AI or try again later.",
@@ -2127,16 +2157,358 @@ async function _checkAiFeatureFlags(options) {
 
 async function _checkCrisisSafety(prompt, options) {
   if (options.skipCrisisCheck) return;
-  const crisisResult = await interceptBeforeAICall(prompt);
+  const crisisResult = interceptBeforeAICall(prompt);
   if (crisisResult.shouldBlock) {
     throw new Error("CRISIS_DETECTED");
   }
 }
 
-async function _buildFullPrompt(prompt, options) {
-  // Build system prompt with anti-hallucination guardrails (unless overridden)
+// D19 follow-up: a reviewer proved the loader-failure fallback below only
+// ever had the full pattern scrubber to fall back on, which cannot catch a
+// KNOWN-VALUE identifier with no generic shape (the veteran's own name) -
+// on a loader failure, a name typed into the veteran's own message (not
+// sourced from the VKB at all) reached an off-device backend un-redacted
+// even after the D19-1 fail-closed fix, since that fix only added pattern
+// scrubbing, never known-value scrubbing, back into the failure path.
+// Caching the last SUCCESSFULLY loaded profile closes this for the common
+// case (a transient loader hiccup after at least one earlier successful
+// call this session) without changing availability semantics (still never
+// blocks generation) or needing the bigger, product-level call of whether
+// a loader failure should block an off-device send outright. A loader that
+// has never once succeeded this session (the cold-start case) still has no
+// known value to fall back to - a structural limit documented here, not
+// silently assumed; see unifiedAIService.redactionFailClosed.test.js.
+let _lastKnownGoodRedactionProfile = null;
+
+export const resetLastKnownGoodRedactionProfile = () => {
+  _lastKnownGoodRedactionProfile = null;
+};
+
+// ADR-008 single enforcement point: the previous 5 builder-level redaction
+// passes (generateLLMContext, generatePacketContext, getVeteranAIContext,
+// buildSystemPrompt, callGeminiAPI) only cover the free text THOSE
+// builders assemble - a caller that hands generateAI its own raw prompt
+// (a Muster Call report, a witness's typed answers, a pasted decision
+// letter...) bypassed every one of them. This redacts every piece of the
+// assembled request (the system prompt AND the user prompt - see D15-2's
+// _buildFullPrompt, which keeps them separate so a backend with a native
+// system role can deliver each exactly once) right before ANY backend
+// (Warrant Council, Wllama, local server, legacy local, cloud) is
+// dispatched, so no send path can skip it. One shared VKB/profile lookup
+// covers every piece. Best-effort: an identifier-load failure must never
+// block generation.
+// D20-5: every source of the veteran's own identifiers, each loaded
+// independently so one failing source never hides the others - the VKB
+// personal block, the flat legacy profile (a Muster Call ingest writes the
+// veteran's name/service number ONLY there, never to VKB's .personal), and
+// the last copy that loaded successfully this session.
+async function _loadRedactionProfile() {
+  let vkb = null;
+  let loadFailed = false;
+  try {
+    vkb = await loadVKB();
+  } catch {
+    loadFailed = true;
+  }
+  let flatProfile = {};
+  try {
+    flatProfile = getVeteranProfile() || {};
+  } catch {
+    loadFailed = true;
+  }
+  const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+    .map((c) => c.claimNumber)
+    .filter(Boolean);
+  const personal = { ...flatProfile, ...vkb?.personal };
+  return { personal, claimNumbers, loadFailed };
+}
+
+// Name tokens are the only known values flagged accentFold. A date of birth,
+// email, phone or SSN last four cannot recognise a typed name.
+const _hasKnownName = (personal, claimNumbers) =>
+  collectKnownIdentifierValues(personal, claimNumbers).some(
+    (entry) => entry.accentFold,
+  );
+
+// True once any identifier source (VKB personal block, flat profile, or the
+// last good copy this session) holds the veteran's name. False is the state in
+// which a typed name reaches an off-device body unredacted (ADR-008 section
+// 2.9), so the AI input warns the veteran.
+export async function hasKnownVeteranName() {
+  const cached = _lastKnownGoodRedactionProfile;
+  if (cached && _hasKnownName(cached.personal, cached.claimNumbers))
+    return true;
+  const loaded = await _loadRedactionProfile();
+  return _hasKnownName(loaded.personal, loaded.claimNumbers);
+}
+
+async function _redactPiecesForSend(pieces) {
+  const loaded = await _loadRedactionProfile();
+  const hasIdentifiers =
+    collectKnownIdentifierValues(loaded.personal, loaded.claimNumbers).length >
+    0;
+  if (hasIdentifiers) {
+    _lastKnownGoodRedactionProfile = {
+      personal: loaded.personal,
+      claimNumbers: loaded.claimNumbers,
+    };
+  }
+  const profile = hasIdentifiers ? loaded : _lastKnownGoodRedactionProfile;
+  const redactKnown = (text) =>
+    profile
+      ? redactVeteranIdentifiers(text, profile.personal, profile.claimNumbers)
+      : text;
+
+  // Healthy path: known values only, as before.
+  if (hasIdentifiers && !loaded.loadFailed) return pieces.map(redactKnown);
+
+  // Fail CLOSED, never open. A loader that threw, or that silently returned
+  // nothing, must never let raw text reach an off-device backend with only
+  // known-value redaction (which has nothing to match). Known values from the
+  // last good copy still run, ON TOP OF the full aggressive pattern scrubber
+  // (bare SSNs, labeled and bare DOBs, addresses...) - neither alone covers
+  // every shape. A name this app has never seen has no shape and cannot be
+  // recognised here (ADR-008 documents that limit).
+  console.warn(
+    loaded.loadFailed
+      ? "[ADR-008] _redactPiecesForSend: VKB/profile load failed, falling back to pattern scrubbing"
+      : "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing",
+  );
+  return pieces.map((text) => scrubText(redactKnown(text)));
+}
+
+// Per-backend DKB budget defaults. Restores the pre-D15-2 per-backend sizing
+// instead of a single uniform 10-entry/8000-char budget for every backend:
+// on-device engines (Swarm, Wllama, legacy local WebLLM) run on far smaller
+// context windows than cloud, and a small-context tier (e.g. a 4096-token
+// tablet profile) can have its ENTIRE input budget consumed by DKB alone
+// once it's sharing space with a system prompt instead of being the whole
+// system prompt on its own. Cloud and the local llama.cpp server (which
+// typically runs a larger-context build) keep the original, larger budgets.
+// excludeBoardDecisions: individual Board of Veterans' Appeals decisions are
+// not placed in the block on the small-budget on-device backends, where the
+// model reads a decision-shaped entry as the veteran's own decision. The
+// ranking is unchanged; the next-ranked entries fill the budget.
+// excludeCourtDecisions: the same for CAVC and Federal Circuit entries, which
+// keyword search returned for unrelated questions.
+// maxVerifiedChars: the share of maxChars the verified-reference block may
+// take. It is a share, not an addition, so reference material as a whole
+// never grows past maxChars on a small context window.
+const DKB_BUDGET_BY_MODE = {
+  [AI_MODES.SWARM]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    maxVerifiedChars: 3400,
+    excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
+  },
+  [AI_MODES.WLLAMA]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    maxVerifiedChars: 3400,
+    excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
+  },
+  [AI_MODES.LOCAL]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    maxVerifiedChars: 3400,
+    excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
+  },
+  [AI_MODES.LOCAL_SERVER]: {
+    maxEntries: 8,
+    maxChars: 6000,
+    maxVerifiedChars: 5000,
+  },
+  [AI_MODES.CLOUD]: { maxEntries: 10, maxChars: 8000, maxVerifiedChars: 6500 },
+};
+const DKB_BUDGET_DEFAULT = {
+  maxEntries: 10,
+  maxChars: 8000,
+  maxVerifiedChars: 6500,
+};
+// Below this the keyword-search block could hold its own header and little
+// else, so it is skipped rather than sent empty.
+const DKB_MIN_CHARS_AFTER_VERIFIED = 800;
+
+const _referenceBudget = (options, effectiveMode) => {
+  const budget = DKB_BUDGET_BY_MODE[effectiveMode] || DKB_BUDGET_DEFAULT;
+  return { ...budget, maxChars: options.maxDKBChars || budget.maxChars };
+};
+
+/**
+ * The === VERIFIED REFERENCE === block for this request: regulation and
+ * manual text quoted from the bundled data, chosen by the question and tool.
+ * Empty when no topic applies or the caller turned reference material off.
+ */
+function _buildVerifiedReference(prompt, options, effectiveMode, roomChars) {
+  if (options.useDKB === false) return "";
+  const budget = _referenceBudget(options, effectiveMode);
+  return buildVerifiedReferenceBlock(prompt, {
+    toolId: options.toolId,
+    conditions: options.conditions,
+    dataClass: options.dataClass,
+    maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars, roomChars),
+  });
+}
+
+const SWARM_PROMPT_SEPARATOR = "\n\n---\n\n";
+const SWARM_DEFAULT_CONTEXT_WINDOW = 8192;
+
+const _longestPersonaChars = () =>
+  Math.max(...Object.values(SWARM_AGENTS).map((a) => a.systemPrompt.length));
+
+/**
+ * The context window the on-device engine was loaded with, and how much of it
+ * this request leaves for reference material (promptBudget.js). Null for
+ * every other backend: their budgets are the per-mode constants above.
+ * Without a caller system prompt the swarm sends the persona as the system
+ * message and folds the default prompt into the user turn, so both count.
+ */
+async function _planSwarmFit(prompt, baseSystemPrompt, options) {
+  const profile = await detectDeviceCapabilities();
+  const contextWindow =
+    profile?.contextWindowSize ?? SWARM_DEFAULT_CONTEXT_WINDOW;
+  const requestedOutputTokens = options.maxTokens ?? getUserTokenLimit();
+  const personaChars = options.systemPrompt
+    ? 0
+    : _longestPersonaChars() + SWARM_PROMPT_SEPARATOR.length;
+  const plan = planPromptFit({
+    contextWindow,
+    requestedOutputTokens,
+    fixedChars: personaChars + baseSystemPrompt.length + prompt.length,
+  });
+  return { ...plan, contextWindow, requestedOutputTokens, personaChars };
+}
+
+const WLLAMA_DEFAULT_CONTEXT_WINDOW = 4096;
+// The chat-template tags and the "User Request:" separator wllama adds.
+const WLLAMA_WRAPPER_CHARS = 80;
+
+/**
+ * Thrown instead of sending a wllama request that cannot fit its window.
+ * wllama has no truncation guard, and what its engine does with an oversize
+ * prompt is not something a veteran should find out. The message is shown as
+ * it is. It names the context window so the overflow handler can still offer
+ * Cloud AI for a request that is allowed to leave the device.
+ */
+export class OnDevicePromptTooLargeError extends Error {
+  constructor(cause, contextWindow) {
+    const size = contextWindow.toLocaleString("en-US");
+    super(
+      cause === "instructions"
+        ? `The AI model loaded on this device cannot take this request. Its context window (${size} tokens) is too small for Vet-Rate's built-in instructions. Use a device with WebGPU, or add a Gemini API key in Settings to use Cloud AI.`
+        : `This request is too long for the AI model loaded on this device (context window ${size} tokens). Shorten your question or the text you pasted and try again, or add a Gemini API key in Settings so longer requests can use Cloud AI.`,
+    );
+    this.name = "OnDevicePromptTooLargeError";
+    this.cause = cause;
+    this.contextWindow = contextWindow;
+  }
+}
+
+/**
+ * The same plan for the WebAssembly backend. wllama wraps every request in
+ * the loaded model's persona, caller system prompt or not, so the persona
+ * always counts. `tooLarge` says the request cannot be sent at all: because
+ * of Vet-Rate's own default prompt ("instructions") or the caller's text
+ * ("request").
+ */
+function _planWllamaFit(prompt, baseSystemPrompt, options) {
+  const model = wllamaService.WLLAMA_MODELS?.[wllamaCurrentModel || "auditor"];
+  const contextWindow = model?.contextSize ?? WLLAMA_DEFAULT_CONTEXT_WINDOW;
+  const requestedOutputTokens = options.maxTokens ?? getUserTokenLimit();
+  const personaChars =
+    (model?.systemPrompt?.length ?? _longestPersonaChars()) +
+    WLLAMA_WRAPPER_CHARS;
+  const fixedChars = personaChars + baseSystemPrompt.length + prompt.length;
+  const sizes = { contextWindow, requestedOutputTokens };
+  const plan = planPromptFit({ ...sizes, fixedChars });
+  const instructionsAlone = options.systemPrompt
+    ? false
+    : cannotFit({ ...sizes, fixedChars: fixedChars - prompt.length });
+  const tooLarge = cannotFit({ ...sizes, fixedChars })
+    ? (instructionsAlone && "instructions") || "request"
+    : null;
+  return {
+    ...plan,
+    ...sizes,
+    personaChars,
+    tooLarge,
+    floorTokens: MIN_OUTPUT_TOKENS,
+  };
+}
+
+function _planOnDeviceFit(effectiveMode, ...args) {
+  if (effectiveMode === AI_MODES.SWARM) return _planSwarmFit(...args);
+  if (effectiveMode === AI_MODES.WLLAMA) return _planWllamaFit(...args);
+  return null;
+}
+
+// D15-2: single DKB (Diamond Knowledge Base) injection point. Every backend
+// used to run its own copy of this block (cloud/local/warrant-council/
+// wllama/local-server), each with a different maxEntries/maxChars budget,
+// AFTER the system prompt had already been assembled once here - meaning a
+// caller-supplied systemPrompt got baked into the request twice: once as
+// plain text in `fullPrompt`, once again re-resolved/re-injected inside the
+// backend. Best-effort: a DKB fetch failure never blocks the call.
+// `usedChars` is what the verified-reference block already took from the
+// shared budget; the keyword search gets the rest, or `roomChars` when the
+// on-device context window has less than that left.
+async function _injectDKBContext(
+  prompt,
+  systemPrompt,
+  options,
+  usedChars = 0,
+  roomChars = Infinity,
+) {
+  if (options.useDKB === false) return systemPrompt;
+  const budget = _referenceBudget(options, options.effectiveMode);
+  const maxChars = Math.min(budget.maxChars - usedChars, roomChars);
+  const limited = usedChars > 0 || roomChars !== Infinity;
+  if (limited && maxChars < DKB_MIN_CHARS_AFTER_VERIFIED) {
+    return systemPrompt;
+  }
+  try {
+    const { buildDKBContext } = await getAISystemPrompts();
+    const dkbContext = await buildDKBContext(prompt, {
+      maxEntries: options.maxDKBEntries || budget.maxEntries,
+      maxChars,
+      ...(budget.excludeBoardDecisions ? { excludeBoardDecisions: true } : {}),
+      ...(budget.excludeCourtDecisions ? { excludeCourtDecisions: true } : {}),
+      ...(usedChars > 0 ? { withVerifiedReference: true } : {}),
+      ...(isFullDKBGroundingEnabled() ? { includeShards: true } : {}),
+    });
+    if (!dkbContext) return systemPrompt;
+    // With a reduced budget the search can return its header and no entry.
+    // That header tells the model to say nothing addresses the question,
+    // which would contradict the verified text above it.
+    if (usedChars > 0 && dkbContext.includes("[0 reference entries provided")) {
+      return systemPrompt;
+    }
+    logger.info("[AI] 💎 DKB context injected");
+    return systemPrompt + dkbContext;
+  } catch (dkbError) {
+    console.warn(
+      "[AI] DKB context injection failed, continuing without:",
+      dkbError.message,
+    );
+    return systemPrompt;
+  }
+}
+
+// D15-2: the ONE assembly point. Returns the system prompt (default or
+// caller override, plus DKB context) and the user prompt as SEPARATE
+// pieces rather than a single pre-concatenated string - a backend with a
+// native system-role message (legacy local, Warrant Council) delivers each
+// piece exactly once in its own role; a backend with no role separation
+// (cloud, wllama, local server) concatenates them into one string itself,
+// exactly once, immediately before it sends. Either way, this function is
+// the only place the system prompt is ever built.
+async function _buildFullPrompt(prompt, options, effectiveMode) {
   const { buildSystemPrompt } = await getAISystemPrompts();
-  const systemPrompt =
+  const hadCallerSystemPrompt = Boolean(options.systemPrompt);
+  const baseSystemPrompt =
     options.systemPrompt ||
     buildSystemPrompt({
       task: options.taskType || "general",
@@ -2146,6 +2518,35 @@ async function _buildFullPrompt(prompt, options) {
       includeVeteranData: true,
     });
 
+  // In-browser engines only (WebLLM swarm, wllama): what the loaded context
+  // window leaves for the blocks below. The keyword block is sized last, so
+  // it gives way first, then the verified block.
+  const fit = await _planOnDeviceFit(
+    effectiveMode,
+    prompt,
+    baseSystemPrompt,
+    options,
+  );
+  const roomChars = fit ? fit.referenceChars : Infinity;
+  const userPrompt = prompt;
+
+  // Verified reference goes in here, before _redactPiecesForSend, so every
+  // backend receives it once. It sits ahead of the keyword-search block and
+  // is charged to the same budget first.
+  const verifiedReference = _buildVerifiedReference(
+    prompt,
+    options,
+    effectiveMode,
+    roomChars,
+  );
+  const systemPrompt = await _injectDKBContext(
+    prompt,
+    baseSystemPrompt + verifiedReference,
+    { ...options, effectiveMode },
+    verifiedReference.length,
+    roomChars - verifiedReference.length,
+  );
+
   // Apply user's saved preset if no preset specified in options
   const effectivePreset = options.preset || getUserPreset();
 
@@ -2153,85 +2554,226 @@ async function _buildFullPrompt(prompt, options) {
   const enhancedOptions = {
     ...options,
     preset: effectivePreset,
+    _hadCallerSystemPrompt: hadCallerSystemPrompt,
+    ..._fittedOutputTokens(fit, systemPrompt.length + userPrompt.length),
   };
 
-  // Prepend system prompt to user prompt
-  const fullPrompt = systemPrompt
-    ? `${systemPrompt}\n\n---\n\nUser Request:\n${prompt}`
-    : prompt;
+  return { systemPrompt, userPrompt, enhancedOptions };
+}
 
-  return { fullPrompt, enhancedOptions };
+// `maxTokens` for an in-browser engine when the request asked for more output
+// than the window has left beside the assembled prompt; nothing when it fits.
+// A wllama request that cannot be sent at all carries the reason instead.
+function _fittedOutputTokens(fit, assembledChars) {
+  if (!fit) return {};
+  if (fit.tooLarge) {
+    return {
+      _promptTooLarge: {
+        cause: fit.tooLarge,
+        contextWindow: fit.contextWindow,
+      },
+    };
+  }
+  const maxTokens = fitOutputTokens({
+    contextWindow: fit.contextWindow,
+    requestedOutputTokens: fit.requestedOutputTokens,
+    promptChars: fit.personaChars + assembledChars,
+    ...(fit.floorTokens ? { floorTokens: fit.floorTokens } : {}),
+  });
+  return maxTokens === fit.requestedOutputTokens ? {} : { maxTokens };
+}
+
+// Whether the engine stopped the answer for length, noted by the backend on
+// a holder that belongs to this one generateAI call (`options._finish`), so
+// concurrent calls cannot read each other's. WebLLM (swarm and the legacy
+// engine) reports finish_reason "length"; Gemini reports MAX_TOKENS. The
+// local-server and wllama clients return text only, so nothing is known for
+// them.
+function _noteStoppedForLength(options, stopped, repeated = false) {
+  if (!options?._finish) return;
+  options._finish.truncated = stopped;
+  options._finish.repeated = stopped && repeated;
+}
+
+const PARAGRAPH_BREAK = "\n\n";
+
+export const CUT_SHORT_NOTICE =
+  "This answer was cut short because it reached the length limit. Ask for the rest if you need it.";
+
+export const REPEATED_NOTICE =
+  "This answer started repeating itself and was stopped. Try rephrasing your question.";
+
+/**
+ * A prose answer the engine stopped for length is trimmed to its last
+ * complete sentence and says so in one line. Structured output is left for
+ * its parser, a blocked answer is already a message, and on a rating answer
+ * the calculator lead drops the cut-off commentary instead.
+ */
+function _settleTruncation(result, finish, options) {
+  if (!finish.truncated || result.blocked) return result;
+  const text = String(result.text ?? "");
+  const leaveAsIs =
+    options.expectJSON || options.responseFormat || looksStructured(text);
+  return {
+    ...result,
+    truncated: true,
+    ...(leaveAsIs
+      ? {}
+      : {
+          text: [
+            trimToLastSentence(text),
+            finish.repeated ? REPEATED_NOTICE : CUT_SHORT_NOTICE,
+          ].join(PARAGRAPH_BREAK),
+        }),
+  };
+}
+
+// One call site per backend, shared by both the mode-directed dispatch and
+// the "whatever's available" fallback chain in _dispatchAiGeneration below -
+// each backend's (systemPrompt, userPrompt, options) argument shape now
+// exists exactly once instead of being repeated per branch.
+async function _invokeBackend(mode, systemPrompt, userPrompt, options) {
+  _noteStoppedForLength(options, false);
+  switch (mode) {
+    case AI_MODES.SWARM: {
+      const { text, agent } = await runWarrantCouncil(
+        systemPrompt,
+        userPrompt,
+        options,
+      );
+      return { text, agentUsed: agent };
+    }
+    case AI_MODES.WLLAMA: {
+      if (options._promptTooLarge) {
+        const { cause, contextWindow } = options._promptTooLarge;
+        throw new OnDevicePromptTooLargeError(cause, contextWindow);
+      }
+      const text = await generateWithWllama(systemPrompt, userPrompt, options);
+      return { text, agentUsed: wllamaCurrentModel || "auditor" };
+    }
+    case AI_MODES.LOCAL_SERVER: {
+      const text = await generateWithLocalServer(
+        systemPrompt,
+        userPrompt,
+        options,
+      );
+      return { text, agentUsed: null };
+    }
+    case AI_MODES.LOCAL: {
+      const text = await generateWithLocalAI(systemPrompt, userPrompt, options);
+      return { text, agentUsed: null };
+    }
+    case AI_MODES.CLOUD: {
+      const text = await generateWithCloudAI(systemPrompt, userPrompt, options);
+      return { text, agentUsed: null };
+    }
+    default:
+      throw new Error(`Unknown AI mode: ${mode}`);
+  }
+}
+
+const _BACKEND_USED_LOG = {
+  [AI_MODES.SWARM]: (agentUsed) =>
+    `🎖️ Generated with Warrant Council (${(agentUsed || "auditor").toUpperCase()} agent)`,
+  [AI_MODES.WLLAMA]: (agentUsed) =>
+    `🌐 Generated with Wllama (${(agentUsed || "auditor").toUpperCase()} model)`,
+  [AI_MODES.LOCAL_SERVER]: () => "🖥️ Generated with local llama.cpp server",
+  [AI_MODES.LOCAL]: () => "💻 Generated with legacy local AI",
+};
+
+function _logBackendUsed(mode, agentUsed) {
+  const buildMessage = _BACKEND_USED_LOG[mode];
+  if (!buildMessage) return;
+  logger.info(buildMessage(agentUsed));
+}
+
+// ADR-009: a document-classed call is dispatched straight to whichever
+// on-device backend is actually ready (_resolveOnDeviceMode), NEVER through
+// an off-device attempt-then-refuse-then-fallback dance. Attempting CLOUD
+// first whenever it's the preferred mode (the generic dispatch below does
+// this) would (a) waste a round trip through the per-backend
+// assertDocumentCallAllowed guard every single time Cloud is preferred and
+// an on-device engine is also ready, (b) previously missed WLLAMA and a
+// loopback LOCAL_SERVER entirely once the preferred mode was off-device,
+// because the general fallback picker only ever offered SWARM or legacy
+// LOCAL (see the old _pickFallbackMode), and (c) let callers that size a
+// prompt/chunk for "whatever generateAI will use" (cfileAnalyzer,
+// DD214Analyzer) read the wrong (cloud-sized) mode back before dispatch
+// silently rerouted on-device. generateAIInternal's primary gate already
+// guarantees at least one on-device backend is ready before this runs.
+async function _dispatchDocumentGeneration(
+  effectiveMode,
+  systemPrompt,
+  userPrompt,
+  enhancedOptions,
+) {
+  const mode = _resolveOnDeviceMode(effectiveMode);
+  if (!mode) {
+    throw new DocumentOffDeviceBlockedError(
+      _offDeviceProviderLabel(effectiveMode),
+    );
+  }
+  const { text, agentUsed } = await _invokeBackend(
+    mode,
+    systemPrompt,
+    userPrompt,
+    enhancedOptions,
+  );
+  _logBackendUsed(mode, agentUsed);
+  return { text, usedMode: mode, agentUsed };
 }
 
 async function _dispatchAiGeneration(
   effectiveMode,
-  fullPrompt,
+  systemPrompt,
+  userPrompt,
   enhancedOptions,
   options,
 ) {
+  if (resolveDataClass(options) === AI_DATA_CLASS.DOCUMENT) {
+    return _dispatchDocumentGeneration(
+      effectiveMode,
+      systemPrompt,
+      userPrompt,
+      enhancedOptions,
+    );
+  }
+
   // Dispatch follows getEffectiveAIMode() - never implicitly upgrade to a
   // backend the user didn't choose. getEffectiveAIMode() already handles the
-  // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD).
-  const useSwarm = effectiveMode === AI_MODES.SWARM;
-  const useWllama = effectiveMode === AI_MODES.WLLAMA;
-  const useLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER;
-  const useCloud =
-    effectiveMode === AI_MODES.CLOUD ||
-    (options.preferCloud === true && isCloudAIAvailable());
-  const useLocal = effectiveMode === AI_MODES.LOCAL;
+  // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD). The
+  // ordered checks below mirror that chain: a mode-directed attempt first,
+  // then "whatever's available" as a last resort.
+  const preferCloud = options.preferCloud === true && isCloudAIAvailable();
+  const orderedAttempts = [
+    [AI_MODES.SWARM, effectiveMode === AI_MODES.SWARM && isDiamondSwarmReady()],
+    [AI_MODES.WLLAMA, effectiveMode === AI_MODES.WLLAMA && isWllamaAvailable()],
+    [
+      AI_MODES.LOCAL_SERVER,
+      effectiveMode === AI_MODES.LOCAL_SERVER && isLocalServerAvailable(),
+    ],
+    [AI_MODES.LOCAL, effectiveMode === AI_MODES.LOCAL && isLocalAIReady()],
+    [
+      AI_MODES.CLOUD,
+      effectiveMode === AI_MODES.CLOUD || preferCloud || isCloudAIAvailable(),
+    ],
+    [AI_MODES.WLLAMA, isWllamaAvailable()],
+    [AI_MODES.LOCAL_SERVER, isLocalServerAvailable()],
+    [AI_MODES.LOCAL, isLocalAIReady()],
+  ];
 
-  if (useSwarm && isDiamondSwarmReady()) {
-    // 🎖️ Warrant Council - Primary AI Engine (WebGPU)
-    const text = await generateWithWarrantCouncil(fullPrompt, enhancedOptions);
-    const agentUsed = getCurrentAgent() || "auditor";
-    // eslint-disable-next-line no-console
-    console.log(
-      `🎖️ Generated with Warrant Council (${agentUsed.toUpperCase()} agent)`,
+  for (const [mode, isAttemptable] of orderedAttempts) {
+    if (!isAttemptable) continue;
+    const { text, agentUsed } = await _invokeBackend(
+      mode,
+      systemPrompt,
+      userPrompt,
+      enhancedOptions,
     );
-    return { text, usedMode: AI_MODES.SWARM, agentUsed };
+    _logBackendUsed(mode, agentUsed);
+    return { text, usedMode: mode, agentUsed };
   }
-  if (useWllama && isWllamaAvailable()) {
-    // 🌐 Wllama - Browser WASM inference
-    const text = await generateWithWllama(fullPrompt, enhancedOptions);
-    const agentUsed = wllamaCurrentModel || "auditor";
-    // eslint-disable-next-line no-console
-    console.log(`🌐 Generated with Wllama (${agentUsed.toUpperCase()} model)`);
-    return { text, usedMode: AI_MODES.WLLAMA, agentUsed };
-  }
-  if (useLocalServer && isLocalServerAvailable()) {
-    // 🖥️ Local Server - llama.cpp API
-    const text = await generateWithLocalServer(fullPrompt, enhancedOptions);
-    // eslint-disable-next-line no-console
-    console.log("🖥️ Generated with local llama.cpp server");
-    return { text, usedMode: AI_MODES.LOCAL_SERVER, agentUsed: null };
-  }
-  if (useLocal && isLocalAIReady()) {
-    // Legacy local AI (fallback)
-    const text = await generateWithLocalAI(fullPrompt, enhancedOptions);
-    // eslint-disable-next-line no-console
-    console.log("💻 Generated with legacy local AI");
-    return { text, usedMode: AI_MODES.LOCAL, agentUsed: null };
-  }
-  if (useCloud || isCloudAIAvailable()) {
-    // Cloud AI (Gemini - fallback)
-    const text = await generateWithCloudAI(fullPrompt, enhancedOptions);
-    return { text, usedMode: AI_MODES.CLOUD, agentUsed: null };
-  }
-  if (isWllamaAvailable()) {
-    // Fallback: Wllama
-    const text = await generateWithWllama(fullPrompt, enhancedOptions);
-    return { text, usedMode: AI_MODES.WLLAMA, agentUsed: null };
-  }
-  if (isLocalServerAvailable()) {
-    // Fallback: Local Server
-    const text = await generateWithLocalServer(fullPrompt, enhancedOptions);
-    return { text, usedMode: AI_MODES.LOCAL_SERVER, agentUsed: null };
-  }
-  if (isLocalAIReady()) {
-    // Final fallback: try legacy local
-    const text = await generateWithLocalAI(fullPrompt, enhancedOptions);
-    return { text, usedMode: AI_MODES.LOCAL, agentUsed: null };
-  }
+
   throw new Error(
     "No AI available. Please initialize Warrant Council, start the local server, or configure a Gemini API key.",
   );
@@ -2279,9 +2821,17 @@ function _applyHallucinationFilter(text, options) {
   return { text, hallucinationReport };
 }
 
+/**
+ * Shown in place of an answer the response validator blocked. Callers render
+ * result.text, so a blocked answer left there was shown to the veteran.
+ */
+export const BLOCKED_RESPONSE_MESSAGE =
+  "The AI's answer is not shown because it did not pass Vet-Rate's safety check. That check stops answers worded as medical or legal advice, answers that promise a claim outcome, and citations Vet-Rate could not confirm. Nothing is wrong with your question. Please ask it again or word it differently. For a medical opinion, speak with your doctor. A Veterans Service Officer can help with your claim at no cost.";
+
 // Validate the AI response for forbidden medical/legal roleplay, ungrounded
 // CFR citations, missing disclaimers, invented stats, and over-certain claim
-// language. Runs unless explicitly skipped.
+// language. Runs unless explicitly skipped. A blocked prose answer is
+// replaced by BLOCKED_RESPONSE_MESSAGE; the original stays on `blockedText`.
 //
 // AIS-01: this was effectively dead in production. The guard required
 // `options.taskType` (so calls without one skipped validation entirely), and
@@ -2295,6 +2845,7 @@ async function _buildValidatedResult(
   hallucinationReport,
   options,
 ) {
+  const onDevice = _isModeOnDevice(usedMode);
   if (!options.skipValidation) {
     const { validateAIResponse } = await getAISystemPrompts();
     const validation = validateAIResponse(text, {
@@ -2308,9 +2859,21 @@ async function _buildValidatedResult(
         validation.errors,
         validation.warnings,
       );
+      // Structured output goes to a parser, not to the veteran, and often
+      // quotes their records ("as a physician, I ..."); the caller gets it
+      // with the errors, as before.
+      const structured =
+        options.expectJSON || options.responseFormat || looksStructured(text);
       return {
-        text,
+        ...(structured
+          ? { text }
+          : {
+              text: BLOCKED_RESPONSE_MESSAGE,
+              blocked: true,
+              blockedText: text,
+            }),
         mode: usedMode,
+        onDevice,
         validationErrors: validation.errors,
         validationWarnings: validation.warnings,
         hallucinationReport,
@@ -2321,6 +2884,7 @@ async function _buildValidatedResult(
   return {
     text,
     mode: usedMode,
+    onDevice,
     ...(agentUsed && { agent: agentUsed }),
     ...(hallucinationReport && { hallucinationReport }),
   };
@@ -2328,14 +2892,15 @@ async function _buildValidatedResult(
 
 async function _handleContextOverflowFallback(
   err,
-  fullPrompt,
+  systemPrompt,
+  userPrompt,
   enhancedOptions,
   options,
 ) {
   const errorMsg = err.message || "";
 
   // 🔥 CONTEXT WINDOW OVERFLOW HANDLING
-  // When Local AI (4096 tokens) can't handle large input, auto-fallback to Cloud AI (1M tokens)
+  // When the on-device engine cannot hold the input, fall back to Cloud AI
   const isContextOverflow =
     errorMsg.includes("ContextWindowSizeExceeded") ||
     errorMsg.includes("context window") ||
@@ -2347,79 +2912,166 @@ async function _handleContextOverflowFallback(
     "📏 Context window overflow detected - document too large for Local AI",
   );
 
+  // ADR-009: a "document"-classed call never auto-falls-back to Cloud on
+  // overflow - Cloud is off-device. Returning null here lets
+  // _handleGeneralFallback try another ON-DEVICE backend instead; if none
+  // is available, the original overflow error propagates unchanged rather
+  // than a cloud attempt this data class can't take.
+  if (resolveDataClass(options) === AI_DATA_CLASS.DOCUMENT) {
+    return null;
+  }
+
   // Try Cloud AI (Gemini has 1M token context window)
   if (isCloudAIAvailable() && !options.noFallback) {
     // eslint-disable-next-line no-console
     console.log("☁️ Auto-falling back to Cloud AI for large document...");
     try {
-      const text = await generateWithCloudAI(fullPrompt, {
-        ...enhancedOptions,
-        // Use minimal system prompt for large documents to save tokens
-        systemPrompt: options.systemPrompt || null,
-      });
+      // D15-2: the local model overflowed, not cloud (1M token window) - the
+      // already-assembled systemPrompt/userPrompt are reused as-is, with no
+      // "minimize the system prompt" special case, since re-deriving one
+      // here would be exactly the re-assembly this refactor removes.
+      const text = await generateWithCloudAI(
+        systemPrompt,
+        userPrompt,
+        enhancedOptions,
+      );
       return {
         text,
         mode: AI_MODES.CLOUD,
+        onDevice: false,
         fallback: true,
         fallbackReason: "context_overflow",
-        note: "Document was too large for Local AI (4096 tokens). Processed with Cloud AI instead.",
+        note: CONTEXT_OVERFLOW_CLOUD_NOTE,
       };
     } catch (cloudErr) {
       console.error("☁️ Cloud AI fallback also failed:", cloudErr.message);
       throw new Error(
-        `Document is too large for Local AI (4096 token limit) and Cloud AI also failed. ` +
-          `Please try with a shorter document, or paste only the most important sections of your decision letter.`,
+        "This request is too long for the AI model on this device, and Cloud AI could not answer it either. Shorten your question or the text you pasted and try again.",
       );
     }
   }
 
-  // No Cloud AI available - give helpful error
+  // The window differs by device and engine, so no figure is quoted here; an
+  // OnDevicePromptTooLargeError already names its own.
+  if (err instanceof OnDevicePromptTooLargeError) throw err;
   throw new Error(
-    `📏 Document is too large for Local AI (4096 token limit). ` +
-      `Options: 1) Configure a Gemini API key in Settings to enable Cloud AI fallback for large documents, ` +
-      `2) Paste only the key sections of your decision letter (look for "Reasons for Decision" or "Denial" sections), ` +
-      `3) Try uploading fewer pages at once.`,
+    "This request is too long for the AI model on this device. Shorten your question or the text you pasted and try again, or add a Gemini API key in Settings so longer requests can use Cloud AI.",
   );
 }
 
-async function _handleGeneralFallback(err, effectiveMode, fullPrompt, options) {
-  // If preferred mode fails, try fallback chain: Swarm -> Local -> Cloud
-  let fallbackMode = null;
-  let canFallback = false;
+export const CONTEXT_OVERFLOW_CLOUD_NOTE =
+  "This request was too long for the AI model on this device, so Cloud AI answered instead.";
 
-  if (effectiveMode === AI_MODES.SWARM) {
-    fallbackMode = isLocalAIReady() ? AI_MODES.LOCAL : AI_MODES.CLOUD;
-    canFallback =
-      fallbackMode === AI_MODES.LOCAL ? isLocalAIReady() : isCloudAIAvailable();
-  } else if (effectiveMode === AI_MODES.LOCAL) {
-    fallbackMode = AI_MODES.CLOUD;
-    canFallback = isCloudAIAvailable();
-  } else {
-    fallbackMode = isDiamondSwarmReady() ? AI_MODES.SWARM : AI_MODES.LOCAL;
-    canFallback = isDiamondSwarmReady() || isLocalAIReady();
+// ADR-009: true for every backend that never leaves the device - the two
+// in-browser engines (Warrant Council/SWARM, WLLAMA) and legacy LOCAL are
+// unconditionally on-device; LOCAL_SERVER depends on whatever host is
+// CURRENTLY configured (re-checked live, never cached - see
+// _isAnyOnDeviceAIReady above); CLOUD is never on-device.
+function _isModeOnDevice(mode) {
+  if (mode === AI_MODES.LOCAL_SERVER) {
+    return isLoopbackHost(localServerClient.getServerConfig().host);
   }
+  return (
+    mode === AI_MODES.SWARM ||
+    mode === AI_MODES.WLLAMA ||
+    mode === AI_MODES.LOCAL
+  );
+}
 
-  if (canFallback && !options.noFallback) {
+// Fallback chain when the preferred mode fails: Swarm -> Local -> Cloud.
+function _pickFallbackMode(effectiveMode) {
+  if (effectiveMode === AI_MODES.SWARM) {
+    const mode = isLocalAIReady() ? AI_MODES.LOCAL : AI_MODES.CLOUD;
+    const available =
+      mode === AI_MODES.LOCAL ? isLocalAIReady() : isCloudAIAvailable();
+    return { mode, available };
+  }
+  if (effectiveMode === AI_MODES.LOCAL) {
+    return { mode: AI_MODES.CLOUD, available: isCloudAIAvailable() };
+  }
+  return {
+    mode: isDiamondSwarmReady() ? AI_MODES.SWARM : AI_MODES.LOCAL,
+    available: isDiamondSwarmReady() || isLocalAIReady(),
+  };
+}
+
+// ADR-009: fallback picker for a document-classed call whose FIRST on-device
+// attempt (_resolveOnDeviceMode's choice) itself threw - e.g. the swarm
+// engine crashed mid-inference. Tries the next ready on-device backend in
+// priority order, skipping the one that just failed; never offers an
+// off-device mode (unlike the generic _pickFallbackMode above, which can
+// land on CLOUD).
+function _pickDocumentFallbackMode(effectiveMode) {
+  const failedMode = _resolveOnDeviceMode(effectiveMode);
+  const mode =
+    ON_DEVICE_MODE_PRIORITY.find(
+      (m) => m !== failedMode && _isOnDeviceModeReady(m),
+    ) || null;
+  return { mode, available: mode !== null };
+}
+
+async function _generateFallback(mode, systemPrompt, userPrompt, options) {
+  _noteStoppedForLength(options, false);
+  if (mode === AI_MODES.SWARM) {
+    const { text, agent } = await runWarrantCouncil(
+      systemPrompt,
+      userPrompt,
+      options,
+    );
+    return {
+      text,
+      mode,
+      onDevice: _isModeOnDevice(mode),
+      agent,
+      fallback: true,
+    };
+  }
+  const generate =
+    mode === AI_MODES.LOCAL ? generateWithLocalAI : generateWithCloudAI;
+  const text = await generate(systemPrompt, userPrompt, options);
+  return { text, mode, onDevice: _isModeOnDevice(mode), fallback: true };
+}
+
+async function _handleGeneralFallback(
+  err,
+  effectiveMode,
+  systemPrompt,
+  userPrompt,
+  enhancedOptions,
+) {
+  // D15-2 bug: this used to receive the raw `options` passed into generateAI,
+  // not `enhancedOptions` (the object _buildFullPrompt actually enriched with
+  // _hadCallerSystemPrompt/preset). Every fallback then dropped the caller's
+  // "_hadCallerSystemPrompt" flag back to its default `false`, folding an
+  // explicit caller systemPrompt into the user turn a second time on any
+  // fallback, cloud or on-device.
+  const isDocument =
+    resolveDataClass(enhancedOptions) === AI_DATA_CLASS.DOCUMENT;
+  const { mode: fallbackMode, available } = isDocument
+    ? _pickDocumentFallbackMode(effectiveMode)
+    : _pickFallbackMode(effectiveMode);
+
+  // ADR-009: a "document"-classed call never falls back to an off-device
+  // mode. Surfacing the ORIGINAL error unwrapped (rather than attempting
+  // the off-device backend here and catching its refusal below) matters
+  // because that original error is often already the typed
+  // DocumentOffDeviceBlockedError from the primary attempt - wrapping it
+  // into the generic "All AI modes failed" Error below would make the
+  // caller's `instanceof DocumentOffDeviceBlockedError` check miss it.
+  const fallbackBlocked = isDocument && !_isModeOnDevice(fallbackMode);
+
+  if (available && !fallbackBlocked && !enhancedOptions.noFallback) {
     console.warn(
       `💎 Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`,
       err.message,
     );
     try {
-      if (fallbackMode === AI_MODES.SWARM) {
-        const text = await generateWithWarrantCouncil(fullPrompt, options);
-        return {
-          text,
-          mode: AI_MODES.SWARM,
-          agent: getCurrentAgent(),
-          fallback: true,
-        };
-      } else if (fallbackMode === AI_MODES.LOCAL) {
-        const text = await generateWithLocalAI(fullPrompt, options);
-        return { text, mode: AI_MODES.LOCAL, fallback: true };
-      } else {
-        const text = await generateWithCloudAI(fullPrompt, options);
-        return { text, mode: AI_MODES.CLOUD, fallback: true };
-      }
+      return await _generateFallback(
+        fallbackMode,
+        systemPrompt,
+        userPrompt,
+        enhancedOptions,
+      );
     } catch (fallbackErr) {
       throw new Error(
         `All AI modes failed. Primary: ${_describeThrown(err)}. Fallback: ${_describeThrown(fallbackErr)}`,
@@ -2428,6 +3080,120 @@ async function _handleGeneralFallback(err, effectiveMode, fullPrompt, options) {
   }
 
   throw err;
+}
+
+// ADR-009: the on-device backend priority order (matches getEffectiveAIMode's
+// own SWARM -> WLLAMA -> LOCAL_SERVER -> LOCAL ordering) used whenever a
+// document-classed call must pick an on-device destination INDEPENDENT of
+// the user's preferred mode - a "document" call never attempts an off-device
+// backend at all (see _dispatchAiGeneration), so it can't rely on
+// getEffectiveAIMode()'s own preference-first ordering, which returns CLOUD
+// whenever CLOUD is both preferred and available even if an on-device engine
+// is ALSO ready.
+const ON_DEVICE_MODE_PRIORITY = [
+  AI_MODES.SWARM,
+  AI_MODES.WLLAMA,
+  AI_MODES.LOCAL_SERVER,
+  AI_MODES.LOCAL,
+];
+
+// Is THIS specific mode ready right now? A local-server backend only counts
+// when its CURRENTLY configured host is loopback - checked live via real URL
+// parsing, not cached, since the user can point it at a different host at
+// any time.
+function _isOnDeviceModeReady(mode) {
+  if (mode === AI_MODES.LOCAL_SERVER) {
+    return (
+      isLocalServerAvailable() &&
+      isLoopbackHost(localServerClient.getServerConfig().host)
+    );
+  }
+  return AI_BACKEND_READY_CHECKS[mode]();
+}
+
+// ADR-009: which on-device backend would actually run a document-classed
+// call right now - the user's preferred mode when it's on-device AND ready,
+// else the first ready backend in priority order. Returns null when none is
+// ready. This is the single source of truth both for the provider-boundary
+// dispatch (_dispatchAiGeneration) and for callers that need to size a
+// document prompt/chunk for whichever backend will really receive it
+// (getDocumentAIRouting) - so "what's ready" and "what will run" never
+// disagree.
+function _resolveOnDeviceMode(effectiveMode) {
+  if (_isModeOnDevice(effectiveMode) && _isOnDeviceModeReady(effectiveMode)) {
+    return effectiveMode;
+  }
+  return ON_DEVICE_MODE_PRIORITY.find(_isOnDeviceModeReady) || null;
+}
+
+// ADR-009: is ANY on-device backend ready right now, regardless of the
+// user's preferred mode?
+function _isAnyOnDeviceAIReady() {
+  return ON_DEVICE_MODE_PRIORITY.some(_isOnDeviceModeReady);
+}
+
+// Human-readable label for the off-device provider a blocked document call
+// would otherwise have reached - shown in the veteran-facing fallback
+// notice (aiDataClassPolicy.buildDocumentOffDeviceNotice).
+function _offDeviceProviderLabel(effectiveMode) {
+  if (effectiveMode === AI_MODES.CLOUD) return "Cloud AI (Gemini)";
+  if (effectiveMode === AI_MODES.LOCAL_SERVER) {
+    return `Local Server (${localServerClient.getServerConfig().host})`;
+  }
+  return null;
+}
+
+/**
+ * ADR-009: pre-flight check a "document"-classed feature can call BEFORE
+ * attempting generateAI, so it can go straight to its local-parser fallback
+ * (and show the notice) instead of burning retries/timeouts against a
+ * routing decision that won't change between attempts. The typed
+ * DocumentOffDeviceBlockedError thrown inside generateAI itself remains the
+ * authoritative enforcement point (this is only an optimization + a label
+ * source for the UI notice) - both read the SAME live state.
+ *
+ * `onDeviceMode` is the on-device backend a document call will ACTUALLY
+ * dispatch to right now (or null when none is ready) - callers that size a
+ * chunk/prompt/timeout for "local vs cloud" (e.g. cfileAnalyzer, DD214
+ * analysis) must use this instead of getEffectiveAIMode(), which can return
+ * CLOUD even while an on-device engine sits ready (Cloud preferred + Warrant
+ * Council loaded), silently sizing a document call for the wrong backend.
+ */
+export const getDocumentAIRouting = () => {
+  const effectiveMode = getEffectiveAIMode();
+  const onDeviceMode = _resolveOnDeviceMode(effectiveMode);
+  return {
+    onDeviceReady: onDeviceMode !== null,
+    onDeviceMode,
+    blockedProviderLabel: onDeviceMode
+      ? null
+      : _offDeviceProviderLabel(effectiveMode),
+  };
+};
+
+/**
+ * Rating arithmetic never comes from a model. A call that brings the
+ * veteran's ratings as structured conditions on a rater route is answered by
+ * the calculator. A question on a rater tool or task that asks for a combined
+ * rating, a bilateral factor result or the TDIU percentage thresholds is
+ * answered from the ratings it lists when they can be read with certainty,
+ * and otherwise by a fixed answer that asks for them. No engine is called,
+ * on-device or cloud, and nothing leaves the device. Recorded runs showed a
+ * model's text on these questions was wrong and replaced, or redundant, or
+ * invented arithmetic when it had no ratings. Returns null for any other
+ * call, which then goes to the model.
+ *
+ * Questions are recognised only on a rater tool or task, not when a rater
+ * model merely happens to be loaded: that would catch other tools' prompts.
+ */
+function _answerWithoutModel(prompt, options) {
+  const raterTool =
+    resolveWarrantCouncilAgent(options.toolId, options.taskType) === "rater";
+  if (!raterTool && !_isRaterRoute(options, getEffectiveAIMode())) return null;
+  const answer = answerRatingQuestion(prompt, options.conditions, {
+    recognise: raterTool,
+  });
+  return answer && { ...answer, onDevice: true, modelCalled: false };
 }
 
 /**
@@ -2440,6 +3206,15 @@ const generateAIInternal = async (prompt, options = {}) => {
   // Crisis safety check (unless explicitly skipped)
   await _checkCrisisSafety(prompt, options);
 
+  const withoutModel = _answerWithoutModel(prompt, options);
+  if (withoutModel) return withoutModel;
+
+  // ADR-010 section 11: an open-advice caller (the assistant chat) is not
+  // answered by a small-class on-device model. Reversal is this condition.
+  if (options.openAdvice && smallModelAnswering(getAIStatus())) {
+    return { ...openAdviceHeldAnswer(), onDevice: true, modelCalled: false };
+  }
+
   const effectiveMode = getEffectiveAIMode();
 
   if (!effectiveMode) {
@@ -2448,11 +3223,69 @@ const generateAIInternal = async (prompt, options = {}) => {
     );
   }
 
-  const { fullPrompt, enhancedOptions } = await _buildFullPrompt(
-    prompt,
+  // ADR-009 fail-closed provider boundary: a "document"-classed call (or
+  // one with no declaration at all - fail closed) is refused up front,
+  // before any prompt assembly/DKB lookup/redaction work, when no on-device
+  // engine is ready. This is the primary path to the typed error; the
+  // per-backend checks inside generateWithCloudAI/generateWithLocalServer
+  // are defense in depth for every other path that can reach them
+  // (fallback, context-overflow fallback).
+  const dataClass = resolveDataClass(options);
+  if (dataClass === AI_DATA_CLASS.DOCUMENT && !_isAnyOnDeviceAIReady()) {
+    throw new DocumentOffDeviceBlockedError(
+      _offDeviceProviderLabel(effectiveMode),
+    );
+  }
+
+  const {
+    systemPrompt: builtSystemPrompt,
+    userPrompt: builtUserPrompt,
+    enhancedOptions: builtOptions,
+  } = await _buildFullPrompt(prompt, options, effectiveMode);
+
+  // ADR-008: redact both halves of the assembled request before either
+  // reaches the dispatch below OR either fallback path in the catch block -
+  // see _redactPiecesForSend for why this belongs here, not per-caller.
+  //
+  // ADR-009 decision E: a "document"-classed call is EXEMPT - it only ever
+  // reaches an on-device backend (the gate above already refused it
+  // otherwise, and _dispatchAiGeneration/_handleGeneralFallback never
+  // attempt an off-device mode for this data class), so nothing here leaves
+  // the veteran's machine. Redacting it anyway would feed the on-device model
+  // "[REDACTED]" tokens that downstream consumers read as genuine values
+  // (identifier fields themselves never come from the model - decision F).
+  const [systemPrompt, userPrompt] =
+    dataClass === AI_DATA_CLASS.DOCUMENT
+      ? [builtSystemPrompt, builtUserPrompt]
+      : await _redactPiecesForSend([builtSystemPrompt, builtUserPrompt]);
+  const finish = { truncated: false };
+  const enhancedOptions = { ...builtOptions, _finish: finish };
+
+  const dispatched = await _dispatchWithRecovery(
+    effectiveMode,
+    systemPrompt,
+    userPrompt,
+    enhancedOptions,
     options,
   );
+  const result = _settleTruncation(dispatched, finish, options);
+  if (!answerChecksApply(options)) return result;
+  const looked = flagUnverifiedForms(
+    flagUnverifiedCitations(result, options),
+    options,
+  );
+  return contradictionRulesApply(result)
+    ? flagContradictions(looked, options, prompt)
+    : looked;
+};
 
+async function _dispatchWithRecovery(
+  effectiveMode,
+  systemPrompt,
+  userPrompt,
+  enhancedOptions,
+  options,
+) {
   try {
     const {
       text: dispatchedText,
@@ -2460,7 +3293,8 @@ const generateAIInternal = async (prompt, options = {}) => {
       agentUsed,
     } = await _dispatchAiGeneration(
       effectiveMode,
-      fullPrompt,
+      systemPrompt,
+      userPrompt,
       enhancedOptions,
       options,
     );
@@ -2480,26 +3314,47 @@ const generateAIInternal = async (prompt, options = {}) => {
   } catch (err) {
     const overflowResult = await _handleContextOverflowFallback(
       err,
-      fullPrompt,
+      systemPrompt,
+      userPrompt,
       enhancedOptions,
       options,
     );
-    if (overflowResult) return overflowResult;
-
-    return await _handleGeneralFallback(
-      err,
-      effectiveMode,
-      fullPrompt,
-      options,
-    );
+    const fallback =
+      overflowResult ??
+      (await _handleGeneralFallback(
+        err,
+        effectiveMode,
+        systemPrompt,
+        userPrompt,
+        enhancedOptions,
+      ));
+    return _validateFallbackResult(fallback, options);
   }
-};
+}
+
+// A fallback answer reaches the veteran exactly as a primary one does, so it
+// gets the same hallucination filter, validation and block handling. The
+// calculator and citation checks run on whatever this returns.
+async function _validateFallbackResult(fallback, options) {
+  const { text, hallucinationReport } = _applyHallucinationFilter(
+    fallback.text,
+    options,
+  );
+  const validated = await _buildValidatedResult(
+    text,
+    fallback.mode,
+    fallback.agent,
+    hallucinationReport,
+    options,
+  );
+  return { ...fallback, ...validated };
+}
 
 // Ordered [substring, friendly name] pairs - first match wins, so more
 // specific patterns (e.g. a particular size/variant) must precede their
 // generic family fallback (e.g. plain "Llama").
 const LOCAL_MODEL_NAME_PATTERNS = [
-  // Warrant Council agents (fine-tuned VetRate models)
+  // GGUF file names that map to the persona labels; none is fine-tuned on VA data
   ["vetrate-auditor", "🎖️ CW5 Auditor"],
   ["vetrate-writer", "🎖️ CW4 Writer"],
   ["vetrate-rater", "🎖️ CW3 Rater"],
@@ -2567,12 +3422,11 @@ function _lookupLocalModelName(modelId) {
 
   // Fallback: try to extract a readable name from the model ID
   // e.g., "Some-Model-Name-q4f32_1-MLC" -> "Some Model Name"
-  const cleanName = modelId
-    // eslint-disable-next-line sonarjs/slow-regex -- runs on short, internal model-ID strings, not user input
-    .replace(/-q\d+f\d+.*$/, "") // Remove quantization suffix
+  const quantAt = modelId.search(/-q\d+f\d/);
+  const cleanName = (quantAt === -1 ? modelId : modelId.slice(0, quantAt))
     .replace(/-MLC$/, "") // Remove MLC suffix
     .replace(/-Instruct$/, "") // Remove Instruct suffix
-    .replace(/-/g, " ") // Replace dashes with spaces
+    .replaceAll("-", " ") // Replace dashes with spaces
     .trim();
 
   return cleanName || "Local AI";
@@ -2667,12 +3521,12 @@ export const getAIDataDisclosure = () => {
     return {
       title: "🎖️ Warrant Council - 100% Private",
       description:
-        "All AI processing uses specialized VetRate agents running directly on your device. No data ever leaves.",
+        "All AI processing uses open models running directly on your device, guided by role prompts and Vet-Rate's knowledge base. No data ever leaves.",
       bullets: [
         "✅ Your data NEVER leaves your device",
-        "✅ 3 specialized agents: Auditor, Writer, Rater",
-        "✅ Fine-tuned on official VA regulations",
-        "✅ Diamond Standard accuracy & privacy",
+        "✅ 3 roles: Auditor, Writer, Rater",
+        "✅ Open models guided by role prompts and the Vet-Rate knowledge base",
+        "✅ Verify important details against official VA sources",
       ],
       isPrivate: true,
       isDiamond: true,
@@ -2718,7 +3572,7 @@ export const getAIDataDisclosure = () => {
     title: "⚠️ No AI Available",
     description: "Configure AI to enable intelligent features.",
     bullets: [
-      "🎖️ Option 1: Enable Warrant Council (recommended - specialized VA agents)",
+      "🎖️ Option 1: Enable Warrant Council (recommended - on-device, three role-guided assistants)",
       "🌐 Option 2: Enable Wllama (browser WASM - works everywhere)",
       "🖥️ Option 3: Start local llama.cpp server (desktop inference)",
       "🔒 Option 4: Enable Local AI (100% private legacy)",
@@ -2789,6 +3643,7 @@ export default {
   resetAICircuitBreaker,
   getAIStatus,
   getAIDataDisclosure,
+  getDocumentAIRouting,
   // Diamond Swarm
   SWARM_AGENTS,
   TOOL_AGENT_MAP,

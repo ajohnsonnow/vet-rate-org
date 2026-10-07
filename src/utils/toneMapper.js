@@ -33,7 +33,7 @@ export const applyCompassionateTone = (
   // 1. Replace technical terms with spoken replacements
   toneMap.mappings.forEach((mapping) => {
     const regex = new RegExp(
-      `\\b${escapeRegex(mapping.technical_term)}\\b`,
+      String.raw`\b${escapeRegex(mapping.technical_term)}\b`,
       "gi",
     );
     processedText = processedText.replace(regex, mapping.spoken_replacement);
@@ -64,7 +64,7 @@ export const applyCompassionateTone = (
  * @returns {string}
  */
 const escapeRegex = (str) => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return str.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 };
 
 /**
@@ -80,8 +80,7 @@ const cleanCitationsForSpeech = (text) => {
 
   // 38 CFR § 3.309 → "Section 3 point 3 0 9 of the VA regulations"
   cleaned = cleaned.replace(
-    // eslint-disable-next-line sonarjs/slow-regex -- each \s* is bounded by adjacent required literals (CFR, digits), no overlapping ambiguity
-    /38\s*CFR\s*§?\s*(\d+)\.(\d+)/gi,
+    /38\s{0,10}CFR\s{0,10}§?\s{0,10}(\d{1,4})\.(\d{1,4})/gi,
     (match, part, section) =>
       `Section ${part} point ${section.split("").join(" ")} of the VA regulations`,
   );
@@ -125,7 +124,7 @@ const expandAbbreviationsForSpeech = (text) => {
   let processed = text;
 
   Object.entries(abbreviations).forEach(([abbr, expansion]) => {
-    const regex = new RegExp(`\\b${abbr}\\b`, "g");
+    const regex = new RegExp(String.raw`\b${abbr}\b`, "g");
     processed = processed.replace(regex, expansion);
   });
 
@@ -141,8 +140,7 @@ const cleanSymbolsForSpeech = (text) => {
   let cleaned = text;
 
   // Percentages: 70% → "70 percent"
-  // eslint-disable-next-line sonarjs/slow-regex -- single quantified group, no overlapping ambiguity
-  cleaned = cleaned.replace(/(\d+)%/g, "$1 percent");
+  cleaned = cleaned.replace(/(\d{1,3})%/g, "$1 percent");
 
   // Bullets and special characters
   cleaned = cleaned.replace(/[•·◦▪►→←↑↓]/g, "");
@@ -151,10 +149,9 @@ const cleanSymbolsForSpeech = (text) => {
   cleaned = cleaned.replace(/\s+/g, " ");
 
   // Remove markdown-style formatting
-  cleaned = cleaned.replace(/\*\*/g, "");
-  cleaned = cleaned.replace(/\*/g, "");
-  // eslint-disable-next-line sonarjs/slow-regex -- single quantified group, no overlapping ambiguity
-  cleaned = cleaned.replace(/#+ /g, "");
+  cleaned = cleaned.replaceAll("**", "");
+  cleaned = cleaned.replaceAll("*", "");
+  cleaned = cleaned.replace(/#{1,10} /g, "");
 
   return cleaned.trim();
 };
@@ -232,7 +229,7 @@ export const getClosingPhrase = (model) => {
  */
 export const translateTerm = (term, langCode = "en") => {
   const langData = multilingualTone.languages[langCode];
-  if (!langData || !langData.terms) return term;
+  if (!langData?.terms) return term;
 
   const termKey = term.toLowerCase().replace(/[^a-z_]/g, "_");
   return langData.terms[termKey] || term;
@@ -246,7 +243,7 @@ export const translateTerm = (term, langCode = "en") => {
  */
 export const getSupportPhrase = (phraseKey, langCode = "en") => {
   const langData = multilingualTone.languages[langCode];
-  if (!langData || !langData.support_phrases) {
+  if (!langData?.support_phrases) {
     return multilingualTone.languages.en.support_phrases[phraseKey] || "";
   }
   return langData.support_phrases[phraseKey] || "";

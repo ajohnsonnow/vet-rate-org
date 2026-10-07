@@ -130,11 +130,10 @@ const generatePKCE = async () => {
   const data = encoder.encode(verifierStr);
   const hash = await window.crypto.subtle.digest("SHA-256", data);
 
-  const challenge = btoa(String.fromCharCode(...new Uint8Array(hash)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    // eslint-disable-next-line sonarjs/slow-regex -- fixed-length base64 hash output (~43 chars), not attacker-controlled length
-    .replace(/=+$/, "");
+  const challenge = btoa(String.fromCodePoint(...new Uint8Array(hash)))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/={0,4}$/, "");
 
   return { verifier: verifierStr, challenge };
 };

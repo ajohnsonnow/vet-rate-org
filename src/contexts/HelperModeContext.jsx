@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 
 /**
  * HelperModeContext - "Spouse Mode" / "Caregiver Mode"
@@ -158,41 +165,54 @@ export function HelperModeProvider({ children }) {
   }, [isHelperMode, showHelperTooltips]);
 
   // Toggle helper mode
-  const toggleHelperMode = () => {
+  const toggleHelperMode = useCallback(() => {
     setIsHelperMode((prev) => !prev);
-  };
+  }, []);
 
   // Get the appropriate terminology
-  const getTerm = (term) => {
-    if (!isHelperMode) return term;
-    const translation = TERMINOLOGY[term];
-    return translation ? translation.simple : term;
-  };
+  const getTerm = useCallback(
+    (term) => {
+      if (!isHelperMode) return term;
+      const translation = TERMINOLOGY[term];
+      return translation ? translation.simple : term;
+    },
+    [isHelperMode],
+  );
 
   // Get tooltip for a term
-  const getTooltip = (term) => {
+  const getTooltip = useCallback((term) => {
     const translation = TERMINOLOGY[term];
     return translation ? translation.tooltip : null;
-  };
+  }, []);
 
   // Check if a tool is priority for caregivers
-  const isCaregiverPriority = (toolName) => {
+  const isCaregiverPriority = useCallback((toolName) => {
     return CAREGIVER_PRIORITY_TOOLS.some((t) =>
       toolName.toLowerCase().includes(t.toLowerCase()),
     );
-  };
+  }, []);
 
-  const value = {
-    isHelperMode,
-    setIsHelperMode,
-    toggleHelperMode,
-    showHelperTooltips,
-    setShowHelperTooltips,
-    getTerm,
-    getTooltip,
-    isCaregiverPriority,
-    TERMINOLOGY,
-  };
+  const value = useMemo(
+    () => ({
+      isHelperMode,
+      setIsHelperMode,
+      toggleHelperMode,
+      showHelperTooltips,
+      setShowHelperTooltips,
+      getTerm,
+      getTooltip,
+      isCaregiverPriority,
+      TERMINOLOGY,
+    }),
+    [
+      isHelperMode,
+      toggleHelperMode,
+      showHelperTooltips,
+      getTerm,
+      getTooltip,
+      isCaregiverPriority,
+    ],
+  );
 
   return (
     <HelperModeContext.Provider value={value}>

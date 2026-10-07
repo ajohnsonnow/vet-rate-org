@@ -34,8 +34,8 @@ export default function MusterCallFileList({ files, validation, onReset }) {
                 <div className="text-xl mr-3">⚠️</div>
                 <div className="text-sm text-yellow-800 dark:text-yellow-200">
                   <p className="font-semibold mb-2">Warnings:</p>
-                  {validation.warnings.map((warning, idx) => (
-                    <p key={idx}>• {warning.message}</p>
+                  {validation.warnings.map((warning) => (
+                    <p key={warning.message}>• {warning.message}</p>
                   ))}
                 </div>
               </div>
@@ -48,8 +48,8 @@ export default function MusterCallFileList({ files, validation, onReset }) {
                 <div className="text-xl mr-3">❌</div>
                 <div className="text-sm text-red-800 dark:text-red-200">
                   <p className="font-semibold mb-2">Invalid Files:</p>
-                  {validation.invalid.map((invalid, idx) => (
-                    <p key={idx}>
+                  {validation.invalid.map((invalid) => (
+                    <p key={invalid.file.name}>
                       • {invalid.file.name}: {invalid.reason}
                     </p>
                   ))}
@@ -62,9 +62,9 @@ export default function MusterCallFileList({ files, validation, onReset }) {
 
       {/* File List */}
       <div className="space-y-2 max-h-96 overflow-y-auto">
-        {files.map((file, index) => (
+        {files.map((file) => (
           <div
-            key={index}
+            key={`${file.name}-${file.size}`}
             className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg"
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">

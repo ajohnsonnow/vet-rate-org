@@ -12,7 +12,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
@@ -21,7 +20,9 @@ import {
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 import { getMyRatings } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatLocalDate } from "../utils/dateUtils";
 
 const ITF_STORAGE_KEY = "vet_rate_itf_date";
@@ -94,8 +95,21 @@ function TimeMachineHeader({ countdown, onReportBug, onClose }) {
         normal: "bg-gradient-to-r from-blue-600 to-blue-800",
       })}`}
     >
-      <div className="flex justify-between items-start">
-        <div>
+      <HeaderCloseSlot
+        close={
+          onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="grid h-11 w-11 shrink-0 place-items-center text-2xl font-bold text-white hover:text-gray-200"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          )
+        }
+      >
+        <div className="min-w-0">
           <h2 id="timemachine-title" className="text-3xl font-bold mb-2">
             ⏰ The Time Machine{" "}
             <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
@@ -106,29 +120,27 @@ function TimeMachineHeader({ countdown, onReportBug, onClose }) {
             Intent to File Countdown & Financial Impact
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="The Time Machine"
-            />
-          )}
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-white hover:text-gray-200 text-2xl font-bold"
-              aria-label="Close"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="The Time Machine"
+          />
+        )}
+      </HeaderCloseSlot>
     </div>
   );
 }
+
+const CancelEditButton = ({ onCancel }) => (
+  <button
+    type="button"
+    onClick={onCancel}
+    className="px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg font-semibold transition-colors"
+  >
+    Cancel
+  </button>
+);
 
 function TimeMachineInputSection({
   itfDate,
@@ -149,30 +161,37 @@ function TimeMachineInputSection({
 
       <div className="space-y-4">
         <div>
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="time-machine-itf-date"
+            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+          >
             When did you file your Intent to File? *
           </label>
           <input
+            id="time-machine-itf-date"
             type="date"
             value={itfDate}
             onChange={(e) => setItfDate(e.target.value)}
             max={new Date().toISOString().split("T")[0]}
-            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:bg-gray-700 dark:text-white text-lg"
+            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:bg-gray-700 dark:text-white dark:[color-scheme:dark] text-lg"
           />
         </div>
 
         <div>
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="time-machine-estimated-rating"
+            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+          >
             Estimated Combined Rating (from Tactical Calculator):
           </label>
+          <BilateralIssuesSummary />
           <select
+            id="time-machine-estimated-rating"
             value={estimatedRating}
             onChange={(e) =>
               setEstimatedRating(Number.parseInt(e.target.value))
             }
-            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:bg-gray-700 dark:text-white text-lg"
+            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:text-white text-lg"
           >
             {Object.keys(VA_MONTHLY_RATES).map((rating) => (
               <option key={rating} value={rating}>
@@ -195,13 +214,7 @@ function TimeMachineInputSection({
             Start Countdown
           </button>
           {countdown && (
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg font-semibold transition-colors"
-            >
-              Cancel
-            </button>
+            <CancelEditButton onCancel={() => setIsEditing(false)} />
           )}
         </div>
       </div>
@@ -597,8 +610,6 @@ export default function TimeMachine({
   onClose = null,
   onReportBug,
 }) {
-  const { _t } = useLanguage();
-
   const [itfDate, setItfDate] = useState("");
   const [estimatedRating, setEstimatedRating] = useState(70);
   const [countdown, setCountdown] = useState(null);

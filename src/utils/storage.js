@@ -150,7 +150,13 @@ export async function needsMigration() {
   ];
 
   for (const key of veteranProfileKeys) {
-    if (localStorage.getItem(key) !== null) {
+    let stored = null;
+    try {
+      stored = localStorage.getItem(key);
+    } catch {
+      // A key that cannot be read has nothing this migration can move.
+    }
+    if (stored !== null) {
       return true; // Found data that needs migration
     }
   }
@@ -158,13 +164,87 @@ export async function needsMigration() {
   return false;
 }
 
+function getAllLocalStorageKeys() {
+  const allKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key) allKeys.push(key);
+  }
+  return allKeys;
+}
+
+async function copyKeyToIndexedDb(key, migrationResults) {
+  try {
+    const value = localStorage.getItem(key);
+    if (value !== null) {
+      const wrote = await storage.setItem(key, value);
+      if (!wrote) {
+        throw new Error("IndexedDB write failed");
+      }
+      migrationResults.migratedKeys.push(key);
+      migrationResults.totalSize += value.length;
+      // eslint-disable-next-line no-console
+      console.log(`✅ Migrated: ${key} (${value.length} bytes)`);
+    }
+  } catch (error) {
+    console.error(`❌ Failed to migrate key: ${key}`, error);
+    migrationResults.failedKeys.push({ key, error: error.message });
+  }
+}
+
+// Copies every key, checking `shouldAbort` before each one. This is never a
+// destructive operation (see migrateFromLocalStorage's own doc comment), so
+// stopping here mid-loop is always safe - it just leaves some keys uncopied
+// for a later, complete run to pick up.
+async function copyAllKeysToIndexedDb(allKeys, migrationResults, shouldAbort) {
+  for (const key of allKeys) {
+    if (shouldAbort?.()) {
+      migrationResults.aborted = true;
+      console.warn(
+        "⚠️ Migration stopped mid-copy (maintenance mode turned on) - originals untouched, will resume on a later boot",
+      );
+      return;
+    }
+    await copyKeyToIndexedDb(key, migrationResults);
+  }
+}
+
+async function markMigrationComplete(migrationResults) {
+  const flagWritten = await storage.setItem(MIGRATION_KEY, "true");
+  await storage.setItem(MIGRATION_TIMESTAMP_KEY, migrationResults.timestamp);
+  if (!flagWritten) {
+    migrationResults.failedKeys.push({
+      key: MIGRATION_KEY,
+      error: "IndexedDB write failed",
+    });
+  }
+  migrationResults.success = migrationResults.failedKeys.length === 0;
+}
+
 /**
- * Migrate all data from localStorage to IndexedDB
+ * Migrate all data from localStorage to IndexedDB.
+ *
+ * This copy is never destructive - it only ever writes to IndexedDB and
+ * never deletes or clears the localStorage originals (see the "DO NOT
+ * clear localStorage" note below), so it's always safe to stop mid-loop.
+ *
+ * `shouldAbort`, if given, is checked before copying each key. It exists so
+ * a caller (useBootSequence.js) can stop an in-progress copy the instant a
+ * live maintenance-mode check turns on, without any risk of data loss - an
+ * aborted run never writes the MIGRATION_KEY completion flag, so
+ * needsMigration() still reports true afterward and a later boot's copy
+ * picks up (and safely re-copies, idempotently) right where this one left
+ * off.
+ *
+ * @param {Object} [options]
+ * @param {() => boolean} [options.shouldAbort] - checked before each key;
+ *   stops the copy (without marking it complete) the first time it's true.
  * @returns {Promise<Object>} Migration results
  */
-export async function migrateFromLocalStorage() {
+export async function migrateFromLocalStorage({ shouldAbort } = {}) {
   const migrationResults = {
     success: false,
+    aborted: false,
     migratedKeys: [],
     failedKeys: [],
     totalSize: 0,
@@ -175,38 +255,18 @@ export async function migrateFromLocalStorage() {
     // eslint-disable-next-line no-console
     console.log("🔄 Starting migration from localStorage to IndexedDB...");
 
-    // Get all localStorage keys
-    const allKeys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) allKeys.push(key);
-    }
-
+    const allKeys = getAllLocalStorageKeys();
     // eslint-disable-next-line no-console
     console.log(`📦 Found ${allKeys.length} keys in localStorage`);
 
-    // Migrate each key
-    for (const key of allKeys) {
-      try {
-        const value = localStorage.getItem(key);
-        if (value !== null) {
-          await storage.setItem(key, value);
-          migrationResults.migratedKeys.push(key);
-          migrationResults.totalSize += value.length;
-          // eslint-disable-next-line no-console
-          console.log(`✅ Migrated: ${key} (${value.length} bytes)`);
-        }
-      } catch (error) {
-        console.error(`❌ Failed to migrate key: ${key}`, error);
-        migrationResults.failedKeys.push({ key, error: error.message });
-      }
+    await copyAllKeysToIndexedDb(allKeys, migrationResults, shouldAbort);
+
+    if (migrationResults.aborted) {
+      migrationResults.success = false;
+      return migrationResults;
     }
 
-    // Mark migration as complete
-    await storage.setItem(MIGRATION_KEY, "true");
-    await storage.setItem(MIGRATION_TIMESTAMP_KEY, migrationResults.timestamp);
-
-    migrationResults.success = migrationResults.failedKeys.length === 0;
+    await markMigrationComplete(migrationResults);
 
     // eslint-disable-next-line no-console
     console.log(
@@ -324,7 +384,7 @@ export async function exportAllData() {
  */
 export async function importAllData(exportedData) {
   try {
-    if (!exportedData || !exportedData.data) {
+    if (!exportedData?.data) {
       throw new Error("Invalid export data format");
     }
 
@@ -345,6 +405,8 @@ export async function importAllData(exportedData) {
   }
 }
 
+const QUOTA_ESTIMATE_TIMEOUT_MS = 5000;
+
 /**
  * Pre-flight check that an upcoming write of roughly `estimatedBytes`
  * fits within the browser's storage quota.
@@ -363,7 +425,18 @@ export async function ensureQuota(estimatedBytes) {
       return { ok: true, remaining: null, message: "" };
     }
 
-    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    // estimate() can stall for a long time when the browser is busy writing;
+    // a save must never wait on an advisory check.
+    let estimateTimer;
+    const { usage = 0, quota = 0 } = await Promise.race([
+      navigator.storage.estimate(),
+      new Promise((resolve) => {
+        estimateTimer = setTimeout(
+          () => resolve({}),
+          QUOTA_ESTIMATE_TIMEOUT_MS,
+        );
+      }),
+    ]).finally(() => clearTimeout(estimateTimer));
     if (!quota) {
       return { ok: true, remaining: null, message: "" };
     }
@@ -395,7 +468,7 @@ export async function getStorageStats() {
 
   // Try to get quota information
   let quota = { usage: 0, quota: 0 };
-  if (navigator.storage && navigator.storage.estimate) {
+  if (navigator.storage?.estimate) {
     try {
       quota = await navigator.storage.estimate();
     } catch (e) {

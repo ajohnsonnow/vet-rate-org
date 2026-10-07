@@ -7,20 +7,23 @@
  *
  * Features:
  * - Compare historical ratings against correct pay tables
- * - Detect missing bilateral factor application
- * - Identify potential Clear and Unmistakable Errors (CUE)
+ * - Say whether the bilateral factor (38 CFR 4.26) applies to the saved
+ *   ratings, so the veteran can check the decision; the tool does not read
+ *   the decision and cannot tell whether the factor was applied
+ * - List common Clear and Unmistakable Error (CUE) patterns for reference
  * - Calculate total missed compensation
  * - AI-powered analysis for action recommendations
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import ToolCardButton from "./ToolCardButton";
 import { getMyRatings } from "../utils/veteranProfile";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { isAIAvailable } from "../utils/aiStatementHelper";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -31,15 +34,12 @@ import {
 } from "../utils/veteranContextProvider";
 import {
   analyzeRetroactivePay,
-  checkBilateralFactorCompliance,
   CUE_PATTERNS,
 } from "../data/vaPayRatesHistorical";
+import { checkBilateralFactorCompliance } from "../utils/vaCalculator";
 import { formatLocalDate } from "../utils/dateUtils";
 
 const STORAGE_KEY = "vet_rate_retro_pay_history";
-
-const findCuePattern = (patternId) =>
-  CUE_PATTERNS.find((p) => p.id === patternId);
 
 const formatRatingHistoryLine = (p) => {
   const spouseNote = p.dependents?.married ? "with spouse" : "";
@@ -49,11 +49,25 @@ const formatRatingHistoryLine = (p) => {
   return `• ${formatLocalDate(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${spouseNote} ${childrenNote}`;
 };
 
-const formatCueIssuesBlock = (alerts) => {
-  if (alerts.length === 0) return "";
-  const lines = alerts.map((a) => `• ${a.message}`).join("\n");
-  return `\n**Potential CUE Issues:**\n${lines}`;
-};
+// This tool reads rating periods the veteran types in and nothing else. It
+// never sees a rating decision, so it cannot establish that the bilateral
+// factor was left out or that any error was made, and it raises no alert. The
+// bilateral check is information: the factor applies to these ratings, and
+// the veteran should check the decision.
+export const formatBilateralPromptBlock = (bilateralCheck) =>
+  bilateralCheck?.applicable
+    ? `\n**Bilateral factor (38 CFR § 4.26):**\nIt applies to: ${bilateralCheck.pairedParts.join(", ")}\nWhether the rating decision applied it has not been checked; tell the veteran to verify it.`
+    : "";
+
+export const bilateralSaveFields = (bilateralCheck) => ({
+  bilateralFactorApplies: bilateralCheck?.applicable || false,
+});
+
+export const RETRO_PAY_ACTION_STEPS =
+  "2. **Action Steps**: What should the veteran do NEXT? (Request a payment review, ask a Veterans Service Officer to check the decision, etc.)";
+
+export const formatRetroPayFindings = (totalMonths, total) =>
+  `Analyzed ${totalMonths || 0} months, est. $${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 
 const getRatingDotClasses = (rating) => {
   if (rating >= 70) return "bg-green-500 border-green-400";
@@ -222,10 +236,8 @@ function createPeriodHandlers({
 function useRunAnalysisCallback({
   ratingHistory,
   conditions,
-  bilateralCheck,
   setAnalysis,
   setBilateralCheck,
-  setCueAlerts,
   setIsAnalyzing,
 }) {
   return useCallback(() => {
@@ -242,34 +254,19 @@ function useRunAnalysisCallback({
       const result = analyzeRetroactivePay(ratingHistory);
       setAnalysis(result);
 
-      // Check bilateral factor
-      if (conditions.length > 0) {
-        const bilateral = checkBilateralFactorCompliance(conditions);
-        setBilateralCheck(bilateral);
-      }
+      const bilateral =
+        conditions.length > 0
+          ? checkBilateralFactorCompliance(conditions)
+          : null;
+      if (bilateral) setBilateralCheck(bilateral);
 
-      // Generate CUE alerts based on patterns
-      const alerts = [];
-
-      // Check for bilateral factor issues
-      if (bilateralCheck?.applicable) {
-        alerts.push({
-          pattern: findCuePattern("bilateral_not_applied"),
-          severity: "high",
-          message: `You have bilateral conditions (${bilateralCheck.pairedParts.join(", ")}). Verify the 10% bilateral factor was applied.`,
-        });
-      }
-
-      setCueAlerts(alerts);
       setIsAnalyzing(false);
     }, 1500);
   }, [
     ratingHistory,
     conditions,
-    bilateralCheck,
     setAnalysis,
     setBilateralCheck,
-    setCueAlerts,
     setIsAnalyzing,
   ]);
 }
@@ -278,7 +275,6 @@ function createAIAnalysisHandler({
   analysis,
   ratingHistory,
   bilateralCheck,
-  cueAlerts,
   setIsAIThinking,
   setAIAnalysis,
   setShowAIAnalysis,
@@ -310,21 +306,23 @@ ${analysis.hasCoverageGap ? `- NOTE: ${analysis.uncoveredMonths} month(s) before
 **Rating History:**
 ${ratingHistory.map(formatRatingHistoryLine).join("\n")}
 
-${bilateralCheck?.applicable ? `\n**Bilateral Factor Issue Detected:**\nPaired body parts: ${bilateralCheck.pairedParts.join(", ")}\nThe 10% bilateral factor may not have been applied correctly.` : ""}
-
-${formatCueIssuesBlock(cueAlerts)}
+${formatBilateralPromptBlock(bilateralCheck)}
 
 Provide a veteran-focused analysis covering:
 
 1. **What This Means**: Explain the findings in plain language - no VA jargon
-2. **Action Steps**: What should the veteran do NEXT? (File CUE claim, request payment review, etc.)
+${RETRO_PAY_ACTION_STEPS}
 3. **Timeline**: How long does the process typically take?
 4. **Documentation Needed**: What evidence should they gather?
 5. **Cautions**: Common mistakes to avoid when filing for retroactive pay
 
 Be direct, practical, and emphasize that retroactive pay claims have specific time limits and procedures.`;
 
-      const response = await generateAI(prompt);
+      // ADR-009: "context" - structured rating history + the allow-listed
+      // veteran context, never a document upload.
+      const response = await generateAI(prompt, {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
       // generateAI returns { text, mode } object - extract the text content
       const aiText = response?.text || response;
       setAIAnalysis(
@@ -339,14 +337,16 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
         rawText: typeof aiText === "string" ? aiText : JSON.stringify(aiText),
         extractedData: {
           totalMonths: analysis?.totalMonths,
-          cueAlerts: cueAlerts?.length || 0,
-          bilateralIssue: bilateralCheck?.applicable || false,
+          ...bilateralSaveFields(bilateralCheck),
           ratingPeriods: ratingHistory?.length || 0,
         },
         vkbMergeData: {
           aiInsights: {
-            retroPayFindings: `Analyzed ${analysis?.totalMonths || 0} months, est. $${computeTotals(analysis).total.toLocaleString("en-US", { minimumFractionDigits: 2 })}; ${cueAlerts?.length || 0} potential CUE issues`,
-            bilateralFactorIssue: bilateralCheck?.applicable || false,
+            retroPayFindings: formatRetroPayFindings(
+              analysis?.totalMonths,
+              computeTotals(analysis).total,
+            ),
+            ...bilateralSaveFields(bilateralCheck),
           },
         },
       }).catch((err) => console.warn("Failed to save retro pay results:", err));
@@ -367,41 +367,13 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
       <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
       <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full" />
 
-      <div className="relative flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-            <span className="text-4xl">💸</span>
-          </div>
-          <div>
-            <h2
-              id="retro-pay-hunter-title"
-              className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
-            >
-              Retroactive Pay Hunter
-              <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
-                AI
-              </span>
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-                BETA
-              </span>
-            </h2>
-            <p className="text-yellow-100 mt-1">
-              &quot;You Owe Me Money&quot; - Find Missed Payments
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="Retroactive Pay Hunter"
-            />
-          )}
+      <HeaderCloseSlot
+        className="relative"
+        close={
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg
@@ -418,8 +390,38 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
               />
             </svg>
           </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="w-16 h-16 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+            <span className="text-4xl">💸</span>
+          </div>
+          <div className="min-w-0">
+            <h2
+              id="retro-pay-hunter-title"
+              className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
+            >
+              Retroactive Pay Hunter{" "}
+              <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
+                AI
+              </span>
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                BETA
+              </span>
+            </h2>
+            <p className="text-yellow-100 mt-1">
+              &quot;You Owe Me Money&quot; - Find Missed Payments
+            </p>
+          </div>
         </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Retroactive Pay Hunter"
+          />
+        )}
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -474,9 +476,11 @@ function DateTerminologyInfo() {
 function EffectiveDateField({ newEntry, setNewEntry }) {
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-        Effective Date *
+      <label
+        htmlFor="retro-pay-effective-date"
+        className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2"
+      >
+        Effective Date *{" "}
         <span className="group relative">
           <span className="text-blue-400 cursor-help text-xs">ℹ️</span>
           <span className="invisible group-hover:visible absolute z-10 w-72 p-3 text-xs bg-gray-900 border border-gray-700 rounded-lg shadow-xl -left-16 top-6">
@@ -496,6 +500,7 @@ function EffectiveDateField({ newEntry, setNewEntry }) {
         </span>
       </label>
       <input
+        id="retro-pay-effective-date"
         type="date"
         value={newEntry.effectiveDate}
         onChange={(e) =>
@@ -517,11 +522,14 @@ function EffectiveDateField({ newEntry, setNewEntry }) {
 function RatingSelectField({ newEntry, setNewEntry }) {
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-semibold text-gray-300 mb-2">
+      <label
+        htmlFor="retro-pay-rating"
+        className="block text-sm font-semibold text-gray-300 mb-2"
+      >
         Combined Rating *
       </label>
       <select
+        id="retro-pay-rating"
         value={newEntry.rating}
         onChange={(e) =>
           setNewEntry({
@@ -556,7 +564,7 @@ function DependentsFields({ newEntry, setNewEntry }) {
               setNewEntry({ ...newEntry, married: e.target.checked })
             }
             className="w-4 h-4 text-amber-500 rounded bg-gray-700 border-gray-600"
-          />
+          />{" "}
           Married
         </label>
 
@@ -565,6 +573,7 @@ function DependentsFields({ newEntry, setNewEntry }) {
             type="number"
             min="0"
             max="10"
+            aria-label="Children under 18"
             value={newEntry.childrenUnder18}
             onChange={(e) =>
               setNewEntry({
@@ -582,6 +591,7 @@ function DependentsFields({ newEntry, setNewEntry }) {
             type="number"
             min="0"
             max="10"
+            aria-label="Children in school, 18 or older"
             value={newEntry.childrenSchool}
             onChange={(e) =>
               setNewEntry({
@@ -599,6 +609,7 @@ function DependentsFields({ newEntry, setNewEntry }) {
             type="number"
             min="0"
             max="2"
+            aria-label="Dependent parents"
             value={newEntry.dependentParents}
             onChange={(e) =>
               setNewEntry({
@@ -618,11 +629,14 @@ function DependentsFields({ newEntry, setNewEntry }) {
 function ActualReceivedField({ newEntry, setNewEntry }) {
   return (
     <div className="mt-4">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-semibold text-gray-300 mb-2">
+      <label
+        htmlFor="retro-pay-actual-received"
+        className="block text-sm font-semibold text-gray-300 mb-2"
+      >
         What you actually received per month (optional)
       </label>
       <input
+        id="retro-pay-actual-received"
         type="number"
         min="0"
         step="0.01"
@@ -644,7 +658,7 @@ function ActualReceivedField({ newEntry, setNewEntry }) {
   );
 }
 
-function LoadedConditionsNotice({ conditions }) {
+export function LoadedConditionsNotice({ conditions }) {
   return (
     <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700 rounded-lg">
       <div className="flex items-center gap-2 mb-2">
@@ -653,14 +667,11 @@ function LoadedConditionsNotice({ conditions }) {
       </div>
       <p className="text-purple-300 text-sm">
         {conditions.length} condition
-        {conditions.length !== 1 ? "s" : ""} detected for bilateral factor
-        analysis.
-        {conditions.filter(
-          (c) =>
-            c.side === "bilateral" || c.side === "left" || c.side === "right",
-        ).length > 0 && (
+        {conditions.length !== 1 ? "s" : ""} loaded for the bilateral factor
+        check.
+        {checkBilateralFactorCompliance(conditions).applicable && (
           <span className="block mt-1 text-purple-400">
-            ⚠️ Paired body parts found - bilateral factor may apply!
+            The bilateral factor applies to some of these ratings.
           </span>
         )}
       </p>
@@ -737,6 +748,7 @@ function RatingTimelineEntry({ period, onRemove }) {
           <button
             type="button"
             onClick={() => onRemove(period.id)}
+            aria-label="Remove rating period"
             className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
           >
             <svg
@@ -966,60 +978,7 @@ function EffectiveDateInfoNote() {
   );
 }
 
-function CueAlertItem({ alert }) {
-  return (
-    <div
-      className={`p-4 rounded-lg ${
-        alert.severity === "high"
-          ? "bg-red-900/30 border border-red-500/50"
-          : "bg-yellow-900/30 border border-yellow-500/30"
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <span
-          className={`${
-            alert.severity === "high" ? "text-red-500" : "text-yellow-500"
-          }`}
-        >
-          {alert.severity === "high" ? "🚨" : "⚡"}
-        </span>
-        <div>
-          <p
-            className={`font-semibold ${
-              alert.severity === "high" ? "text-red-400" : "text-yellow-400"
-            }`}
-          >
-            {alert.pattern?.name}
-          </p>
-          <p className="text-gray-300 text-sm mt-1">{alert.message}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CueAlertsList({ cueAlerts }) {
-  if (cueAlerts.length === 0) return null;
-
-  return (
-    <div className="bg-yellow-900/30 border-2 border-yellow-500/50 rounded-xl p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-2xl">⚠️</span>
-        <h3 className="text-lg font-bold text-yellow-400">
-          Potential Issues Detected
-        </h3>
-      </div>
-
-      <div className="space-y-3">
-        {cueAlerts.map((alert, index) => (
-          <CueAlertItem key={index} alert={alert} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function BilateralCheckCard({ bilateralCheck }) {
+export function BilateralCheckCard({ bilateralCheck }) {
   if (!bilateralCheck) return null;
 
   return (
@@ -1033,7 +992,9 @@ function BilateralCheckCard({ bilateralCheck }) {
       <div className="flex items-center gap-3 mb-2">
         <span className="text-xl">🦾</span>
         <h3 className="text-lg font-bold text-blue-400">
-          Bilateral Factor Analysis
+          {bilateralCheck.applicable
+            ? "Check that the bilateral factor was applied"
+            : "Bilateral factor"}
         </h3>
       </div>
       <p className="text-gray-300">{bilateralCheck.message}</p>
@@ -1046,7 +1007,7 @@ function BilateralCheckCard({ bilateralCheck }) {
   );
 }
 
-function AnalysisResults({ analysis, totals, cueAlerts, bilateralCheck }) {
+function AnalysisResults({ analysis, totals, bilateralCheck }) {
   if (!analysis) return null;
 
   return (
@@ -1054,7 +1015,6 @@ function AnalysisResults({ analysis, totals, cueAlerts, bilateralCheck }) {
       <FoundMoneyBanner analysis={analysis} totals={totals} />
       <CoverageGapNotice analysis={analysis} />
       <YearlyBreakdown totals={totals} />
-      <CueAlertsList cueAlerts={cueAlerts} />
       <EffectiveDateInfoNote />
       <BilateralCheckCard bilateralCheck={bilateralCheck} />
     </div>
@@ -1196,7 +1156,6 @@ function RetroPayHunterBody({
   runAnalysis,
   analysis,
   totals,
-  cueAlerts,
   bilateralCheck,
   showAIAnalysis,
   handleAIAnalysis,
@@ -1244,7 +1203,6 @@ function RetroPayHunterBody({
       <AnalysisResults
         analysis={analysis}
         totals={totals}
-        cueAlerts={cueAlerts}
         bilateralCheck={bilateralCheck}
       />
 
@@ -1267,8 +1225,6 @@ function RetroPayHunterBody({
 }
 
 function useRetroPayHunterState({ onAISettingsClick }) {
-  const { _t } = useLanguage();
-
   const [ratingHistory, setRatingHistory] = useState([]);
   const [newEntry, setNewEntry] = useState({
     effectiveDate: "",
@@ -1281,7 +1237,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
   });
 
   const [analysis, setAnalysis] = useState(null);
-  const [cueAlerts, setCueAlerts] = useState([]);
   const [showCuePatterns, setShowCuePatterns] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [conditions, setConditions] = useState([]);
@@ -1306,10 +1261,8 @@ function useRetroPayHunterState({ onAISettingsClick }) {
   const runAnalysis = useRunAnalysisCallback({
     ratingHistory,
     conditions,
-    bilateralCheck,
     setAnalysis,
     setBilateralCheck,
-    setCueAlerts,
     setIsAnalyzing,
   });
 
@@ -1319,7 +1272,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
     analysis,
     ratingHistory,
     bilateralCheck,
-    cueAlerts,
     setIsAIThinking,
     setAIAnalysis,
     setShowAIAnalysis,
@@ -1338,7 +1290,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
     runAnalysis,
     analysis,
     totals,
-    cueAlerts,
     bilateralCheck,
     showAIAnalysis,
     handleAIAnalysis,

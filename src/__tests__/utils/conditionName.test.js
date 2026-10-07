@@ -1,0 +1,278 @@
+import { describe, expect, it } from "vitest";
+import {
+  calendarDay,
+  dropSupersededConditions,
+  extractPriorConditionNames,
+  findRatedConditionMatch,
+  isOlderDecision,
+  isSupersededName,
+  matchConditionToKnownKey,
+  normalizeConditionName,
+  primaryConditionKey,
+} from "../../utils/conditionName";
+
+const byName = (r) => r.name;
+
+describe("extractPriorConditionNames", () => {
+  it("reads a nested 'formerly evaluated as' parenthetical", () => {
+    expect(
+      extractPriorConditionNames(
+        "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS))",
+      ),
+    ).toEqual([
+      "panic disorder without agoraphobia and depressive disorder not otherwise specified",
+    ]);
+  });
+
+  it("reads 'previously rated as'", () => {
+    expect(
+      extractPriorConditionNames(
+        "lumbosacral strain, degenerative disc disease (previously rated as lumbago)",
+      ),
+    ).toEqual(["lumbago"]);
+  });
+
+  it("tolerates a truncated, unclosed parenthetical", () => {
+    expect(
+      extractPriorConditionNames(
+        "lumbosacral strain (previously rated as lumba",
+      ),
+    ).toEqual(["lumba"]);
+  });
+
+  it("does not treat 'also claimed as' as a rename", () => {
+    expect(
+      extractPriorConditionNames("Lumbago (also claimed as back strain)"),
+    ).toEqual([]);
+  });
+
+  it("returns [] for plain names and non-strings", () => {
+    expect(extractPriorConditionNames("tinnitus")).toEqual([]);
+    expect(extractPriorConditionNames(null)).toEqual([]);
+  });
+});
+
+describe("findRatedConditionMatch", () => {
+  const rows = [
+    {
+      name: "Panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS)",
+    },
+    {
+      name: "Lumbago (also claimed as back strain and straightening lordotic curve)",
+    },
+    { name: "Tinnitus" },
+  ];
+
+  it("matches the same condition by normalized name", () => {
+    expect(findRatedConditionMatch(rows, "TINNITUS.", byName)).toBe(rows[2]);
+  });
+
+  it("matches a renamed condition to the row it replaces", () => {
+    expect(
+      findRatedConditionMatch(
+        rows,
+        "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS))",
+        byName,
+      ),
+    ).toBe(rows[0]);
+    expect(
+      findRatedConditionMatch(
+        rows,
+        "lumbosacral strain (previously rated as lumbago)",
+        byName,
+      ),
+    ).toBe(rows[1]);
+  });
+
+  it("matches an older name to a row that already records it as former", () => {
+    const newer = [{ name: "PTSD (formerly evaluated as panic disorder)" }];
+    expect(findRatedConditionMatch(newer, "Panic disorder", byName)).toBe(
+      newer[0],
+    );
+  });
+
+  it("returns null for an unrelated condition", () => {
+    expect(findRatedConditionMatch(rows, "rhinitis", byName)).toBeNull();
+  });
+
+  it("matches a code sheet name that spells out the secondary link", () => {
+    const saved = [
+      { name: "radiculopathy, left lower extremity (femoral)" },
+      { name: "radiculopathy, right lower extremity (femoral)" },
+    ];
+    expect(
+      findRatedConditionMatch(
+        saved,
+        "Radiculopathy, right lower extremity (femoral) associated with lumbosacral strain, degenerative disc disease",
+        byName,
+      ),
+    ).toBe(saved[1]);
+  });
+
+  it("keeps sides apart when only the secondary link differs", () => {
+    const saved = [{ name: "Right hip limited adduction" }];
+    expect(
+      findRatedConditionMatch(
+        saved,
+        "Left hip limited adduction associated with lumbosacral strain",
+        byName,
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("primaryConditionKey", () => {
+  it("drops an 'associated with' or 'secondary to' link", () => {
+    expect(
+      primaryConditionKey(
+        "Tinnitus secondary to bilateral hearing loss (claimed as ringing)",
+      ),
+    ).toBe("tinnitus");
+    expect(
+      primaryConditionKey(
+        "Right hip limited extension associated with lumbosacral strain",
+      ),
+    ).toBe("right hip limited extension");
+    expect(primaryConditionKey("Rhinitis")).toBe("rhinitis");
+  });
+});
+
+describe("normalizeConditionName with a truncated parenthetical", () => {
+  it("drops the unclosed tail so a later complete letter matches", () => {
+    expect(
+      normalizeConditionName("lumbosacral strain (previously rated as lumba"),
+    ).toBe(
+      normalizeConditionName(
+        "Lumbosacral strain (previously rated as lumbago)",
+      ),
+    );
+  });
+});
+
+describe("isSupersededName", () => {
+  it("treats a name the saved row replaced as older", () => {
+    expect(
+      isSupersededName(
+        "PTSD (formerly evaluated as panic disorder)",
+        "Panic disorder",
+      ),
+    ).toBe(true);
+    expect(isSupersededName("Tinnitus", "Tinnitus")).toBe(false);
+  });
+});
+
+describe("matchConditionToKnownKey", () => {
+  const knownConditions = [
+    { key: "ptsd", label: "PTSD" },
+    { key: "lumbar_strain", label: "Lumbar Strain / Back Condition" },
+    { key: "radiculopathy", label: "Radiculopathy (Sciatic Nerve)" },
+    { key: "tinnitus", label: "Tinnitus" },
+    { key: "cervical_strain", label: "Cervical Strain / Neck Condition" },
+  ];
+
+  it("maps a fully-worded re-characterized PTSD name via the PTSD/post-traumatic-stress-disorder alias", () => {
+    expect(
+      matchConditionToKnownKey(
+        "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS))",
+        knownConditions,
+      ),
+    ).toBe("ptsd");
+  });
+
+  it("maps a lumbosacral-strain-and-DDD letter name to the back/spine key via the alias group, not cervical", () => {
+    expect(
+      matchConditionToKnownKey(
+        "lumbosacral strain, degenerative disc disease (previously rated as lumbago) (claimed as low back condition)",
+        knownConditions,
+      ),
+    ).toBe("lumbar_strain");
+  });
+
+  it("maps sided radiculopathy names by plain word overlap, no alias needed", () => {
+    expect(
+      matchConditionToKnownKey(
+        "radiculopathy, left lower extremity (femoral)",
+        knownConditions,
+      ),
+    ).toBe("radiculopathy");
+    expect(
+      matchConditionToKnownKey(
+        "radiculopathy, right lower extremity (femoral)",
+        knownConditions,
+      ),
+    ).toBe("radiculopathy");
+  });
+
+  it("maps a plain tinnitus name exactly", () => {
+    expect(matchConditionToKnownKey("Tinnitus", knownConditions)).toBe(
+      "tinnitus",
+    );
+  });
+
+  it("returns null for a real condition name the tool's data doesn't support", () => {
+    expect(
+      matchConditionToKnownKey(
+        "Iliotibial band syndrome Greater trochanteric pain syndrome (not bursitis), left hip",
+        knownConditions,
+      ),
+    ).toBeNull();
+  });
+
+  it("returns null for empty input", () => {
+    expect(matchConditionToKnownKey("", knownConditions)).toBeNull();
+    expect(matchConditionToKnownKey(null, knownConditions)).toBeNull();
+  });
+});
+
+describe("isOlderDecision", () => {
+  it("compares ISO and prose dates", () => {
+    expect(isOlderDecision("2008-06-30", "2023-09-15")).toBe(true);
+    expect(isOlderDecision("September 15, 2023", "2008-06-30")).toBe(false);
+  });
+
+  it("is false when either date is missing", () => {
+    expect(isOlderDecision(null, "2023-09-15")).toBe(false);
+    expect(isOlderDecision("2023-09-15", undefined)).toBe(false);
+  });
+});
+
+describe("dropSupersededConditions", () => {
+  it("removes a rating another row says it replaced", () => {
+    const rows = [
+      { name: "Panic disorder without agoraphobia (NOS)" },
+      {
+        name: "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia (NOS))",
+      },
+      { name: "Lumbago" },
+      { name: "Lumbosacral strain (previously rated as lumbago)" },
+      { name: "Tinnitus" },
+    ];
+    expect(dropSupersededConditions(rows, byName)).toBe(2);
+    expect(rows.map((r) => r.name)).toEqual([
+      "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia (NOS))",
+      "Lumbosacral strain (previously rated as lumbago)",
+      "Tinnitus",
+    ]);
+  });
+
+  it("leaves unrelated rows alone", () => {
+    const rows = [{ name: "Tinnitus" }, { name: "Rhinitis" }];
+    expect(dropSupersededConditions(rows, byName)).toBe(0);
+    expect(rows).toHaveLength(2);
+  });
+});
+
+describe("calendarDay and same-day decisions", () => {
+  it("reads ISO and prose dates as the same calendar day", () => {
+    expect(calendarDay("2023-09-15")).toBe("2023-09-15");
+    expect(calendarDay("September 15, 2023")).toBe("2023-09-15");
+    expect(calendarDay("09/15/2023")).toBe("2023-09-15");
+    expect(calendarDay("not a date")).toBeNull();
+    expect(calendarDay(null)).toBeNull();
+  });
+
+  it("does not call the same day in another format older", () => {
+    expect(isOlderDecision("2023-09-15", "September 15, 2023")).toBe(false);
+    expect(isOlderDecision("September 15, 2023", "2023-09-15")).toBe(false);
+  });
+});

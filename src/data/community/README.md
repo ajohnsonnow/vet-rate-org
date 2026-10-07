@@ -10,11 +10,11 @@ This directory contains community-sourced content that is **NOT** official VA po
 
 ## Permission Status
 
-| Source | Status | Contact Method | Date Contacted |
-|--------|--------|----------------|----------------|
-| VeteransBenefitsKB.com | 🟡 Pending | Reddit DM to l8tn8/SSG_Rock | TBD |
-| Rater HQ: After Dark | 🟡 Pending | YouTube comment/email | TBD |
-| r/VeteransBenefits | 🟡 Pending | Reddit API application | TBD |
+| Source                 | Status     | Contact Method              | Date Contacted |
+| ---------------------- | ---------- | --------------------------- | -------------- |
+| VeteransBenefitsKB.com | 🟡 Pending | Reddit DM to l8tn8/SSG_Rock | TBD            |
+| Rater HQ: After Dark   | 🟡 Pending | YouTube comment/email       | TBD            |
+| r/VeteransBenefits     | 🟡 Pending | Reddit API application      | TBD            |
 
 ---
 
@@ -37,12 +37,14 @@ community/
 ## Legal Requirements
 
 ### Before Adding Content:
+
 1. ✅ Obtain explicit written permission from content creator
 2. ✅ Document permission in `attribution.json`
 3. ✅ Add appropriate disclaimer to UI display
 4. ✅ Preserve original source URLs
 
 ### Disclaimer Required on All Community Content:
+
 > 🛡️ **Community Field Note**
 > This information is sourced from the veteran community, not official VA policy.
 > What worked for one veteran may not apply to your specific situation.
@@ -53,6 +55,7 @@ community/
 ## Attribution Template
 
 Add to `attribution.json`:
+
 ```json
 {
   "source_id": "unique-id",
@@ -72,16 +75,18 @@ Add to `attribution.json`:
 ## Safe Usage (No Permission Required)
 
 ### YouTube Embeds
+
 - Embedding YouTube videos is generally safe
 - Views/ad revenue go to original creator
 - Store only: video_id, title, our summary
 - Do NOT store transcripts without permission
 
 ### Link Aggregation
+
 - Creating a search index that links to external sources is safe
 - User clicks link → goes to original source
 - We write our own summaries, don't copy theirs
 
 ---
 
-*Last Updated: January 23, 2026*
+_Last Updated: January 23, 2026_

@@ -111,11 +111,11 @@ describe("Williams bilateral detection - checkBilateralFactor (38 CFR § 4.26)",
 
 describe("2026 VA pay rates - spot-check (38 CFR § 3.460, 2.8% COLA)", () => {
   it("solo[100] = $3938.58", () => {
-    expect(VA_PAY_RATES_2026.solo[100]).toBe(3938.58);
+    expect(Math.round(VA_PAY_RATES_2026.solo[100] * 100)).toBe(393858);
   });
 
   it("solo[50] = $1132.90", () => {
-    expect(VA_PAY_RATES_2026.solo[50]).toBe(1132.9);
+    expect(Math.round(VA_PAY_RATES_2026.solo[50] * 100)).toBe(113290);
   });
 
   it("solo rates are monotonically increasing", () => {

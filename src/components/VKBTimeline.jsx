@@ -14,6 +14,7 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   getAllDocumentsByCategory,
   compareDocumentVersions,
@@ -96,7 +97,7 @@ function useVKBTimelineData(onDocumentClick) {
   };
 
   const handleSelectForComparison = (doc) => {
-    if (selectedDocs.find((d) => d.id === doc.id)) {
+    if (selectedDocs.some((d) => d.id === doc.id)) {
       setSelectedDocs(selectedDocs.filter((d) => d.id !== doc.id));
     } else if (selectedDocs.length < 2) {
       setSelectedDocs([...selectedDocs, doc]);
@@ -149,39 +150,44 @@ function useVKBTimelineData(onDocumentClick) {
 }
 
 const TimelineHeaderTitle = ({ totalDocs, onClose }) => (
-  <div className="flex items-center justify-between mb-4">
-    <div>
-      <h2
-        id="vkb-timeline-title"
-        className="text-2xl font-bold text-white flex items-center space-x-2"
-      >
-        <span>📚</span>
-        <span>Knowledge Base Timeline</span>
-      </h2>
-      <p className="text-slate-400 mt-1">
-        {totalDocs} document{totalDocs !== 1 ? "s" : ""} in your Veteran
-        Knowledge Base
-      </p>
-    </div>
-    <button
-      onClick={onClose}
-      className="text-slate-400 hover:text-white transition-colors"
-      aria-label="Close timeline"
+  <div className="mb-4">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-slate-400 hover:text-white transition-colors"
+          aria-label="Close timeline"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
     >
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    </button>
+      <div className="min-w-0">
+        <h2
+          id="vkb-timeline-title"
+          className="text-2xl font-bold text-white flex items-center space-x-2"
+        >
+          <span>📚</span>
+          <span>Knowledge Base Timeline</span>
+        </h2>
+        <p className="text-slate-400 mt-1">
+          {totalDocs} document{totalDocs !== 1 ? "s" : ""} in your Veteran
+          Knowledge Base
+        </p>
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -195,14 +201,16 @@ const TimelineHeaderFilters = ({
   selectedDocs,
   onCompare,
 }) => (
-  <div className="flex items-center space-x-4">
-    <div className="flex items-center space-x-2">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="text-sm text-slate-400">Filter:</label>
+  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <div className="flex min-w-0 items-center space-x-2">
+      <label htmlFor="vkb-timeline-filter" className="text-sm text-slate-400">
+        Filter:
+      </label>
       <select
+        id="vkb-timeline-filter"
         value={filterCategory}
         onChange={(e) => setFilterCategory(e.target.value)}
-        className="bg-slate-700 text-white rounded px-3 py-1 text-sm border border-slate-600 focus:border-blue-500 focus:outline-none"
+        className="min-w-0 max-w-full bg-slate-700 text-white rounded px-3 py-1 text-sm border border-slate-600 focus:border-blue-500 focus:outline-none"
       >
         <option value="all">All Documents ({totalDocs})</option>
         {documentsByCategory &&
@@ -215,9 +223,11 @@ const TimelineHeaderFilters = ({
     </div>
 
     <div className="flex items-center space-x-2">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="text-sm text-slate-400">Sort:</label>
+      <label htmlFor="vkb-timeline-sort" className="text-sm text-slate-400">
+        Sort:
+      </label>
       <select
+        id="vkb-timeline-sort"
         value={sortOrder}
         onChange={(e) => setSortOrder(e.target.value)}
         className="bg-slate-700 text-white rounded px-3 py-1 text-sm border border-slate-600 focus:border-blue-500 focus:outline-none"
@@ -292,18 +302,18 @@ const TimelineDocumentInfo = ({ doc, categoryData }) => (
 
     <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm mt-3">
       <div className="text-slate-400">
-        <span className="text-slate-500">Size:</span>{" "}
+        <span className="text-slate-300">Size:</span>{" "}
         {formatFileSize(doc.fileSize)}
       </div>
       <div className="text-slate-400">
-        <span className="text-slate-500">Pages:</span> {doc.pageCount || 1}
+        <span className="text-slate-300">Pages:</span> {doc.pageCount || 1}
       </div>
       <div className="text-slate-400">
-        <span className="text-slate-500">Method:</span>{" "}
+        <span className="text-slate-300">Method:</span>{" "}
         {doc.method === "ocr" ? "🔍 OCR" : "📝 Text"}
       </div>
       <div className="text-slate-400">
-        <span className="text-slate-500">Fields:</span>{" "}
+        <span className="text-slate-300">Fields:</span>{" "}
         {Object.keys(doc.extractedData || {}).length}
       </div>
     </div>
@@ -473,8 +483,8 @@ const ComparisonModalDifferences = ({ comparisonResult }) =>
         {comparisonResult.differenceCount !== 1 ? "s" : ""} found:
       </p>
       <div className="space-y-3">
-        {comparisonResult.differences.map((diff, idx) => (
-          <ComparisonDifferenceRow key={idx} diff={diff} />
+        {comparisonResult.differences.map((diff) => (
+          <ComparisonDifferenceRow key={diff.field} diff={diff} />
         ))}
       </div>
     </div>
@@ -519,7 +529,7 @@ const TimelineDocumentList = ({
       <p className="text-slate-400 text-lg">
         No documents in this category yet.
       </p>
-      <p className="text-slate-500 text-sm mt-2">
+      <p className="text-slate-300 text-sm mt-2">
         Drop documents through Muster Call to build your Knowledge Base.
       </p>
     </div>

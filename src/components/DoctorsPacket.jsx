@@ -14,6 +14,7 @@ import {
   getNexusLogicPrivacyDisclosure,
 } from "../utils/nexusLogicGenerator";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -312,52 +313,57 @@ function printPacket() {
 }
 
 const DoctorsPacketHeader = ({ onClose, onOpenAISettings }) => (
-  <div className="flex items-center justify-between border-b border-violet-700 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 px-6 py-4">
-    <div className="flex items-center gap-3">
-      <div className="rounded-lg bg-white/20 p-2 text-white">
-        <SparklesIcon />
-      </div>
-      <div>
-        <h2
-          id="doctors-packet-title"
-          className="flex items-center gap-2 text-xl font-bold text-white"
+  <div className="border-b border-violet-700 bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 px-6 py-4">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white transition-colors hover:bg-white/20 hover:text-gray-200"
+          aria-label="Close dialog"
         >
-          Doctor&apos;s Packet Generator
-          <span className="rounded bg-violet-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-            AI
-          </span>
-          <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-            BETA
-          </span>
-        </h2>
-        <p className="text-sm text-violet-100">
-          AI-powered medical nexus research
-        </p>
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="rounded-lg bg-white/20 p-2 text-white">
+          <SparklesIcon />
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="doctors-packet-title"
+            className="flex items-center gap-2 text-xl font-bold text-white"
+          >
+            Doctor&apos;s Packet Generator{" "}
+            <span className="rounded bg-violet-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+              AI
+            </span>
+            <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+              BETA
+            </span>
+          </h2>
+          <p className="text-sm text-violet-100">
+            AI-powered medical nexus research
+          </p>
+        </div>
       </div>
-    </div>
-    <div className="flex items-center gap-3">
-      <LLMRecommendationBadge toolId="doctors-packet" />
-      <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-      <button
-        onClick={onClose}
-        className="rounded-lg p-2 text-white transition-colors hover:bg-white/20 hover:text-gray-200"
-        aria-label="Close dialog"
-      >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
+      <div className="flex items-center gap-3">
+        <LLMRecommendationBadge toolId="doctors-packet" />
+        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -393,19 +399,19 @@ const ConsentFeatureGrid = () => (
       </h4>
       <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Medical mechanism explanation
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Pathophysiological pathways
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Literature/study references
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Physician template letter
         </li>
       </ul>
@@ -417,20 +423,20 @@ const ConsentFeatureGrid = () => (
       </h4>
       <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           This is <strong>research</strong>, not a diagnosis
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           Doctor must review and sign
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           Uses your free Gemini API key
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
-          No personal data is sent
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span> No
+          personal data is sent
         </li>
       </ul>
     </div>
@@ -731,7 +737,7 @@ const ResultPathwaysAndLiterature = ({ packetData }) => (
         <ul className="space-y-3">
           {packetData.data.key_pathways.map((pathway, i) => (
             <li
-              key={i}
+              key={pathway}
               className="flex items-start gap-3 text-gray-700 dark:text-gray-300 print:text-black"
             >
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 print:bg-gray-200 print:text-black">
@@ -750,9 +756,9 @@ const ResultPathwaysAndLiterature = ({ packetData }) => (
           Supporting Medical Literature
         </h3>
         <ul className="space-y-2">
-          {packetData.data.literature_topics.map((topic, i) => (
+          {packetData.data.literature_topics.map((topic) => (
             <li
-              key={i}
+              key={topic}
               className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 print:text-black"
             >
               <DocumentIcon />
@@ -772,9 +778,9 @@ const ResultRiskFactors = ({ packetData }) =>
         Relevant Risk Factors
       </h3>
       <ul className="space-y-2">
-        {packetData.data.risk_factors.map((factor, i) => (
+        {packetData.data.risk_factors.map((factor) => (
           <li
-            key={i}
+            key={factor}
             className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 print:text-black"
           >
             <span className="text-amber-600 dark:text-amber-400 print:text-black">

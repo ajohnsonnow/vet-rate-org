@@ -31,6 +31,7 @@ async function runBatchOnComplete(completeData, ctx) {
     setResults,
     setProcessingState,
     setReport,
+    setOffDeviceNotice,
     setError,
     onProcessComplete,
   } = ctx;
@@ -59,12 +60,16 @@ async function runBatchOnComplete(completeData, ctx) {
       completeData.classified,
     );
     // eslint-disable-next-line no-console
-    console.log("📊 Report result:", reportResult);
+    console.log("📊 Report result:", { success: reportResult.success });
 
     if (reportResult.success) {
       // eslint-disable-next-line no-console
       console.log("✅ Setting report in state");
       setReport(reportResult.report);
+      // ADR-009: offDeviceNotice was computed (generateMusterCallReport)
+      // but silently dropped here - the veteran saw the off-device fallback
+      // report with no explanation of why it wasn't a real AI analysis.
+      setOffDeviceNotice(reportResult.offDeviceNotice || null);
     } else {
       console.warn("⚠️ Report generation failed:", reportResult.error);
       setError(`Report generation failed: ${reportResult.error}`);
@@ -91,7 +96,7 @@ async function runBatchOnComplete(completeData, ctx) {
   setProcessingState(PROCESSING_STATES.COMPLETE);
 
   // Trigger Intelligence Briefing if callback provided
-  if (onProcessComplete && completeData && completeData.results) {
+  if (onProcessComplete && completeData?.results) {
     const briefingData = extractIntelligenceBriefingData(completeData.results);
     onProcessComplete(briefingData);
   }
@@ -110,6 +115,7 @@ async function startBatchProcessing(files, ctx) {
     setProcessingState,
     setResults,
     setReport,
+    setOffDeviceNotice,
     setShowReport,
     setFileProgress,
     setProgress,
@@ -124,6 +130,7 @@ async function startBatchProcessing(files, ctx) {
   setProcessingState(PROCESSING_STATES.VALIDATING);
   setResults(null);
   setReport(null);
+  setOffDeviceNotice(null);
   setError(null);
   setShowReport(false);
 
@@ -157,6 +164,7 @@ async function startBatchProcessing(files, ctx) {
           setResults,
           setProcessingState,
           setReport,
+          setOffDeviceNotice,
           setError,
           onProcessComplete,
         }),
@@ -201,6 +209,7 @@ export const useLegacyBatchProcessing = ({
   const [fileProgress, setFileProgress] = useState({});
   const [results, setResults] = useState(null);
   const [report, setReport] = useState(null);
+  const [offDeviceNotice, setOffDeviceNotice] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const abortControllerRef = useRef(null);
 
@@ -221,6 +230,7 @@ export const useLegacyBatchProcessing = ({
       setProcessingState,
       setResults,
       setReport,
+      setOffDeviceNotice,
       setShowReport,
       setFileProgress,
       setProgress,
@@ -234,6 +244,7 @@ export const useLegacyBatchProcessing = ({
     setFileProgress({});
     setResults(null);
     setReport(null);
+    setOffDeviceNotice(null);
     setShowReport(false);
   };
 
@@ -243,6 +254,7 @@ export const useLegacyBatchProcessing = ({
     fileProgress,
     results,
     report,
+    offDeviceNotice,
     showReport,
     setShowReport,
     handleStartBatchProcessing,

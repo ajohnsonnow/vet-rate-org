@@ -11,16 +11,16 @@ Legal documents and disclaimers for Vet-Rate.org.
 ## Important Disclaimers
 
 !!! warning "Educational Tool Only"
-    
-    Vet-Rate.org is an **educational resource** designed to help veterans understand the VA disability claims process. 
-    
+
+    Vet-Rate.org is an **educational resource** designed to help veterans understand the VA disability claims process.
+
     **It is NOT:**
-    
+
     - A substitute for professional legal advice
     - A substitute for medical advice
     - An official VA resource
     - A guarantee of any claim outcome
-    
+
     Always consult qualified professionals for your specific situation.
 
 ---

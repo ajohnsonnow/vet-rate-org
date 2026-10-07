@@ -9,8 +9,6 @@
  *   <VisualRibbon award={award} devices={devices} size="md" />
  */
 
-import { useLanguage } from "../contexts/LanguageContext";
-
 // Standard ribbon dimensions (scaled by size)
 const SIZES = {
   sm: { width: 72, height: 27, deviceSize: 8 },
@@ -43,7 +41,7 @@ function renderStarDevice(device, index, deviceSize, color) {
         width: deviceSize,
         height: deviceSize,
       }}
-      aria-label={device.type.replace(/_/g, " ")}
+      aria-label={device.type.replaceAll("_", " ")}
     >
       <span
         style={{
@@ -239,7 +237,6 @@ const VisualRibbon = ({
   className = "",
   showName = false,
 }) => {
-  const { _t } = useLanguage();
   const dimensions = SIZES[size] || SIZES.md;
   const { width, height, deviceSize } = dimensions;
 
@@ -328,7 +325,6 @@ export const RibbonRackDisplay = ({
 
   // Calculate rows
   const totalRibbons = awards.length;
-  const _fullRows = Math.floor(totalRibbons / ribbonsPerRow);
   const remainder = totalRibbons % ribbonsPerRow;
 
   const rows = [];

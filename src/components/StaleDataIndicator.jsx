@@ -11,14 +11,12 @@ import {
   getStaleDataStatus,
   generateReportOutdatedLink,
 } from "../utils/staleDataDetection";
-import { useLanguage } from "../contexts/LanguageContext";
 
 const StaleDataIndicator = ({
   disability,
   variant = "full",
   className = "",
 }) => {
-  const { _t } = useLanguage();
   const status = getStaleDataStatus(disability);
 
   // Don't show anything if data is current
@@ -80,7 +78,7 @@ const StaleDataIndicator = ({
             >
               38 CFR Part 4
             </a>
-            .
+            {"."}
           </p>
           <a
             href={generateReportOutdatedLink(disability)}
@@ -90,8 +88,7 @@ const StaleDataIndicator = ({
                 : "text-yellow-700 dark:text-yellow-400"
             }`}
           >
-            <span>📧</span>
-            Report Outdated Info
+            <span>📧</span> Report Outdated Info
           </a>
         </div>
       </div>

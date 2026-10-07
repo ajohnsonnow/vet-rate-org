@@ -13,16 +13,13 @@
  */
 
 import mammoth from "mammoth";
-import {
-  analyzePDF,
-  OCR_STATES,
-  getProgressStyling as getOCRProgressStyling,
-} from "./ocr";
+import { analyzePDF, OCR_STATES } from "./ocr";
 import { describePdfPasswordError } from "./fileTypeGuards";
+import { FileReadError, forLog, isFileReadFailure } from "./fileReadFailure";
 
 // Re-export for convenience
 export { OCR_STATES };
-export const getProgressStyling = getOCRProgressStyling;
+export { getProgressStyling } from "./ocr";
 
 /**
  * Supported file types and their MIME types
@@ -112,38 +109,38 @@ export const getAcceptString = () => {
 /**
  * Read file as ArrayBuffer
  */
-const readFileAsArrayBuffer = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsArrayBuffer(file);
-  });
-};
+const readFileAsArrayBuffer = (file) => file.arrayBuffer();
 
 /**
  * Read file as text
  */
-const readFileAsText = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsText(file);
-  });
-};
+const readFileAsText = (file) => file.text();
 
 /**
  * Analyze PDF file
  */
-async function analyzePDFDocument(file, onProgress) {
-  const result = await analyzePDF(file, onProgress);
+async function analyzePDFDocument(file, onProgress, options) {
+  const result = await analyzePDF(file, onProgress, options);
   return {
     text: result.text,
+    letterheadText: result.letterheadText,
     pageCount: result.pageCount || 1,
     method: result.method,
     fileType: "PDF",
     ocrUsed: result.ocrUsed,
+    // The OCR's own reading confidence (0-100). Dropping it made the caller
+    // treat every scan as 0% and run the vision fallback each time (D21-6).
+    confidence: result.confidence,
+    // D-4: advancedOCR.js already reports exactly how many pages were
+    // read, OCR'd and skipped - forward it instead of silently dropping
+    // it, so a caller can tell the veteran (or retry the skipped pages via
+    // ocrOnlyPageNumbers) instead of the coverage note dead-ending here.
+    pagesRead: result.pagesRead,
+    pagesOCRd: result.pagesOCRd,
+    pagesBlank: result.pagesBlank,
+    pagesSkipped: result.pagesSkipped,
+    pagesFailed: result.pagesFailed,
+    coverageNote: result.coverageNote,
   };
 }
 
@@ -198,6 +195,7 @@ async function analyzeDOCXDocument(file, onProgress) {
       warnings: result.messages || [],
     };
   } catch (error) {
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw new Error(`Failed to read Word document: ${error.message}`);
   }
 }
@@ -229,6 +227,7 @@ async function analyzeTXTDocument(file, onProgress) {
       ocrUsed: false,
     };
   } catch (error) {
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw new Error(`Failed to read text file: ${error.message}`);
   }
 }
@@ -258,9 +257,9 @@ async function analyzeRTFDocument(file, onProgress) {
       .replace(/\\[a-z]+-?\d* ?/g, "") // Remove RTF commands
       .replace(/[{}]/g, "") // Remove braces
       .replace(/\\'[0-9a-f]{2}/g, " ") // Remove escaped chars
-      .replace(/\\\*/g, "") // Remove escaped asterisks
-      .replace(/\\~/g, " ") // Non-breaking spaces
-      .replace(/\\_/g, "-") // Non-breaking hyphens
+      .replaceAll(String.raw`\*`, "") // Remove escaped asterisks
+      .replaceAll(String.raw`\~`, " ") // Non-breaking spaces
+      .replaceAll(String.raw`\_`, "-") // Non-breaking hyphens
       .replace(/\n{3,}/g, "\n\n") // Normalize line breaks
       .trim();
 
@@ -278,6 +277,7 @@ async function analyzeRTFDocument(file, onProgress) {
       ocrUsed: false,
     };
   } catch (error) {
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw new Error(`Failed to read RTF file: ${error.message}`);
   }
 }
@@ -313,7 +313,11 @@ async function analyzeDOCDocument(file, onProgress) {
  * @param {Function} onProgress - Progress callback
  * @returns {Promise<{text: string, pageCount: number, method: string, fileType: string, ocrUsed: boolean}>}
  */
-export async function analyzeDocument(file, onProgress = () => {}) {
+export async function analyzeDocument(
+  file,
+  onProgress = () => {},
+  options = {},
+) {
   // Validate file
   if (!file) {
     throw new Error("No file provided");
@@ -332,7 +336,7 @@ export async function analyzeDocument(file, onProgress = () => {}) {
   // Route to appropriate analyzer
   switch (ext) {
     case ".pdf":
-      return await analyzePDFDocument(file, onProgress);
+      return await analyzePDFDocument(file, onProgress, options);
 
     case ".docx":
       return await analyzeDOCXDocument(file, onProgress);
@@ -419,6 +423,7 @@ async function _renderPdfPagesToImages({
     // Clean up
     canvas.width = 0;
     canvas.height = 0;
+    page.cleanup();
   }
 
   return images;
@@ -458,15 +463,14 @@ export async function renderPDFToImages(
     message: "Loading PDF for vision analysis...",
   });
 
+  let loadingTask = null;
   try {
-    // Read file into ArrayBuffer
-    const arrayBuffer = await readFileAsArrayBuffer(file);
-
-    // Load PDF document
-    const pdf = await pdfjsLib.getDocument({
-      data: arrayBuffer,
+    // Load PDF document (the buffer is transferred to pdf.js's worker)
+    loadingTask = pdfjsLib.getDocument({
+      data: await readFileAsArrayBuffer(file),
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
-    }).promise;
+    });
+    const pdf = await loadingTask.promise;
     const numPages = pdf.numPages;
     const pagesToRender = Math.min(numPages, maxPages);
 
@@ -504,9 +508,16 @@ export async function renderPDFToImages(
       renderedPages: pagesToRender,
     };
   } catch (error) {
-    console.error("Error rendering PDF to images:", error);
+    console.error("Error rendering PDF to images:", forLog(error));
     const pwError = describePdfPasswordError(error);
     if (pwError) throw pwError;
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw new Error(`Failed to render PDF: ${error.message}`);
+  } finally {
+    try {
+      await loadingTask?.destroy();
+    } catch (releaseError) {
+      console.warn(`PDF release failed: ${forLog(releaseError)}`);
+    }
   }
 }

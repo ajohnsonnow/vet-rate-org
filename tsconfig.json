@@ -27,7 +27,8 @@
   "include": [
     "src/**/*.js",
     "src/**/*.jsx",
-    "scripts/**/*.{js,mjs}"
+    "scripts/**/*.js",
+    "scripts/**/*.mjs"
   ],
   "exclude": [
     "node_modules",
@@ -37,7 +38,9 @@
     "playwright-report",
     "src/_deprecated/**",
     "src/__tests__/**",
-    "src/**/*.test.{js,jsx}",
-    "packages/**"
+    "src/**/*.test.js",
+    "src/**/*.test.jsx",
+    "packages/**",
+    ".claude/**"
   ]
 }

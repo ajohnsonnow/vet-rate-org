@@ -2,9 +2,14 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { jsPDF } from "jspdf";
 import ShareButton from "./ShareButton";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
+import { useLanguage } from "../contexts/LanguageContext";
+import RewordingOffNote from "./common/RewordingOffNote";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 import {
@@ -600,26 +605,30 @@ const SymptomLoggerAISettingsPanel = ({ aiStatus, setAIStatus }) => (
       </span>
     </div>
     <AIModeSelector
-      onModeChange={async () => {
-        const status = await getAIStatus();
-        setAIStatus(status);
+      onModeChange={() => {
+        setAIStatus(getAIStatus());
       }}
     />
-    <p className="text-xs text-white/70 mt-2">
-      ✨ AI can help suggest triggers, activity impact, and clinical-style notes
-      for your symptom entries.
-    </p>
+    {suggestionsOff(aiStatus) ? (
+      <SuggestionsOffNote className="mt-2 !text-white" />
+    ) : (
+      <p className="text-xs text-white/70 mt-2">
+        ✨ AI can help suggest triggers, activity impact, and clinical-style
+        notes for your symptom entries.
+      </p>
+    )}
   </div>
 );
 
 const SymptomLoggerHeaderActions = ({
+  aiStatus,
   showAISettings,
   setShowAISettings,
   symptomLoggerContentRef,
   onReportBug,
-  onClose,
 }) => (
-  <div className="flex items-center gap-2">
+  <div className="flex flex-wrap items-center gap-2">
+    <AIStatusBadge status={aiStatus} />
     <button
       type="button"
       onClick={() => setShowAISettings(!showAISettings)}
@@ -644,27 +653,30 @@ const SymptomLoggerHeaderActions = ({
         moduleName="Symptom Logger"
       />
     )}
-    <button
-      type="button"
-      onClick={onClose}
-      className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-      aria-label="Close"
-    >
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    </button>
   </div>
+);
+
+const SymptomLoggerCloseButton = ({ onClose }) => (
+  <button
+    type="button"
+    onClick={onClose}
+    className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+    aria-label="Close"
+  >
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  </button>
 );
 
 const SymptomLoggerHeader = ({
@@ -680,18 +692,20 @@ const SymptomLoggerHeader = ({
   <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+    <HeaderCloseSlot
+      className="relative"
+      close={<SymptomLoggerCloseButton onClose={onClose} />}
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
           <span className="text-3xl">{config.emoji}</span>
         </div>
-        <div>
+        <div className="min-w-0">
           <h2
             id="symptom-logger-title"
-            className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
+            className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
           >
             Symptom Logger
-            <AIStatusBadge status={aiStatus} />
             <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
               BETA
             </span>
@@ -702,13 +716,13 @@ const SymptomLoggerHeader = ({
         </div>
       </div>
       <SymptomLoggerHeaderActions
+        aiStatus={aiStatus}
         showAISettings={showAISettings}
         setShowAISettings={setShowAISettings}
         symptomLoggerContentRef={symptomLoggerContentRef}
         onReportBug={onReportBug}
-        onClose={onClose}
       />
-    </div>
+    </HeaderCloseSlot>
 
     {/* AI Settings Panel */}
     {showAISettings && (
@@ -1237,13 +1251,42 @@ const TriggersNotesFields = ({
   </>
 );
 
-const LogAttackTab = ({
+// The "AI" buttons write a model's words into the veteran's own entry. A
+// small on-device model is not asked to do that, so while one would answer
+// the buttons are not offered and one line above the fields says why.
+const suggestionsOff = (aiStatus) =>
+  Boolean(aiStatus.anyAvailable) && smallModelAnswering(aiStatus);
+
+const SuggestionsOffNote = ({ className }) => {
+  const { t } = useLanguage();
+  return (
+    <RewordingOffNote
+      text={t("smallModelCaveat", "rewordingOff")}
+      className={className}
+    />
+  );
+};
+
+const LogAttackTab = ({ aiStatus: fullStatus, ...rest }) => (
+  <LogAttackFields
+    {...rest}
+    noSuggestions={suggestionsOff(fullStatus)}
+    aiStatus={
+      suggestionsOff(fullStatus)
+        ? { ...fullStatus, anyAvailable: false }
+        : fullStatus
+    }
+  />
+);
+
+const LogAttackFields = ({
   newLog,
   setNewLog,
   config,
   colors,
   symptomType,
   aiStatus,
+  noSuggestions,
   isAIGenerating,
   generateAISuggestion,
   aiError,
@@ -1251,6 +1294,7 @@ const LogAttackTab = ({
 }) => (
   <div className="space-y-6">
     <TrackFrequencyBanner config={config} colors={colors} />
+    {noSuggestions && <SuggestionsOffNote />}
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <DateTimeFields newLog={newLog} setNewLog={setNewLog} />
@@ -1733,11 +1777,7 @@ function useSymptomLoggerInitEffects({
   setAIStatus,
 }) {
   useEffect(() => {
-    const checkAI = async () => {
-      const status = await getAIStatus();
-      setAIStatus(status);
-    };
-    checkAI();
+    setAIStatus(getAIStatus());
   }, [setAIStatus]);
 
   useEffect(() => {
@@ -1818,6 +1858,7 @@ async function _runAISuggestion({
 
 IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Keep it concise and directly usable.`,
       {
+        dataClass: AI_DATA_CLASS.CONTEXT,
         temperature: 0.7,
         maxTokens: 300,
         systemPrompt:
@@ -1911,6 +1952,7 @@ function useSymptomLoggerHandlers({
   };
 
   const generateAISuggestion = (field) => {
+    if (suggestionsOff(aiStatus)) return Promise.resolve();
     if (!aiStatus.anyAvailable) {
       setAIError("Please configure AI in settings first");
       return Promise.resolve();

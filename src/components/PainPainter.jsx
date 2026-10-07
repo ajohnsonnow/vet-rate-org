@@ -15,7 +15,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { useLanguage } from "../contexts/LanguageContext";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { useScreenshot } from "../hooks/useScreenshot";
 import { savePainMap } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
@@ -921,10 +921,6 @@ function BodySVG({
 
   // Calculate scaled positions based on body type
   const shoulderWidth = 50 * s.shoulders;
-  const _hipWidth = 40 * s.hips;
-  const _torsoHeight = 60 * s.torso;
-  const _armLength = 100 * s.arms;
-  const _legLength = 150 * s.legs;
 
   // Get regions based on current view
   const regions = getRegionsForView(
@@ -983,7 +979,7 @@ function BodySVG({
           fontWeight="bold"
         >
           {(hoveredRegion || selectedRegion)
-            .replace(/_/g, " ")
+            .replaceAll("_", " ")
             .replace(/\b\w/g, (l) => l.toUpperCase())}
         </text>
       )}
@@ -1006,7 +1002,7 @@ function DiagnosticCodesPanel({ selectedRegion }) {
 
   const codes = DIAGNOSTIC_CODES[selectedRegion] || [];
   const regionName = selectedRegion
-    .replace(/_/g, " ")
+    .replaceAll("_", " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
   return (
@@ -1053,8 +1049,8 @@ function NexusSuggestions({ detectedNexus }) {
         <h4 className="font-bold text-purple-400">Nexus Pattern Detected!</h4>
       </div>
 
-      {detectedNexus.map((nexus, index) => (
-        <div key={index} className="p-3 bg-gray-800/50 rounded-lg mb-2">
+      {detectedNexus.map((nexus) => (
+        <div key={nexus.name} className="p-3 bg-gray-800/50 rounded-lg mb-2">
           <p className="font-semibold text-white">{nexus.name}</p>
           <p className="text-gray-400 text-sm mt-1">{nexus.description}</p>
           <div className="flex flex-wrap gap-1 mt-2">
@@ -1316,7 +1312,7 @@ function usePainPainterExport({
     // Build pain points array with details
     const painPointsArray = Object.entries(painPoints).map(
       ([region, data]) => ({
-        region: region.replace(/_/g, " "),
+        region: region.replaceAll("_", " "),
         bodyPart: region,
         type: PAIN_TYPES[data.type]?.name || data.type,
         severity: getSeverityLabel(data.intensity),
@@ -1370,37 +1366,12 @@ const PainPainterHeader = ({ onClose, onReportBug }) => (
   <div className="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-600 text-white px-6 py-6 relative overflow-hidden">
     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-4xl">🎨</span>
-        </div>
-        <div>
-          <h2
-            id="pain-painter-title"
-            className="text-2xl sm:text-3xl font-bold"
-          >
-            Pain Painter{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h2>
-          <p className="text-pink-200 mt-1">
-            &quot;Translate Grunt to Doctor&quot; • Visual Pain Mapping
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Pain Painter"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -1417,8 +1388,35 @@ const PainPainterHeader = ({ onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-16 h-16 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-4xl">🎨</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="pain-painter-title"
+            className="text-2xl sm:text-3xl font-bold"
+          >
+            Pain Painter{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-pink-200 mt-1">
+            &quot;Translate Grunt to Doctor&quot; • Visual Pain Mapping
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="Pain Painter"
+        />
+      )}
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -1508,7 +1506,7 @@ const PainPainterBodyScaling = ({ bodyScale, setBodyScale }) => (
             onChange={(e) =>
               setBodyScale((prev) => ({
                 ...prev,
-                [part]: parseFloat(e.target.value),
+                [part]: Number.parseFloat(e.target.value),
               }))
             }
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
@@ -1642,7 +1640,7 @@ const PainPainterViewControls = ({ zoom, setZoom, view, setView }) => (
             max="2"
             step="0.1"
             value={zoom}
-            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            onChange={(e) => setZoom(Number.parseFloat(e.target.value))}
             className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
           />
           <button
@@ -1889,7 +1887,7 @@ const PainPainterPainLegend = ({ painPoints }) => (
             color: PAIN_TYPES[pain.type].color,
           }}
         >
-          {PAIN_TYPES[pain.type].emoji} {region.replace(/_/g, " ")}
+          {PAIN_TYPES[pain.type].emoji} {region.replaceAll("_", " ")}
         </span>
       ))}
     </div>
@@ -2248,7 +2246,8 @@ function usePainPainterOrchestration() {
 
   // setDetectedNexus is internal to usePainPainterEffects; the original
   // orchestration return never exposed it to callers.
-  const { setDetectedNexus: _setDetectedNexus, ...publicPainState } = painState;
+  const publicPainState = { ...painState };
+  delete publicPainState.setDetectedNexus;
 
   return {
     ...publicPainState,
@@ -2427,7 +2426,6 @@ const PainPainterMainModal = ({
 // returned by usePainPainterOrchestration, so spreading it through is
 // behaviorally identical to the previous explicit prop-by-prop passing.
 const PainPainter = ({ onClose, _onExport, onReportBug }) => {
-  const { _t } = useLanguage();
   const painPainterState = usePainPainterOrchestration();
 
   return (

@@ -76,9 +76,8 @@ describe("Python LLM tool stays in sync with the SSOT", () => {
     );
     const block = source.match(/VA_COMPENSATION_RATES = \{([\s\S]*?)\}/);
     expect(block).not.toBeNull();
-    // eslint-disable-next-line sonarjs/slow-regex -- disjoint char classes (\d, ':', \s, [\d.]) per segment; no ambiguous backtracking, and input is this repo's own vaCalculatorTool.py, not attacker-controlled
-    const entries = [...block[1].matchAll(/(\d+):\s*([\d.]+)/g)];
-    expect(entries.length).toBe(10);
+    const entries = [...block[1].matchAll(/(\d{1,3}):\s{0,10}([\d.]{1,20})/g)];
+    expect(entries).toHaveLength(10);
     for (const [, rating, value] of entries) {
       expect(Number(value)).toBe(HISTORICAL_2026.solo[Number(rating)]);
     }
@@ -132,5 +131,26 @@ describe("analyzeRetroactivePay input validation", () => {
     ]);
     const months = result.periods.map((p) => p.month);
     expect(months).toContain("2025-02");
+  });
+
+  it("terminates for a multi-year range and covers every bounded month (S2189)", () => {
+    // Regression test for the month-advance loop in analyzeRetroactivePay:
+    // it must reassign currentDate every iteration (not just mutate it via
+    // setMonth) so the loop is provably finite, not just finite in practice.
+    const result = analyzeRetroactivePay([
+      { effectiveDate: "2018-02-15", rating: 50, dependents: {} },
+      { effectiveDate: "2025-01-20", rating: 30, dependents: {} },
+    ]);
+
+    const firstSegment = result.periods.filter((p) => p.month < "2025-01");
+    expect(firstSegment).toHaveLength(83); // 2018-02 .. 2024-12 inclusive
+    expect(firstSegment[0].month).toBe("2018-02");
+    expect(firstSegment.at(-1).month).toBe("2024-12");
+
+    // The final entry's segment runs to "now" (open-ended) — still must
+    // terminate and stay within a sane bound, not run away indefinitely.
+    const finalSegment = result.periods.filter((p) => p.month >= "2025-01");
+    expect(finalSegment.length).toBeGreaterThan(0);
+    expect(finalSegment.length).toBeLessThan(240);
   });
 });

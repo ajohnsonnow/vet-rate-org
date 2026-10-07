@@ -75,6 +75,6 @@ describe("DutyStationsSection - coordinate range validation on save", () => {
 
     const stations = getDutyStations();
     expect(stations).toHaveLength(1);
-    expect(stations[0].latitude).toBe(35.139);
+    expect(stations[0].latitude).toBeCloseTo(35.139, 5);
   });
 });

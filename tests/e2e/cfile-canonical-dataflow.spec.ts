@@ -81,7 +81,25 @@ async function boot(page: Page): Promise<void> {
   await page
     .waitForLoadState("networkidle", { timeout: 60_000 })
     .catch(() => {});
-  await page.waitForTimeout(2000);
+  await waitForInteractiveEffectsToSettle(page);
+}
+
+// React commits the interactive tree (including every cluster's listener-
+// registering useEffect) once useBootSequence's isBooting gate flips false,
+// but passive effects flush a tick AFTER that commit paints - networkidle
+// only proves the commit happened, not that effects have run yet. Waiting
+// on two animation frames plus a macrotask turn is tied to the browser's
+// real paint/task-queue lifecycle (and so scales with actual system load)
+// rather than guessing a fixed duration.
+async function waitForInteractiveEffectsToSettle(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setTimeout(resolve, 0)),
+        );
+      }),
+  );
 }
 
 async function injectMods(page: Page): Promise<void> {
@@ -91,7 +109,9 @@ async function injectMods(page: Page): Promise<void> {
       import * as provider from "/src/utils/veteranContextProvider.js";
       import * as vkbMod from "/src/utils/veteranKnowledgeBase.js";
       import * as pktMod from "/src/utils/myPacketManager.js";
-      window.__verifyMods = { provider, vkbMod, pktMod };
+      import * as dkbMod from "/src/utils/dkbIndexedDB.js";
+      import * as backupMod from "/src/utils/autoBackup.js";
+      window.__verifyMods = { provider, vkbMod, pktMod, dkbMod, backupMod };
     `,
   });
   await page.waitForFunction(() => Boolean(window.__verifyMods), null, {
@@ -141,13 +161,20 @@ async function precreateDatabases(page: Page): Promise<void> {
 }
 
 // The desktop first-boot DKB auto-download caches ~130K entries into IndexedDB;
-// while that write runs, opens creating new DBs stall. Give it a fixed budget to
-// finish, pre-warm both connections, then let the auto-backup settle before the
-// save's VKB writes race a concurrent VetRateVKB transaction.
+// while that write runs, opens creating new DBs stall. isFullDKBCached() only
+// reads small metadata (not the 130K-row store) via an open on the SAME
+// existing database, not a new one, so polling it converges on the real
+// finish time instead of guessing a fixed 60s budget - same worst-case safety
+// (still capped at 60s), but doesn't wait longer than actually needed.
+// Pre-warms both connections afterwards so the save path is not racing a cold
+// open, then lets the auto-backup settle before the save's VKB writes race a
+// concurrent VetRateVKB transaction.
 async function waitForDkbSettled(page: Page): Promise<void> {
-  await page.waitForTimeout(60_000);
-  // Pre-warm both IndexedDB connections so the save path is not racing a cold
-  // open; tolerate a slow open without failing.
+  await page
+    .waitForFunction(() => window.__verifyMods.dkbMod.isFullDKBCached(), null, {
+      timeout: 60_000,
+    })
+    .catch(() => {});
   await page.evaluate(async () => {
     const mods = window.__verifyMods;
     const race = (pr: Promise<unknown>, ms: number) =>
@@ -155,7 +182,22 @@ async function waitForDkbSettled(page: Page): Promise<void> {
     await race(mods.vkbMod.loadVKB(), 30_000);
     await race(mods.pktMod.getAllPacketDocuments(), 30_000);
   });
-  await page.waitForTimeout(5000);
+  // Resolves as soon as a pending debounced backup (autoBackup.js,
+  // triggered by any monitored localStorage write during boot) actually
+  // completes, via the module's own onBackupComplete hook - falling back to
+  // the same 5s ceiling the old fixed wait used if none was pending or it
+  // doesn't fire (e.g. this listener registered after it already ran).
+  await page.evaluate(async () => {
+    const mods = window.__verifyMods;
+    await new Promise<void>((resolve) => {
+      const done = () => {
+        mods.backupMod.removeBackupListener(done);
+        resolve();
+      };
+      mods.backupMod.onBackupComplete(done);
+      setTimeout(done, 5000);
+    });
+  });
 }
 
 function syntheticAnalysis(marker: string) {
@@ -324,26 +366,41 @@ async function walkMyPacketTabs(page: Page): Promise<TabReport[]> {
   await page
     .waitForLoadState("networkidle", { timeout: 60_000 })
     .catch(() => {});
-  await page.waitForTimeout(2000);
-  await page.evaluate(() =>
-    window.dispatchEvent(new CustomEvent("openMyPacket")),
-  );
-  const dialog = page.locator('[role="dialog"]').first();
-  await expect(dialog, "MyPacket modal should open").toBeVisible({
-    timeout: 15_000,
-  });
+  await waitForInteractiveEffectsToSettle(page);
 
-  const tabButtons = dialog.locator('nav[aria-label="Tabs"] button');
+  const dialog = page.locator('[role="dialog"]').first();
+  // Re-fire the open event on every poll tick (a single dispatch can race
+  // the listener's own registration, the same way dialog-contract.spec.ts's
+  // openModalByEvent handles it) - every open handler is an idempotent
+  // setShow(true), so re-firing is harmless.
+  await expect
+    .poll(
+      async () => {
+        await page.evaluate(() =>
+          window.dispatchEvent(new CustomEvent("openMyPacket")),
+        );
+        return dialog.count();
+      },
+      { timeout: 15_000 },
+    )
+    .toBeGreaterThan(0);
+  await expect(dialog, "MyPacket modal should open").toBeVisible();
+
+  // By role and accessible name: at phone width a tab's visible text is
+  // hidden (`hidden sm:inline`) and only its aria-label names it.
+  const tabButtons = dialog.getByRole("tab");
   const count = await tabButtons.count();
   const reports: TabReport[] = [];
   for (let i = 0; i < count; i++) {
     const btn = tabButtons.nth(i);
-    const label = (await btn.innerText().catch(() => `tab${i}`)).replace(
-      /\s+/g,
-      " ",
-    );
-    await btn.click().catch(() => {});
-    await page.waitForTimeout(700);
+    const accessibleName =
+      (await btn.getAttribute("aria-label")) ??
+      (await btn.innerText().catch(() => `tab${i}`));
+    const label = accessibleName.replace(/\s+/g, " ");
+    await btn.click();
+    await expect(btn).toHaveAttribute("aria-selected", "true", {
+      timeout: 5000,
+    });
     const text = await dialog.innerText().catch(() => "");
     reports.push({
       tab: label,

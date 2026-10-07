@@ -7,8 +7,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import ToolCardButton from "./ToolCardButton";
 import {
   initializeGoogleDrive,
@@ -23,25 +23,30 @@ import {
 import { exportAllData, importAllData } from "../utils/storage";
 
 const CloudSyncHeader = ({ onClose }) => (
-  <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <div className="text-3xl">☁️</div>
-      <div>
-        <h1 id="cloud-sync-title" className="text-xl font-bold text-white">
-          The Off-Site Bunker
-        </h1>
-        <p className="text-green-100 text-sm">
-          Secure cloud backup with YOUR Google Drive
-        </p>
-      </div>
-    </div>
-    <button
-      onClick={onClose}
-      className="text-white hover:text-green-200 transition-colors text-2xl font-bold"
-      aria-label="Close"
+  <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-green-200 transition-colors text-2xl font-bold"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      }
     >
-      ×
-    </button>
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="text-3xl">☁️</div>
+        <div className="min-w-0">
+          <h1 id="cloud-sync-title" className="text-xl font-bold text-white">
+            The Off-Site Bunker
+          </h1>
+          <p className="text-green-100 text-sm">
+            Secure cloud backup with YOUR Google Drive
+          </p>
+        </div>
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -419,7 +424,7 @@ const useGoogleDriveInit = ({
 
     const tryInitialize = async () => {
       // Wait for gapi to be available
-      if (typeof window.gapi === "undefined") {
+      if (window.gapi === undefined) {
         if (retryCount < maxRetries) {
           retryCount++;
           setStatus(`Waiting for Google API... (${retryCount}/${maxRetries})`);
@@ -515,8 +520,6 @@ const useCloudSync = () => {
 };
 
 const CloudSyncManager = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   const {
     isInitialized,
     isSignedIn,

@@ -13,11 +13,32 @@
  * - Privacy-conscious data clearing
  */
 
+import { logger } from "../utils/logger";
 import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { removeBeforeUnloadWarning } from "../utils/dataPersistence";
+import { stopAutoBackup } from "../utils/autoBackup";
+import { clearAllImportMarkers } from "../utils/importProgressMarker";
+import {
+  broadcastDataWipe,
+  broadcastWipePending,
+} from "../utils/dataWipeChannel";
+
+// Decision B: every "Clear All Data"/"Clear Data" control in the app (VKB
+// Viewer, The Bunker) deletes this same full scope via wipeAllLocalData - the
+// confirm text they show must say exactly that, not a narrower subset, since
+// a veteran reading it needs to know nothing survives anywhere it can be
+// clicked from.
+export const FULL_DATA_DELETE_CONFIRM_TEXT =
+  "This permanently deletes EVERYTHING Vet-Rate.org has about you on this " +
+  "device: your records, profile, and service history; My Packet documents; " +
+  "the knowledge base; your timeline; saved claims and conditions; local AI " +
+  "models and vector databases; preferences and settings; and all cached or " +
+  "offline data. This does not redirect you anywhere and cannot be undone.";
 
 function clearLocalAndSessionStorage() {
+  clearAllImportMarkers();
   // 1. Clear all localStorage
   // eslint-disable-next-line no-console
   console.log("🔥 Clearing localStorage...");
@@ -81,16 +102,19 @@ function deleteDatabaseFallback(dbName) {
 
 async function clearIndexedDbModern() {
   const databases = await window.indexedDB.databases();
-  const deletePromises = databases.map((db) => {
-    if (db.name) {
-      return deleteDatabaseModern(db.name);
-    }
-  });
+  const deletePromises = databases
+    .filter((db) => db.name)
+    .map((db) => deleteDatabaseModern(db.name));
   await Promise.all(deletePromises);
 }
 
 async function clearIndexedDbFallback() {
-  // Fallback: delete known database names
+  // Fallback: delete known database names, for the rare browser without
+  // indexedDB.databases() (clearIndexedDbModern's path, used everywhere
+  // else). Audited against every indexedDB.open(name, ...) call site in
+  // src/ (2026-09-27) - this list must stay in sync with that grep, since
+  // unlike the modern path it cannot discover a database it doesn't already
+  // know the name of.
   // eslint-disable-next-line no-console
   console.log("  Using fallback database deletion...");
   const knownDbs = [
@@ -102,13 +126,22 @@ async function clearIndexedDbFallback() {
     "onnx-models",
     "webllm-cache",
     "vet-rate-cache",
-    "keyval-store",
+    "keyval-store", // idb-keyval default DB - src/utils/storage.js's primary packet/claims store
+    "VetRateVKB", // src/utils/veteranKnowledgeBase.js - the Veteran Knowledge Base
+    "VetRateAutoBackup", // src/utils/autoBackup.js
+    "VetRateBugSquasher", // src/utils/bugReportStorage.js
+    "vet-rate-dbq-cache", // src/utils/dbqOfflineStorage.js
+    "VetRate_DKB", // src/utils/dkbIndexedDB.js
+    "VetRateFeatureRequests", // src/utils/featureRequestStorage.js
+    "VetRateMyPacket", // src/utils/myPacketManager.js
+    "VetRate_CFileStream", // src/utils/pdfExtractor.js
+    "VetRate_UserDocVectors", // src/utils/userDocSemanticIndex.js
   ];
   const deletePromises = knownDbs.map(deleteDatabaseFallback);
   await Promise.all(deletePromises);
 }
 
-async function clearIndexedDb() {
+export async function clearIndexedDb() {
   // 4. Clear IndexedDB (Vector Store, AI Models, etc.)
   // eslint-disable-next-line no-console
   console.log("🔥 Clearing IndexedDB...");
@@ -164,7 +197,7 @@ async function unregisterServiceWorkers() {
   }
 }
 
-function forceReloadWithCacheBypass() {
+export function forceReloadWithCacheBypass() {
   // Build from pathname/search only (not the raw href) so this is never
   // read as "unsanitized location input flows back into window.location".
   const separator = window.location.search ? "&" : "?";
@@ -176,31 +209,110 @@ function forceReloadWithCacheBypass() {
     Date.now();
 }
 
-async function handleAtomicWipe(setIsWiping, onWipeComplete) {
-  setIsWiping(true);
+function disableBeforeUnloadPrompt() {
+  // clearLocalAndSessionStorage() below deletes vetrate_data_hash, which
+  // makes dataPersistence.hasUnsavedChanges() read as true from that point
+  // on - so the reload a few lines down would otherwise trip the browser's
+  // native "Leave site?" prompt on every wipe, even for a veteran who had
+  // fully backed up. If they choose Stay, the reload never happens: the
+  // IndexedDB deletes already issued stay pending behind this tab's own open
+  // connections, and the in-memory caches they fed survive right along with
+  // them. Disabling the guard up front - the same way the panic redirect
+  // does - means the reload this wipe promised actually happens.
+  removeBeforeUnloadWarning();
+  window.onbeforeunload = null;
+}
+
+/**
+ * The full local-data wipe, shared by every caller that needs to delete
+ * everything a veteran's browser holds (Atomic Wipe's own confirm flow,
+ * VKBViewer's "Clear All Data" - see D13/decision B). Callers that also want
+ * a hard reload or a UI progress flag layer that on top; this function is
+ * just the deletion itself, so the list of what gets cleared lives in
+ * exactly one place.
+ */
+export async function wipeAllLocalData() {
+  disableBeforeUnloadPrompt();
+  // Stop before clearing storage: a debounced backup already scheduled by a
+  // write from moments earlier fires on its own timer regardless of how
+  // thoroughly storage gets cleared next, and would otherwise write a fresh
+  // snapshot right back after this wipe (D13-8).
+  stopAutoBackup();
+
+  clearLocalAndSessionStorage();
+  clearCookies();
+  await clearIndexedDb();
+  await clearCacheStorage();
+  await unregisterServiceWorkers();
+
+  logger.info("✅ Wipe complete!");
+}
+
+/**
+ * The full, cross-tab-safe data wipe. Every "Clear All Data"/"Atomic Wipe"
+ * entry point (this component, VKBViewer, The Bunker) should call this
+ * rather than sequencing wipeAllLocalData/broadcastDataWipe/
+ * forceReloadWithCacheBypass itself - a bare wipeAllLocalData() ->
+ * broadcastDataWipe() sequence leaves a real window open: every OTHER tab
+ * keeps running normally for as long as THIS tab's own wipeAllLocalData()
+ * takes (IndexedDB deletes alone can block ~100ms+ per open connection in
+ * another tab), and whatever any of them write during that window lands in
+ * storage AFTER this tab's own clear already ran, surviving every tab's
+ * reload.
+ *
+ * Two things narrow that window, on both ends of it. broadcastWipePending()
+ * tells other tabs to stop their own debounced auto-backup writes as early
+ * as possible - before this tab has cleared anything at all, not after.
+ * The second wipeAllLocalData() pass right before reload re-clears whatever
+ * still landed despite that - a write already in flight when the pending
+ * signal arrives, or from this tab's own timers. Neither closes the window
+ * completely (there is no cross-tab "stop everything now" primitive), but
+ * together they shrink it from "the whole first wipe's duration" to
+ * whatever's left on either side of it.
+ *
+ * onError, if given, is only for the FIRST wipeAllLocalData() call - the
+ * caller's chance to tell a veteran their data may not be fully gone before
+ * the reload carries any status UI away. The close-out re-wipe below always
+ * proceeds regardless (logging only), since it exists precisely to catch
+ * what the first pass might have missed.
+ */
+export async function performFullDataWipe(onWipeComplete, onError) {
+  broadcastWipePending();
 
   try {
-    clearLocalAndSessionStorage();
-    clearCookies();
-    await clearIndexedDb();
-    await clearCacheStorage();
-    await unregisterServiceWorkers();
-
-    // eslint-disable-next-line no-console
-    console.log("✅ Atomic Wipe complete!");
-
-    // Notify completion
-    if (onWipeComplete) {
-      onWipeComplete();
-    }
-
-    // Force hard reload with cache bypass
-    setTimeout(forceReloadWithCacheBypass, 500);
+    await wipeAllLocalData();
+    onWipeComplete?.();
   } catch (error) {
-    console.error("Error during atomic wipe:", error);
-    // Still try to reload with cache bypass
-    forceReloadWithCacheBypass();
+    console.error("Error during data wipe:", error);
+    onError?.(error);
   }
+
+  // Decision B: propagate to every other open tab - without this, a second
+  // tab keeps every in-memory cache (vkbCache and siblings) fed from the
+  // data this wipe just deleted, and can re-save it right back into storage.
+  broadcastDataWipe();
+
+  // Best-effort only: a deleteDatabase() call that resolved via the
+  // "blocked, forcing" escape hatch above (deleteDatabaseModern's onblocked)
+  // can leave the real browser-level delete still pending underneath, which
+  // then blocks THIS pass's deleteDatabase() call for that same name
+  // indefinitely - no onsuccess/onerror/onblocked ever fires again, since
+  // the browser serializes delete requests per database name and the first
+  // one never actually finished. Racing it against a bounded timeout
+  // restores forceReloadWithCacheBypass's original guarantee (it must always
+  // run) without giving up the re-wipe when it does finish in time.
+  await Promise.race([
+    wipeAllLocalData().catch((error) => {
+      console.error("Error during pre-reload re-wipe:", error);
+    }),
+    new Promise((resolve) => setTimeout(resolve, 3000)),
+  ]);
+  forceReloadWithCacheBypass();
+}
+
+async function handleAtomicWipe(setIsWiping, onWipeComplete) {
+  setIsWiping(true);
+  await performFullDataWipe(onWipeComplete);
 }
 
 export default function AtomicWipe({ compact = false, onWipeComplete }) {
@@ -355,20 +467,18 @@ function AtomicWipeBody() {
 
       <ul className="text-sm text-slate-600 dark:text-gray-400 space-y-2 mb-6">
         <li className="flex items-center gap-2">
-          <span className="text-red-500">✗</span>
-          All saved conditions and claims data
+          <span className="text-red-500">✗</span> All saved conditions and
+          claims data
         </li>
         <li className="flex items-center gap-2">
-          <span className="text-red-500">✗</span>
-          Local AI models and vector databases
+          <span className="text-red-500">✗</span> Local AI models and vector
+          databases
         </li>
         <li className="flex items-center gap-2">
-          <span className="text-red-500">✗</span>
-          All preferences and settings
+          <span className="text-red-500">✗</span> All preferences and settings
         </li>
         <li className="flex items-center gap-2">
-          <span className="text-red-500">✗</span>
-          Cached files and offline data
+          <span className="text-red-500">✗</span> Cached files and offline data
         </li>
       </ul>
 

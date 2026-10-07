@@ -39,10 +39,6 @@ let instance = null;
  */
 class VoiceOrchestrator {
   constructor() {
-    if (instance) {
-      return instance;
-    }
-
     this.isEnabled = false;
     this.currentLanguage = "en";
     this.currentBranch = null;
@@ -90,9 +86,6 @@ class VoiceOrchestrator {
         ko: "다음은 제가 찾은 내용입니다: ",
       },
     };
-
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    instance = this;
   }
 
   /**

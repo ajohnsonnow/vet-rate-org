@@ -101,7 +101,7 @@ describe("embed.mjs CONTEXTUALIZE_CHUNKS gate", () => {
     const r = await embedSource({ chunkFile, vectorFile, embedder });
 
     expect(r.count).toBe(2);
-    expect(readFileSync(vectorFile).length).toBe(2 * 384);
+    expect(readFileSync(vectorFile)).toHaveLength(2 * 384);
     rmSync(dir, { recursive: true, force: true });
   });
 });

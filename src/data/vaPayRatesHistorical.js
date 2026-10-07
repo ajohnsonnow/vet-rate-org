@@ -733,7 +733,6 @@ export const analyzeRetroactivePay = (ratingHistory) => {
   );
 
   const periods = [];
-  const _totalPotentialUnderpayment = 0;
   let uncoveredMonths = 0;
   const availableYears = Object.keys(VA_PAY_RATES_HISTORICAL).map(Number);
   const earliestAvailableYear = Math.min(...availableYears);
@@ -748,8 +747,11 @@ export const analyzeRetroactivePay = (ratingHistory) => {
 
     // Calculate months covered. Iterate from the 1st of the starting month —
     // setMonth() on day 29-31 can skip a month (Jan 31 → Mar 3).
-    const currentDate = new Date(startDate);
-    currentDate.setDate(1);
+    let currentDate = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      1,
+    );
     while (currentDate < endDate) {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -792,7 +794,7 @@ export const analyzeRetroactivePay = (ratingHistory) => {
       }
 
       // Move to next month
-      currentDate.setMonth(currentDate.getMonth() + 1);
+      currentDate = new Date(year, month + 1, 1);
     }
   });
 
@@ -847,54 +849,6 @@ const generatePaySummary = (periods) => {
 };
 
 /**
- * Calculate bilateral factor compliance
- * Checks if bilateral factor was likely applied correctly
- */
-export const checkBilateralFactorCompliance = (conditions) => {
-  const bilateralConditions = conditions.filter(
-    (c) => c.side === "left" || c.side === "right" || c.side === "bilateral",
-  );
-
-  if (bilateralConditions.length < 2) {
-    return {
-      applicable: false,
-      message:
-        "Bilateral factor requires conditions affecting paired extremities",
-    };
-  }
-
-  // Check for paired conditions
-  const bodyParts = {};
-  bilateralConditions.forEach((c) => {
-    const part = c.bodyPart || "unknown";
-    if (!bodyParts[part]) bodyParts[part] = [];
-    bodyParts[part].push(c);
-  });
-
-  const pairedParts = Object.entries(bodyParts).filter(
-    ([_, conditions]) =>
-      (conditions.some((c) => c.side === "left") &&
-        conditions.some((c) => c.side === "right")) ||
-      conditions.some((c) => c.side === "bilateral"),
-  );
-
-  if (pairedParts.length === 0) {
-    return {
-      applicable: false,
-      message: "No paired bilateral conditions found",
-    };
-  }
-
-  return {
-    applicable: true,
-    pairedParts: pairedParts.map(([part, _]) => part),
-    message: `Bilateral factor should be applied to: ${pairedParts.map(([p]) => p).join(", ")}`,
-    potentialBonus:
-      "Bilateral factor adds ~10% to combined bilateral rating before final calculation",
-  };
-};
-
-/**
  * Get the current year's compensation rates
  * Automatically selects the appropriate rate year based on current date
  * @returns {Object} - The current year's rate data
@@ -931,7 +885,7 @@ export const CUE_PATTERNS = [
     description:
       "VA failed to apply 10% bilateral factor when rating conditions affecting paired extremities",
     detection:
-      "Check if you have left/right conditions of same body part rated together",
+      "Check whether both arms or both legs each have a compensable rating. Any part of each limb counts (38 CFR § 4.26)",
     severity: "high",
   },
   {

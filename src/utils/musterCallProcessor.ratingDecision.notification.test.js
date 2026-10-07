@@ -29,5 +29,10 @@ describe("musterCallProcessor: parseRatingDecision on the notification-letter fo
     expect(result.combinedRating).toBe(40);
     expect(result.combinedRatingHistory).toHaveLength(2);
     expect(result.decisions).toHaveLength(3);
+    // No "DECISION DATE:" label and no letterhead date in this format -
+    // falls back to the newest effective date the letter states (the
+    // per-issue decisions are checked before the combined-rating history,
+    // so the full-month form wins the tie over the table's abbreviated one).
+    expect(result.decisionDate).toBe("November 1, 2025");
   });
 });

@@ -616,6 +616,13 @@ function GlobalCommandSearchPalette({
         role="dialog"
         aria-modal="true"
         aria-label="Quick search"
+        // Owner decision C: this palette is a search/navigation surface, not
+        // a tool dialog - an Escape that closes it must still count toward
+        // the panic threshold, same as the mobile nav drawer. This marker is
+        // safetyRedirect.js's DIALOG_SELECTOR opt-out for exactly that (see
+        // Header.jsx's mobile menu for the same pattern); it changes nothing
+        // about this dialog's own accessibility semantics or focus trap.
+        data-vetrate-nav-menu="true"
       >
         {/* Search Input */}
         <CommandSearchInputBar

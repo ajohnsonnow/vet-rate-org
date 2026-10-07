@@ -78,11 +78,11 @@ const MobileNotice = () => {
 
   return (
     <div
-      className="text-white px-4 py-3 text-center relative shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600"
+      className="hide-when-dialog-open text-white px-4 py-3 text-center relative shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600"
       role="status"
       aria-live="polite"
     >
-      <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 pr-10">
+      <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 pr-12">
         <span className="text-2xl" role="img" aria-label="Tablet optimized">
           📱💻
         </span>
@@ -98,7 +98,7 @@ const MobileNotice = () => {
       </div>
       <button
         onClick={handleDismiss}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-white/20 rounded-full transition-colors"
+        className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center hover:bg-white/20 rounded-full transition-colors"
         aria-label="Dismiss notice"
       >
         <svg

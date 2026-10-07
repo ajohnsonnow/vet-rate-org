@@ -1,10 +1,17 @@
+import ScrollRegion from "./common/ScrollRegion";
 import { useState, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ShareButton from "./ShareButton";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { useLanguage } from "../contexts/LanguageContext";
+import IgnoredRatingsNotice from "./IgnoredRatingsNotice";
+import {
+  BodyPartSelectField,
+  SideSelectField,
+} from "./ConditionLocationFields";
 import {
   calculateVARating,
   calculateCompensation,
@@ -110,6 +117,7 @@ const ProgressRing = ({ percentage, size = 200, strokeWidth = 12 }) => {
  * All TacticalCalculator useState/useRef/useEffect declarations, grouped
  * into a single hook so the component body stays under the line budget.
  */
+
 function useTacticalCalculatorFormState(
   initialConditions,
   capSimulatorResults,
@@ -148,7 +156,10 @@ function useTacticalCalculatorFormState(
 
   // What-If scenario
   const [whatIfRating, setWhatIfRating] = useState(30);
-  const [whatIfBilateral, setWhatIfBilateral] = useState(false);
+  const [whatIfCondition, setWhatIfCondition] = useState({
+    bodyPart: "",
+    side: "none",
+  });
 
   // View mode
   const [activeTab, setActiveTab] = useState(
@@ -182,8 +193,8 @@ function useTacticalCalculatorFormState(
     setDependents,
     whatIfRating,
     setWhatIfRating,
-    whatIfBilateral,
-    setWhatIfBilateral,
+    whatIfCondition,
+    setWhatIfCondition,
     activeTab,
     setActiveTab,
     showSteps,
@@ -548,7 +559,7 @@ function computeDerivedResults({
   myRatings,
   dependents,
   whatIfRating,
-  whatIfBilateral,
+  whatIfCondition,
 }) {
   const myRatingsResults = calculateVARating(myRatings);
   const myRatingsPyramiding = detectPyramiding(myRatings);
@@ -560,11 +571,10 @@ function computeDerivedResults({
   );
   const pyramiding = detectPyramiding(conditions);
   const tdiu = checkTDIUEligibility(conditions);
-  const whatIfResults = calculateWhatIf(
-    conditions,
-    whatIfRating,
-    whatIfBilateral,
-  );
+  const whatIfResults = calculateWhatIf(conditions, whatIfRating, {
+    side: whatIfCondition.side,
+    bodyPart: whatIfCondition.bodyPart || "other",
+  });
   const ratingNeededFor90 = calculateNeededRating(results.rawScore, 90);
   const ratingNeededFor100 = calculateNeededRating(results.rawScore, 100);
 
@@ -1006,8 +1016,9 @@ function WhatIfScenarioInput({
   t,
   whatIfRating,
   setWhatIfRating,
-  whatIfBilateral,
-  setWhatIfBilateral,
+  whatIfCondition,
+  setWhatIfCondition,
+  allBodyParts,
 }) {
   return (
     <div className="space-y-4">
@@ -1046,23 +1057,25 @@ function WhatIfScenarioInput({
           </div>
         </div>
 
-        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-        <label className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg cursor-pointer">
-          <input
-            type="checkbox"
-            checked={whatIfBilateral}
-            onChange={(e) => setWhatIfBilateral(e.target.checked)}
-            className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+        <div className="space-y-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg">
+          <BodyPartSelectField
+            t={t}
+            newCondition={whatIfCondition}
+            setNewCondition={setWhatIfCondition}
+            allBodyParts={allBodyParts}
           />
-          <div>
-            <span className="font-medium text-purple-800 dark:text-purple-200">
-              🔄 {t("tacticalCalc", "wouldBeBilateral")}
-            </span>
-            <p className="text-xs text-purple-600 dark:text-purple-400">
-              {t("tacticalCalc", "addsBilateralBoost")}
-            </p>
-          </div>
-        </label>
+          {allBodyParts.find((bp) => bp.value === whatIfCondition.bodyPart)
+            ?.canBeBilateral && (
+            <SideSelectField
+              t={t}
+              newCondition={whatIfCondition}
+              setNewCondition={setWhatIfCondition}
+            />
+          )}
+          <p className="text-xs text-purple-700 dark:text-purple-300">
+            {t("tacticalCalc", "whatIfBilateralRule")}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -1202,8 +1215,9 @@ function WhatIfTab({
   t,
   whatIfRating,
   setWhatIfRating,
-  whatIfBilateral,
-  setWhatIfBilateral,
+  whatIfCondition,
+  setWhatIfCondition,
+  allBodyParts,
   whatIfResults,
 }) {
   return (
@@ -1212,8 +1226,9 @@ function WhatIfTab({
         t={t}
         whatIfRating={whatIfRating}
         setWhatIfRating={setWhatIfRating}
-        whatIfBilateral={whatIfBilateral}
-        setWhatIfBilateral={setWhatIfBilateral}
+        whatIfCondition={whatIfCondition}
+        setWhatIfCondition={setWhatIfCondition}
+        allBodyParts={allBodyParts}
       />
       <WhatIfResultsPanel
         t={t}
@@ -1243,77 +1258,6 @@ function QuickLoadRatingsBanner({
       >
         {t("tacticalCalc", "loadNow")}
       </button>
-    </div>
-  );
-}
-
-function BodyPartSelectField({
-  t,
-  newCondition,
-  setNewCondition,
-  allBodyParts,
-}) {
-  return (
-    <div className="sm:col-span-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        {t("tacticalCalc", "bodyPartConditionType")}
-      </label>
-      <select
-        aria-label={t("tacticalCalc", "bodyPartConditionType")}
-        value={newCondition.bodyPart}
-        onChange={(e) => {
-          const bp = e.target.value;
-          const info = allBodyParts.find((p) => p.value === bp);
-          setNewCondition((prev) => ({
-            ...prev,
-            bodyPart: bp,
-            side: info?.canBeBilateral ? prev.side : "none",
-          }));
-        }}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-      >
-        <option value="">{t("tacticalCalc", "select")}</option>
-        <optgroup label={t("tacticalCalc", "extremitiesBilateral")}>
-          {BODY_PARTS.extremities.map((bp) => (
-            <option key={bp.value} value={bp.value}>
-              {bp.label}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label={t("tacticalCalc", "otherBodySystems")}>
-          {BODY_PARTS.other.map((bp) => (
-            <option key={bp.value} value={bp.value}>
-              {bp.label}
-            </option>
-          ))}
-        </optgroup>
-      </select>
-    </div>
-  );
-}
-
-function SideSelectField({ t, newCondition, setNewCondition }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        {t("tacticalCalc", "side")}
-      </label>
-      <select
-        aria-label={t("tacticalCalc", "side")}
-        value={newCondition.side}
-        onChange={(e) =>
-          setNewCondition((prev) => ({
-            ...prev,
-            side: e.target.value,
-          }))
-        }
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-      >
-        <option value="none">{t("tacticalCalc", "notBilateral")}</option>
-        <option value="left">{t("tacticalCalc", "left")}</option>
-        <option value="right">{t("tacticalCalc", "right")}</option>
-        <option value="bilateral">{t("tacticalCalc", "bothBilateral")}</option>
-      </select>
     </div>
   );
 }
@@ -1443,39 +1387,68 @@ function RecordsCandidatesBanner({ recordCandidates, handleLoadFromRecords }) {
   );
 }
 
+const SIDE_LABEL_KEYS = {
+  left: "left",
+  right: "right",
+  bilateral: "bothSides",
+};
+
+const bilateralGroupIds = (conditions) =>
+  new Set(calculateVARating(conditions).bilateralConditions.map((c) => c.id));
+
+function ConditionSideBadge({ t, side, inBilateralGroup }) {
+  const key = SIDE_LABEL_KEYS[side];
+  if (!key) return null;
+  const sideLabel = t("tacticalCalc", key);
+  if (!inBilateralGroup) {
+    return (
+      <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+        {sideLabel}
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
+      🔄 {t("tacticalCalc", "bilateral")} ({sideLabel})
+    </span>
+  );
+}
+
 function ConditionRow({
+  t,
   condition,
+  inBilateralGroup,
   handleEditCondition,
   handleRemoveCondition,
 }) {
   return (
     <div
-      className={`flex items-center justify-between p-3 rounded-lg border ${
-        condition.side !== "none"
+      className={`flex items-center justify-between gap-2 p-3 rounded-lg border ${
+        inBilateralGroup
           ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700"
           : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
       }`}
     >
-      <div className="flex items-center gap-3">
-        <span className="w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span className="w-12 h-12 shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
           {condition.rating}%
         </span>
-        <div>
-          <p className="font-medium text-gray-800 dark:text-gray-200">
+        <div className="min-w-0">
+          <p className="break-words font-medium text-gray-800 dark:text-gray-200">
             {condition.name}
           </p>
-          {condition.side !== "none" && (
-            <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
-              🔄 Bilateral ({condition.side})
-            </span>
-          )}
+          <ConditionSideBadge
+            t={t}
+            side={condition.side}
+            inBilateralGroup={inBilateralGroup}
+          />
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={() => handleEditCondition(condition)}
-          className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-gray-400 hover:text-blue-500 transition-colors"
           aria-label="Edit"
         >
           <svg
@@ -1495,7 +1468,7 @@ function ConditionRow({
         <button
           type="button"
           onClick={() => handleRemoveCondition(condition.id)}
-          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 text-gray-400 hover:text-red-500 transition-colors"
           aria-label="Remove"
         >
           <svg
@@ -1524,6 +1497,7 @@ function ConditionsListSection({
   handleEditCondition,
   handleRemoveCondition,
 }) {
+  const groupIds = bilateralGroupIds(conditions);
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
@@ -1554,7 +1528,9 @@ function ConditionsListSection({
           {conditions.map((condition) => (
             <ConditionRow
               key={condition.id}
+              t={t}
               condition={condition}
+              inBilateralGroup={groupIds.has(condition.id)}
               handleEditCondition={handleEditCondition}
               handleRemoveCondition={handleRemoveCondition}
             />
@@ -1622,9 +1598,11 @@ function CalculatorInputSection({
 function ResultsValidationBadge({ t }) {
   return (
     <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-3 border border-green-200 dark:border-green-700">
-      <div className="flex items-center justify-center gap-2 text-sm text-green-700 dark:text-green-300">
+      <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-green-700 dark:text-green-300">
         <span className="text-lg">✓</span>
-        <span className="font-medium">{t("tacticalCalc", "verifiedPer")}</span>
+        <span className="min-w-0 font-medium">
+          {t("tacticalCalc", "verifiedPer")}
+        </span>
         <span className="text-xs px-2 py-1 bg-green-200 dark:bg-green-800 rounded-full">
           {t("tacticalCalc", "matchesVAGov")}
         </span>
@@ -1635,8 +1613,8 @@ function ResultsValidationBadge({ t }) {
 
 function MainRatingDisplay({ t, results }) {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
-      <div className="flex items-center justify-center gap-6">
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-700">
+      <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
         {/* Progress Ring */}
         <div className="relative">
           <ProgressRing
@@ -1676,6 +1654,39 @@ function MainRatingDisplay({ t, results }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const BILATERAL_ISSUE_KEYS = {
+  "limb-unknown": "bilateralIssueLimbUnknown",
+  "side-unknown": "bilateralIssueSideUnknown",
+  "side-not-set": "bilateralIssueSideNotSet",
+  "side-unspecified": "bilateralIssueSideUnspecified",
+  "separate-entry": "bilateralIssueSeparateEntry",
+  "single-bilateral-evaluation": "bilateralIssueSingleEvaluation",
+  "most-favourable-not-checked": "bilateralIssueNotChecked",
+};
+
+function BilateralIssuesNotice({ t, issues }) {
+  if (!issues || issues.length === 0) return null;
+  return (
+    <div
+      role="status"
+      aria-label={t("tacticalCalc", "bilateralIssuesTitle")}
+      className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg text-sm text-amber-800 dark:text-amber-200"
+    >
+      <p className="font-semibold">
+        {t("tacticalCalc", "bilateralIssuesTitle")}
+      </p>
+      <ul className="mt-1 space-y-1 list-disc list-inside">
+        {issues.map((issue, index) => (
+          <li key={issue.id ?? `${issue.reason}-${index}`}>
+            {issue.name && <strong>{issue.name}: </strong>}
+            {t("tacticalCalc", BILATERAL_ISSUE_KEYS[issue.reason])}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -1737,8 +1748,12 @@ function PyramidingWarningsSection({ t, pyramiding }) {
         {pyramiding.summary}
       </p>
       <div className="space-y-2">
-        {pyramiding.warnings.map((warning, idx) => (
-          <PyramidingWarningItem key={idx} t={t} warning={warning} />
+        {pyramiding.warnings.map((warning) => (
+          <PyramidingWarningItem
+            key={warning.message}
+            t={t}
+            warning={warning}
+          />
         ))}
       </div>
       <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
@@ -1884,6 +1899,12 @@ function CalculationStepDetail({ step }) {
           Non-bilateral: {step.nonBilateral.join(", ")}
         </div>
       )}
+      {step.excludedFromFactor && step.excludedFromFactor.length > 0 && (
+        <div className="ml-8 text-sm text-gray-600 dark:text-gray-400">
+          Left out of the bilateral factor because that gives a higher rating
+          (38 CFR § 4.26(d)): {step.excludedFromFactor.join(", ")}
+        </div>
+      )}
       {step.ratings && (
         <div className="ml-8 text-sm font-mono text-gray-700 dark:text-gray-300">
           Ratings (sorted): [{step.ratings.join("%, ")}%]
@@ -1893,7 +1914,10 @@ function CalculationStepDetail({ step }) {
         <div className="ml-8 mt-2 p-2 bg-purple-50 dark:bg-purple-900/30 rounded text-sm">
           <div className="text-purple-700 dark:text-purple-300">
             <div>Combined: {step.combinedBilateral}%</div>
-            <div>Bilateral Factor (+10%): {step.bilateralFactor}%</div>
+            <div>
+              Bilateral Factor (+10%): {step.bilateralFactor}%
+              {step.bilateralFactorCapped && " (group capped at 100%)"}
+            </div>
             <div className="font-bold mt-1">
               Group Rating: {step.bilateralGroupRating}%
             </div>
@@ -1945,8 +1969,8 @@ function CalculationStepsSection({ t, showSteps, setShowSteps, results }) {
             <span>📋</span>
             <span>{t("tacticalCalc", "officialVAMethod")}</span>
           </div>
-          {results.calculationSteps.map((step, idx) => (
-            <CalculationStepDetail key={idx} step={step} />
+          {results.calculationSteps.map((step) => (
+            <CalculationStepDetail key={step.step} step={step} />
           ))}
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
             <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
@@ -1979,6 +2003,10 @@ function CalculatorResultsSection({
       <ResultsValidationBadge t={t} />
 
       <MainRatingDisplay t={t} results={results} />
+
+      <BilateralIssuesNotice t={t} issues={results.bilateralIssues} />
+
+      <IgnoredRatingsNotice t={t} ignored={results.ignoredEntries} />
 
       {/* Pyramiding Warnings - NEW */}
       <PyramidingWarningsSection t={t} pyramiding={pyramiding} />
@@ -2251,9 +2279,9 @@ function MyRatingsPyramidingWarning({ t, myRatingsPyramiding }) {
         {myRatingsPyramiding.summary}
       </p>
       <div className="space-y-2 max-h-48 overflow-y-auto">
-        {myRatingsPyramiding.warnings.map((warning, idx) => (
+        {myRatingsPyramiding.warnings.map((warning) => (
           <div
-            key={idx}
+            key={warning.message}
             className="text-xs p-2 bg-white dark:bg-gray-800 rounded border-l-2 border-yellow-500"
           >
             <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
@@ -2313,6 +2341,10 @@ function MyRatingsSummaryFilled({
           </p>
         )}
       </div>
+
+      <BilateralIssuesNotice t={t} issues={myRatingsResults.bilateralIssues} />
+
+      <IgnoredRatingsNotice t={t} ignored={myRatingsResults.ignoredEntries} />
 
       {/* Monthly Pay Estimate */}
       <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">
@@ -2854,7 +2886,7 @@ function VeteranAloneRatesTable({ t }) {
         </span>
         {t("tacticalCalc", "veteranAlone")}
       </h4>
-      <div className="overflow-x-auto">
+      <ScrollRegion label={t("tacticalCalc", "veteranAlone")}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b dark:border-gray-700">
@@ -2897,7 +2929,7 @@ function VeteranAloneRatesTable({ t }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }
@@ -2911,7 +2943,7 @@ function WithSpouseRatesTable({ t }) {
         </span>
         {t("tacticalCalc", "withSpouse")}
       </h4>
-      <div className="overflow-x-auto">
+      <ScrollRegion label={t("tacticalCalc", "withSpouse")}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b dark:border-gray-700">
@@ -2951,7 +2983,7 @@ function WithSpouseRatesTable({ t }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }
@@ -2998,7 +3030,7 @@ function AddedAmountsTable({ t }) {
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
         {t("tacticalCalc", "additionalAmountsNote")}
       </p>
-      <div className="overflow-x-auto">
+      <ScrollRegion label={t("tacticalCalc", "additionalAmounts")}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b dark:border-gray-700">
@@ -3026,7 +3058,7 @@ function AddedAmountsTable({ t }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }
@@ -3125,15 +3157,39 @@ function TacticalCalculatorHeader({
     <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
-      <div className="relative flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+      <HeaderCloseSlot
+        className="relative"
+        close={
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 sm:p-3 text-white hover:bg-white/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Close"
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
             <span className="text-2xl sm:text-3xl">🧮</span>
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <h2
               id="calculator-title"
-              className="text-lg sm:text-2xl md:text-3xl font-bold truncate"
+              className="text-lg sm:text-2xl md:text-3xl font-bold"
             >
               {t("tacticalCalc", "title")}{" "}
               <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
@@ -3158,28 +3214,8 @@ function TacticalCalculatorHeader({
               moduleName="Tactical Calculator"
             />
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 sm:p-3 text-white hover:bg-white/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Close"
-          >
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -3235,7 +3271,7 @@ function TacticalCalculatorTabButton({ tab, activeTab, setActiveTab }) {
     <button
       type="button"
       onClick={() => setActiveTab(tab.id)}
-      className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
+      className={`flex-1 sm:flex-none min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
     >
       <span className="hidden sm:inline">{tab.label}</span>
       <span className="inline sm:hidden">{tab.shortLabel}</span>
@@ -3257,8 +3293,15 @@ function TacticalCalculatorTabButton({ tab, activeTab, setActiveTab }) {
 function TacticalCalculatorTabNav({ t, activeTab, setActiveTab, capResults }) {
   const tabs = getTacticalCalculatorTabs(t, capResults);
   return (
-    <div className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
-      <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
+    <div
+      data-calculator-tab-bar
+      className="-mx-4 -mt-4 px-6 sm:px-7 md:px-10 pt-6 sm:pt-7 md:pt-8 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky -top-4 z-10"
+    >
+      {/* The dialog body has 16px of padding and a sticky child pins inside
+          it, so the bar is pulled over that padding (-mx-4 -mt-4 -top-4) to
+          keep scrolled rows from showing above and beside it. Tabs wrap on a
+          phone instead of scrolling sideways out of sight. */}
+      <nav className="flex flex-wrap gap-1 pb-1">
         {tabs.map((tab) => (
           <TacticalCalculatorTabButton
             key={tab.id}
@@ -3434,8 +3477,27 @@ function EditConditionSideField({ t, editForm, setEditForm, allBodyParts }) {
   );
 }
 
-function EditConditionBilateralExplanation({ t, editForm }) {
-  if (editForm.side === "none") return null;
+function EditConditionBilateralExplanation({
+  t,
+  editForm,
+  editingCondition,
+  conditions,
+  allBodyParts,
+}) {
+  const sided = allBodyParts.find(
+    (bp) => bp.value === editForm.bodyPart,
+  )?.canBeBilateral;
+  if (!sided || editForm.side === "none") return null;
+  const asEdited = conditions.map((c) =>
+    c.id === editingCondition.id ? { ...c, ...editForm } : c,
+  );
+  if (!bilateralGroupIds(asEdited).has(editingCondition.id)) {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300">
+        {t("tacticalCalc", "bilateralNotApplied")}
+      </div>
+    );
+  }
   return (
     <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
       <div className="flex gap-2">
@@ -3482,7 +3544,7 @@ function TacticalCalculatorMainModal({
         />
       }
     >
-      <div ref={calculatorContentRef}>
+      <div ref={calculatorContentRef} className="min-w-0">
         {/* Tab Navigation - Sticky */}
         <TacticalCalculatorTabNav
           t={t}
@@ -3527,6 +3589,7 @@ function VAGovRatingPasterModal({
 
 function EditConditionModal({
   t,
+  conditions,
   editingCondition,
   editForm,
   setEditForm,
@@ -3590,7 +3653,6 @@ function EditConditionModal({
           setEditForm={setEditForm}
         />
 
-        {/* Side (only show if body part can be bilateral) */}
         <EditConditionSideField
           t={t}
           editForm={editForm}
@@ -3598,8 +3660,13 @@ function EditConditionModal({
           allBodyParts={allBodyParts}
         />
 
-        {/* Bilateral Factor Explanation */}
-        <EditConditionBilateralExplanation t={t} editForm={editForm} />
+        <EditConditionBilateralExplanation
+          t={t}
+          editForm={editForm}
+          editingCondition={editingCondition}
+          conditions={conditions}
+          allBodyParts={allBodyParts}
+        />
       </div>
     </ResponsiveModal>
   );
@@ -3618,6 +3685,7 @@ const TacticalCalculator = ({
   });
   const {
     t,
+    conditions,
     showVAGovPaster,
     setShowVAGovPaster,
     editingCondition,
@@ -3648,6 +3716,7 @@ const TacticalCalculator = ({
       {/* Edit Condition Modal */}
       <EditConditionModal
         t={t}
+        conditions={conditions}
         editingCondition={editingCondition}
         editForm={editForm}
         setEditForm={setEditForm}

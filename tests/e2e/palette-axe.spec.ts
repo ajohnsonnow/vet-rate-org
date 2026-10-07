@@ -137,7 +137,10 @@ async function bootWithPalette(
         try {
           const db = req.result;
           const tx = db.transaction("keyval", "readwrite");
-          tx.objectStore("keyval").put("true", "vet_rate_migrated_to_indexeddb");
+          tx.objectStore("keyval").put(
+            "true",
+            "vet_rate_migrated_to_indexeddb",
+          );
           tx.oncomplete = () => db.close();
         } catch {
           /* store missing on first open is handled by onupgradeneeded */
@@ -150,10 +153,17 @@ async function bootWithPalette(
   // and the IDB migration async work has settled before we assert or dispatch.
   await page.goto("/", { waitUntil: "networkidle" });
   await dismissDisclaimer(page);
-  // Settle async content (e.g. the DKB stat counter loads after networkidle).
-  // Without this, the baseline-relative diff can flake when the counter is in a
-  // different state between the default-baseline load and a palette load.
-  await page.waitForTimeout(1200);
+  // Settle async content: the header's KnowledgeBaseStatus badge (compact
+  // CompactBadgeLabel) shows "DKB: Loading..." until its own async
+  // device/cache check resolves (KnowledgeBaseStatus.jsx) - without waiting
+  // for that specific text to clear, the baseline-relative diff can flake
+  // when the counter is in a different state between the default-baseline
+  // load and a palette load. Resolves immediately if it was never showing
+  // "Loading..." in the first place (already settled).
+  await page
+    .getByText(/DKB:\s*Loading/i)
+    .waitFor({ state: "hidden", timeout: 10000 })
+    .catch(() => {});
 }
 
 /**
@@ -208,7 +218,12 @@ async function scanDialogViolations(
   page: Page,
   event: string,
 ): Promise<
-  { id: string; impact?: string | null; help: string; nodes: { html: string }[] }[]
+  {
+    id: string;
+    impact?: string | null;
+    help: string;
+    nodes: { html: string }[];
+  }[]
 > {
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -220,7 +235,12 @@ async function scanDialogViolations(
         .analyze();
       return results.violations.filter((v) =>
         BLOCKING_IMPACTS.has(v.impact ?? ""),
-      ) as { id: string; impact?: string | null; help: string; nodes: { html: string }[] }[];
+      ) as {
+        id: string;
+        impact?: string | null;
+        help: string;
+        nodes: { html: string }[];
+      }[];
     } catch (err) {
       if (!String(err).includes("No elements found for include")) throw err;
       lastError = err;
@@ -241,7 +261,13 @@ async function scanDialogViolations(
  * present even with `default`). A palette that recolors the brand surface must not
  * add any violation a veteran wouldn't already hit on the default theme.
  */
-const violationSignatures = (violations: { id: string; impact?: string | null; nodes: { target: unknown[] }[] }[]): Set<string> => {
+const violationSignatures = (
+  violations: {
+    id: string;
+    impact?: string | null;
+    nodes: { target: unknown[] }[];
+  }[],
+): Set<string> => {
   const sigs = new Set<string>();
   for (const v of violations) {
     if (!BLOCKING_IMPACTS.has(v.impact ?? "")) continue;
@@ -252,7 +278,10 @@ const violationSignatures = (violations: { id: string; impact?: string | null; n
 
 test.describe("axe palette: home page — all palettes × light/dark", () => {
   // Per-mode baseline = the `default` palette's blocking-violation signatures.
-  const baseline: Record<ThemeMode, Set<string>> = { light: new Set(), dark: new Set() };
+  const baseline: Record<ThemeMode, Set<string>> = {
+    light: new Set(),
+    dark: new Set(),
+  };
 
   test.beforeAll(async ({ browser }) => {
     // Two full page loads + axe scans; comfortably over the default 30s hook budget.
@@ -261,7 +290,9 @@ test.describe("axe palette: home page — all palettes × light/dark", () => {
       const context = await browser.newContext();
       const page = await context.newPage();
       await bootWithPalette(page, "default", mode);
-      const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+      const results = await new AxeBuilder({ page })
+        .withTags(WCAG_TAGS)
+        .analyze();
       baseline[mode] = violationSignatures(results.violations);
       await context.close();
     }
@@ -340,7 +371,9 @@ test.describe("axe palette: modal surfaces — pride + army × light/dark", () =
           const novel = blocking.filter(
             (v) =>
               !v.nodes.every((n) =>
-                base.has(`${v.id}|${JSON.stringify((n as { target?: unknown }).target)}`),
+                base.has(
+                  `${v.id}|${JSON.stringify((n as { target?: unknown }).target)}`,
+                ),
               ),
           );
           expect(

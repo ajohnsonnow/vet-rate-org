@@ -7,7 +7,6 @@ import VersionDropdown from "./VersionDropdown";
 // ConsistencyBadge removed from header - accessed via Tools menu
 import { AIStatusBadge } from "./AIModeSelector";
 import { useTheme } from "../contexts/ThemeContext";
-import { useHelperMode } from "../contexts/HelperModeContext";
 import { hasUnsavedChanges } from "../utils/dataPersistence";
 import { useColorSchemas } from "../hooks/useColorSchemas";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -284,6 +283,7 @@ const ToolsMenuTrigger = ({ t, showToolsMenu, setShowToolsMenu }) => (
     aria-label={t("common", "tools")}
     aria-expanded={showToolsMenu}
     aria-haspopup="true"
+    data-e2e-menu-trigger="tools"
   >
     🛠️ <span className="hidden lg:inline">{t("common", "tools")}</span>
     <svg
@@ -1311,6 +1311,7 @@ const SupportResourcesSection = (props) => (
 
 const ToolsMenuPanel = (props) => (
   <div
+    data-e2e-menu-panel="tools"
     className={`fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-96 rounded-lg shadow-xl z-50 overflow-hidden max-h-[80vh] overflow-y-auto ${props.dropdownClasses.menu.replace("absolute mt-2", "")}`}
   >
     <div className="p-2">
@@ -1426,6 +1427,7 @@ const VeteranResourceLink = ({ resource }) => {
 
 const ResourcesMenuPanel = (props) => (
   <div
+    data-e2e-menu-panel="resources"
     className={`fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-72 rounded-lg shadow-xl z-50 overflow-hidden max-h-[70vh] sm:max-h-[80vh] overflow-y-auto ${props.dropdownClasses.menu.replace("absolute mt-2", "")}`}
   >
     <div className="p-2">
@@ -1443,8 +1445,8 @@ const ResourcesMenuPanel = (props) => (
 
       <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
-      {VETERAN_RESOURCES.map((resource, index) => (
-        <VeteranResourceLink key={index} resource={resource} />
+      {VETERAN_RESOURCES.map((resource) => (
+        <VeteranResourceLink key={resource.name} resource={resource} />
       ))}
     </div>
   </div>
@@ -1462,6 +1464,7 @@ const ResourcesMenuTrigger = ({
     aria-label={t("header", "veteranResources")}
     aria-expanded={showResourcesMenu}
     aria-haspopup="true"
+    data-e2e-menu-trigger="resources"
   >
     🎖️ <span className="hidden lg:inline">{t("header", "resources")}</span>
     <svg
@@ -1530,6 +1533,7 @@ const MobileMenuButton = ({ showMobileMenu, setShowMobileMenu }) => (
     className="md:hidden p-2.5 rounded-lg bg-va-blue/10 dark:bg-gray-700 hover:bg-va-blue/20 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold flex-shrink-0"
     aria-label="Toggle menu"
     aria-expanded={showMobileMenu}
+    data-e2e-menu-trigger="mobile-drawer"
   >
     {showMobileMenu ? (
       <svg
@@ -1637,7 +1641,16 @@ const LowerHeaderRow = ({
 );
 
 const MobileMenuHeader = ({ setShowMobileMenu }) => (
-  <div className="sticky top-0 bg-gradient-to-r from-va-blue to-blue-700 dark:from-gray-800 dark:to-gray-900 text-white p-4 flex justify-between items-center shadow-md z-10">
+  // pt-20 below `md` reserves the same Quick Exit gutter as
+  // ResponsiveModal.jsx (D3, 52a1edd8): this drawer's own left edge sits
+  // close enough to the viewport's left edge at 320-360px that the fixed
+  // top-left Quick Exit button covers the "Menu" title. `md:` (not `sm:`):
+  // this whole drawer is `md:hidden` (see MobileMenuDrawer), so it only ever
+  // renders full-bleed/near-full-width - dropping to pt-4 at `sm:` left the
+  // 640-767px band with just 16px of clearance from Quick Exit, which moves
+  // to top-right at that same `sm:` breakpoint and reached this header's own
+  // close button there (measured at 640x800/700x900).
+  <div className="sticky top-0 bg-gradient-to-r from-va-blue to-blue-700 dark:from-gray-800 dark:to-gray-900 text-white p-4 pt-20 md:pt-4 flex justify-between items-center shadow-md z-10">
     <div>
       <h2 id="mobile-menu-title" className="text-lg font-bold">
         Menu
@@ -1993,13 +2006,24 @@ const MobileMenuDrawer = (props) => {
         ref={props.mobileMenuRef}
         role="dialog"
         aria-modal="true"
+        // Owner decision (C): the panic-key threshold must count an Escape
+        // that closes a navigation menu/drawer (unlike one that closes a
+        // tool dialog, which is exempt). This attribute is a pure marker for
+        // safetyRedirect.js's DIALOG_SELECTOR to exclude the drawer from its
+        // "a tool dialog closed" exemption - it changes nothing about the
+        // drawer's own accessibility semantics (still role="dialog"
+        // aria-modal="true", still focus-trapped, still closes on Escape)
+        // and nothing about index.css's floating-widget-hiding rule (keyed
+        // off role/aria-modal alone, so the drawer still hides Quick Exit's
+        // siblings while open).
+        data-vetrate-nav-menu="true"
         aria-labelledby="mobile-menu-title"
         className="absolute right-0 top-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <MobileMenuHeader setShowMobileMenu={props.setShowMobileMenu} />
 
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-2" data-e2e-menu-panel="mobile-drawer">
           <MobileMenuCoreNav {...props} />
           <MobileMenuToolsSection {...props} />
           <MobileMenuResourcesSection {...props} />
@@ -2015,9 +2039,8 @@ const MobileMenuDrawer = (props) => {
 
 function Header(props) {
   const { isDark, toggleTheme } = useTheme();
-  const { _isHelperMode } = useHelperMode();
-  const { getDropdownClasses, _getColorClass, _colors } = useColorSchemas();
-  const { t, _language } = useLanguage(); // Include language to force re-render on change
+  const { getDropdownClasses } = useColorSchemas();
+  const { t } = useLanguage();
   const dropdownClasses = getDropdownClasses();
 
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);
@@ -2044,7 +2067,7 @@ function Header(props) {
       {/* Crisis Line Banner - Always Visible */}
       <CrisisLineBanner />
 
-      <div className="container mx-auto px-4 py-4 md:py-6 max-w-7xl">
+      <div className="container mx-auto px-4 py-4 md:py-6 max-w-7xl 3xl:max-w-[96rem] 4xl:max-w-[120rem]">
         <div className="flex flex-col md:flex-row justify-center items-center gap-3 md:gap-6">
           <HeaderBrand t={t} />
 

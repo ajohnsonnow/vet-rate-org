@@ -7,16 +7,21 @@
  * Analyzes veteran claims files locally using AI to identify evidence and claim opportunities
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatFileSize } from "../utils/pdfExtractor";
 import { isPdfFile } from "../utils/fileTypeGuards";
 import SystemRequirementsNotice from "./SystemRequirementsNotice";
 import {
   processFormationDocument,
+  persistFormationDocument,
+  stripIdentifiersFromFormationResult,
+  DocumentPersistIncompleteError,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
+import { describePersistIncomplete } from "../utils/persistIncompleteMessage";
 import {
   analyzeCFile,
   getCFilePrivacyDisclosure,
@@ -26,41 +31,56 @@ import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import ReportBugLink from "./ReportBugLink";
-import {
-  saveAnalysisResults,
-  buildVkbMergeFromCFile,
-  PACKET_DOC_TYPES,
-} from "../utils/veteranContextProvider";
+import { mergeAnalysisIntoVkb } from "../utils/veteranContextProvider";
+import { planCFileSave } from "../utils/cfileSavePlan";
+import { convergeTimelineStoreWithVKB } from "../utils/timelineStoreSync";
 import { getStorageStats } from "../utils/storage";
+import { getPacketIndex } from "../utils/myPacketManager";
 
 // Sub-components for the dashboard
 import CFileTimeline from "./CFileTimeline";
 import CFileClaimsCards from "./CFileClaimsCards";
 import CFileSemanticSearch from "./CFileSemanticSearch";
+import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
+import { getReadingNotices } from "../utils/readingNotices";
 
-async function _extractTextForAnalysis(file, ctx) {
-  const musterResult = await processFormationDocument(file, (progress) => {
-    // Map MusterCall progress events → CFileAnalyzer UI state
-    if (progress.state === PROCESSING_STATES.EXTRACTING) {
-      ctx.setExtractionProgress({
-        current: progress.currentPage || 0,
-        total: progress.totalPages || 0,
-      });
-      if (progress.message) ctx.setProcessingStage(progress.message);
-    }
-  });
+// Reading the file writes nothing (deferPersist): the veteran decides on the
+// results screen, and name, date of birth and VA file and claim numbers are
+// never part of what is saved (omitIdentifiers).
+export async function _extractTextForAnalysis(file, ctx, options) {
+  const musterResult = await processFormationDocument(
+    file,
+    (progress) => {
+      // Map MusterCall progress events → CFileAnalyzer UI state
+      if (progress.state === PROCESSING_STATES.EXTRACTING) {
+        ctx.setExtractionProgress({
+          current: progress.currentPage || 0,
+          total: progress.totalPages || 0,
+        });
+        if (progress.message) ctx.setProcessingStage(progress.message);
+      }
+    },
+    { ...options, deferPersist: true, omitIdentifiers: true },
+  );
 
   // Normalise to the shape the rest of handleConsentAndProcess expects
   const extractionResult = {
     text: musterResult.text || "",
     hasText: (musterResult.text || "").trim().length > 100,
     totalPages: musterResult.pageCount || 1,
+    totalCharacters: (musterResult.text || "").length,
     avgCharsPerPage: musterResult.text
       ? Math.round(musterResult.text.length / (musterResult.pageCount || 1))
       : 0,
     method: musterResult.method || "ocr",
     ocrUsed: musterResult.ocrUsed ?? true,
     confidence: musterResult.confidence ?? null,
+    coverageNote: musterResult.coverageNote ?? null,
+    pagesOCRd: musterResult.pagesOCRd ?? null,
+    pagesBlank: musterResult.pagesBlank ?? [],
+    pagesSkipped: musterResult.pagesSkipped ?? [],
+    pagesFailed: musterResult.pagesFailed ?? [],
+    deferredResult: musterResult,
   };
 
   if (!extractionResult.hasText) {
@@ -126,31 +146,189 @@ async function _checkStorageQuota(extractionResult, result, ctx) {
   }
 }
 
-async function _saveCFileResults(file, extractionResult, result) {
-  // Save C-File analysis to VKB + My Packet
-  try {
-    const analysis = result.analysis || {};
-    await saveAnalysisResults({
-      toolName: "C-File Analyzer",
-      classification: PACKET_DOC_TYPES.C_FILE,
-      rawText: extractionResult?.text || "",
-      extractedData: analysis,
-      fileName: file?.name || "c-file.pdf",
-      pageCount: extractionResult?.totalPages || 1,
-      vkbDocument: {
-        classification: "c_file",
-        rawText: (extractionResult?.text || "").slice(0, 5000),
-        extractedData: analysis,
-        source: "CFileAnalyzer",
-      },
-      vkbMergeData: buildVkbMergeFromCFile(analysis, extractionResult),
-    });
-  } catch (saveErr) {
-    console.warn("Failed to save C-File results to VKB/Packet:", saveErr);
-  }
+// Filed once, under the document's real type, and only after the veteran chose
+// to save. Both stores key a document on its name and size and the merges skip
+// what is already there, so saving again or analysing the same file again adds
+// nothing new.
+export async function _saveCFileToRecords(
+  extractionResult,
+  analysis,
+  ticked = [],
+) {
+  const plan = planCFileSave(analysis, extractionResult, { ticked });
+  const filed = stripIdentifiersFromFormationResult(
+    extractionResult.deferredResult,
+  );
+  await persistFormationDocument(
+    { name: filed.filename, size: filed.size },
+    filed,
+  );
+  const packetIndex = await getPacketIndex();
+  const filedRecord = packetIndex.find(
+    (entry) =>
+      entry.fileName === filed.filename &&
+      (entry.fileSize || 0) === (filed.size || 0),
+  );
+  await mergeAnalysisIntoVkb({
+    toolName: "C-File Analyzer",
+    vkbMergeData: plan.vkbMergeData,
+    sourceDocumentId: filedRecord?.id ?? null,
+  });
+  await convergeTimelineStoreWithVKB({
+    onlyIfStoreHasEvents: true,
+    cfileDocumentIds: filedRecord?.id ? [filedRecord.id] : [],
+  });
 }
 
-async function _runConsentAndProcess(file, t, ctx) {
+const SAVE_IDLE = { phase: "idle", message: "", saves: 0 };
+
+function _describeSaveFailure(err, fileName) {
+  if (err instanceof DocumentPersistIncompleteError) {
+    return describePersistIncomplete(fileName, "Save to my records", err);
+  }
+  return "Saving did not finish. Nothing was lost. Choose Save to my records to try again.";
+}
+
+// Nothing is written until the veteran chooses this: it says what will be
+// kept, and closing the tool without it leaves the stored data as it was.
+function SavePlanLists({ plan, ticked, onToggle }) {
+  return (
+    <div className="mt-2 text-sm text-blue-900 dark:text-blue-100">
+      <p className="font-medium">Conditions saved ({plan.conditions.length})</p>
+      <ul className="list-disc pl-5" data-testid="cfile-save-conditions">
+        {plan.conditions.map((name) => (
+          <li key={name}>{name}</li>
+        ))}
+      </ul>
+      {plan.leftOut.length > 0 && (
+        <fieldset data-testid="cfile-save-left-out" className="mt-2">
+          <legend className="font-medium">
+            Not recognised as a condition ({plan.leftOut.length}), left out
+            unless you tick it
+          </legend>
+          {plan.leftOut.map((item) => (
+            <label
+              key={item.key}
+              className="flex items-center gap-2 min-h-[44px]"
+            >
+              <input
+                type="checkbox"
+                checked={ticked.includes(item.key)}
+                onChange={() => onToggle(item.key)}
+              />
+              <span>{item.name}</span>
+            </label>
+          ))}
+        </fieldset>
+      )}
+      <p className="mt-2 font-medium">
+        Timeline events saved ({plan.timeline.length})
+      </p>
+      <ul className="list-disc pl-5" data-testid="cfile-save-timeline">
+        {plan.timeline.map((e, i) => (
+          <li key={`${e.date}|${e.eventType}|${i}`}>
+            {e.date || "no date found"}: {e.description}
+          </li>
+        ))}
+      </ul>
+      {plan.timelineLeftOut.length > 0 && (
+        <>
+          <p className="mt-2 font-medium">
+            Timeline events left out ({plan.timelineLeftOut.length})
+          </p>
+          <ul
+            className="list-disc pl-5"
+            data-testid="cfile-save-timeline-left-out"
+          >
+            {plan.timelineLeftOut.map((e, i) => (
+              <li key={`${e.date}|${e.description}|${i}`}>
+                {e.date || "no date"}: {e.description || "no description"}. Left
+                out: {e.reason}.
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+const NO_TICKS = [];
+
+export function CFileSaveToRecords({ file, extractedText, analysisResult }) {
+  const [status, setStatus] = useState(SAVE_IDLE);
+  const [ticked, setTicked] = useState(NO_TICKS);
+  useEffect(() => {
+    setStatus(SAVE_IDLE);
+    setTicked(NO_TICKS);
+  }, [analysisResult, extractedText]);
+  const plan = useMemo(
+    () => planCFileSave(analysisResult, extractedText, { ticked }),
+    [analysisResult, extractedText, ticked],
+  );
+  const toggleTick = useCallback(
+    (key) =>
+      setTicked((cur) =>
+        cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key],
+      ),
+    [],
+  );
+  const fileName = file?.name || "this document";
+
+  const handleSave = async () => {
+    setStatus((s) => ({ ...s, phase: "saving", message: "" }));
+    try {
+      await _saveCFileToRecords(extractedText, analysisResult, ticked);
+      setStatus((s) => ({ phase: "saved", message: "", saves: s.saves + 1 }));
+    } catch (err) {
+      console.warn("C-File save did not finish:", err?.name);
+      setStatus((s) => ({
+        ...s,
+        phase: "error",
+        message: _describeSaveFailure(err, fileName),
+      }));
+    }
+  };
+
+  return (
+    <section
+      className="mb-6 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 p-4"
+      data-testid="cfile-save-to-records"
+      aria-label="Save to my records"
+      data-saves={status.saves}
+    >
+      <p className="text-sm text-blue-900 dark:text-blue-100">
+        {status.saves > 0
+          ? "Saved to your records on this device."
+          : "Nothing has been saved yet."}{" "}
+        Saving keeps the conditions and timeline events listed below, the
+        summary, exposures and action items the analysis wrote, any service
+        periods, awards, deployments and ratings found in the document, and the
+        document "{fileName}" in your Knowledge Base and My Packet. Saving again
+        replaces the events earlier saved from this document, so none is
+        repeated. The text the analysis wrote can repeat details from the
+        document. Your name, date of birth, VA file number and claim number are
+        not saved as fields. Closing this screen without saving keeps nothing.
+      </p>
+      <SavePlanLists plan={plan} ticked={ticked} onToggle={toggleTick} />
+      {status.phase === "error" && (
+        <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
+          {status.message}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={status.phase === "saving"}
+        className="mt-3 min-h-[44px] px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg font-medium transition-colors"
+      >
+        {status.phase === "saving" ? "Saving..." : "Save to my records"}
+      </button>
+    </section>
+  );
+}
+
+async function _runConsentAndProcess(file, t, ctx, options = {}) {
   ctx.setHasConsented(true);
   ctx.setShowPrivacyConsent(false);
   ctx.setIsProcessing(true);
@@ -173,7 +351,7 @@ async function _runConsentAndProcess(file, t, ctx) {
     // Stage 2: Extract text - route through MusterCall pipeline for full
     // Tesseract OCR support (handles scanned / image-only PDFs)
     ctx.setProcessingStage(t("cfileAnalyzer", "extractingText"));
-    const extractionResult = await _extractTextForAnalysis(file, ctx);
+    const extractionResult = await _extractTextForAnalysis(file, ctx, options);
     if (!extractionResult) return;
 
     // Stage 3: Analyze with AI (uses unified AI service with automatic chunking)
@@ -181,7 +359,6 @@ async function _runConsentAndProcess(file, t, ctx) {
     const result = await _runAiAnalysis(extractionResult, ctx);
 
     await _checkStorageQuota(extractionResult, result, ctx);
-    await _saveCFileResults(file, extractionResult, result);
   } catch (err) {
     console.error("Analysis error:", err);
     console.error("Error stack:", err.stack);
@@ -206,22 +383,51 @@ async function _runConsentAndProcess(file, t, ctx) {
   }
 }
 
-function CFileDashboardHeader({
+// D19-2: a result with zero potential claims is not a completed analysis
+// with nothing interesting to report - it is the off-device fallback (or,
+// in principle, a real AI pass) finding nothing at all, which must never be
+// labeled "Analysis Complete". The off-device fallback (cfileAnalyzer.js's
+// _buildOffDeviceFallbackResult) always writes a non-empty summary - even
+// its "found nothing" summary says so in prose - so a blank-summary check
+// can never fire for that path. metadata.foundNothing is the fallback's own
+// authoritative signal and takes priority; the summary/claims heuristic
+// only covers paths (e.g. a real AI pass) that never set that field.
+function _cfileFoundNothing(analysisResult, analysisMetadata) {
+  if (typeof analysisMetadata?.foundNothing === "boolean") {
+    return analysisMetadata.foundNothing;
+  }
+  return (
+    (analysisResult?.potential_claims?.length || 0) === 0 &&
+    !analysisResult?.summary?.trim()
+  );
+}
+
+export function CFileDashboardHeader({
   t,
   file,
   extractedText,
   analysisMetadata,
+  analysisResult,
   onReset,
 }) {
+  const foundNothing = _cfileFoundNothing(analysisResult, analysisMetadata);
   return (
-    <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 mb-6 text-white">
+    <div
+      className={`bg-gradient-to-r rounded-xl p-6 mb-6 text-white ${
+        foundNothing
+          ? "from-amber-500 to-orange-600"
+          : "from-green-500 to-emerald-600"
+      }`}
+    >
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            ✅ {t("cfileAnalyzer", "analysisComplete")}
+            {foundNothing
+              ? `⚠️ ${t("cfileAnalyzer", "analysisNoFindings")}`
+              : `✅ ${t("cfileAnalyzer", "analysisComplete")}`}
           </h2>
           <p className="mt-1 opacity-90">
-            {file?.name} • {extractedText?.pageCount}{" "}
+            {file?.name} • {extractedText?.totalPages}{" "}
             {t("cfileAnalyzer", "pagesAnalyzed")} •{" "}
             {extractedText?.totalCharacters?.toLocaleString()}{" "}
             {t("cfileAnalyzer", "charactersExtracted")}
@@ -253,6 +459,31 @@ function CFileDashboardHeader({
   );
 }
 
+// How completely the document was read: blank pages, OCR'd pages, and any
+// scanned pages that were not read, with a real action to read the rest.
+export function CFileReadCoverage({ extractedText, onReadRemainingPages }) {
+  const { coverageNote, pagesNotRead } = getReadingNotices(extractedText);
+  if (!coverageNote) return null;
+  const hasSkipped = (extractedText.pagesSkipped?.length || 0) > 0;
+  return (
+    <div className="mb-6 space-y-2" data-testid="cfile-read-coverage">
+      <DocumentReadingNotices
+        coverageNote={coverageNote}
+        pagesNotRead={pagesNotRead}
+      />
+      {hasSkipped && (
+        <button
+          type="button"
+          onClick={onReadRemainingPages}
+          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
+        >
+          Read remaining pages
+        </button>
+      )}
+    </div>
+  );
+}
+
 function CFileDashboardWarnings({
   analysisResult,
   analysisMetadata,
@@ -260,6 +491,23 @@ function CFileDashboardWarnings({
 }) {
   return (
     <>
+      {/* ADR-009: only an off-device AI is configured - shown when the
+          built-in documented-term scan ran instead of sending the C-File
+          off-device. */}
+      {analysisMetadata?.offDeviceBlocked && (
+        <div
+          role="alert"
+          className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">🔒</span>
+            <p className="text-amber-700 dark:text-amber-300 text-sm">
+              {analysisMetadata.offDeviceNotice}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Partial-analysis warning - a veteran must never mistake a partial
           analysis for a complete one */}
       {analysisResult.failedChunks?.length > 0 && (
@@ -493,9 +741,9 @@ function CFileExposuresTab({ t, exposures }) {
       </h3>
       {exposures?.length > 0 ? (
         <div className="space-y-4">
-          {exposures.map((exposure, idx) => (
+          {exposures.map((exposure) => (
             <div
-              key={idx}
+              key={exposure.type}
               className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4"
             >
               <div className="flex items-start justify-between">
@@ -526,9 +774,9 @@ function CFileExposuresTab({ t, exposures }) {
                     {t("cfileAnalyzer", "presumptiveConditions")}
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {exposure.presumptive_conditions.map((condition, i) => (
+                    {exposure.presumptive_conditions.map((condition) => (
                       <span
-                        key={i}
+                        key={condition}
                         className="text-xs bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded"
                       >
                         {condition}
@@ -563,9 +811,9 @@ function CFileMentalHealthTab({ t, mentalHealth }) {
                 {t("cfileAnalyzer", "diagnosesFound")}
               </h4>
               <div className="flex flex-wrap gap-2">
-                {mentalHealth.diagnoses.map((dx, i) => (
+                {mentalHealth.diagnoses.map((dx) => (
                   <span
-                    key={i}
+                    key={dx}
                     className="bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-sm"
                   >
                     {dx}
@@ -581,8 +829,8 @@ function CFileMentalHealthTab({ t, mentalHealth }) {
                 {t("cfileAnalyzer", "indicators")}
               </h4>
               <ul className="list-disc list-inside text-blue-700 dark:text-blue-300 text-sm space-y-1">
-                {mentalHealth.indicators.map((indicator, i) => (
-                  <li key={i}>{indicator}</li>
+                {mentalHealth.indicators.map((indicator) => (
+                  <li key={indicator}>{indicator}</li>
                 ))}
               </ul>
             </div>
@@ -594,8 +842,8 @@ function CFileMentalHealthTab({ t, mentalHealth }) {
                 {t("cfileAnalyzer", "documentedStressors")}
               </h4>
               <ul className="list-disc list-inside text-amber-700 dark:text-amber-300 text-sm space-y-1">
-                {mentalHealth.stressors.map((stressor, i) => (
-                  <li key={i}>{stressor}</li>
+                {mentalHealth.stressors.map((stressor) => (
+                  <li key={stressor}>{stressor}</li>
                 ))}
               </ul>
             </div>
@@ -630,7 +878,7 @@ function CFileActionItemsTab({ t, actionItems }) {
         <div className="space-y-3">
           {actionItems.map((action, idx) => (
             <div
-              key={idx}
+              key={action}
               className="flex items-start gap-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4"
             >
               <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-green-500 text-white rounded-full font-bold text-sm">
@@ -657,9 +905,9 @@ function CFileRedFlagsSection({ t, redFlags }) {
         🚨 {t("cfileAnalyzer", "attentionNeeded")}
       </h3>
       <div className="space-y-3">
-        {redFlags.map((flag, idx) => (
+        {redFlags.map((flag) => (
           <div
-            key={idx}
+            key={flag.issue}
             className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-red-200 dark:border-red-700"
           >
             <div className="flex items-start justify-between">
@@ -692,9 +940,9 @@ function CFileCombatIndicatorsSection({ t, combatIndicators }) {
         🎖️ {t("cfileAnalyzer", "combatIndicatorsFound")}
       </h3>
       <div className="space-y-3">
-        {combatIndicators.map((indicator, idx) => (
+        {combatIndicators.map((indicator) => (
           <div
-            key={idx}
+            key={indicator.indicator}
             className="flex items-start justify-between bg-white dark:bg-gray-800 rounded-lg p-4 border border-indigo-200 dark:border-indigo-700"
           >
             <div>
@@ -720,6 +968,27 @@ function CFileCombatIndicatorsSection({ t, combatIndicators }) {
 }
 
 // Render the analysis dashboard
+function CFileSaveAndCoverage({
+  file,
+  extractedText,
+  analysisResult,
+  onReadRemainingPages,
+}) {
+  return (
+    <>
+      <CFileSaveToRecords
+        file={file}
+        extractedText={extractedText}
+        analysisResult={analysisResult}
+      />
+      <CFileReadCoverage
+        extractedText={extractedText}
+        onReadRemainingPages={onReadRemainingPages}
+      />
+    </>
+  );
+}
+
 function CFileDashboard({
   t,
   file,
@@ -732,6 +1001,7 @@ function CFileDashboard({
   showSemanticSearch,
   setShowSemanticSearch,
   handleReset,
+  onReadRemainingPages,
 }) {
   return (
     <div className="max-w-7xl mx-auto">
@@ -740,7 +1010,14 @@ function CFileDashboard({
         file={file}
         extractedText={extractedText}
         analysisMetadata={analysisMetadata}
+        analysisResult={analysisResult}
         onReset={handleReset}
+      />
+      <CFileSaveAndCoverage
+        file={file}
+        extractedText={extractedText}
+        analysisResult={analysisResult}
+        onReadRemainingPages={onReadRemainingPages}
       />
       <CFileDashboardWarnings
         analysisResult={analysisResult}
@@ -1208,64 +1485,69 @@ function _resetAnalyzerState(ctx) {
 function CFileAnalyzerHeader({ t, onOpenAISettings, onReportBug, onClose }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 border-b border-violet-500 shadow-sm rounded-t-xl">
-      <div className="px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🔬</span>
-          <div>
-            <h1
-              id="cfile-analyzer-title"
-              className="text-2xl font-bold text-white flex items-center gap-2"
+      <div className="px-4 py-4">
+        <HeaderCloseSlot
+          close={
+            <button
+              onClick={onClose}
+              className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/10 rounded-lg transition-colors text-white"
+              aria-label={t("cfileAnalyzer", "closeCFileAnalyzer")}
             >
-              {t("cfileAnalyzer", "title")}
-              <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
-                {t("cfileAnalyzer", "ai")}
-              </span>
-            </h1>
-            <p className="text-sm text-violet-100">
-              {t("cfileAnalyzer", "subtitle")}
-            </p>
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          }
+        >
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <span className="text-3xl shrink-0">🔬</span>
+            <div className="min-w-0">
+              <h1
+                id="cfile-analyzer-title"
+                className="text-2xl font-bold text-white flex flex-wrap items-center gap-2"
+              >
+                {t("cfileAnalyzer", "title")}
+                <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
+                  {t("cfileAnalyzer", "ai")}
+                </span>
+              </h1>
+              <p className="text-sm text-violet-100">
+                {t("cfileAnalyzer", "subtitle")}
+              </p>
+            </div>
+            <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
+              {t("cfileAnalyzer", "beta")}
+            </span>
+            <span
+              className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1"
+              aria-label="VA also uses AI for document classification in claims processing"
+            >
+              🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
+            </span>
           </div>
-          <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
-            {t("cfileAnalyzer", "beta")}
-          </span>
-          <span
-            className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1"
-            aria-label="VA also uses AI for document classification in claims processing"
-          >
-            🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* AI Status & LLM Recommendation Badges */}
-          <LLMRecommendationBadge toolId="cfile-analyzer" />
-          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="C-File Analyzer"
-            />
-          )}
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
-            aria-label={t("cfileAnalyzer", "closeCFileAnalyzer")}
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
+          <div className="flex flex-wrap items-center gap-3">
+            {/* AI Status & LLM Recommendation Badges */}
+            <LLMRecommendationBadge toolId="cfile-analyzer" />
+            <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+            {onReportBug && (
+              <ReportBugLink
+                onClick={onReportBug}
+                variant="light"
+                moduleName="C-File Analyzer"
               />
-            </svg>
-          </button>
-        </div>
+            )}
+          </div>
+        </HeaderCloseSlot>
       </div>
     </div>
   );
@@ -1421,24 +1703,41 @@ function useCFileConsentResetHandlers(ctx) {
     abortControllerRef,
   } = ctx;
 
+  const runProcess = (options) =>
+    _runConsentAndProcess(
+      file,
+      t,
+      {
+        setHasConsented,
+        setShowPrivacyConsent,
+        setIsProcessing,
+        setError,
+        setStorageWarning,
+        setChunkProgress,
+        setProcessingStage,
+        setExtractionProgress,
+        setExtractedText,
+        setAnalysisResult,
+        setAnalysisMetadata,
+        abortControllerRef,
+      },
+      options,
+    );
+
   // Process the file after consent
-  const handleConsentAndProcess = useCallback(async () => {
-    await _runConsentAndProcess(file, t, {
-      setHasConsented,
-      setShowPrivacyConsent,
-      setIsProcessing,
-      setError,
-      setStorageWarning,
-      setChunkProgress,
-      setProcessingStage,
-      setExtractionProgress,
-      setExtractedText,
-      setAnalysisResult,
-      setAnalysisMetadata,
-      abortControllerRef,
-    });
+  const handleConsentAndProcess = useCallback(
+    () => runProcess({}),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file, t]);
+    [file, t],
+  );
+
+  // Re-read the same file with the scan limit lifted so scanned pages that
+  // were skipped are read too.
+  const handleReadRemainingPages = useCallback(
+    () => runProcess({ readAllPages: true }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [file, t],
+  );
 
   // Reset to start over
   const handleReset = useCallback(() => {
@@ -1469,19 +1768,20 @@ function useCFileConsentResetHandlers(ctx) {
     setShowSemanticSearch,
   ]);
 
-  return { handleConsentAndProcess, handleReset };
+  return { handleConsentAndProcess, handleReadRemainingPages, handleReset };
 }
 
 function useCFileAnalysisHandlers(ctx) {
   const { handleStopAnalysis, handleStartAnalysis } =
     useCFileStopStartHandlers(ctx);
-  const { handleConsentAndProcess, handleReset } =
+  const { handleConsentAndProcess, handleReadRemainingPages, handleReset } =
     useCFileConsentResetHandlers(ctx);
 
   return {
     handleStopAnalysis,
     handleStartAnalysis,
     handleConsentAndProcess,
+    handleReadRemainingPages,
     handleReset,
   };
 }
@@ -1514,6 +1814,7 @@ function CFileAnalyzerMainContent({ state }) {
     showSemanticSearch,
     setShowSemanticSearch,
     handleReset,
+    handleReadRemainingPages,
   } = state;
 
   if (isProcessing) {
@@ -1542,6 +1843,7 @@ function CFileAnalyzerMainContent({ state }) {
         showSemanticSearch={showSemanticSearch}
         setShowSemanticSearch={setShowSemanticSearch}
         handleReset={handleReset}
+        onReadRemainingPages={handleReadRemainingPages}
       />
     );
   }
@@ -1581,7 +1883,7 @@ function CFileAnalyzerView({ state }) {
         size="full"
         labelledBy="cfile-analyzer-title"
         footer={
-          <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
+          <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-prose mx-auto">
             ⚠️ {t("cfileAnalyzer", "footerDisclaimer")}
           </p>
         }
@@ -1719,6 +2021,7 @@ export default function CFileAnalyzer({
     handleStopAnalysis,
     handleStartAnalysis,
     handleConsentAndProcess,
+    handleReadRemainingPages,
     handleReset,
   } = useCFileAnalysisHandlers({
     t,
@@ -1758,6 +2061,7 @@ export default function CFileAnalyzer({
         handleStopAnalysis,
         handleReset,
         handleConsentAndProcess,
+        handleReadRemainingPages,
       }}
     />
   );

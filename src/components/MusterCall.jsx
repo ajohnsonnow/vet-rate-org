@@ -22,7 +22,6 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useToast } from "../contexts/ToastContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import useMusterCallOrchestration from "../hooks/useMusterCallOrchestration";
@@ -37,17 +36,16 @@ import SystemRequirementsNotice from "./SystemRequirementsNotice";
 /**
  * Muster Call - Mass Document Processor
  */
+// NOTE: toggle between Formation (sequential) and legacy batch mode is
+// currently locked to sequential; see FormationLineup for the UI path.
 export default function MusterCall({
   isOpen,
   onClose,
   onProcessComplete,
   onOpenDD214Analyzer,
 }) {
-  const { t: _t } = useLanguage();
   const toast = useToast();
-  // NOTE: toggle between Formation (sequential) and legacy batch mode is
-  // currently locked to sequential; see FormationLineup for the UI path.
-  const [useSequentialMode, _setUseSequentialMode] = useState(true);
+  const [useSequentialMode] = useState(true);
 
   const {
     formationQueue,
@@ -59,6 +57,7 @@ export default function MusterCall({
     batch,
     shouldShowFormation,
     showProcessingView,
+    showCompletionSummary,
     handleStartProcessing,
     handleReset,
   } = useMusterCallOrchestration({
@@ -66,8 +65,6 @@ export default function MusterCall({
     onProcessComplete,
     useSequentialMode,
   });
-
-  const { hasDocuments, isComplete: formationComplete } = formationQueue;
 
   return (
     <ResponsiveModal
@@ -82,7 +79,7 @@ export default function MusterCall({
           intake={intake}
           useSequentialMode={useSequentialMode}
           ai={ai}
-          formationComplete={formationComplete}
+          formationComplete={formationQueue.isComplete}
           onStart={handleStartProcessing}
           onReset={handleReset}
         />
@@ -104,13 +101,14 @@ export default function MusterCall({
         intake={intake}
         processingState={processingState}
         useSequentialMode={useSequentialMode}
-        hasDocuments={hasDocuments}
+        hasDocuments={formationQueue.hasDocuments}
         onReset={handleReset}
       />
 
       <MusterCallFormationSection
         shouldShowFormation={shouldShowFormation}
         showProcessingView={showProcessingView}
+        showCompletionSummary={showCompletionSummary}
         formationQueue={formationQueue}
         ai={ai}
         flow={flow}

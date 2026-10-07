@@ -37,6 +37,17 @@ describe("musterCallProcessor: parseRatingDecision (legacy fallback parser)", ()
     expect(tinnitus.rating).toBe(10);
   });
 
+  it("marks the decisionDateKind as 'letter' when a DECISION DATE label is present", async () => {
+    const text =
+      "COMBINED RATING: 70%\n" +
+      "DECISION DATE: 05-08-2024\n" +
+      "EFFECTIVE DATE: 01-01-2020\n" +
+      "Tinnitus - 10%\n";
+    const result = await parseRatingDecision(text);
+    expect(result.decisionDate).toBe("05-08-2024");
+    expect(result.decisionDateKind).toBe("letter");
+  });
+
   it("returns null diagnosticCode when none precedes the condition", async () => {
     const text = "Tinnitus - 10%, PTSD - 70%";
     const result = await parseRatingDecision(text);

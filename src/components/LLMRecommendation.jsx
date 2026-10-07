@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   getToolRecommendation,
   analyzeCurrentModel,
@@ -54,9 +53,9 @@ const LLMRecommendationBadgeDetails = ({ recommendation, analysis }) => (
             Also works well:
           </div>
           <div className="space-y-1">
-            {recommendation.alternatives.slice(0, 2).map((alt, i) => (
+            {recommendation.alternatives.slice(0, 2).map((alt) => (
               <div
-                key={i}
+                key={alt.modelName}
                 className="text-gray-600 dark:text-gray-300 text-[10px]"
               >
                 • <strong>{alt.modelName}</strong>: {alt.reason}
@@ -82,7 +81,6 @@ const LLMRecommendationBadgeDetails = ({ recommendation, analysis }) => (
  * Compact badge showing current model and recommendation
  */
 export const LLMRecommendationBadge = ({ toolId, className = "" }) => {
-  const { _t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [aiStatus, setAiStatus] = useState(getAIStatus());
 
@@ -194,9 +192,9 @@ const LLMRecommendationPanelAlternatives = ({
       Alternative Models
     </h5>
     <div className="space-y-2">
-      {alternatives.map((alt, i) => (
+      {alternatives.map((alt) => (
         <div
-          key={i}
+          key={alt.modelName}
           className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
         >
           <div>
@@ -294,8 +292,8 @@ export const LLMRecommendationPanel = ({
             💡 Pro Tips
           </h5>
           <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-            {recommendation.tips.map((tip, i) => (
-              <li key={i}>• {tip}</li>
+            {recommendation.tips.map((tip) => (
+              <li key={tip}>• {tip}</li>
             ))}
           </ul>
         </div>

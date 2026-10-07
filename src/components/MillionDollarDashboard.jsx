@@ -11,14 +11,15 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   getMyRatings,
   hasMyRatings,
   getVeteranProfile,
 } from "../utils/veteranProfile";
 import { calculateVARating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 import { checkSMCSHousebound } from "../utils/smcDetector";
 import { stateBenefits } from "../data/stateBenefits.js";
 import {
@@ -337,38 +338,13 @@ const DashboardHeader = ({ onClose, onReportBug }) => (
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-3xl">💰</span>
-        </div>
-        <div>
-          <h2
-            id="million-dollar-dashboard-title"
-            className="text-2xl sm:text-3xl font-bold text-black"
-          >
-            Million Dollar Dashboard{" "}
-            <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h2>
-          <p className="text-yellow-800 text-sm sm:text-base mt-1">
-            Lifetime Value Financial Projector
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="dark"
-            moduleName="Million Dollar Dashboard"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           type="button"
           onClick={onClose}
-          className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-black hover:bg-black/10 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -385,8 +361,35 @@ const DashboardHeader = ({ onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-3xl">💰</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="million-dollar-dashboard-title"
+            className="text-2xl sm:text-3xl font-bold text-black"
+          >
+            Million Dollar Dashboard{" "}
+            <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-yellow-800 text-sm sm:text-base mt-1">
+            Lifetime Value Financial Projector
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="dark"
+          moduleName="Million Dollar Dashboard"
+        />
+      )}
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -397,7 +400,7 @@ const TheBigNumber = ({ animatedTotal, currentAge }) => (
       Your Claim&apos;s Total Lifetime Value
     </p>
     <div className="relative">
-      <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-pulse">
+      <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500">
         {formatCurrency(animatedTotal)}
       </h1>
       <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-transparent to-yellow-400/20 blur-3xl -z-10"></div>
@@ -412,9 +415,14 @@ const TheBigNumber = ({ animatedTotal, currentAge }) => (
 // Current Age input field
 const AgeInputField = ({ ageInputValue, setAgeInputValue, setCurrentAge }) => (
   <div>
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm text-gray-400 mb-1">Current Age</label>
+    <label
+      htmlFor="mdd-current-age"
+      className="block text-sm text-gray-400 mb-1"
+    >
+      Current Age
+    </label>
     <input
+      id="mdd-current-age"
       type="number"
       value={ageInputValue}
       onChange={(e) => {
@@ -445,8 +453,9 @@ const AgeInputField = ({ ageInputValue, setAgeInputValue, setCurrentAge }) => (
 const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
   <div className="col-span-2 md:col-span-1">
     <div className="flex justify-between items-center mb-1">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm text-gray-400">VA Rating %</label>
+      <label htmlFor="mdd-va-rating" className="block text-sm text-gray-400">
+        VA Rating %
+      </label>
       {hasMyRatings() && (
         <button
           type="button"
@@ -459,34 +468,36 @@ const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
       )}
     </div>
     <input
+      id="mdd-va-rating"
       type="range"
       min="0"
       max="100"
       step="10"
       value={rating}
       onChange={(e) => setRating(Number.parseInt(e.target.value))}
-      className="w-full"
+      className="w-full min-h-[44px]"
     />
     <div className="text-center text-2xl font-bold text-white mt-2">
       {rating}%
     </div>
+    <BilateralIssuesSummary />
   </div>
 );
 
 // State dropdown select (for property tax exemption lookup)
 const StateSelectField = ({ state, setState }) => (
   <div className="col-span-2">
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm text-gray-400 mb-1">
+    <label htmlFor="mdd-state" className="block text-sm text-gray-400 mb-1">
       State (for Property Tax)
     </label>
     <select
+      id="mdd-state"
       value={state}
       onChange={(e) => setState(e.target.value)}
       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
     >
       {Object.keys(STATE_PROPERTY_TAX_EXEMPTIONS)
-        .sort()
+        .sort((a, b) => a.localeCompare(b))
         .map((s) => (
           <option key={s} value={s}>
             {s}
@@ -518,9 +529,11 @@ const SpouseToggleField = ({ hasSpouse, setHasSpouse }) => (
 // Number of children input
 const ChildrenInputField = ({ numChildren, setNumChildren }) => (
   <div>
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm text-gray-400 mb-1"># Children</label>
+    <label htmlFor="mdd-children" className="block text-sm text-gray-400 mb-1">
+      # Children
+    </label>
     <input
+      id="mdd-children"
       type="number"
       value={numChildren}
       onChange={(e) =>
@@ -606,9 +619,9 @@ const ProfileInputControls = ({
 // Faint dashed reference grid lines behind the value growth line
 const ChartGridLines = ({ chartWidth, chartHeight, padding }) => (
   <>
-    {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
+    {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
       <line
-        key={i}
+        key={pct}
         x1={padding}
         y1={chartHeight - padding - pct * (chartHeight - padding * 2)}
         x2={chartWidth - padding}
@@ -623,7 +636,7 @@ const ChartGridLines = ({ chartWidth, chartHeight, padding }) => (
 // Age-labeled data point markers along the value growth line
 const ChartDataPoints = ({ chartData, chartWidth, chartHeight, padding }) => (
   <>
-    {chartData.map((d, i) => {
+    {chartData.map((d) => {
       const maxValue = Math.max(...chartData.map((p) => p.value));
       const minAge = chartData[0].age;
       const maxAge = chartData[chartData.length - 1].age;
@@ -636,7 +649,7 @@ const ChartDataPoints = ({ chartData, chartWidth, chartHeight, padding }) => (
         (d.value / maxValue) * (chartHeight - padding * 2);
 
       return (
-        <g key={i}>
+        <g key={d.age}>
           <circle cx={x} cy={y} r="4" fill="#fbbf24" />
           <text
             x={x}
@@ -1029,7 +1042,7 @@ const LunaTreatFund = ({ animatedTotal, grandTotal }) => {
               href="https://buymeacoffee.com/anthonyjohnson"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-amber-900 text-xs font-bold rounded-lg transition-colors"
+              className="inline-block px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-lg transition-colors"
             >
               🍪 Buy Luna a Treat
             </a>
@@ -1135,7 +1148,6 @@ function useMillionDollarDashboardState() {
 }
 
 export default function MillionDollarDashboard({ onClose, onReportBug }) {
-  const { _t } = useLanguage();
   const d = useMillionDollarDashboardState();
 
   // SVG Chart dimensions

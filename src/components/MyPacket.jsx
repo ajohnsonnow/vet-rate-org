@@ -20,6 +20,7 @@ import VAGovRatingPaster from "./VAGovRatingPaster";
 import CFileClaimsCards from "./CFileClaimsCards";
 import CFileTimeline from "./CFileTimeline";
 import DutyStationsSection from "./DutyStationsSection";
+import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   getSavedClaims,
@@ -76,9 +77,11 @@ import {
   getAllDocumentsByCategory,
   groupDocumentationByCategory,
   raceVkb,
+  periodDisplayFormType,
 } from "../utils/veteranKnowledgeBase";
 import { buildPacketSummary } from "../utils/packetSummary";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { triggerBlobDownload } from "../utils/sanitize";
 import { useVaAuth } from "../hooks/useVaAuth";
 import {
@@ -100,16 +103,23 @@ import CertificationCheckbox from "./CertificationCheckbox";
 import NexusDisclaimerFooter from "./NexusDisclaimerFooter";
 import ClaimPrepDisclaimer from "./ClaimPrepDisclaimer";
 import ClaimProgress from "./ClaimProgress";
-import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import {
+  generateAI,
+  getAIStatus,
+  getDocumentAIRouting,
+} from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
 import { RibbonRackDisplay } from "./VisualRibbon";
 import { enrichAwardForDisplay } from "../utils/ribbonRackData";
 import VADataCenter from "./VADataCenter";
 import ClaimEvidenceUpload from "./ClaimEvidenceUpload";
-import {
-  combineMultipleRatings,
-  roundToNearest10,
-} from "../utils/vaCalculator";
+import { calculateVARating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 import { formatLocalDate } from "../utils/dateUtils";
+import { recordRemovedTimelineEvent } from "../utils/timelineStoreSync";
 import { formatFileSize } from "../utils/documentAnalyzer";
 import { parseServiceRecord } from "../utils/musterCallProcessor";
 import { getDocumentTypeLabel } from "../utils/documentClassifier";
@@ -360,6 +370,38 @@ async function _importVaData(vaAccessToken, ctx) {
   setVaImportStatus(_buildVaImportStatusMessage(fetchedData, errors));
 }
 
+// Import saved forms if present, merging with existing forms (by id) when
+// `mergeMode === "merge"`, otherwise overwriting.
+function _importSavedForms(data, mergeMode, loadSavedForms) {
+  if (
+    !data.savedForms ||
+    !Array.isArray(data.savedForms) ||
+    data.savedForms.length === 0
+  ) {
+    return;
+  }
+
+  try {
+    if (mergeMode === "merge") {
+      const existingForms = getSavedForms();
+      const existingIds = new Set(existingForms.map((f) => f.id));
+      const newForms = data.savedForms.filter((f) => !existingIds.has(f.id));
+      localStorage.setItem(
+        "vet_rate_saved_forms",
+        JSON.stringify([...existingForms, ...newForms]),
+      );
+    } else {
+      localStorage.setItem(
+        "vet_rate_saved_forms",
+        JSON.stringify(data.savedForms),
+      );
+    }
+    loadSavedForms();
+  } catch (e) {
+    console.error("Error importing forms:", e);
+  }
+}
+
 function _importAllPacketData(data, mergeMode, ctx) {
   const {
     loadSavedForms,
@@ -379,32 +421,7 @@ function _importAllPacketData(data, mergeMode, ctx) {
     );
   }
 
-  // Import saved forms if present
-  if (
-    data.savedForms &&
-    Array.isArray(data.savedForms) &&
-    data.savedForms.length > 0
-  ) {
-    try {
-      if (mergeMode === "merge") {
-        const existingForms = getSavedForms();
-        const existingIds = new Set(existingForms.map((f) => f.id));
-        const newForms = data.savedForms.filter((f) => !existingIds.has(f.id));
-        localStorage.setItem(
-          "vet_rate_saved_forms",
-          JSON.stringify([...existingForms, ...newForms]),
-        );
-      } else {
-        localStorage.setItem(
-          "vet_rate_saved_forms",
-          JSON.stringify(data.savedForms),
-        );
-      }
-      loadSavedForms();
-    } catch (e) {
-      console.error("Error importing forms:", e);
-    }
-  }
+  _importSavedForms(data, mergeMode, loadSavedForms);
 
   // Import service history
   if (data.serviceHistory) {
@@ -486,8 +503,31 @@ function _confirmDataImport(mergeMode, data, ctx) {
 function MyPacketHeader({ onClose, onReportBug, packetContentRef, t }) {
   return (
     <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex-1 min-w-0">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6 sm:w-8 sm:h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="min-w-0">
           <h2
             id="my-packet-title"
             className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
@@ -514,28 +554,8 @@ function MyPacketHeader({ onClose, onReportBug, packetContentRef, t }) {
               moduleName="My Claim Packet"
             />
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6 sm:w-8 sm:h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -708,7 +728,7 @@ function MyPacketBackupGuideBanner({
             <button
               type="button"
               onClick={handleBackupPacket}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors text-sm shadow-md"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-lg font-medium hover:bg-emerald-800 transition-colors text-sm shadow-md"
             >
               <svg
                 className="w-4 h-4"
@@ -777,7 +797,7 @@ function BackupRestoreButtons({
         type="button"
         onClick={handleBackupPacket}
         disabled={claims.length === 0}
-        className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+        className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-700 text-white rounded-lg font-medium hover:bg-emerald-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
       >
         <svg
           className="w-4 h-4"
@@ -909,6 +929,34 @@ function MyPacketImportStatusMessage({ importStatus }) {
   );
 }
 
+// WAI-ARIA Tabs pattern (APG): flat, ordered list of every tab id as they
+// appear left-to-right across the two nav rows (Primary then Secondary).
+// Drives both the tab/panel id pairing (`mypacket-tab-<id>` /
+// `mypacket-panel-<id>`) and the roving-tabindex arrow-key navigation in
+// `MyPacketTabNav`, so the two never drift apart.
+const TAB_ORDER = [
+  "claims",
+  "ratings",
+  "service",
+  "timeline",
+  "painmaps",
+  "profile",
+  "forms",
+  "varecords",
+  "documents",
+];
+
+function myPacketTabProps(id, activeTab) {
+  return {
+    id: `mypacket-tab-${id}`,
+    "data-tab-id": id,
+    role: "tab",
+    "aria-selected": activeTab === id,
+    "aria-controls": `mypacket-panel-${id}`,
+    tabIndex: activeTab === id ? 0 : -1,
+  };
+}
+
 // eslint-disable-next-line max-lines-per-function -- 82 lines of flat tab-button JSX, two over the ceiling; pre-existing and untouched by this change
 function MyPacketTabNavPrimary({
   activeTab,
@@ -926,6 +974,8 @@ function MyPacketTabNavPrimary({
       <button
         type="button"
         onClick={() => setActiveTab("claims")}
+        aria-label={t("myPacketSection.claims")}
+        {...myPacketTabProps("claims", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "claims"
             ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg"
@@ -942,6 +992,8 @@ function MyPacketTabNavPrimary({
       <button
         type="button"
         onClick={() => setActiveTab("ratings")}
+        aria-label={t("myPacketSection.ratings")}
+        {...myPacketTabProps("ratings", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "ratings"
             ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
@@ -955,12 +1007,17 @@ function MyPacketTabNavPrimary({
         </span>
       </button>
 
-      <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+      <div
+        className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"
+        aria-hidden="true"
+      ></div>
 
       {/* Service & History */}
       <button
         type="button"
         onClick={() => setActiveTab("service")}
+        aria-label={t("myPacketSection.service")}
+        {...myPacketTabProps("service", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "service"
             ? "border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-t-lg"
@@ -979,6 +1036,8 @@ function MyPacketTabNavPrimary({
       <button
         type="button"
         onClick={() => setActiveTab("timeline")}
+        aria-label={t("myPacketSection.timeline")}
+        {...myPacketTabProps("timeline", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "timeline"
             ? "border-slate-600 text-slate-600 dark:border-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 rounded-t-lg"
@@ -1002,6 +1061,8 @@ function VaRecordsTabButton({ activeTab, setActiveTab, vaRecords }) {
     <button
       type="button"
       onClick={() => setActiveTab("varecords")}
+      aria-label="VA Records"
+      {...myPacketTabProps("varecords", activeTab)}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "varecords"
           ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
@@ -1029,9 +1090,11 @@ function DocumentsTabButton({ activeTab, setActiveTab, documents }) {
     <button
       type="button"
       onClick={() => setActiveTab("documents")}
+      aria-label="Documents"
+      {...myPacketTabProps("documents", activeTab)}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "documents"
-          ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 rounded-t-lg"
+          ? "border-teal-700 text-teal-700 dark:border-teal-400 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 rounded-t-lg"
           : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
       }`}
     >
@@ -1045,6 +1108,7 @@ function DocumentsTabButton({ activeTab, setActiveTab, documents }) {
   );
 }
 
+// eslint-disable-next-line max-lines-per-function -- 85 lines of flat tab-button JSX, matching MyPacketTabNavPrimary above; the ARIA tab props push it 5 lines over the ceiling
 function MyPacketTabNavSecondary({
   activeTab,
   setActiveTab,
@@ -1057,12 +1121,17 @@ function MyPacketTabNavSecondary({
 }) {
   return (
     <>
-      <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+      <div
+        className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"
+        aria-hidden="true"
+      ></div>
 
       {/* Evidence & Docs */}
       <button
         type="button"
         onClick={() => setActiveTab("painmaps")}
+        aria-label={t("myPacketSection.painMaps")}
+        {...myPacketTabProps("painmaps", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "painmaps"
             ? "border-red-600 text-red-600 dark:border-red-400 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-t-lg"
@@ -1081,6 +1150,8 @@ function MyPacketTabNavSecondary({
       <button
         type="button"
         onClick={() => setActiveTab("profile")}
+        aria-label={t("myPacketSection.profile")}
+        {...myPacketTabProps("profile", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "profile"
             ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-t-lg"
@@ -1099,9 +1170,11 @@ function MyPacketTabNavSecondary({
       <button
         type="button"
         onClick={() => setActiveTab("forms")}
+        aria-label={t("myPacketSection.forms")}
+        {...myPacketTabProps("forms", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "forms"
-            ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
+            ? "border-purple-700 text-purple-700 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
             : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
         }`}
       >
@@ -1142,11 +1215,35 @@ function MyPacketTabNav({
   documents,
   t,
 }) {
+  // WAI-ARIA Tabs pattern: roving tabindex + arrow-key navigation across the
+  // flat TAB_ORDER, regardless of which nav row (Primary/Secondary) a tab
+  // renders in. Home/End jump to the first/last tab; Left/Right wrap around.
+  const handleTabListKeyDown = (e) => {
+    if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) return;
+    const currentId = e.target?.dataset?.tabId;
+    const idx = TAB_ORDER.indexOf(currentId);
+    if (idx === -1) return;
+    e.preventDefault();
+
+    let nextIdx;
+    if (e.key === "ArrowRight") nextIdx = (idx + 1) % TAB_ORDER.length;
+    else if (e.key === "ArrowLeft")
+      nextIdx = (idx - 1 + TAB_ORDER.length) % TAB_ORDER.length;
+    else if (e.key === "Home") nextIdx = 0;
+    else nextIdx = TAB_ORDER.length - 1;
+
+    const nextId = TAB_ORDER[nextIdx];
+    setActiveTab(nextId);
+    document.getElementById(`mypacket-tab-${nextId}`)?.focus();
+  };
+
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0">
       <nav
         className="flex gap-1 overflow-x-auto pb-px scrollbar-hide"
+        role="tablist"
         aria-label="Tabs"
+        onKeyDown={handleTabListKeyDown}
       >
         <MyPacketTabNavPrimary
           activeTab={activeTab}
@@ -1235,6 +1332,7 @@ function MyRatingEditForm({
         }
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         placeholder={t("myPacketSection.conditionName")}
+        aria-label={t("myPacketSection.conditionName")}
       />
       <div className="flex gap-2">
         <input
@@ -1243,6 +1341,7 @@ function MyRatingEditForm({
           max="100"
           step="10"
           value={editingRating.rating}
+          aria-label={t("myPacketSection.ratingPercent")}
           onChange={(e) =>
             setEditingRating({
               ...editingRating,
@@ -1277,14 +1376,14 @@ function MyRatingEditForm({
 
 function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
   return (
-    <div className="flex justify-between items-center">
-      <div className="flex-1">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 min-w-0 break-words">
             {rating.name || rating.condition}
           </h3>
           <span
-            className={`px-3 py-1 rounded-full text-sm font-bold ${getRatingBadgeClass(rating.rating)}`}
+            className={`px-3 py-1 rounded-full text-sm font-bold flex-shrink-0 ${getRatingBadgeClass(rating.rating)}`}
           >
             {rating.rating}%
           </span>
@@ -1296,18 +1395,18 @@ function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
           </p>
         )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex w-full flex-shrink-0 gap-2 sm:w-auto">
         <button
           type="button"
           onClick={() => setEditingRating({ ...rating })}
-          className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+          className="min-h-[44px] px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
         >
           {t("myPacketSection.edit")}
         </button>
         <button
           type="button"
           onClick={() => handleRemoveRating(rating.id)}
-          className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+          className="min-h-[44px] px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
         >
           {t("myPacketSection.remove")}
         </button>
@@ -1324,7 +1423,7 @@ function MyRatingEntry({
   handleRemoveRating,
   t,
 }) {
-  const isEditing = editingRating?.id === rating.id;
+  const isEditing = editingRating != null && editingRating.id === rating.id;
   return (
     <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-all">
       {isEditing ? (
@@ -1388,18 +1487,21 @@ function VkbEnrichmentLoadingState({ label }) {
   );
 }
 
-// FIX-1: combined rating via vaCalculator.js (the tested implementation),
-// not a third combined-rating implementation. Shows both raw and rounded
-// (e.g. "72% raw → 70%"). Bilateral grouping is out of scope for this
-// display - combines the flat list of saved ratings as-is.
-function CombinedRatingSummary({ myRatings, t }) {
-  const ratingValues = myRatings
-    .map((r) => r.rating)
-    .filter((r) => typeof r === "number" && r > 0);
-  if (ratingValues.length < 2) return null;
+// FIX-1: combined rating via vaCalculator.js's calculateVARating (the
+// tested, bilateral-aware implementation), not a flat combine over the raw
+// rating values. Each saved rating already carries the `side` that
+// saveRatingDecisionToProfile/saveMyRatings derives from the condition name,
+// so left+right paired-extremity ratings get the §4.26 bilateral factor
+// instead of being combined as if unrelated. Shows both raw and rounded
+// (e.g. "72% raw → 70%").
+function CombinedRatingSummary({ myRatings, stated, t }) {
+  const nonZeroCount = myRatings.filter(
+    (r) => typeof r.rating === "number" && r.rating > 0,
+  ).length;
+  if (nonZeroCount < 2) return null;
 
-  const raw = combineMultipleRatings(ratingValues);
-  const rounded = roundToNearest10(raw);
+  const { rawScore: raw, combinedRating: rounded } =
+    calculateVARating(myRatings);
 
   return (
     <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
@@ -1409,7 +1511,32 @@ function CombinedRatingSummary({ myRatings, t }) {
       <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
         {raw}% raw → {rounded}%
       </p>
+      {stated && stated.rating !== rounded && (
+        <StatedRatingMismatch stated={stated} calculated={rounded} />
+      )}
+      <BilateralIssuesSummary conditions={myRatings} t={t} />
     </div>
+  );
+}
+
+// A mismatch almost always means a decision letter is missing from the
+// packet (e.g. the one that raised a rating), not that VA's math is wrong.
+function StatedRatingMismatch({ stated, calculated }) {
+  const dateWord = stated.dateKind === "effective" ? "effective" : "dated";
+  const from = stated.date ? ` (${dateWord} ${stated.date})` : "";
+  const headline = `Your newest VA letter${from} says your combined rating is ${stated.rating}%. From the ratings on file we calculate ${calculated}%.`;
+  return (
+    <output
+      aria-live="polite"
+      className="block mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg text-sm text-amber-900 dark:text-amber-100"
+    >
+      <p className="font-semibold">{headline}</p>
+      <p className="mt-1">
+        That usually means a decision letter is missing from your packet, such
+        as one that increased a rating. Upload it and this number will update.
+        Your VA letter is the official figure.
+      </p>
+    </output>
   );
 }
 
@@ -1423,6 +1550,7 @@ function RatingsTab({
   setShowVAGovPaster,
   vkbDisabilityRatings = [],
   vkbEnrichmentLoading,
+  packetSummary,
   t,
 }) {
   const hasRatings = myRatings.length > 0;
@@ -1437,7 +1565,11 @@ function RatingsTab({
     <>
       {hasRatings && (
         <>
-          <CombinedRatingSummary myRatings={myRatings} t={t} />
+          <CombinedRatingSummary
+            myRatings={myRatings}
+            stated={packetSummary?.statedCombinedRating}
+            t={t}
+          />
           <div className="mb-4 flex justify-between items-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {myRatings.length} {t("myPacketSection.ratingsSaved")}
@@ -1792,20 +1924,31 @@ function ContactInfoSection({ veteranProfile, setVeteranProfile, t }) {
 // period in veteranProfile.servicePeriods always has a real canonical id
 // (see ServicePeriodsSection's add handler), so every edit here is an
 // immediate updateServicePeriod call, not a batched "Save Profile" write.
-function _updateServicePeriodField(
+// ADR-007: a serviceStartDate edit now routes through updateServicePeriod's
+// own corrections layer (_applyStartCorrection) instead of this component
+// guessing at provenance - state is refreshed from getServicePeriods()
+// afterward so the displayed source/derived/correction fields are the
+// real, canonical result, not an optimistic local guess.
+export function _updateServicePeriodField(
   veteranProfile,
   setVeteranProfile,
   idx,
   field,
   value,
 ) {
-  const newPeriods = [...veteranProfile.servicePeriods];
-  const updated = { ...newPeriods[idx], [field]: value };
-  newPeriods[idx] = updated;
-  setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
-  if (updated.id) {
-    updateServicePeriod(updated.id, { [field]: value });
+  const changes = { [field]: value };
+  const period = veteranProfile.servicePeriods[idx];
+  if (period?.id) {
+    updateServicePeriod(period.id, changes);
+    setVeteranProfile({
+      ...veteranProfile,
+      servicePeriods: getServicePeriods(),
+    });
+    return;
   }
+  const newPeriods = [...veteranProfile.servicePeriods];
+  newPeriods[idx] = { ...period, ...changes };
+  setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
 }
 
 function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
@@ -1830,6 +1973,21 @@ function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
       </button>
     </div>
   );
+}
+
+// ADR-007: the "you corrected this" note names the document's own value
+// (never silently dropped, invariant I5) whenever a veteran-authored
+// correction exists - regardless of the CURRENT effective source, which
+// may already read as 'veteran' rather than showing "(calculated from net
+// service)" (that marker still comes only from serviceStartDateDerived).
+function _startDateCorrectionNote(period) {
+  const documentDate = period.startDateCorrection?.documentDate;
+  if (!documentDate) return null;
+  const calculatedSuffix =
+    period.startDateCorrection?.documentSource === "calculated"
+      ? " - calculated"
+      : "";
+  return `(you corrected this; your document shows ${documentDate}${calculatedSuffix})`;
 }
 
 function ServicePeriodFieldsA({ period, update, t }) {
@@ -1874,6 +2032,16 @@ function ServicePeriodFieldsA({ period, update, t }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {t("myPacketSection.startDate")}
+          {period.serviceStartDateDerived && (
+            <span className="ml-1 font-normal text-xs text-gray-600 dark:text-gray-400">
+              (calculated from net service)
+            </span>
+          )}
+          {_startDateCorrectionNote(period) && (
+            <span className="ml-1 font-normal text-xs text-gray-600 dark:text-gray-400">
+              {_startDateCorrectionNote(period)}
+            </span>
+          )}
         </label>
         <input
           type="date"
@@ -1898,7 +2066,7 @@ function ServicePeriodFieldsA({ period, update, t }) {
   );
 }
 
-function ServicePeriodFieldsB({ period, update, t }) {
+export function ServicePeriodFieldsB({ period, update, t }) {
   return (
     <>
       <div>
@@ -1934,6 +2102,12 @@ function ServicePeriodFieldsB({ period, update, t }) {
           <option value="DD214">DD214 (Active Duty)</option>
           <option value="NGB22">NGB 22 (National Guard)</option>
           <option value="DD256">DD256 (Reserve)</option>
+          {/* D14-1 follow-up: musterCallProcessor.js's code-sheet ingest
+              stores formType: "Code Sheet" - without this option, a
+              controlled <select> whose value matches none of its <option>s
+              falls back to selecting the first one, presenting "DD214
+              (Active Duty)" as fact for a period a code sheet supplied. */}
+          <option value="Code Sheet">VA Rating Code Sheet</option>
           <option value="Other">Other</option>
         </select>
       </div>
@@ -2129,6 +2303,46 @@ function ProfileConflictsBanner({ veteranProfile, setVeteranProfile }) {
   );
 }
 
+// FIX-9: an explicit Save Profile click is the user confirming these field
+// values - mark every currently non-empty field "user"-sourced so a later
+// document import never silently overwrites it (autoPopulateProfile treats
+// profileFieldSources[field] === "user" as never-overwrite).
+// ADR-007 (D12-3): serviceStartDate/serviceStartDateDerived are EXCLUDED -
+// their provenance is owned entirely by the projection/chokepoint now, not
+// by this generic "confirm every field" walk; a stale local value for
+// either field can no longer be marked "user"-sourced and clobber a
+// correction made elsewhere (My Packet's own period editor, FormsHelper,
+// the VKB viewer) since saveVeteranProfile's chokepoint replaces both
+// fields with the real projection whenever a period backs the entry.
+const EXCLUDED_FROM_SOURCE_TRACKING = new Set([
+  "profileFieldSources",
+  "servicePeriods",
+  "lastUpdated",
+  "profileVersion",
+  "serviceStartDate",
+  "serviceStartDateDerived",
+]);
+
+// FIX-10 (SECURITY): route through saveVeteranProfile()'s whitelist +
+// sanitizeString + markAsModified() instead of a raw localStorage.setItem
+// that bypassed all of it.
+export function _saveProfileTab(veteranProfile) {
+  const fieldSources = { ...(veteranProfile.profileFieldSources || {}) };
+  Object.keys(veteranProfile).forEach((field) => {
+    if (
+      !EXCLUDED_FROM_SOURCE_TRACKING.has(field) &&
+      veteranProfile[field] !== undefined &&
+      veteranProfile[field] !== ""
+    ) {
+      fieldSources[field] = "user";
+    }
+  });
+  return saveVeteranProfile({
+    ...veteranProfile,
+    profileFieldSources: fieldSources,
+  });
+}
+
 function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
   return (
     <>
@@ -2159,45 +2373,15 @@ function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
           <button
             type="button"
             onClick={() => {
-              // FIX-10 (SECURITY): route through saveVeteranProfile()'s
-              // whitelist + sanitizeString + markAsModified() instead of a
-              // raw localStorage.setItem that bypassed all of it. Branch
-              // the alert on the actual return value - it returns false on
-              // quota exhaustion, which the old code always claimed as
-              // success.
-              //
-              // FIX-9: an explicit Save Profile click is the user
-              // confirming these field values - mark every currently
-              // non-empty field "user"-sourced so a later document import
-              // never silently overwrites it (autoPopulateProfile treats
-              // profileFieldSources[field] === "user" as never-overwrite).
-              const EXCLUDED_FROM_SOURCE_TRACKING = new Set([
-                "profileFieldSources",
-                "servicePeriods",
-                "lastUpdated",
-                "profileVersion",
-              ]);
-              const fieldSources = {
-                ...(veteranProfile.profileFieldSources || {}),
-              };
-              Object.keys(veteranProfile).forEach((field) => {
-                if (
-                  !EXCLUDED_FROM_SOURCE_TRACKING.has(field) &&
-                  veteranProfile[field] !== undefined &&
-                  veteranProfile[field] !== ""
-                ) {
-                  fieldSources[field] = "user";
-                }
-              });
-
-              const success = saveVeteranProfile({
-                ...veteranProfile,
-                profileFieldSources: fieldSources,
-              });
+              // Branch the alert on the actual return value - it returns
+              // false on quota exhaustion, which the old code always
+              // claimed as success.
+              const success = _saveProfileTab(veteranProfile);
 
               if (success) {
                 // Re-read from storage so the UI reflects what was
-                // actually persisted post-sanitization, not the raw
+                // actually persisted post-sanitization (and post-projection
+                // - see saveVeteranProfile's chokepoint), not the raw
                 // pre-sanitized local state.
                 setVeteranProfile(getVeteranProfile());
                 alert(`✅ ${t("myPacketSection.profileSaved")}`);
@@ -2471,7 +2655,7 @@ function DD214PasteProcessor({
 // (Q2 - Total time in service headline + Service span context, shown
 // separately since they answer different questions for a veteran with a
 // break in service).
-function DD214PeriodsSummary({ summary, dd214Data, awards, t }) {
+export function DD214PeriodsSummary({ summary, dd214Data, awards, t }) {
   return (
     <div className="space-y-3">
       {dd214Data?.fullName && (
@@ -2499,8 +2683,11 @@ function DD214PeriodsSummary({ summary, dd214Data, awards, t }) {
         </p>
         {summary.serviceSpan && (
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Service span: {summary.serviceSpan.start || "?"} -{" "}
-            {summary.serviceSpan.end || "?"}
+            Service span: {summary.serviceSpan.start || "?"}
+            {summary.serviceSpan.startDerived && (
+              <span className="text-xs"> (calculated from net service)</span>
+            )}{" "}
+            - {summary.serviceSpan.end || "?"}
           </p>
         )}
       </div>
@@ -2576,15 +2763,79 @@ function CombatServiceCard({ awards, dd214Data, t }) {
   );
 }
 
+// N1b (final8 QA, 2026-09-24): a disagreement _mergeExistingServicePeriod
+// recorded (kept the existing value, never overwrote it) instead of
+// letting it disappear silently - split out purely to keep
+// DD214PeriodDetailCard's line count under the repo's lint ceiling.
+function ServicePeriodFieldConflicts({ conflicts }) {
+  if (!conflicts?.length) return null;
+  return (
+    <div className="mt-2 pt-2 border-t border-amber-200 dark:border-amber-800">
+      <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+        ⚠️ A different document disagreed:
+      </p>
+      <ul className="text-xs text-amber-600 dark:text-amber-400 list-disc list-inside">
+        {conflicts.map((c, i) => (
+          <li key={`${c.field}-${i}`}>
+            {_humanizeFieldName(c.field)}: kept "{c.keptValue}" (
+            {c.keptSourceDocument || "unknown source"}) -{" "}
+            {c.conflictingSourceDocument || "another document"} says "
+            {c.conflictingValue}"
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // C3: detail view - one card per period, most recent first.
-function DD214PeriodDetailCard({ period, t }) {
+function DD214PeriodDetailCardTitle({ period }) {
+  return (
+    <h5 className="font-semibold text-gray-900 dark:text-gray-100">
+      {period.serviceStartDate || "?"}
+      {period.serviceStartDateDerived && (
+        <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+          {" "}
+          (calculated from net service)
+        </span>
+      )}
+      {_startDateCorrectionNote(period) && (
+        <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+          {" "}
+          {_startDateCorrectionNote(period)}
+        </span>
+      )}{" "}
+      - {period.serviceEndDate || (period.incomplete ? "?" : "Present")}
+    </h5>
+  );
+}
+
+// D14-1 follow-up (final14 QA, 2026-09-28): the Source line used to pair
+// `period.sourceDocument` (raw, follows whichever document most recently
+// upserted this period) with `periodDisplayFormType` (sticky - "NGB22" for
+// as long as ANY NGB-22 ever contributed, per veteranKnowledgeBase.js's
+// _enlistmentClassificationFormType), so a code sheet re-import could read
+// "Source: cfile_codesheet.pdf (NGB22)" - the shown filename and its
+// printed type disagreeing. The Source line above now pairs sourceDocument
+// with its OWN period.formType (both written together by the same
+// upsert); this note keeps the sticky NGB-22 signal, but labeled honestly
+// as a fact about the ENLISTMENT, not a description of the filename shown.
+function _backedByNgb22Note(period) {
+  const sticky = periodDisplayFormType(period);
+  if (!sticky || sticky === period.formType) return null;
+  return (
+    <span className="block text-xs text-gray-500 dark:text-gray-400">
+      An NGB-22 on file establishes this as a Guard/Reserve enlistment,
+      regardless of which document above most recently supplied its dates.
+    </span>
+  );
+}
+
+export function DD214PeriodDetailCard({ period, t }) {
   return (
     <div className="border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-white dark:bg-gray-800">
       <div className="flex items-center justify-between mb-2">
-        <h5 className="font-semibold text-gray-900 dark:text-gray-100">
-          {period.serviceStartDate || "?"} -{" "}
-          {period.serviceEndDate || (period.incomplete ? "?" : "Present")}
-        </h5>
+        <DD214PeriodDetailCardTitle period={period} />
         {period.incomplete && (
           <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
             Incomplete
@@ -2641,8 +2892,10 @@ function DD214PeriodDetailCard({ period, t }) {
           <span className="text-gray-500 dark:text-gray-400">Source: </span>
           {period.sourceDocument || "N/A"}
           {period.formType ? ` (${period.formType})` : ""}
+          {_backedByNgb22Note(period)}
         </p>
       </div>
+      <ServicePeriodFieldConflicts conflicts={period.fieldConflicts} />
     </div>
   );
 }
@@ -2665,6 +2918,71 @@ function DD214PeriodsDetail({ periods, t }) {
       </p>
       {sorted.map((period) => (
         <DD214PeriodDetailCard key={period.id} period={period} t={t} />
+      ))}
+    </div>
+  );
+}
+
+// N1c (final8 QA, 2026-09-24): a row that carries real content (rank, pay
+// grade, character of service, branch, ...) but has no proven link to any
+// date range - governing principle: showing an honest "we couldn't match
+// this" is better than guessing which period it belongs to. Kept in
+// storage in full; shown here, plainly separate from real periods, so the
+// veteran can still see what the record says and the period count above
+// only ever counts real, dated periods.
+function UnmatchedServiceRecordCard({ record }) {
+  return (
+    <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/60">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Form type: </span>
+          {record.formType ? getDocumentTypeLabel(record.formType) : "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Branch: </span>
+          {record.branch || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Component: </span>
+          {record.component || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Rank: </span>
+          {record.rank || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Pay grade: </span>
+          {record.payGrade || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">
+            Character of service:{" "}
+          </span>
+          {record.characterOfService || "N/A"}
+        </p>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        Source: {record.sourceDocument || "N/A"}
+      </p>
+    </div>
+  );
+}
+
+function UnmatchedServiceRecordsSection({ records }) {
+  if (!records || records.length === 0) return null;
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+        Records we couldn't match to a date range ({records.length})
+      </h4>
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        These documents didn't have a readable date, and we couldn't confirm
+        which service period they belong to - so we're showing them separately
+        instead of guessing. Nothing here is lost; it just isn't counted as one
+        of your service periods above.
+      </p>
+      {records.map((record) => (
+        <UnmatchedServiceRecordCard key={record.id} record={record} />
       ))}
     </div>
   );
@@ -2706,7 +3024,11 @@ function DD214ExtractedDataDisplay({
   t,
 }) {
   const periods = serviceHistory.servicePeriods || [];
-  const summary = summarizeServicePeriods(periods);
+  const unmatchedRecords = serviceHistory.unmatchedServiceRecords || [];
+  const summary = summarizeServicePeriods(periods, {
+    unmatchedRecords,
+    dd214Data: serviceHistory.dd214Data,
+  });
   return (
     <div className="space-y-4">
       <DD214PeriodsSummary
@@ -2716,12 +3038,25 @@ function DD214ExtractedDataDisplay({
         t={t}
       />
       {periods.length > 0 && <DD214PeriodsDetail periods={periods} t={t} />}
+      <UnmatchedServiceRecordsSection records={unmatchedRecords} />
       <DD214DataActions
         setShowDD214Processor={setShowDD214Processor}
         handleClearDD214={handleClearDD214}
         t={t}
       />
     </div>
+  );
+}
+
+// N1c (final8 QA, 2026-09-24): a Guard member whose DD214s are all
+// undated still has real data - servicePeriods[] alone (0 entries) can no
+// longer decide "has this veteran imported anything yet" on its own, or
+// the empty-state drop zone shows instead of the unmatched-records section
+// that has their data.
+function _hasServiceData(serviceHistory) {
+  return (
+    !!serviceHistory.servicePeriods?.length ||
+    !!serviceHistory.unmatchedServiceRecords?.length
   );
 }
 
@@ -2742,7 +3077,7 @@ function DD214SectionHeader({
           </span>
         )}
       </h3>
-      {!showDD214Processor && !serviceHistory.servicePeriods?.length && (
+      {!showDD214Processor && !_hasServiceData(serviceHistory) && (
         <div className="flex gap-2">
           <button
             type="button"
@@ -2794,7 +3129,7 @@ function DD214Section({
         t={t}
       />
 
-      {!serviceHistory.servicePeriods?.length && !showDD214Processor && (
+      {!_hasServiceData(serviceHistory) && !showDD214Processor && (
         <DD214DropZone
           dd214FileInputRef={dd214FileInputRef}
           handleDD214DragOver={handleDD214DragOver}
@@ -2820,7 +3155,7 @@ function DD214Section({
         />
       )}
 
-      {serviceHistory.servicePeriods?.length > 0 && !showDD214Processor && (
+      {_hasServiceData(serviceHistory) && !showDD214Processor && (
         <DD214ExtractedDataDisplay
           serviceHistory={serviceHistory}
           setShowDD214Processor={setShowDD214Processor}
@@ -3040,8 +3375,14 @@ function DeploymentEntry({ dep, handleRemoveDeployment, t }) {
             {dep.theater}
           </span>
           {dep.combat && (
+            // dep.combat is a DoD/IRS tax combat-zone designation (see
+            // COMBAT_ZONE_DESIGNATIONS in musterCallProcessor.js), not a VA
+            // "engaged in combat with the enemy" finding under 38 U.S.C.
+            // § 1154(b) - reuses the same "Combat Zone" label the manual
+            // Add Deployment form's own checkbox already uses (below) so
+            // this doesn't read as a bare, broader "Combat" claim.
             <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full">
-              {t("myPacketSection.combat")}
+              {t("myPacketSection.combatZone")}
             </span>
           )}
           {dep.hazardous && (
@@ -3916,6 +4257,7 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
           <button
             type="button"
             onClick={() => {
+              recordRemovedTimelineEvent(event);
               const updated = timelineEvents.filter((e) => e.id !== event.id);
               setTimelineEvents(updated);
               import("../utils/veteranProfile").then((m) =>
@@ -4140,9 +4482,9 @@ function PainMapCard({ map, setViewingPainMap, handleDeletePainMap, t }) {
         </p>
         {map.conditions && map.conditions.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {map.conditions.slice(0, 2).map((cond, idx) => (
+            {map.conditions.slice(0, 2).map((cond) => (
               <span
-                key={idx}
+                key={cond}
                 className="text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded"
               >
                 {cond}
@@ -4231,38 +4573,43 @@ function PainMapsTab({
 
 function PainMapDetailHeader({ viewingPainMap, setViewingPainMap, t }) {
   return (
-    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 flex items-center justify-between">
-      <div>
-        <h3 id="painmap-detail-title" className="text-xl font-bold">
-          {viewingPainMap.name || t("myPacketSection.painMapDetails")}
-        </h3>
-        <p className="text-red-100 text-sm">
-          {t("myPacketSection.saved")}:{" "}
-          {new Date(
-            viewingPainMap.savedAt || viewingPainMap.createdAt,
-          ).toLocaleString()}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={() => setViewingPainMap(null)}
-        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-        aria-label={t("common.close") || "Close"}
+    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={() => setViewingPainMap(null)}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg hover:bg-white/20 transition-colors"
+            aria-label={t("common.close") || "Close"}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
       >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
+        <div className="min-w-0">
+          <h3 id="painmap-detail-title" className="text-xl font-bold">
+            {viewingPainMap.name || t("myPacketSection.painMapDetails")}
+          </h3>
+          <p className="text-red-100 text-sm">
+            {t("myPacketSection.saved")}:{" "}
+            {new Date(
+              viewingPainMap.savedAt || viewingPainMap.createdAt,
+            ).toLocaleString()}
+          </p>
+        </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -4276,9 +4623,9 @@ function PainPointsPane({ viewingPainMap, t }) {
       </h4>
       {viewingPainMap.painPoints && viewingPainMap.painPoints.length > 0 ? (
         <div className="space-y-2 max-h-[300px] overflow-y-auto">
-          {viewingPainMap.painPoints.map((point, idx) => (
+          {viewingPainMap.painPoints.map((point) => (
             <div
-              key={idx}
+              key={point.bodyPart}
               className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
             >
               <div className="flex items-center gap-2">
@@ -4392,6 +4739,44 @@ function PainMapDetailModal({
   );
 }
 
+function FormViewerModalHeader({ viewingForm, setViewingForm, t }) {
+  return (
+    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={() => setViewingForm(null)}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg hover:bg-white/20 transition-colors"
+            aria-label={t("common.close") || "Close"}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="min-w-0">
+          <h3 id="form-viewer-title" className="text-xl font-bold">
+            {viewingForm.title || viewingForm.formName}
+          </h3>
+          <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
+        </div>
+      </HeaderCloseSlot>
+    </div>
+  );
+}
+
 function FormViewerModal({ viewingForm, setViewingForm, t }) {
   return (
     <ResponsiveModal
@@ -4401,36 +4786,11 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
       zIndex={70}
       labelledBy="form-viewer-title"
       header={
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4 flex items-center justify-between">
-          <div>
-            <h3 id="form-viewer-title" className="text-xl font-bold">
-              {viewingForm.title || viewingForm.formName}
-            </h3>
-            <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setViewingForm(null)}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              aria-label={t("common.close") || "Close"}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <FormViewerModalHeader
+          viewingForm={viewingForm}
+          setViewingForm={setViewingForm}
+          t={t}
+        />
       }
     >
       {viewingForm.generatedContent && (
@@ -4482,11 +4842,37 @@ function StatementViewerHeader({
   t,
 }) {
   return (
-    <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-4 flex items-center justify-between">
-      <h3 id="statement-viewer-title" className="text-xl font-bold">
-        {t("myPacketSection.generatedStatement")}
-      </h3>
-      <div className="flex items-center gap-3">
+    <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-4">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={() => {
+              setViewingStatement(null);
+              setViewingClaimId(null);
+            }}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200"
+            aria-label={t("common.close") || "Close"}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <h3 id="statement-viewer-title" className="min-w-0 text-xl font-bold">
+          {t("myPacketSection.generatedStatement")}
+        </h3>
         <button
           type="button"
           onClick={handleEditStatement}
@@ -4494,30 +4880,7 @@ function StatementViewerHeader({
         >
           {t("myPacketSection.editStatement")}
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            setViewingStatement(null);
-            setViewingClaimId(null);
-          }}
-          className="text-white hover:text-gray-200"
-          aria-label={t("common.close") || "Close"}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -4904,18 +5267,22 @@ function downloadAsPdf(statement, fileName, claim) {
 
 function _loadVeteranProfile(ctx) {
   const { setVeteranProfile } = ctx;
-  const profile = getVeteranProfile();
   // Q4: the Profile tab's manual editor reads/writes the SAME canonical
   // array as the Service tab (serviceHistory.servicePeriods[]), not the
   // legacy profile.servicePeriods field.
-  profile.servicePeriods = getServicePeriods();
+  // ADR-007: read BEFORE getVeteranProfile() - getServicePeriods() may run
+  // the one-time v3 migration, which re-projects the flat profile mirror;
+  // reading the profile first would capture it pre-projection and go stale
+  // the moment this function's own servicePeriods read triggers it.
+  const servicePeriods = getServicePeriods();
+  const profile = getVeteranProfile();
+  profile.servicePeriods = servicePeriods;
   setVeteranProfile(profile || {});
 }
 
-async function _checkAIStatus(ctx) {
+function _checkAIStatus(ctx) {
   const { setAIStatus } = ctx;
-  const status = await getAIStatus();
-  setAIStatus(status);
+  setAIStatus(getAIStatus());
 }
 
 function _loadServiceHistory(ctx) {
@@ -4970,6 +5337,24 @@ async function _loadVkbDocuments(ctx) {
   }
 }
 
+// DD214 imports save service dates to the veteran profile, not always the
+// VKB, so the summary's "separation date missing" check must see both - the
+// same sources BDD Builder reads.
+function _withProfileServicePeriods(vkb) {
+  const profile = getVeteranProfile();
+  const periods = [
+    ...(vkb.serviceHistory?.servicePeriods || []),
+    ...getServicePeriods(),
+    ...(profile.serviceEndDate
+      ? [{ serviceEndDate: profile.serviceEndDate }]
+      : []),
+  ];
+  return {
+    ...vkb,
+    serviceHistory: { ...vkb.serviceHistory, servicePeriods: periods },
+  };
+}
+
 async function _loadVkbEnrichment(ctx) {
   const {
     setCfileConditions,
@@ -5000,7 +5385,10 @@ async function _loadVkbEnrichment(ctx) {
     // Derived from the VKB already in hand - groupDocumentationByCategory is
     // pure, so this costs no extra IndexedDB read.
     setPacketSummary(
-      buildPacketSummary(vkb, groupDocumentationByCategory(vkb)),
+      buildPacketSummary(
+        _withProfileServicePeriods(vkb),
+        groupDocumentationByCategory(vkb),
+      ),
     );
   } catch {
     // Best-effort read-only enrichment - leave defaults on failure.
@@ -5310,7 +5698,7 @@ function _toIsoDate(dateStr) {
 // regex extractor Muster Call already uses) instead of hard-disabling the
 // paste button. Less reliable than AI extraction, so it's tagged with a
 // low confidence and the veteran is told to double-check the result.
-async function _processDD214TextWithoutAI(dd214Text, ctx) {
+async function _processDD214TextWithoutAI(dd214Text, ctx, message) {
   const {
     setIsProcessingDD214,
     loadServiceHistory,
@@ -5320,6 +5708,32 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
   setIsProcessingDD214(true);
   try {
     const parsed = await parseServiceRecord(dd214Text);
+    // ADR-007: upserts the canonical period BEFORE the legacy dd214Data
+    // save, same reasoning/order as musterCallProcessor.js's
+    // saveServiceRecordToProfile - the period (and saveServiceHistory's own
+    // preservation guard) already knows this document's date by the time
+    // the legacy write runs, not the other way around.
+    upsertServicePeriod(
+      {
+        serviceStartDate: _toIsoDate(parsed.serviceStartDate),
+        serviceEndDate: _toIsoDate(parsed.serviceEndDate),
+        serviceStartDateDerived: !!parsed.serviceStartDateDerived,
+        branch: parsed.branch || "",
+        rank: parsed.rank || "",
+        payGrade: parsed.payGrade || "",
+        mos: parsed.mos || "",
+        mosTitle: parsed.mosTitle || "",
+        characterOfService: parsed.dischargeType || "",
+        separationType: parsed.separationType || "",
+        separationAuthority: parsed.separationAuthority || "",
+        separationCode: parsed.spdCode || "",
+        reentryCode: parsed.reentryCode || "",
+        narrativeReason: parsed.narrativeReason || "",
+        foreignService: parsed.foreignService ?? null,
+        formType: parsed.formType || "DD214",
+      },
+      { sourceDocument: "Pasted DD214 Text", confidence: 0.4 },
+    );
     saveDD214Data({
       fullName: parsed.veteranName,
       // FIX: this manual paste path used to omit fullNameSourceForm, so the
@@ -5337,26 +5751,6 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
       extractedText: dd214Text.substring(0, 5000),
       confidence: 0.4,
     });
-    upsertServicePeriod(
-      {
-        serviceStartDate: _toIsoDate(parsed.serviceStartDate),
-        serviceEndDate: _toIsoDate(parsed.serviceEndDate),
-        branch: parsed.branch || "",
-        rank: parsed.rank || "",
-        payGrade: parsed.payGrade || "",
-        mos: parsed.mos || "",
-        mosTitle: parsed.mosTitle || "",
-        characterOfService: parsed.dischargeType || "",
-        separationType: parsed.separationType || "",
-        separationAuthority: parsed.separationAuthority || "",
-        separationCode: parsed.spdCode || "",
-        reentryCode: parsed.reentryCode || "",
-        narrativeReason: parsed.narrativeReason || "",
-        foreignService: !!parsed.foreignService,
-        formType: parsed.formType || "DD214",
-      },
-      { sourceDocument: "Pasted DD214 Text", confidence: 0.4 },
-    );
     (parsed.awards || []).forEach((item) => {
       const name = item.award?.name || item.matchedText;
       if (!name) return;
@@ -5366,7 +5760,8 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
     setDD214Text("");
     setShowDD214Processor(false);
     alert(
-      "DD214 information extracted using text pattern matching (no AI configured). Review the Service tab and correct anything that looks wrong.",
+      message ||
+        "DD214 information extracted using text pattern matching (no AI configured). Review the Service tab and correct anything that looks wrong.",
     );
   } catch (error) {
     console.error("Error processing DD214 without AI:", error);
@@ -5374,6 +5769,33 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
   } finally {
     setIsProcessingDD214(false);
   }
+}
+
+// ADR-007: upserts the canonical period at the same trust tier (confidence
+// 0.4) as the sibling non-AI paste path, before the legacy dd214Data save.
+function _saveDD214AiTextResult(data, dd214Text) {
+  upsertServicePeriod(
+    {
+      serviceStartDate: _toIsoDate(data.entryDate),
+      serviceEndDate: _toIsoDate(data.separationDate),
+      serviceStartDateDerived: false,
+      branch: data.branch || "",
+      mos: data.mos || "",
+      mosTitle: data.mosTitle || "",
+      characterOfService: data.characterOfService || "",
+      separationType: data.separationType || "",
+    },
+    { sourceDocument: "Pasted DD214 Text", confidence: 0.4 },
+  );
+  saveDD214Data({
+    ...data,
+    // FIX: matches the same fix on the non-AI paste path above and the
+    // primary upload path (musterCallProcessor.js _buildDD214IdentityFields)
+    // -- only set when a name was actually found, so the Name card's source
+    // attribution doesn't go stale.
+    fullNameSourceForm: data.fullName ? "DD214" : null,
+    extractedText: dd214Text.substring(0, 5000), // Store first 5000 chars
+  });
 }
 
 async function _processDD214Text(dd214Text, aiStatus, ctx) {
@@ -5390,6 +5812,20 @@ async function _processDD214Text(dd214Text, aiStatus, ctx) {
 
   if (!aiStatus.anyAvailable) {
     await _processDD214TextWithoutAI(dd214Text, ctx);
+    return;
+  }
+
+  // ADR-009: pasted DD214 text is document-derived and stays on-device
+  // only. If only an off-device AI is configured, reuse the same local
+  // regex parser used when no AI is configured at all, with a notice
+  // explaining why.
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    await _processDD214TextWithoutAI(
+      dd214Text,
+      ctx,
+      buildDocumentOffDeviceNotice(routing.blockedProviderLabel),
+    );
     return;
   }
 
@@ -5418,6 +5854,8 @@ ${dd214Text}
 
 Return ONLY the JSON object, no explanation.`,
       {
+        dataClass: AI_DATA_CLASS.DOCUMENT,
+        toolId: "dd214-analyzer",
         temperature: 0.3,
         maxTokens: 512,
         expectJSON: true,
@@ -5430,16 +5868,7 @@ Return ONLY the JSON object, no explanation.`,
       const contentStr =
         typeof content === "string" ? content : JSON.stringify(content);
       const data = _parseDD214AiResponse(contentStr);
-
-      saveDD214Data({
-        ...data,
-        // FIX: matches the same fix on the non-AI paste path above and the
-        // primary upload path (musterCallProcessor.js
-        // _buildDD214IdentityFields) -- only set when a name was actually
-        // found, so the Name card's source attribution doesn't go stale.
-        fullNameSourceForm: data.fullName ? "DD214" : null,
-        extractedText: dd214Text.substring(0, 5000), // Store first 5000 chars
-      });
+      _saveDD214AiTextResult(data, dd214Text);
       loadServiceHistory();
       setDD214Text("");
       setShowDD214Processor(false);
@@ -5593,7 +6022,7 @@ function DocumentsEmptyState({ onClose, t }) {
       <button
         type="button"
         onClick={onClose}
-        className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
+        className="px-6 py-3 bg-teal-700 text-white rounded-lg font-semibold hover:bg-teal-800 transition-colors"
       >
         {t("common.close") || "Close"}
       </button>
@@ -5605,11 +6034,17 @@ function DocumentFindingScalars({ scalars }) {
   if (scalars.length === 0) return null;
   return (
     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-sm">
-      {scalars.map(({ label, value }) => (
+      {scalars.map(({ label, value, derived }) => (
         <div key={label} className="flex flex-wrap gap-x-2 min-w-0">
           <dt className="text-gray-500 dark:text-gray-400">{label}:</dt>
           <dd className="font-medium text-gray-900 dark:text-gray-100 min-w-0 break-words">
             {value}
+            {derived && (
+              <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+                {" "}
+                (calculated from net service)
+              </span>
+            )}
           </dd>
         </div>
       ))}
@@ -5693,6 +6128,18 @@ function DocumentFindingsCard({ findings }) {
           Raw text stored, but structured fields could not be read from this
           document ({findings.parseError}).
         </p>
+      )}
+
+      {(findings.aiAnalysisNotice || findings.coverageNote) && (
+        <div className="px-4 py-3">
+          <DocumentReadingNotices
+            aiAnalysisNotice={findings.aiAnalysisNotice}
+            coverageNote={findings.coverageNote}
+            pagesNotRead={/not read|could not be read/i.test(
+              findings.coverageNote || "",
+            )}
+          />
+        </div>
       )}
 
       <DocumentFindingScalars scalars={findings.scalars} />
@@ -5809,7 +6256,14 @@ function DocumentsTab({ documents, packetSummary, onClose, t }) {
 function MyPacketTabContent(props) {
   const { activeTab, viewingPainMap, viewingForm } = props;
   return (
-    <div className="p-6">
+    <div
+      className="p-6"
+      role="tabpanel"
+      id={`mypacket-panel-${activeTab}`}
+      aria-labelledby={`mypacket-tab-${activeTab}`}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- WAI-ARIA Tabs pattern: the active panel needs tabIndex=0 so keyboard users can Tab straight into it when it has no focusable content of its own (same rationale as ResponsiveModal's scroll-body tabIndex above)
+      tabIndex={0}
+    >
       {/* MY RATINGS TAB */}
       {activeTab === "ratings" && <RatingsTab {...props} />}
 
@@ -5962,6 +6416,8 @@ function useMyPacketServiceHistoryState() {
     awards: [],
     dutyStations: [],
     dd214Data: null,
+    servicePeriods: [],
+    unmatchedServiceRecords: [],
   });
   const [showDeploymentForm, setShowDeploymentForm] = useState(false);
   const [showAwardForm, setShowAwardForm] = useState(false);
@@ -6021,12 +6477,8 @@ function useMyPacketVaState() {
   const [vaRecords, setVaRecords] = useState(null);
   const {
     isAuthenticated: isVaAuthenticated,
-    isLoading: _vaAuthLoading,
-    userInfo: _vaUserInfo,
-    login: _vaLogin,
     logout: vaLogout,
     accessToken: vaAccessToken,
-    error: _vaAuthError,
   } = useVaAuth();
   const [vaImportStatus, setVaImportStatus] = useState({
     loading: false,
@@ -6066,9 +6518,7 @@ function _buildPacketLoaders(state) {
   } = state;
 
   const loadVeteranProfile = () => _loadVeteranProfile({ setVeteranProfile });
-  const checkAIStatus = async () => {
-    await _checkAIStatus({ setAIStatus });
-  };
+  const checkAIStatus = () => _checkAIStatus({ setAIStatus });
   const loadServiceHistory = () => _loadServiceHistory({ setServiceHistory });
   const loadTimelineEvents = () => _loadTimelineEvents({ setTimelineEvents });
   const loadPainMaps = () => _loadPainMaps({ setPainMaps });
@@ -6732,6 +7182,21 @@ function _useMyPacketEffects({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
+
+  // ADR-007: the Service/Profile tabs both display projections of
+  // servicePeriods[] - reload both stores on entry so a correction made in
+  // another tab, another editor (FormsHelper, the VKB viewer), or a
+  // re-import processed while this tab wasn't active is never shown stale.
+  useEffect(() => {
+    if (
+      tabsState.activeTab === "service" ||
+      tabsState.activeTab === "profile"
+    ) {
+      loaders.loadServiceHistory();
+      loaders.loadVeteranProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabsState.activeTab]);
 }
 
 const MyPacket = ({

@@ -199,3 +199,192 @@ describe("a conflict is persisted onto the profile so the UI can surface it (pre
     );
   });
 });
+
+describe("autoPopulateProfile: a C-File's code sheet", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the combined rating and the veteran's representative", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "cfile.pdf",
+        status: "complete",
+        extractedData: {
+          type: "c_file",
+          ratingSource: "code_sheet",
+          combinedRating: 80,
+          representative: "Veterans of Foreign Wars of the US",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      currentCombinedRating: 80,
+      vsoOrganization: "Veterans of Foreign Wars of the US",
+    });
+  });
+
+  it("ignores a C-File without a code sheet", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "cfile.pdf",
+        status: "complete",
+        extractedData: { type: "c_file", combinedRating: 30 },
+      },
+    ]);
+    expect(getVeteranProfile().currentCombinedRating).not.toBe(30);
+  });
+});
+
+describe("autoPopulateProfile: a rating decision letter", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the combined rating and effective date", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "ClaimLetter-2024-5-8.pdf",
+        status: "complete",
+        extractedData: {
+          type: "rating_decision",
+          combinedRating: 70,
+          effectiveDate: "2023-09-15",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      currentCombinedRating: 70,
+      effectiveDate: "2023-09-15",
+    });
+  });
+});
+
+// D-C (final10 QA, 2026-09-25): serviceStartDateDerived previously stopped
+// propagating at the service-period row - the top-level profile field
+// (read by MyPacket's Profile tab) never learned a serviceStartDate came
+// from an NGB-22's calculated entry date rather than a printed one.
+describe("D-C: autoPopulateProfile propagates serviceStartDateDerived onto the profile", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("marks the profile's serviceStartDate as derived when the document's was calculated", async () => {
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-07-30",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+
+    expect(getVeteranProfile().serviceStartDateDerived).toBe(true);
+  });
+
+  it("marks the profile's serviceStartDate as not derived for an ordinary printed date", async () => {
+    await autoPopulateProfile([serviceRecordResult()]);
+
+    expect(getVeteranProfile().serviceStartDateDerived).toBe(false);
+  });
+
+  it("clears the derived flag once a later, genuinely dated document refines the field", async () => {
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-07-30",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-06-01",
+        serviceStartDateDerived: false,
+      }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("1997-06-01");
+    expect(profile.serviceStartDateDerived).toBe(false);
+  });
+
+  // Regression (final10 QA correctness re-review, 2026-09-26): a
+  // conflicting document must never flag the veteran's OWN typed date as
+  // "calculated" - serviceStartDateDerived used to run through the
+  // generic per-field pass independently of serviceStartDate, so it wrote
+  // through even when serviceStartDate itself was correctly blocked as a
+  // conflict.
+  it("does not flag the veteran's own typed date as calculated when a conflicting document is blocked", async () => {
+    saveVeteranProfile({
+      serviceStartDate: "1998-05-11",
+      profileFieldSources: { serviceStartDate: "user" },
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-07-30",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("1998-05-11");
+    expect(profile.serviceStartDateDerived).toBeFalsy();
+    expect(result.conflicts.map((c) => c.field)).toContain("serviceStartDate");
+  });
+});
+
+describe("autoPopulateProfile: a claim letter", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the claim number and VA file number", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "ClaimLetter.pdf",
+        status: "complete",
+        extractedData: {
+          type: "claim_letter",
+          claimNumber: "600123456",
+          vaFileNumber: "000000000",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      claimNumber: "600123456",
+      vaFileNumber: "000000000",
+    });
+  });
+});
+
+describe("ADR-007: autoPopulateProfile never moves serviceStartDate once a period backs the entry", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("skips serviceStartDate but still fills every other field", async () => {
+    const { upsertServicePeriod, setServiceEntryDate } =
+      await import("../../utils/veteranProfile");
+    const id = upsertServicePeriod(
+      {
+        serviceStartDate: "2002-01-10",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2010-06-15",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22.pdf", confidence: 60 },
+    );
+    setServiceEntryDate({
+      date: "2001-11-01",
+      via: "muster_review",
+      periodId: id,
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({ serviceStartDate: "06/01/2010", mos: "68W" }),
+    ]);
+    expect(result.success).toBe(true);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("2001-11-01");
+    expect(profile.mos).toBe("68W");
+  });
+});

@@ -152,7 +152,7 @@ test.describe("My Packet — derived TL;DR and per-document findings", () => {
     await openMyPacket(page);
 
     const dialog = page.locator('[role="dialog"]').last();
-    await dialog.getByRole("button", { name: /Documents/ }).click();
+    await dialog.getByRole("tab", { name: /Documents/ }).click();
 
     // The DD-214's extracted fields previously never rendered anywhere —
     // the tab listed the bucket count only.
@@ -171,7 +171,7 @@ test.describe("My Packet — derived TL;DR and per-document findings", () => {
     await openMyPacket(page);
 
     const dialog = page.locator('[role="dialog"]').last();
-    await dialog.getByRole("button", { name: /Documents/ }).click();
+    await dialog.getByRole("tab", { name: /Documents/ }).click();
 
     await expect(dialog).toContainText("Conditions across your records");
     await expect(dialog).toContainText("Tinnitus");

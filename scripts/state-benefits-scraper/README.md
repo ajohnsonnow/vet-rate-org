@@ -76,22 +76,22 @@ class CaliforniaScraper(BaseStateScraper):
             state_code="CA",
             official_url="https://www.calvet.ca.gov/"
         )
-    
+
     def scrape_property_tax_benefits(self) -> List[Benefit]:
         """Scrape CA property tax exemptions"""
         benefits = []
-        
+
         # Fetch the official CA page
         soup = self.fetch_page(
             "https://www.calvet.ca.gov/veteran-services-benefits/property-tax"
         )
-        
+
         if not soup:
             return benefits
-        
+
         # Parse the HTML (implementation varies by state)
         # Look for benefit information in tables, lists, etc.
-        
+
         benefits.append(Benefit(
             category="Property Tax",
             benefit_name="Disabled Veterans Property Tax Exemption",
@@ -99,7 +99,7 @@ class CaliforniaScraper(BaseStateScraper):
             value="$161,083 exemption (2026)",
             # ... etc
         ))
-        
+
         return benefits
 ```
 
@@ -160,6 +160,7 @@ python monitors/update_checker.py
 ```
 
 This should run:
+
 - **Daily**: Check for page changes
 - **Monthly**: Alert on state law changes
 - **Quarterly**: Trigger full re-scrape
@@ -203,20 +204,24 @@ Track progress for all 50 states + DC:
 Most states have similar structure:
 
 ### Property Tax
+
 - State Comptroller website
 - County Assessor guidelines
 - State Tax Code
 
 ### Vehicle Registration
+
 - State DMV/Motor Vehicle Department
 - Special license plate programs
 
 ### Education
+
 - State Veterans Commission
 - Higher Education Coordinating Board
 - Tuition waiver programs
 
 ### Recreation
+
 - Wildlife/Game & Fish Department
 - State Parks Department
 
@@ -304,7 +309,7 @@ This scraper collects publicly available information from government websites fo
 
 ### State Resources
 
-- State VA offices: https://www.va.gov/statedva.htm
+- State VA offices: <https://www.va.gov/statedva.htm>
 - Property tax info: Each state comptroller
 - Legal citations: Justia, FindLaw
 

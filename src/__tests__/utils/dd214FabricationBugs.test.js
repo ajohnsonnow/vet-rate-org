@@ -23,8 +23,8 @@ describe("FIX-3a: no fabricated deployments from DD214 boilerplate", () => {
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).not.toContain("VIETNAM");
-    expect(result.deployments.length).toBe(0);
+    expect(result.deployments.map((d) => d.location)).not.toContain("VIETNAM");
+    expect(result.deployments).toHaveLength(0);
   });
 
   it("still extracts a real deployment mentioned in Box 18 remarks", async () => {
@@ -40,7 +40,7 @@ describe("FIX-3a: no fabricated deployments from DD214 boilerplate", () => {
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).toContain("IRAQ");
+    expect(result.deployments.map((d) => d.location)).toContain("IRAQ");
   });
 
   it("rejects a deployment whose era predates the veteran's date of birth", async () => {
@@ -56,10 +56,17 @@ describe("FIX-3a: no fabricated deployments from DD214 boilerplate", () => {
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).not.toContain("VIETNAM");
+    expect(result.deployments.map((d) => d.location)).not.toContain("VIETNAM");
   });
 
-  it("extracts nothing from Box 18 when the box cannot be isolated (conservative fallback)", async () => {
+  it("still finds a real deployment mention when Box 18 cannot be isolated (full-document fallback)", async () => {
+    // A scrambled OCR reading order can leave the real "SERVED IN <place>"
+    // line outside whatever Box 18 isolates (or, as here, outside any
+    // recognizable Box 18 at all) - the isolated-substring scan used to
+    // give up rather than risk scanning the whole document, but that threw
+    // away a genuine deployment mention along with the boilerplate risk.
+    // The boilerplate-fabrication guard (previous test) still applies to
+    // this fallback, so it's safe to widen the scan.
     const text = `
 1. NAME (Last, First, Middle): SMITH, JOHN ROBERT
 2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
@@ -70,7 +77,7 @@ NO REMARKS BOX PRESENT ON THIS SYNTHETIC DOCUMENT. SERVED IN GERMANY.
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments.length).toBe(0);
+    expect(result.deployments.map((d) => d.location)).toContain("GERMANY");
   });
 });
 
@@ -94,7 +101,7 @@ VETERAN'S EDUCATI0NAL ASSISTANCE PR0GRAM
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).not.toContain("VIETNAM");
+    expect(result.deployments.map((d) => d.location)).not.toContain("VIETNAM");
     expect(result.deployments).toHaveLength(0);
   });
 
@@ -111,7 +118,7 @@ VETERAN'S EDUCATI0NAL ASSISTANCE PR0GRAM
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).toContain("IRAQ");
+    expect(result.deployments.map((d) => d.location)).toContain("IRAQ");
   });
 });
 

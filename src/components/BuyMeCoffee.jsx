@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useBreakpoint, BREAKPOINTS } from "../hooks/useBreakpoint";
 
 /**
  * LunaHelper - A calm, supportive presence celebrating user accomplishments
@@ -33,6 +33,14 @@ const POSITION_ZONES = [
   { top: "5.5rem", right: "1.5rem" }, // Top-right (below header)
   { top: "5.5rem", left: "1.5rem" }, // Top-left (below header)
 ];
+
+// Below `sm`, dialogs run full-bleed and their header height varies per
+// tool (icon-heavy headers like BDD Builder's run taller than the fixed
+// "top: 5.5rem" the top zones assume), so a top zone can start above a
+// given dialog's close-X and cover it (QA D7: BDD Builder, Forms Helper at
+// 320px). Bottom zones don't have this problem - no dialog close button
+// lives down there - so phones get bottom-only placement.
+const MOBILE_POSITION_ZONES = POSITION_ZONES.filter((zone) => "bottom" in zone);
 
 // Cat-themed emojis for extra fun
 const CAT_EMOJIS = ["😺", "😸", "🐱", "😻", "😽", "🐾", "✨"];
@@ -289,11 +297,19 @@ function buildMessages(context) {
 
 function LunaCard({ position, animation, extraEmoji, msg, onDismiss }) {
   return (
+    // luna-toast: hidden via index.css whenever a dialog is open (D7/N5 -
+    // her corner-anchored toast can land on a dialog's close button at any
+    // width, not just mobile, so she must not render at all over a dialog
+    // rather than trying to dodge it with another zone tweak).
     <div
-      className={`fixed z-50 ${animation} max-w-[calc(100vw-2rem)] sm:max-w-sm`}
+      className={`luna-toast fixed z-50 ${animation} max-w-[calc(100vw-2rem)] sm:max-w-sm`}
       style={position}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 border-2 border-purple-300 dark:border-purple-600 relative backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+      {/* max-h/overflow: N5 - on a short viewport (320x568) the full card
+          can run taller than the visible zone and push into a dialog's
+          close button; this caps her height there and lets her own content
+          scroll instead of spilling past it. */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 border-2 border-purple-300 dark:border-purple-600 relative backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95 max-h-[70dvh] overflow-y-auto">
         {/* Decorative cat ears on top */}
         <div className="absolute -top-3 left-6 w-0 h-0 border-l-[12px] border-r-[12px] border-b-[16px] border-l-transparent border-r-transparent border-b-purple-300 dark:border-b-purple-600" />
         <div className="absolute -top-3 right-6 w-0 h-0 border-l-[12px] border-r-[12px] border-b-[16px] border-l-transparent border-r-transparent border-b-purple-300 dark:border-b-purple-600" />
@@ -353,16 +369,17 @@ function LunaCard({ position, animation, extraEmoji, msg, onDismiss }) {
 }
 
 function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
-  const { _t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [sessionDismissCount, setSessionDismissCount] = useState(0);
+  const { width } = useBreakpoint();
+  const isNarrow = width > 0 && width < BREAKPOINTS.sm;
+  const zones = isNarrow ? MOBILE_POSITION_ZONES : POSITION_ZONES;
 
   // Randomize position and animation when Luna appears
   const { position, animation, extraEmoji } = useMemo(
     () => ({
-      position:
-        POSITION_ZONES[Math.floor(Math.random() * POSITION_ZONES.length)],
+      position: zones[Math.floor(Math.random() * zones.length)],
       animation:
         ENTRANCE_ANIMATIONS[
           Math.floor(Math.random() * ENTRANCE_ANIMATIONS.length)
@@ -370,8 +387,8 @@ function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
       extraEmoji: CAT_EMOJIS[Math.floor(Math.random() * CAT_EMOJIS.length)],
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [trigger],
-  ); // Re-randomize when trigger changes
+    [trigger, isNarrow],
+  ); // Re-randomize when trigger (or the mobile zone set) changes
 
   // Show with a slight delay for better UX
   useEffect(() => {

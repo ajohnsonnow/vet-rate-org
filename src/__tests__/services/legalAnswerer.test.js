@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import { answer, _internals } from "../../services/legalAnswerer.js";
+import {
+  answer,
+  retrieveRegulationText,
+  _internals,
+} from "../../services/legalAnswerer.js";
 
 const { expandChunksWithSiblings } = _internals;
 
@@ -423,4 +427,33 @@ describe("legalAnswerer - expansion wiring + security invariant", () => {
     "still attributes correctly when only a non-adjacent block's fact is applicable (Ab-H03 under expansion)",
     expansionWiringNonAdjacentAttributionTest,
   );
+});
+
+describe("retrieveRegulationText: search with no model", () => {
+  it("returns the retrieved text with its citation and takes no generateAI", async () => {
+    const passages = await retrieveRegulationText("flexion of the leg", {
+      retrieve: fakeRetrieve(fixtureChunks),
+    });
+    expect(passages).toEqual([
+      {
+        citation: "38 CFR § 4.71a",
+        title: "Schedule of ratings-musculoskeletal",
+        text: "Limitation of flexion of the leg to 30 degrees warrants a 20 percent evaluation.",
+        source_url: "https://www.ecfr.gov/section-4.71a",
+        fetched_at: "2026-05-15T00:00:00Z",
+        score: 0.82,
+      },
+    ]);
+  });
+
+  it("scrubs identifiers from the question before it is searched", async () => {
+    const retrieve = vi.fn().mockResolvedValue({ chunks: [] });
+    const passages = await retrieveRegulationText(
+      "My SSN is 123-45-6789, how is a knee rated?",
+      { retrieve },
+    );
+    expect(passages).toEqual([]);
+    expect(retrieve.mock.calls[0][0]).not.toContain("123-45-6789");
+    expect(retrieve.mock.calls[0][1]).toEqual({ topK: 3, threshold: 0.35 });
+  });
 });

@@ -22,9 +22,34 @@ import {
   getAIStatus,
   AI_MODES,
 } from "./unifiedAIService";
+import { loadVKB } from "./veteranKnowledgeBase";
+import { getFullName, getVeteranProfile } from "./veteranProfile";
+import { redactVeteranIdentifiers } from "./piiScrubber";
+import { withVerifiedReviewOptions } from "./reviewOptions";
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
+import {
+  draftAfterModelError,
+  resolvePassageDraft,
+  smallModelDraft,
+  standardDraft,
+} from "./writerDraftCheck";
+import { smallModelAnswering } from "./smallModelAnswering";
+import {
+  SMALL_MODEL_REWORDING_OFF,
+  appealStatementPlan,
+  buildPassagePrompt,
+  formStatementPlan,
+  nexusRequestPlan,
+  personalStatementPlan,
+  ptsdStatementPlan,
+  selectPassages,
+} from "./writerTemplates";
 
 // LocalStorage key for BYOK (Bring Your Own Key)
 const STORAGE_KEY = "vetrate_gemini_key";
+
+// Rewording an existing draft wants fidelity, not variety.
+const REWORD_TEMPERATURE = 0.3;
 
 /**
  * Check if AI features are available (either cloud or local)
@@ -32,6 +57,51 @@ const STORAGE_KEY = "vetrate_gemini_key";
  */
 export const isAIAvailable = () => {
   return isAnyAIAvailable();
+};
+
+// Owner decision D (2026-09-28, ADR-008): every statement/letter prompt in
+// this file (and WitnessBench.jsx's buddy-statement prompt) instructs the
+// model to write a placeholder - "[Veteran]", "[Veteran Name]", or
+// "[Veteran's Name]" - instead of the veteran's real name, so the model
+// never sees it. This swaps the placeholder back to the real name in the
+// RESPONSE, after generation - a purely local substitution the
+// veteran-visible/saved statement needs, never sent to any AI provider.
+// Longest alternative first so "'s Name" isn't left dangling by an earlier,
+// shorter match; the apostrophe class covers straight/curly quotes.
+const VETERAN_PLACEHOLDER = /\[Veteran(?:['’]s\s+Name|\s+Name|['’]s)?\]/gi;
+
+/**
+ * @param {string} text - the model's (or a local template's) output
+ * @param {string} [veteranName] - the veteran's real name, looked up locally
+ * @returns {string} `text` unchanged if no name is known; otherwise every
+ *   placeholder occurrence replaced with the real name.
+ */
+export const substituteVeteranNamePlaceholder = (text, veteranName) => {
+  if (!text || typeof text !== "string" || !veteranName) return text;
+  return text.replace(VETERAN_PLACEHOLDER, veteranName);
+};
+
+// The legacy profile's firstName/lastName are checked FIRST, ahead of VKB's
+// personal.fullName: a DD-214 merge stores fullName in the printed Box 1
+// "LAST, FIRST MIDDLE" order, which reads unnaturally spliced into a
+// first-person statement, while getFullName() joins the profile's parsed
+// parts in natural order. It's also the ONLY populated source for a
+// veteran ingested through Muster Call, which never writes vkb.personal.
+// Best-effort: an identifier-load failure must never block a statement
+// from being generated, just leave the placeholder as-is.
+export const resolveVeteranDisplayName = async () => {
+  try {
+    const profileName = getFullName();
+    if (profileName) return profileName;
+  } catch {
+    // fall through to the VKB fallback below
+  }
+  try {
+    const vkb = await loadVKB();
+    return vkb?.personal?.fullName || null;
+  } catch {
+    return null;
+  }
 };
 
 /**
@@ -44,225 +114,6 @@ const _getApiKey = () => {
   const storedKey = localStorage.getItem(STORAGE_KEY);
   if (storedKey && storedKey.length > 0) return storedKey;
   return "";
-};
-
-/**
- * Build the prompt for enhancing a personal statement using the "Three Pillars" approach:
- * 1. The Event (what happened in service)
- * 2. Current Symptoms (what's wrong now)
- * 3. The Nexus/Link (how the event causes the current condition)
- */
-function buildSecondaryThreePillars(answers, condition, primaryCondition) {
-  // For secondary claims, the "event" is the primary condition
-  const pillar1_Event = `I have a service-connected condition: ${primaryCondition}.`;
-  const pillar2_Symptoms =
-    [
-      answers.specificExamples,
-      answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
-      answers.socialImpact
-        ? `Social/family impact: ${answers.socialImpact}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" ") || "Ongoing symptoms affecting daily life.";
-
-  // The nexus for secondary is how the primary causes/aggravates the secondary
-  const mechanismText = answers.aggravationMechanism || "";
-  const explanationText = answers.aggravationExplanation || "";
-  const incidentText = answers.specificIncident || "";
-  const pillar3_Nexus =
-    [mechanismText, explanationText, incidentText].filter(Boolean).join(" ") ||
-    `My ${primaryCondition} causes or aggravates my ${condition}.`;
-
-  return { pillar1_Event, pillar2_Symptoms, pillar3_Nexus };
-}
-
-function buildDirectThreePillars(answers, condition) {
-  // For primary/direct claims
-  const pillar1_Event =
-    answers.inServiceEvent ||
-    answers.specificIncident ||
-    `During my military service, I developed/experienced issues related to ${condition}.`;
-  const pillar2_Symptoms =
-    [
-      answers.specificExamples,
-      answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
-      answers.socialImpact
-        ? `Social/family impact: ${answers.socialImpact}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" ") || "I currently experience ongoing symptoms.";
-  const pillar3_Nexus =
-    answers.nexusExplanation ||
-    `The symptoms started during/after service and have persisted since ${answers.symptomOnsetDate || "that time"}.`;
-
-  return { pillar1_Event, pillar2_Symptoms, pillar3_Nexus };
-}
-
-function deriveTreatmentStatus(answers) {
-  if (answers.hasTreatment === "yes-va") {
-    return "Currently receiving VA treatment";
-  }
-  if (answers.hasTreatment === "yes-private") {
-    return "Currently receiving private treatment";
-  }
-  return "Not currently in formal treatment";
-}
-
-const buildStatementPrompt = (
-  answers,
-  condition,
-  primaryCondition,
-  claimType,
-) => {
-  const isSecondary = claimType === "secondary";
-
-  // Build the Three Pillars from user input
-  const { pillar1_Event, pillar2_Symptoms, pillar3_Nexus } = isSecondary
-    ? buildSecondaryThreePillars(answers, condition, primaryCondition)
-    : buildDirectThreePillars(answers, condition);
-
-  const treatmentStatus = deriveTreatmentStatus(answers);
-
-  return `Draft a Personal Statement in Support of Claim (VA Form 21-4138) based on the following Three Pillars:
-
-=== PILLAR 1: THE IN-SERVICE EVENT ===
-${pillar1_Event}
-
-=== PILLAR 2: CURRENT SYMPTOMS ===
-Condition: ${condition}
-${pillar2_Symptoms}
-Treatment: ${treatmentStatus}
-
-=== PILLAR 3: THE NEXUS/LINK ===
-${pillar3_Nexus}
-
-=== OUTPUT FORMAT ===
-Write this in the first person ("I").
-Do not be overly dramatic, but do not downplay the pain or limitations.
-Focus on how this affects my occupation and social/family life.
-Be professional, clear, and factual.
-Do NOT include specific dates, names, addresses, or identifying information.
-The statement should be 3-5 paragraphs.
-${isSecondary ? `Frame this as a SECONDARY claim - ${condition} caused or aggravated by service-connected ${primaryCondition}.` : "Frame this as a DIRECT service connection claim."}
-End with a respectful request for a C&P examination.
-
-=== PROTECTION RULES (CRITICAL) ===
-You are FORBIDDEN from outputting:
-- Social Security Numbers (SSN) - Replace with [SSN REDACTED] if present in input
-- Phone numbers - Replace with [PHONE REDACTED]
-- Specific street addresses - Use [ADDRESS] placeholder
-- Email addresses - Replace with [EMAIL REDACTED]
-- Full names of family members or medical providers - Use [NAME REDACTED]
-If the user input contains any of these, you MUST sanitize them in your output.
-
-Write the statement now:`;
-};
-
-/**
- * Build the prompt for enhancing a buddy/lay statement using the Three Pillars approach
- */
-const buildBuddyStatementPrompt = (answers, conditionName) => {
-  // Three Pillars adapted for witness perspective
-  const pillar1_Relationship = `${answers.relationship || "Someone close to"} the veteran, known them for ${answers.knownDuration || "several years"}.`;
-  const pillar2_Observations =
-    answers.observations ||
-    "Observed changes in the veteran's condition and daily life.";
-  const pillar3_Impact =
-    [
-      answers.changesNoticed
-        ? `Changes noticed: ${answers.changesNoticed}`
-        : "",
-      answers.dailyImpact ? `Daily impact: ${answers.dailyImpact}` : "",
-    ]
-      .filter(Boolean)
-      .join(" ") || "The condition significantly affects their daily life.";
-
-  return `Draft a Buddy/Lay Statement (VA Form 21-10210) based on the following:
-
-=== PILLAR 1: WITNESS RELATIONSHIP ===
-${pillar1_Relationship}
-
-=== PILLAR 2: WHAT I HAVE OBSERVED ===
-Veteran's condition: ${conditionName || "Not specified"}
-${pillar2_Observations}
-
-=== PILLAR 3: IMPACT I HAVE WITNESSED ===
-${pillar3_Impact}
-
-=== OUTPUT FORMAT ===
-Write this in the first person ("I") from the WITNESS's perspective.
-Describe only what was personally observed - do not make medical diagnoses.
-Be sincere and factual, not dramatic.
-Focus on specific, observable behaviors and changes.
-Do NOT include specific dates, names, or identifying information (use [Veteran] as placeholder).
-The statement should be 2-4 paragraphs.
-End with a sincere attestation that the statement is true to the best of your knowledge.
-
-=== PROTECTION RULES (CRITICAL) ===
-You are FORBIDDEN from outputting:
-- Social Security Numbers - Replace with [SSN REDACTED]
-- Phone numbers - Replace with [PHONE REDACTED]
-- Specific street addresses - Use [ADDRESS] placeholder
-- Email addresses or full names - Use [NAME REDACTED] or [Veteran]
-If any PII appears in input, you MUST sanitize it in your output.
-
-Write the statement now:`;
-};
-
-/**
- * Build the prompt for enhancing a PTSD stressor statement using the Three Pillars approach
- */
-const buildPTSDStressorPrompt = (answers) => {
-  // Three Pillars for PTSD
-  const pillar1_Event =
-    answers.eventDescription ||
-    answers.stressorType ||
-    "Traumatic event during military service.";
-  const pillar2_Symptoms =
-    [
-      answers.currentSymptoms || "",
-      answers.immediateImpact
-        ? `Initial impact: ${answers.immediateImpact}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" ") || "Ongoing PTSD symptoms.";
-  const pillar3_Impact =
-    answers.dailyImpact || "Symptoms continue to affect daily life.";
-
-  return `Draft a PTSD Stressor Statement (VA Form 21-0781) based on the following:
-
-=== PILLAR 1: THE TRAUMATIC EVENT ===
-Type of stressor: ${answers.stressorType || "Military service-related trauma"}
-${pillar1_Event}
-
-=== PILLAR 2: CURRENT SYMPTOMS ===
-${pillar2_Symptoms}
-
-=== PILLAR 3: HOW IT AFFECTS MY LIFE NOW ===
-${pillar3_Impact}
-
-=== OUTPUT FORMAT ===
-Write this in the first person ("I").
-=== PROTECTION RULES (CRITICAL) ===
-You are FORBIDDEN from outputting:
-- Social Security Numbers - Replace with [SSN REDACTED]
-- Phone numbers - Replace with [PHONE REDACTED]
-- Specific street addresses - Use [ADDRESS] placeholder
-- Email addresses, full names, unit IDs - Replace with [REDACTED]
-If any PII appears in input, you MUST sanitize it in your output.
-
-Be factual about the traumatic event without unnecessary graphic details.
-Acknowledge that recounting these events is difficult.
-Focus on the emotional/psychological impact and current symptoms.
-Do NOT include specific dates, names, unit designations, or locations (use placeholders like [Date], [Location]).
-Be sensitive to trauma while maintaining professional tone.
-The statement should be 3-5 paragraphs.
-End with a note about seeking help and a request for evaluation.
-
-Write the statement now:`;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -554,6 +405,27 @@ function mapAIErrorToResponse(error) {
   };
 }
 
+// ADR-008: best-effort - an identifier-load failure (no IndexedDB, private
+// browsing, …) must never block a statement from being generated.
+async function _redactForAi(texts) {
+  try {
+    const vkb = await loadVKB();
+    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+      .map((c) => c.claimNumber)
+      .filter(Boolean);
+    // ADR-008: merge in the flat legacy profile - it's the only place
+    // firstName/lastName/serviceNumber/mailingStreet/mailingCity live.
+    const personal = { ...getVeteranProfile(), ...vkb?.personal };
+    return texts.map((text) =>
+      redactVeteranIdentifiers(text, personal, claimNumbers),
+    );
+  } catch {
+    return texts;
+  }
+}
+
+const _finalizeAiPrompt = async (prompt) => (await _redactForAi([prompt]))[0];
+
 /**
  * Call AI service (Unified - supports both Cloud and Local AI)
  * Now with built-in rate limiting ("The Cooldown") and crisis detection
@@ -562,7 +434,12 @@ function mapAIErrorToResponse(error) {
  * @param {Object} userInput - Original user input (for crisis detection)
  * @returns {Promise<{success: boolean, content?: string, error?: string, mode?: string}>}
  */
-const callGeminiAPI = async (prompt, userInput = null) => {
+const callGeminiAPI = async (
+  prompt,
+  userInput = null,
+  toolId = null,
+  { temperature = 0.7 } = {},
+) => {
   // ═══ CRISIS DETECTION CHECK (HIGHEST PRIORITY) ═══
   const crisisBlock = blockIfCrisisDetected(userInput);
   if (crisisBlock) return crisisBlock;
@@ -589,13 +466,25 @@ const callGeminiAPI = async (prompt, userInput = null) => {
   recordAIRequest();
 
   try {
+    // ADR-008 single enforcement point: this file's prompt builders already
+    // avoid interpolating the veteran's identity by construction (see the
+    // CLOUD_AI_DATA_DISCLOSURE "notShared" lists above), but every prompt
+    // funnels through this one call site regardless of which builder made
+    // it - the final backstop belongs here, not duplicated per builder.
+    const safePrompt = await _finalizeAiPrompt(prompt);
     // ═══ USE UNIFIED AI SERVICE ═══
-    const result = await generateAI(prompt, {
+    // ADR-009: "context" - every caller of this shared choke point (personal/
+    // buddy/PTSD/form-statement enhancement) builds its prompt from the
+    // veteran's or witness's own typed interview answers, never an
+    // uploaded/pasted document.
+    const result = await generateAI(safePrompt, {
       systemPrompt:
         "You are a helpful assistant specializing in VA disability claims and veteran benefits. You help veterans write accurate, compelling statements for their claims.",
       maxTokens: 2048,
-      temperature: 0.7,
+      temperature,
       skipCrisisCheck: true, // Already checked above
+      dataClass: AI_DATA_CLASS.CONTEXT,
+      ...(toolId ? { toolId } : {}),
     });
 
     const status = getAIStatus();
@@ -614,6 +503,72 @@ const callGeminiAPI = async (prompt, userInput = null) => {
 };
 
 /**
+ * Offer the model the passages of a writing plan (the free text someone
+ * typed), and return the app-built draft with each accepted rewording in
+ * its place. Headings, fixed sentences, blanks, greeting and closing are
+ * built by the app and never pass through the model.
+ *
+ * `draftPath` is "model" only when at least one passage was reworded and
+ * accepted. Otherwise the veteran gets the app-built draft with a one-line
+ * note and no claim of AI wording: when the form has no free text (no model
+ * call is made), when every rewording came back unchanged or was rejected,
+ * and when the model could not answer (`draftErrorReason` names the error).
+ * `passages` counts how the passages fared.
+ *
+ * ADR-008: a passage that names the veteran is not sent. The model would
+ * see a redaction marker in its place, and the app could not put the name
+ * back into a rewording; the passage stays as typed.
+ */
+async function draftWithModel(plan, { toolId, userInput = null }) {
+  const crisisBlock = blockIfCrisisDetected(userInput);
+  if (crisisBlock) return crisisBlock;
+
+  const offered = selectPassages(plan);
+  // A small on-device model is never asked to reword: the app-built draft
+  // is returned with no model call, and the note says why. A draft with
+  // nothing to reword (a witness's, or nothing typed) keeps its own note:
+  // the model's size is not the reason there.
+  if (offered.length > 0 && smallModelAnswering(getAIStatus())) {
+    return {
+      success: true,
+      ...smallModelDraft(plan, SMALL_MODEL_REWORDING_OFF),
+    };
+  }
+
+  const redacted = await _redactForAi(offered.map((passage) => passage.text));
+  const sent = offered.filter((passage, i) => redacted[i] === passage.text);
+  const withheld = offered.length - sent.length;
+  const settled = (draft) => ({
+    ...draft,
+    passages: { ...draft.passages, withheld },
+  });
+  if (sent.length === 0)
+    return { success: true, ...settled(standardDraft(plan)) };
+
+  const result = await callGeminiAPI(
+    buildPassagePrompt(sent.map((passage) => passage.text)),
+    userInput,
+    toolId,
+    { temperature: REWORD_TEMPERATURE },
+  );
+  // The crisis block stays a block. Any other failure (engine error,
+  // timeout, request limit, no AI loaded) still leaves the veteran with the
+  // app-built draft to work from.
+  if (result.crisisDetected) return result;
+  if (!result.success) {
+    return {
+      success: true,
+      ...(result.errorType ? { errorType: result.errorType } : {}),
+      ...settled(draftAfterModelError(plan, sent, result.error)),
+    };
+  }
+  return {
+    ...result,
+    ...settled(resolvePassageDraft({ plan, sent, reply: result.content })),
+  };
+}
+
+/**
  * Enhance a personal statement (Nexus Builder) using AI
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
@@ -621,185 +576,55 @@ export const enhancePersonalStatement = async (
   answers,
   condition,
   primaryCondition = null,
-) => {
-  const claimType = primaryCondition ? "secondary" : "primary";
-  const prompt = buildStatementPrompt(
-    answers,
-    condition,
-    primaryCondition,
-    claimType,
-  );
-  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
-};
-
-/**
- * Enhance a buddy/lay statement using AI
- * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
- */
-export const enhanceBuddyStatement = async (answers, conditionName) => {
-  const prompt = buildBuddyStatementPrompt(answers, conditionName);
-  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
-};
+) =>
+  draftWithModel(personalStatementPlan(answers, condition, primaryCondition), {
+    toolId: "personal-statement",
+    userInput: answers,
+  });
 
 /**
  * Enhance a PTSD stressor statement using AI
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
-export const enhancePTSDStatement = async (answers) => {
-  const prompt = buildPTSDStressorPrompt(answers);
-  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
-};
-
-/**
- * Build prompt for an appeal statement (Notice of Disagreement, HLR, Supplemental Claim)
- */
-const buildAppealStatementPrompt = (answers) => {
-  const appealTypeLabels = {
-    nod: "Notice of Disagreement (NOD) / Board Appeal",
-    hlr: "Higher-Level Review (HLR)",
-    supplemental: "Supplemental Claim with New Evidence",
-  };
-
-  return `Draft an Appeal Statement based on the following:
-
-=== APPEAL INFORMATION ===
-Appeal Type: ${appealTypeLabels[answers.appealType] || answers.appealType || "Disability claim appeal"}
-Condition: ${answers.conditionName || "Not specified"}
-Original Decision Date: ${answers.decisionDate || "Recent"}
-Original Rating: ${answers.originalRating || "Not specified"}
-Desired Rating: ${answers.desiredRating || "Higher rating warranted by evidence"}
-
-=== PILLAR 1: WHY THE DECISION IS INCORRECT ===
-${answers.whyIncorrect || "The evidence in the record supports a higher rating than assigned."}
-
-=== PILLAR 2: WHAT EVIDENCE SUPPORTS YOUR APPEAL ===
-${answers.supportingEvidence || "Medical records and personal statements demonstrate greater severity."}
-
-=== PILLAR 3: WHAT OUTCOME YOU ARE SEEKING ===
-${answers.desiredOutcome || "Request reconsideration with appropriate rating that reflects actual severity of condition."}
-
-${
-  answers.newEvidence
-    ? `=== NEW/ADDITIONAL EVIDENCE ===
-${answers.newEvidence}`
-    : ""
-}
-
-=== OUTPUT FORMAT ===
-Write this in the first person ("I").
-Be professional, factual, and respectful.
-Reference 38 CFR rating criteria where appropriate.
-Focus on the discrepancy between evidence and the decision.
-Do NOT include specific dates, names, or identifying information.
-The statement should be 3-5 paragraphs.
-End with a clear request for the desired outcome.
-
-Write the statement now:`;
-};
-
-/**
- * Build prompt for a nexus letter request (help veteran communicate with doctor)
- */
-const buildNexusLetterRequestPrompt = (answers) => {
-  const isSecondary = Boolean(answers.primaryCondition);
-
-  return `Draft a Nexus Letter Request to help a veteran communicate with their doctor about what to include in a medical opinion letter.
-
-=== CLAIM INFORMATION ===
-Condition Being Claimed: ${answers.conditionName || "Not specified"}
-${
-  isSecondary
-    ? `Primary Service-Connected Condition: ${answers.primaryCondition}
-Connection Theory: ${answers.connectionTheory || "The primary condition caused or aggravates the claimed condition"}`
-    : `In-Service Event/Cause: ${answers.inServiceEvent || "Event during military service"}`
-}
-
-=== VETERAN'S SYMPTOMS ===
-${answers.symptoms || "Current symptoms affecting daily life"}
-
-=== RELEVANT MEDICAL HISTORY ===
-${answers.medicalHistory || "Treatment history and relevant medical records"}
-
-=== OUTPUT FORMAT ===
-Create a PROFESSIONAL letter the veteran can give to their doctor explaining:
-1. What a nexus letter is and why it's important for VA claims
-2. The specific connection that needs to be established (service connection ${isSecondary ? "OR secondary connection" : ""})
-3. The standard of proof: "at least as likely as not" (50% or greater probability)
-4. What the doctor should include in the letter
-5. Key medical terminology that would strengthen the opinion
-
-Write this as a helpful guide for the doctor, not as the medical opinion itself.
-Keep it professional and educational.
-Do NOT include patient names or identifying information (use [Veteran Name]).
-Remind that the doctor should base their opinion on their professional medical judgment and the patient's records.
-
-Write the letter request now:`;
-};
+export const enhancePTSDStatement = async (answers) =>
+  draftWithModel(ptsdStatementPlan(answers), {
+    toolId: "personal-statement",
+    userInput: answers,
+  });
 
 /**
  * Enhance an appeal statement using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
-export const enhanceAppealStatement = async (answers) => {
-  const prompt = buildAppealStatementPrompt(answers);
-  return callGeminiAPI(prompt);
-};
+export const enhanceAppealStatement = async (answers) =>
+  draftWithModel(appealStatementPlan(answers), {
+    toolId: "appeal-statement",
+    userInput: answers,
+  });
 
 /**
  * Generate a nexus letter request using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
-export const generateNexusLetterRequest = async (answers) => {
-  const prompt = buildNexusLetterRequestPrompt(answers);
-  return callGeminiAPI(prompt);
-};
+export const generateNexusLetterRequest = async (answers) =>
+  draftWithModel(nexusRequestPlan(answers), {
+    toolId: "nexus-builder",
+    userInput: answers,
+  });
 
 /**
  * Generic enhance function that takes FormData from FormsHelper
  * This allows the FormsHelper to call AI enhancement on any generated statement
  */
 export const enhanceFormStatement = async (formType, formData) => {
-  switch (formType) {
-    case "buddy-statement":
-      return enhanceBuddyStatement(
-        {
-          relationship: formData.witnessRelation,
-          knownDuration: formData.knownSince,
-          observations: formData.whatObserved,
-          changesNoticed: formData.specificExamples,
-          dailyImpact: formData.dailyImpact,
-        },
-        formData.conditionName,
-      );
-
-    case "personal-statement":
-      return enhancePersonalStatement(
-        {
-          inServiceEvent: formData.inServiceEvent,
-          specificExamples: formData.worstDays,
-          workImpact: formData.workImpact,
-          socialImpact: formData.socialImpact,
-          symptomOnsetDate: formData.onsetDate,
-          hasTreatment: formData.currentTreatment ? "yes-va" : "no",
-        },
-        formData.conditionName,
-        formData.primaryCondition,
-      );
-
-    case "ptsd-stressor":
-      return enhancePTSDStatement({
-        stressorType: formData.stressorType,
-        eventDescription: formData.eventDescription,
-        currentSymptoms: Array.isArray(formData.symptoms)
-          ? formData.symptoms.join(", ")
-          : formData.symptomDetails,
-        dailyImpact: formData.symptomDetails,
-      });
-
-    default:
-      return {
-        success: false,
-        error: "Unsupported form type for AI enhancement",
-      };
+  const plan = formStatementPlan(formType, formData);
+  if (!plan) {
+    return {
+      success: false,
+      error: "Unsupported form type for AI enhancement",
+    };
   }
+  return draftWithModel(plan, { toolId: plan.toolId, userInput: plan.answers });
 };
 
 /**
@@ -1130,10 +955,13 @@ export const generateFieldSuggestion = async (
   }
 
   try {
-    // Use unified AI service
+    // Use unified AI service - ADR-009: "context" - condition name + the
+    // veteran's own in-progress field text, never document-derived.
     const response = await generateAI(prompt, {
       temperature: 0.7,
       maxTokens: 300,
+      dataClass: AI_DATA_CLASS.CONTEXT,
+      toolId: "personal-statement",
     });
 
     // generateAI returns { text, mode } object - extract the text content
@@ -1275,7 +1103,7 @@ function normalizeStateCode(state) {
 export const searchStateBenefits = async (state, rating) => {
   try {
     // Import the real state benefits database
-    const { searchBenefitsByRating, getStateBenefits, _getAllStateData } =
+    const { searchBenefitsByRating, getStateBenefits } =
       await import("../data/stateBenefits.js");
 
     // Convert state name to code if needed
@@ -1427,12 +1255,13 @@ export const searchVSOs = async (zipCode) => {
   const prompt = buildVSOFinderPrompt(zipCode);
 
   try {
-    // Use unified AI service
+    // Use unified AI service - ADR-009: "context" - a ZIP code only.
     const response = await generateAI(prompt, {
       temperature: 0.3,
       maxTokens: 2048,
       expectJSON: true,
       skipHallucinationCheck: true, // VSO finder JSON doesn't contain diagnostic codes
+      dataClass: AI_DATA_CLASS.CONTEXT,
     });
 
     // generateAI returns { text, mode } object - extract the text content
@@ -1603,9 +1432,18 @@ export function sanitizeWeakSpotSuggestions(weakSpots) {
 /**
  * Stress test a draft statement using Gemini AI
  * @param {string} statement - The draft statement to analyze
+ * @param {object} [options]
+ * @param {boolean} [options.isDocument] - True when `statement` came from an
+ *   uploaded/dropped file's OCR/extraction (RedTeam's Drop-In PDF tab)
+ *   rather than the veteran typing/dictating it directly. Fails closed to
+ *   `true` when the caller doesn't say, since a caller-supplied statement of
+ *   unknown provenance could be document-derived.
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
-export const stressTestStatement = async (statement) => {
+export const stressTestStatement = async (
+  statement,
+  { isDocument = true } = {},
+) => {
   // Check if any AI is available via unified service
   if (!isAnyAIAvailable()) {
     return {
@@ -1618,12 +1456,19 @@ export const stressTestStatement = async (statement) => {
   const prompt = buildStressTestPrompt(statement);
 
   try {
-    // Use unified AI service
+    // ADR-009: the caller (RedTeam.jsx) tracks whether this statement text
+    // came from the Drop-In PDF tab's OCR extraction (document) or the
+    // veteran typing/dictating it (context) - this call site can't tell on
+    // its own. A dropped PDF's text is document-derived even though the
+    // panel says nothing is sent anywhere; the veteran's own typed/dictated
+    // draft is not.
     const response = await generateAI(prompt, {
       temperature: 0.4,
       maxTokens: 2048,
       expectJSON: true,
       skipHallucinationCheck: true, // Stress test returns critique/score, not diagnostic codes
+      dataClass: isDocument ? AI_DATA_CLASS.DOCUMENT : AI_DATA_CLASS.CONTEXT,
+      toolId: "red-team",
     });
 
     // generateAI returns { text, mode } object - extract the text content
@@ -1793,7 +1638,6 @@ Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JS
     "Step 2: Next specific action",
     "Step 3: Additional steps if needed"
   ],
-  "appeal_options": "Brief explanation of appeal options (Supplemental Claim, HLR, or BVA)",
   "deadline_warning": "You typically have 1 year from the decision date to file an appeal while preserving your effective date. Check your decision letter for specific deadlines."
 }
 
@@ -1935,6 +1779,18 @@ function parseDecisionDecoderResponse(textStr, fallbackInfo, truncation) {
 function mapDecodeDecisionError(error) {
   console.error("Decision decoder error:", error);
 
+  // ADR-009: the provider boundary refused to send this document off-device
+  // - surface a distinguishable field so the UI runs the local parser
+  // fallback + shows the plain-language notice instead of a dead-end error.
+  if (error.code === "DOCUMENT_OFF_DEVICE_BLOCKED") {
+    return {
+      success: false,
+      error: error.message,
+      isOffDeviceBlocked: true,
+      providerLabel: error.providerLabel || null,
+    };
+  }
+
   // Check for context overflow error and provide helpful message
   const errorMsg = error.message || "";
   if (
@@ -1979,7 +1835,10 @@ function mapDecodeDecisionError(error) {
  * @param {string} decisionText - The decision letter text to analyze
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
-export const decodeDecision = async (decisionText) => {
+export const decodeDecision = async (
+  decisionText,
+  { timeout = 90000 } = {},
+) => {
   // Check if any AI is available via unified service
   if (!isAnyAIAvailable()) {
     return {
@@ -2009,12 +1868,16 @@ export const decodeDecision = async (decisionText) => {
   try {
     // Use unified AI service with minimal system prompt
     // The decision decoder prompt already includes all necessary context
-    // Set a 90-second timeout to match UI expectations
+    // The timeout is the caller's (the UI scales it to the engine's pace)
+    // ADR-009: "document" - decisionText is the veteran's uploaded/pasted
+    // decision letter; only an on-device engine may see it.
     const response = await generateAI(prompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "decision-decoder",
       temperature: 0.3,
       maxTokens: 1500, // Reduced from 2048 to leave room for context
       expectJSON: true,
-      timeout: 90000, // 90 seconds - match UI timeout
+      timeout, // the caller scales this to the engine's measured pace
       // Tell generateAI to use a minimal/empty system prompt since our prompt is self-contained
       systemPrompt: "You are a VA claims expert. Respond only with valid JSON.",
       taskType: "legal", // Use legal preset for accuracy
@@ -2040,7 +1903,23 @@ export const decodeDecision = async (decisionText) => {
     const textStr = typeof text === "string" ? text : JSON.stringify(text);
 
     // Better JSON parsing with multiple fallback strategies
-    return parseDecisionDecoderResponse(textStr, fallbackInfo, truncation);
+    const decoded = parseDecisionDecoderResponse(
+      textStr,
+      fallbackInfo,
+      truncation,
+    );
+    // The review options come from the bundled regulation text, never from
+    // the model: its own version is dropped and wrong filing instructions in
+    // its other fields are noted. The whole letter, not the truncated copy
+    // the model saw, is what its "missing" list is checked against.
+    return decoded.success
+      ? {
+          ...decoded,
+          data: withVerifiedReviewOptions(decoded.data, {
+            documentText: decisionText,
+          }),
+        }
+      : decoded;
   } catch (error) {
     return mapDecodeDecisionError(error);
   }
@@ -2057,7 +1936,6 @@ export {
 export default {
   isAIAvailable,
   enhancePersonalStatement,
-  enhanceBuddyStatement,
   enhancePTSDStatement,
   enhanceAppealStatement,
   generateNexusLetterRequest,
@@ -2068,6 +1946,7 @@ export default {
   searchVSOs,
   stressTestStatement,
   decodeDecision,
+  substituteVeteranNamePlaceholder,
   // New unified AI exports
   isLocalAIReady,
   isCloudAIAvailable,

@@ -9,7 +9,16 @@
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import { generateAI, isAnyAIAvailable, getAIStatus } from "./unifiedAIService";
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getAIStatus,
+  getDocumentAIRouting,
+} from "./unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "./aiDataClassPolicy";
 
 // The specialized system prompt for contract analysis
 const SHARK_RADAR_SYSTEM_PROMPT = `You are a VA Compliance Auditor and Legal Contract Analyst. Your job is to scan text (contracts, emails, or marketing copy) for predatory practices targeting veterans.
@@ -298,6 +307,26 @@ export async function analyzeContract(apiKey, textToAnalyze) {
     };
   }
 
+  // ADR-009: the pasted contract/email text is a document the veteran
+  // received, so it stays on-device only. If only an off-device AI is
+  // configured, reuse the same pattern-match fallback used when no AI is
+  // configured at all, with a notice explaining why.
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    return {
+      success: true,
+      data: {
+        ...patternMatchContract(textToAnalyze),
+        _fallbackNote: buildDocumentOffDeviceNotice(
+          routing.blockedProviderLabel,
+        ),
+      },
+      analyzedAt: new Date().toISOString(),
+      aiMode: "offline_pattern_match",
+      offDeviceBlocked: true,
+    };
+  }
+
   const userPrompt = `${SHARK_RADAR_SYSTEM_PROMPT}
 
 Analyze the following text from a VA claim consulting company for predatory practices:
@@ -311,6 +340,7 @@ Identify all red flags and provide your analysis.`;
   try {
     // Use unified AI service - automatically chooses Cloud or Local
     const rawResult = await generateAI(userPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       temperature: 0.2,
       maxTokens: 4096,
       expectJSON: true,

@@ -602,8 +602,11 @@ const BugReportAuditLogSection = ({ t, auditLog }) => {
   return (
     <DetailSection title={t("bugLookup", "sectionAuditLog")} icon={History}>
       <div className="space-y-2">
-        {auditLog.map((entry, idx) => (
-          <div key={idx} className="flex items-center justify-between text-sm">
+        {auditLog.map((entry) => (
+          <div
+            key={`${entry.timestamp}-${entry.action}`}
+            className="flex items-center justify-between text-sm"
+          >
             <span className="text-gray-600 dark:text-slate-400">
               <span className="font-medium text-gray-900 dark:text-white">
                 {entry.action}

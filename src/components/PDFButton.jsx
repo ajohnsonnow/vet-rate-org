@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { generatePDF } from "../utils/pdfGenerator";
 import BuyMeCoffee from "./BuyMeCoffee";
 
 function PDFButton({ result, searchTerm }) {
-  const { _t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [pdfGenerated, setPdfGenerated] = useState(false);
@@ -13,7 +11,7 @@ function PDFButton({ result, searchTerm }) {
     setIsLoading(true);
     setError(null);
     try {
-      await generatePDF(result, searchTerm);
+      generatePDF(result, searchTerm);
       setPdfGenerated(true);
     } catch (err) {
       setError(err.message || "Failed to generate PDF. Please try again.");

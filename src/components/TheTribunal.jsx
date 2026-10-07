@@ -10,10 +10,11 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import ReportBugLink from "./ReportBugLink";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
@@ -465,11 +466,9 @@ export default function TheTribunal({
   onReportBug,
   onOpenAISettings,
 }) {
-  const { _t } = useLanguage();
-
   const [isInitialized, setIsInitialized] = useState(false);
+  const headingRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
-  const [_transcript, setTranscript] = useState("");
   const [conversation, setConversation] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedPersona, setSelectedPersona] = useState("skeptical");
@@ -484,7 +483,6 @@ export default function TheTribunal({
 
   // Speech control state
   const [micSupported, setMicSupported] = useState(true);
-  const [_hearingStarted, setHearingStarted] = useState(false); // Whether to auto-play speech
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
   const {
@@ -537,7 +535,11 @@ export default function TheTribunal({
         questionContext,
       });
 
-      const response = await generateAI(prompt);
+      // ADR-009: "context" - the veteran's own typed mock-hearing answer +
+      // allow-listed VKB context, never a document upload.
+      const response = await generateAI(prompt, {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
       setIsAIProcessing(false);
       // generateAI returns { text, mode } object - extract the text content
       const text = response?.text || response;
@@ -564,7 +566,11 @@ export default function TheTribunal({
         conversation,
       });
 
-      const response = await generateAI(prompt);
+      // ADR-009: "context" - structured claims/session data + allow-listed
+      // VKB context, never a document upload.
+      const response = await generateAI(prompt, {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
       setIsAIProcessing(false);
       // generateAI returns { text, mode } object - extract the text content
       const text = response?.text || response;
@@ -603,7 +609,6 @@ export default function TheTribunal({
 
     recognition.onresult = (event) => {
       const text = event.results[0][0].transcript;
-      setTranscript(text);
       handleUserResponse(text);
     };
 
@@ -624,6 +629,22 @@ export default function TheTribunal({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // D13-5: the `!isInitialized` shell above renders with no focusable
+  // content, so useFocusTrap's own autoFocus is a no-op until its
+  // MutationObserver sees the real header mount once isInitialized flips -
+  // and the first focusable element in DOM order at that point is the
+  // header's AI status badge (before the close-X - see HeaderCloseSlot),
+  // whose Tooltip shows on focus (D13-6) and, while open, swallows Escape
+  // via a document capture-phase listener. Explicitly moving focus to the
+  // heading instead - same tabIndex={-1}+ref+focus() pattern as
+  // FormsHelper's stepHeadingRef - blurs the badge before its 200ms
+  // show-tooltip timer can fire, consistent with how other dialogs in this
+  // codebase hand focus to a heading rather than "whatever happens to be
+  // first".
+  useEffect(() => {
+    if (isInitialized) headingRef.current?.focus();
+  }, [isInitialized]);
 
   // Play the last judge message
   const speakLastJudgeMessage = () => {
@@ -654,7 +675,6 @@ export default function TheTribunal({
   // Start the hearing (enters courtroom but doesn't auto-start speech)
   const startHearing = () => {
     setShowInstructions(false);
-    setHearingStarted(true);
     const judge = JUDGE_PERSONAS[selectedPersona];
 
     const opening = `Good morning. I am ${judge.name}, and I will be conducting your hearing today. I have reviewed your file. Let's begin with your primary contentions. Please state your main argument clearly and concisely.`;
@@ -910,7 +930,6 @@ export default function TheTribunal({
     stopSpeaking();
     stopListening();
     setShowInstructions(true);
-    setHearingStarted(false);
     setConversation([]);
     setSessionScore({ correct: 0, total: 0 });
     setCurrentQuestion(null);
@@ -923,6 +942,7 @@ export default function TheTribunal({
       onClose={onClose}
       onReportBug={onReportBug}
       onOpenAISettings={onOpenAISettings}
+      headingRef={headingRef}
     />
   );
 
@@ -995,17 +1015,31 @@ function TribunalHeader({
   onClose,
   onReportBug,
   onOpenAISettings,
+  headingRef,
 }) {
   return (
     <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-4 text-white sm:px-6 sm:py-6">
-      <div className="flex items-start justify-between gap-2">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl font-bold text-white transition-colors hover:bg-white/20"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        }
+      >
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 sm:mb-2">
             <h2
+              ref={headingRef}
               id="the-tribunal-title"
-              className="flex items-center gap-2 text-xl font-bold sm:text-3xl"
+              tabIndex={-1}
+              className="flex flex-wrap items-center gap-2 text-xl font-bold sm:text-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
             >
-              ⚖️ The Tribunal
+              ⚖️ The Tribunal{" "}
               <span className="rounded bg-gray-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 AI
               </span>
@@ -1027,16 +1061,8 @@ function TribunalHeader({
               moduleName="The Tribunal"
             />
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-11 w-11 place-items-center rounded-lg text-2xl font-bold text-white transition-colors hover:bg-white/20"
-            aria-label="Close"
-          >
-            ×
-          </button>
         </div>
-      </div>
+      </HeaderCloseSlot>
 
       {/* Score Display */}
       {sessionScore.total > 0 && (
@@ -1615,9 +1641,9 @@ function PreHearingInstructions({
 function ConversationLog({ conversation, selectedPersona, isAIProcessing }) {
   return (
     <div className="-m-4 space-y-4 bg-gray-50 p-4 dark:bg-gray-900 sm:p-6">
-      {conversation.map((message, index) => (
+      {conversation.map((message) => (
         <div
-          key={index}
+          key={message.timestamp}
           className={`flex ${message.speaker === "user" ? "justify-end" : "justify-start"}`}
         >
           <div

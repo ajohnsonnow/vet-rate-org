@@ -73,8 +73,6 @@ export const VA_GLOSSARY = {
     "Statement in Support of Claim - A general-purpose form for submitting personal statements and additional information",
   "VA Form 21-0781":
     "Statement in Support of Claim for PTSD - Specialized form for describing PTSD stressors",
-  "VA Form 21-0781a":
-    "Statement in Support of Claim for PTSD Secondary to Personal Assault - Specialized form for PTSD from MST or personal trauma",
   "VA Form 21-10210":
     "Lay/Witness Statement - Form for buddy statements from people who observed your condition",
   "VA Form 21-0966":

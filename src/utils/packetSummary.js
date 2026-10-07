@@ -67,11 +67,21 @@ const uniqueLabels = (items) => {
 // module rather than changing the shared normalizeConditionName, which the
 // VKB write/read paths also depend on).
 const CONDITION_LENGTH_RANGE = [3, 120];
+// VA letters name re-characterized conditions in full, e.g. "lumbosacral
+// strain, degenerative disc disease ... (previously rated as lumbago)",
+// past 370 characters. A label that long is only a condition when it carries
+// that parenthetical and no sentence break; otherwise it is run-on OCR text.
+const LONG_VA_CONDITION_MAX = 400;
+const isLongVaCondition = (label) =>
+  label.length <= LONG_VA_CONDITION_MAX &&
+  label.includes("(") &&
+  !/[.!?] [A-Z]/.test(label);
 
 const looksLikeCondition = (label) => {
   if (!label) return false;
   const [min, max] = CONDITION_LENGTH_RANGE;
-  if (label.length < min || label.length > max) return false;
+  if (label.length < min) return false;
+  if (label.length > max && !isLongVaCondition(label)) return false;
   // Reject fragments with no letters at all -- page numbers, punctuation
   // runs, and other OCR noise occasionally land in a condition list.
   return /[a-z]/i.test(label);
@@ -82,7 +92,16 @@ const looksLikeCondition = (label) => {
 const SCALAR_FINDINGS = [
   { label: "Branch", keys: ["branch", "branchOfService", "branch_of_service"] },
   { label: "Rank", keys: ["rank", "rankAtDischarge", "payGrade"] },
-  { label: "Entered service", keys: ["entryDate", "serviceStartDate"] },
+  // An NGB-22 that prints no entry date gets one calculated (separation date
+  // minus net service - musterCallProcessor.js's _extractNGB22PrimaryPeriodDates);
+  // derivedKeys carries the matching "was this one calculated" flag for
+  // whichever of keys[] actually supplied the value, so the packet can say so
+  // instead of presenting a guess as something read off the form.
+  {
+    label: "Entered service",
+    keys: ["entryDate", "serviceStartDate"],
+    derivedKeys: ["entryDateDerived", "serviceStartDateDerived"],
+  },
   { label: "Separated", keys: ["separationDate", "serviceEndDate"] },
   {
     label: "Character of service",
@@ -114,11 +133,29 @@ const CONDITION_KEYS = [
 
 const CLAIM_KEYS = ["potential_claims", "potentialClaims", "claims"];
 
+// Index of the first key in `keys` that actually supplied firstValue's
+// result, so a sibling derivedKeys[] entry can be read off the SAME field
+// that won - two alias keys can disagree on whether their own value was
+// calculated (e.g. one document's real serviceStartDate merged against
+// another's derived one), so matching by position instead of re-deriving
+// from the value alone keeps the flag tied to the field it describes.
+const firstMatchingKeyIndex = (source, keys) =>
+  keys.findIndex((key) => {
+    const raw = source?.[key];
+    if (typeof raw === "number" && Number.isFinite(raw)) return true;
+    return !!cleanString(raw);
+  });
+
 const collectScalarFindings = (data) =>
-  SCALAR_FINDINGS.map(({ label, keys }) => ({
-    label,
-    value: firstValue(data, keys),
-  })).filter((entry) => entry.value);
+  SCALAR_FINDINGS.map(({ label, keys, derivedKeys }) => {
+    const matchIndex = firstMatchingKeyIndex(data, keys);
+    const derivedKey = matchIndex === -1 ? null : derivedKeys?.[matchIndex];
+    return {
+      label,
+      value: firstValue(data, keys),
+      derived: derivedKey ? !!data?.[derivedKey] : false,
+    };
+  }).filter((entry) => entry.value);
 
 const collectListFindings = (data) =>
   LIST_FINDINGS.map(({ label, keys }) => {
@@ -180,6 +217,8 @@ export function buildDocumentFindings(doc, categoryMeta = {}) {
     // record when a parser throws, and a document that stored no structured
     // data should say so rather than render as an empty card.
     parseError: cleanString(data.parseError),
+    aiAnalysisNotice: cleanString(data.aiAnalysisNotice),
+    coverageNote: cleanString(data.pageCoverageNote),
     findingCount:
       scalars.length +
       lists.reduce((sum, entry) => sum + entry.values.length, 0) +
@@ -312,6 +351,7 @@ const buildBullets = (stats, conditions) => {
   if (stats.rated > 0) {
     const top = conditions
       .filter((c) => Number.isFinite(c.ratedPercentage))
+      .toSorted((a, b) => b.ratedPercentage - a.ratedPercentage)
       .slice(0, 3)
       .map((c) => `${c.name} (${c.ratedPercentage}%)`)
       .join(", ");
@@ -342,7 +382,7 @@ const buildGaps = (vkb, documentFindings, conditions, stats) => {
   const unsupported = conditions.filter((c) => c.documentCount === 0);
   if (unsupported.length > 0) {
     gaps.push(
-      `${plural(unsupported.length, "condition")} has no supporting document in this packet: ${unsupported
+      `${plural(unsupported.length, "condition")} ${unsupported.length === 1 ? "has" : "have"} no supporting document in this packet: ${unsupported
         .slice(0, 5)
         .map((c) => c.name)
         .join(", ")}.`,
@@ -351,10 +391,22 @@ const buildGaps = (vkb, documentFindings, conditions, stats) => {
   if (!documentFindings.some((doc) => doc.categoryKey === "dd214s")) {
     gaps.push("No DD-214 or service record on file.");
   }
-  if (!cleanString(vkb?.serviceHistory?.separationDate)) {
+  if (!hasSeparationDate(vkb)) {
     gaps.push("Separation date is not recorded in your service history.");
   }
   return gaps;
+};
+
+// Same source BDDBuilder's getVeteranSeparationDefault falls back to: the
+// top-level separationDate field, or - when that's empty - any service
+// period on file with an end date. Without this fallback the summary
+// flagged a missing separation date even when BDDBuilder had already found
+// one from the veteran's service periods.
+const hasSeparationDate = (vkb) => {
+  if (cleanString(vkb?.serviceHistory?.separationDate)) return true;
+  return asArray(vkb?.serviceHistory?.servicePeriods).some((p) =>
+    cleanString(p?.serviceEndDate),
+  );
 };
 
 /**
@@ -381,6 +433,19 @@ export function buildPacketTldr(vkb, documentFindings = [], conditions = []) {
   };
 }
 
+/** The combined rating the newest decision letter states, if any. */
+export function getStatedCombinedRating(vkb) {
+  const history = vkb?.vaClaimsHistory;
+  const rating = Number(history?.currentCombinedRating);
+  if (!Number.isFinite(rating)) return null;
+  return {
+    rating,
+    date: history.currentCombinedRatingDate || null,
+    dateKind: history.currentCombinedRatingDateKind || null,
+    source: history.currentCombinedRatingSource || null,
+  };
+}
+
 /** One call for the My Packet view: findings, synthesis, and TL;DR together. */
 export function buildPacketSummary(vkb, documentsByCategory) {
   const documents = buildAllDocumentFindings(documentsByCategory);
@@ -389,5 +454,6 @@ export function buildPacketSummary(vkb, documentsByCategory) {
     documents,
     conditions,
     tldr: buildPacketTldr(vkb, documents, conditions),
+    statedCombinedRating: getStatedCombinedRating(vkb),
   };
 }

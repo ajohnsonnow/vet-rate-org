@@ -34,4 +34,21 @@ describe("D-9: timeline event title", () => {
     });
     expect(getTimelineEvents()[0].title).toBe("Diagnosed with PTSD");
   });
+
+  // D-C (final10 QA, 2026-09-25; coverage gap closed in final10 QA's tests
+  // lens re-review, 2026-09-26): a VKB-imported event's eventType (e.g.
+  // "guard_enlistment") must survive a save/reload round-trip, or
+  // EvidenceTimeline.jsx's gap-detection exclusion for it silently comes
+  // back on the next visit.
+  it("saveTimelineEvents persists eventType across a save/reload round-trip", () => {
+    saveTimelineEvents([
+      {
+        type: "service",
+        date: "2003-01-15",
+        title: "Enlisted (Army National Guard)",
+        eventType: "guard_enlistment",
+      },
+    ]);
+    expect(getTimelineEvents()[0].eventType).toBe("guard_enlistment");
+  });
 });

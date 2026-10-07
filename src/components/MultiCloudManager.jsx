@@ -41,8 +41,10 @@ import {
 import { exportAllData, importAllData } from "../utils/storage";
 
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import ToolCardButton from "./ToolCardButton";
 import DeviceKeystorePanel from "./DeviceKeystorePanel";
+import ScrollRegion from "./common/ScrollRegion";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString();
@@ -119,7 +121,7 @@ const useGoogleDriveInit = (setProviderStates) => {
   useEffect(() => {
     const initGDrive = async () => {
       try {
-        if (typeof window.gapi !== "undefined") {
+        if (window.gapi !== undefined) {
           await initializeGoogleDrive();
           const signedIn = isSignedInToGoogleDrive();
           setProviderStates((prev) => ({
@@ -197,7 +199,7 @@ function createConnectHandler({
           google_drive: { ...prev.google_drive, connected: true, user },
         }));
       } else {
-        const _result = await connectProvider(providerId);
+        await connectProvider(providerId);
         const state = getProviderState(providerId);
         setProviderStates((prev) => ({
           ...prev,
@@ -745,25 +747,30 @@ function useBackupOperations({
 
 const MultiCloudHeader = ({ onClose, activeTab, setActiveTab }) => (
   <div>
-    <div className="flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
-      <div className="flex items-center gap-3">
-        <div className="text-3xl">🏰</div>
-        <div>
-          <h1 id="multicloud-title" className="text-xl font-bold text-white">
-            The Redundant Bunker Network
-          </h1>
-          <p className="text-sm text-cyan-100">
-            Multi-cloud backup with military-grade encryption
-          </p>
-        </div>
-      </div>
-      <button
-        onClick={onClose}
-        aria-label="Close dialog"
-        className="text-2xl font-bold text-white transition-colors hover:text-cyan-200"
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="grid h-11 w-11 shrink-0 place-items-center text-2xl font-bold text-white transition-colors hover:text-cyan-200"
+          >
+            ×
+          </button>
+        }
       >
-        ×
-      </button>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="text-3xl">🏰</div>
+          <div className="min-w-0">
+            <h1 id="multicloud-title" className="text-xl font-bold text-white">
+              The Redundant Bunker Network
+            </h1>
+            <p className="text-sm text-cyan-100">
+              Multi-cloud backup with military-grade encryption
+            </p>
+          </div>
+        </div>
+      </HeaderCloseSlot>
     </div>
 
     <div className="flex border-b border-gray-200 dark:border-gray-700">
@@ -790,7 +797,7 @@ const MultiCloudHeader = ({ onClose, activeTab, setActiveTab }) => (
           }`}
         >
           <div>{tab.label}</div>
-          <div className="text-xs opacity-60">{tab.desc}</div>
+          <div className="text-xs font-normal">{tab.desc}</div>
         </button>
       ))}
     </div>
@@ -1516,7 +1523,7 @@ const ProviderComparisonTable = () => (
     <h4 className="mb-3 font-semibold text-gray-900 dark:text-white">
       Cloud Provider Security
     </h4>
-    <div className="overflow-x-auto">
+    <ScrollRegion label="Cloud provider security comparison">
       <table className="w-full text-sm">
         <ProviderComparisonTableHead />
         <tbody>
@@ -1574,7 +1581,7 @@ const ProviderComparisonTable = () => (
           </tr>
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
     <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">
       ~ Google Drive can be HIPAA compliant with Workspace + BAA. Personal
       accounts are not.

@@ -13,8 +13,8 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import useConsistencyCheck, {
   getHealthStatus,
 } from "../utils/useConsistencyCheck";
@@ -64,8 +64,6 @@ function getHealthBadgeStyle(color) {
 }
 
 export default function ConsistencyEngine({ onClose }) {
-  const { _t } = useLanguage();
-
   const [activeTab, setActiveTab] = useState("rules"); // 'rules' or 'ai'
   const {
     contradictions,
@@ -75,7 +73,6 @@ export default function ConsistencyEngine({ onClose }) {
     criticalCount,
     highCount,
     mediumCount,
-    _totalCount,
   } = useConsistencyCheck();
   const healthStatus = getHealthStatus(contradictions);
 
@@ -132,43 +129,44 @@ function AIAnalyzerScreen({ activeTab, setActiveTab, onClose }) {
       className="!bg-gray-900"
       header={
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h2 id="consistency-engine-title" className="text-2xl font-bold">
-                🔍 The Consistency Engine
-              </h2>
-              {/* Tabs */}
-              <div className="flex bg-black/20 rounded-lg p-1">
-                <button
-                  onClick={() => setActiveTab("rules")}
-                  className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
-                    activeTab === "rules"
-                      ? "bg-white text-purple-700"
-                      : "text-white/80 hover:text-white"
-                  }`}
-                >
-                  📋 Rules Check
-                </button>
-                <button
-                  onClick={() => setActiveTab("ai")}
-                  className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
-                    activeTab === "ai"
-                      ? "bg-white text-purple-700"
-                      : "text-white/80 hover:text-white"
-                  }`}
-                >
-                  🤖 AI Analysis
-                </button>
-              </div>
+          <HeaderCloseSlot
+            close={
+              <button
+                onClick={onClose}
+                className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200 text-2xl font-bold"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            }
+          >
+            <h2 id="consistency-engine-title" className="text-2xl font-bold">
+              🔍 The Consistency Engine
+            </h2>
+            {/* Tabs */}
+            <div className="flex bg-black/20 rounded-lg p-1">
+              <button
+                onClick={() => setActiveTab("rules")}
+                className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
+                  activeTab === "rules"
+                    ? "bg-white text-purple-700"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                📋 Rules Check
+              </button>
+              <button
+                onClick={() => setActiveTab("ai")}
+                className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
+                  activeTab === "ai"
+                    ? "bg-white text-purple-700"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                🤖 AI Analysis
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-gray-200 text-2xl font-bold"
-              aria-label="Close"
-            >
-              ×
-            </button>
-          </div>
+          </HeaderCloseSlot>
         </div>
       }
     >
@@ -194,9 +192,19 @@ function ConsistencyEngineHeader({
         healthStatus.color,
       )} text-white p-6`}
     >
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-4 mb-2">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200 text-2xl font-bold"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        }
+      >
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-4 mb-2">
             <h2 id="consistency-engine-title" className="text-3xl font-bold">
               {healthStatus.icon} The Consistency Engine{" "}
               <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
@@ -231,14 +239,7 @@ function ConsistencyEngineHeader({
             Automated contradiction detection across all your data
           </p>
         </div>
-        <button
-          onClick={onClose}
-          className="text-white hover:text-gray-200 text-2xl font-bold"
-          aria-label="Close"
-        >
-          ×
-        </button>
-      </div>
+      </HeaderCloseSlot>
 
       <HeaderStatusSummary
         healthStatus={healthStatus}
@@ -393,8 +394,11 @@ function ContradictionsList({
           <div className="space-y-3">
             {contradictions
               .filter((c) => c.severity === "critical")
-              .map((contradiction, index) => (
-                <ContradictionCard key={index} contradiction={contradiction} />
+              .map((contradiction) => (
+                <ContradictionCard
+                  key={contradiction.issue}
+                  contradiction={contradiction}
+                />
               ))}
           </div>
         </div>
@@ -409,8 +413,11 @@ function ContradictionsList({
           <div className="space-y-3">
             {contradictions
               .filter((c) => c.severity === "high")
-              .map((contradiction, index) => (
-                <ContradictionCard key={index} contradiction={contradiction} />
+              .map((contradiction) => (
+                <ContradictionCard
+                  key={contradiction.issue}
+                  contradiction={contradiction}
+                />
               ))}
           </div>
         </div>
@@ -425,8 +432,11 @@ function ContradictionsList({
           <div className="space-y-3">
             {contradictions
               .filter((c) => c.severity === "medium")
-              .map((contradiction, index) => (
-                <ContradictionCard key={index} contradiction={contradiction} />
+              .map((contradiction) => (
+                <ContradictionCard
+                  key={contradiction.issue}
+                  contradiction={contradiction}
+                />
               ))}
           </div>
         </div>

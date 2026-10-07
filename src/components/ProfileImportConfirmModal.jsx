@@ -8,8 +8,17 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { isSameCalendarDay } from "../utils/serviceEntryDate";
+import {
+  VALUE_SOURCE,
+  countBySource,
+  describeSourceCounts,
+} from "../utils/dd214ValueSources";
+import {
+  MODEL_LIST_FIELDS,
+  MODEL_TEXT_FIELDS,
+} from "../utils/dd214ModelOutputGuards";
 
 // Field labels for display
 const fieldLabels = {
@@ -90,13 +99,15 @@ const fieldLabels = {
 
   // Combat & Qualifications
   specialQualifications: "Special Qualifications",
+  awards: "Awards and Decorations",
+  combatService: "Combat Service Details",
   securityClearance: "Security Clearance",
 
   // Legacy
   reenlisted: "Re-enlisted",
 };
 
-const PERSONAL_FIELDS = [
+const PERSONAL_FIELDS = new Set([
   "firstName",
   "middleInitial",
   "middleName",
@@ -110,9 +121,9 @@ const PERSONAL_FIELDS = [
   "vaFileNumber",
   "placeOfBirth",
   "homeOfRecord",
-];
+]);
 
-const SERVICE_FIELDS = [
+const SERVICE_FIELDS = new Set([
   "branch",
   "component",
   "componentFull",
@@ -152,11 +163,13 @@ const SERVICE_FIELDS = [
   "militaryEducation",
   "memberRequests",
   "specialQualifications",
+  "awards",
+  "combatService",
   "securityClearance",
   "reenlisted",
-];
+]);
 
-const CONTACT_FIELDS = [
+const CONTACT_FIELDS = new Set([
   "homeAddress",
   "email",
   "phone",
@@ -165,7 +178,7 @@ const CONTACT_FIELDS = [
   "city",
   "state",
   "zip",
-];
+]);
 
 const CATEGORY_SECTIONS = [
   { key: "personal", icon: "👤", title: "Personal Information" },
@@ -216,11 +229,11 @@ const categorizeFields = (editableData) => {
   };
 
   Object.keys(editableData).forEach((field) => {
-    if (PERSONAL_FIELDS.includes(field)) {
+    if (PERSONAL_FIELDS.has(field)) {
       categories.personal.push(field);
-    } else if (SERVICE_FIELDS.includes(field)) {
+    } else if (SERVICE_FIELDS.has(field)) {
       categories.service.push(field);
-    } else if (CONTACT_FIELDS.includes(field)) {
+    } else if (CONTACT_FIELDS.has(field)) {
       categories.contact.push(field);
     } else {
       categories.other.push(field);
@@ -239,7 +252,40 @@ const formatSimpleFieldValue = (value) => {
   return String(value);
 };
 
-const useEditableProfileData = (extractedData, currentProfile) => {
+// Owner decision (F): nothing identifier-related is ever pre-selected for
+// import. The veteran ticks the box deliberately. Text a model writes counts:
+// a name the app has never seen cannot be recognised in it.
+const NEVER_PRESELECTED_FIELDS = new Set([
+  ...MODEL_TEXT_FIELDS,
+  ...MODEL_LIST_FIELDS,
+  "fullName",
+  "firstName",
+  "middleName",
+  "lastName",
+  "ssnLast4",
+  "ssnFull",
+  "dateOfBirth",
+  "dob",
+  "serviceNumber",
+  "homeOfRecord",
+  "homeAddress",
+  "placeOfBirth",
+  "email",
+  "phone",
+  "alternatePhone",
+  "nextOfKin",
+  "nearestRelative",
+  "signature",
+]);
+
+// Owner decision (G), 2026-10-03 (ADR-009): a row is pre-ticked only when its
+// value came from the app's own parser. A value the AI read, one typed by the
+// veteran, or one with no known source is offered unticked.
+const useEditableProfileData = (
+  extractedData,
+  currentProfile,
+  fieldSources,
+) => {
   const [editableData, setEditableData] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
 
@@ -248,9 +294,11 @@ const useEditableProfileData = (extractedData, currentProfile) => {
     if (extractedData) {
       setEditableData({ ...extractedData });
 
-      // Auto-select fields that are new or different
+      // Auto-select parser-read fields that are new or different
       const autoSelected = {};
       Object.keys(extractedData).forEach((key) => {
+        if (NEVER_PRESELECTED_FIELDS.has(key)) return;
+        if (fieldSources?.[key] !== VALUE_SOURCE.PARSER) return;
         // Select if current profile doesn't have this field, or if values differ
         if (
           !currentProfile[key] ||
@@ -261,15 +309,62 @@ const useEditableProfileData = (extractedData, currentProfile) => {
       });
       setSelectedFields(autoSelected);
     }
-  }, [extractedData, currentProfile]);
+  }, [extractedData, currentProfile, fieldSources]);
 
   return { editableData, setEditableData, selectedFields, setSelectedFields };
+};
+
+const FIELD_BOX_CLASS =
+  "w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white disabled:opacity-50";
+
+// A service time or other structured value is shown read-only; a yes/no is a
+// select; everything else is a text box that can be corrected once ticked.
+const ImportedValueField = ({
+  label,
+  importedValue,
+  isSelected,
+  isBooleanField,
+  onChange,
+}) => {
+  if (typeof importedValue === "object" && importedValue !== null) {
+    return (
+      <div
+        aria-label={`${label} (read from the document)`}
+        className="px-2 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300 break-words"
+      >
+        {formatFieldValue(label, importedValue)}
+      </div>
+    );
+  }
+  if (isBooleanField) {
+    return (
+      <select
+        value={importedValue ? "true" : "false"}
+        onChange={(e) => onChange(e.target.value === "true")}
+        disabled={!isSelected}
+        className={FIELD_BOX_CLASS}
+      >
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </select>
+    );
+  }
+  return (
+    <input
+      type="text"
+      value={importedValue || ""}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={!isSelected}
+      className={FIELD_BOX_CLASS}
+    />
+  );
 };
 
 /**
  * Value Comparison - current value display + editable imported value
  */
 const FieldValueComparison = ({
+  label,
   currentValue,
   importedValue,
   isSelected,
@@ -289,34 +384,65 @@ const FieldValueComparison = ({
       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
         Imported Value:
       </div>
-      {isBooleanField ? (
-        <select
-          value={importedValue ? "true" : "false"}
-          onChange={(e) => onChange(e.target.value === "true")}
-          disabled={!isSelected}
-          className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white disabled:opacity-50"
-        >
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-      ) : (
-        <input
-          type="text"
-          value={importedValue || ""}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={!isSelected}
-          className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white disabled:opacity-50"
-        />
-      )}
+      <ImportedValueField
+        label={label}
+        importedValue={importedValue}
+        isSelected={isSelected}
+        isBooleanField={isBooleanField}
+        onChange={onChange}
+      />
     </div>
   </div>
 );
+
+function countRowSources(editableData, fieldSources) {
+  const rows = Object.keys(editableData).filter(
+    (field) => fieldSources?.[field],
+  );
+  return countBySource(
+    Object.fromEntries(rows.map((field) => [field, fieldSources[field]])),
+  );
+}
+
+const SOURCE_NOTES = {
+  [VALUE_SOURCE.PARSER]: {
+    text: "Read from your document by the app's own parser.",
+    className: "text-green-700 dark:text-green-300",
+  },
+  [VALUE_SOURCE.PARSER_CHECK]: {
+    text: "Read by the app's own parser, but not from its own printed box, or the rest of the page does not agree with it. Check this against your document before you tick it.",
+    className: "text-amber-700 dark:text-amber-300",
+  },
+  [VALUE_SOURCE.MODEL]: {
+    text: "Read by the AI. Check it against your document before you tick it.",
+    className: "text-amber-700 dark:text-amber-300",
+  },
+  [VALUE_SOURCE.VETERAN]: {
+    text: "Typed by you.",
+    className: "text-gray-600 dark:text-gray-300",
+  },
+};
+
+const SourceNote = ({ source }) => {
+  const note = SOURCE_NOTES[source];
+  if (!note) return null;
+  return (
+    <p
+      className={`text-xs mb-2 ${note.className}`}
+      data-source={source}
+      data-testid="import-row-source"
+    >
+      {note.text}
+    </p>
+  );
+};
 
 /**
  * Field Row Component - Shows current vs imported value with checkbox
  */
 const FieldRow = ({
   label,
+  source,
   currentValue,
   importedValue,
   isSelected,
@@ -343,6 +469,7 @@ const FieldRow = ({
             type="checkbox"
             checked={isSelected === true}
             onChange={onToggle}
+            aria-label={label}
             className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
           />
         </div>
@@ -360,7 +487,9 @@ const FieldRow = ({
             </label>
           </div>
 
+          <SourceNote source={source} />
           <FieldValueComparison
+            label={label}
             currentValue={currentValue}
             importedValue={importedValue}
             isSelected={isSelected}
@@ -383,6 +512,7 @@ const FieldCategorySection = ({
   currentProfile,
   editableData,
   selectedFields,
+  fieldSources,
   onToggle,
   onChange,
 }) => {
@@ -398,6 +528,7 @@ const FieldCategorySection = ({
           <FieldRow
             key={field}
             label={getFieldLabel(field)}
+            source={fieldSources?.[field]}
             currentValue={formatFieldValue(field, currentProfile[field])}
             importedValue={editableData[field]}
             isSelected={selectedFields[field]}
@@ -449,6 +580,7 @@ const ImportHeader = ({
   onCancel,
   selectedCount,
   totalCount,
+  sourceCounts,
   onSelectAll,
   onSelectNone,
 }) => (
@@ -492,10 +624,17 @@ const ImportHeader = ({
         <span className="text-lg">⚠️</span>
         <span>
           <strong>Important:</strong> Review the extracted information below.
-          Uncheck any fields you don&apos;t want to update. Fields already in
-          your profile that differ from the imported data are pre-selected for
-          your review.
+          Only values the app&apos;s own parser read from your document are
+          pre-selected, and only when they differ from what is already in your
+          profile. Anything the AI read is left unticked: check it against your
+          document, then tick it if it is right.
         </span>
+      </p>
+      <p
+        className="text-sm text-yellow-800 dark:text-yellow-200 mt-2"
+        data-testid="import-source-counts"
+      >
+        {describeSourceCounts(sourceCounts)}.
       </p>
     </div>
 
@@ -547,31 +686,68 @@ const ImportFooter = ({ onCancel, selectedCount, onConfirm }) => (
   </div>
 );
 
+// A plain truthiness check dropped an explicit `false` (e.g.
+// DD214Analyzer.jsx's serviceStartDateDerived: false, clearing a stale
+// calculated flag on import) as if the field had never been extracted at
+// all - only null/undefined/"" mean that.
+function _hasImportableValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+// ADR-007 W10/W9: serviceStartDateEdited is distinct from merely selecting
+// the field - a genuine typed edit is the only thing that may correct the
+// canonical period's start date; an unedited, selected extraction never
+// should.
+function _buildProfileImportConfirmPayload(
+  selectedFields,
+  editableData,
+  extractedData,
+) {
+  const fieldsToImport = {};
+  Object.keys(selectedFields).forEach((key) => {
+    const value = editableData[key];
+    if (selectedFields[key] && _hasImportableValue(value)) {
+      fieldsToImport[key] = value;
+    }
+  });
+  const serviceStartDateEdited =
+    !!selectedFields.serviceStartDate &&
+    !isSameCalendarDay(
+      editableData.serviceStartDate,
+      extractedData?.serviceStartDate,
+    );
+  return { fieldsToImport, meta: { serviceStartDateEdited } };
+}
+
+const CategorySections = ({ categories, ...sectionProps }) =>
+  CATEGORY_SECTIONS.map(({ key, icon, title }) => (
+    <FieldCategorySection
+      key={key}
+      icon={icon}
+      title={title}
+      fields={categories[key]}
+      {...sectionProps}
+    />
+  ));
+
 /**
  * Profile Import Confirmation Modal
  * Shows extracted data with side-by-side comparison and selective import
  */
 const ProfileImportConfirmModal = ({
   extractedData,
+  fieldSources,
   currentProfile,
   onConfirm,
   onCancel,
 }) => {
-  const { _t } = useLanguage();
-
   const { editableData, setEditableData, selectedFields, setSelectedFields } =
-    useEditableProfileData(extractedData, currentProfile);
+    useEditableProfileData(extractedData, currentProfile, fieldSources);
 
-  /**
-   * Update a field value
-   */
   const handleFieldChange = (field, value) => {
     setEditableData((prev) => ({ ...prev, [field]: value }));
   };
 
-  /**
-   * Toggle field selection
-   */
   const handleFieldToggle = (field) => {
     setSelectedFields((prev) => ({
       ...prev,
@@ -579,9 +755,6 @@ const ProfileImportConfirmModal = ({
     }));
   };
 
-  /**
-   * Select all fields
-   */
   const handleSelectAll = () => {
     const allSelected = {};
     Object.keys(editableData).forEach((key) => {
@@ -590,29 +763,24 @@ const ProfileImportConfirmModal = ({
     setSelectedFields(allSelected);
   };
 
-  /**
-   * Deselect all fields
-   */
   const handleSelectNone = () => {
     setSelectedFields({});
   };
 
-  /**
-   * Confirm import - only save selected fields
-   */
   const handleConfirm = () => {
-    const fieldsToImport = {};
-    Object.keys(selectedFields).forEach((key) => {
-      if (selectedFields[key] && editableData[key]) {
-        fieldsToImport[key] = editableData[key];
-      }
-    });
-    onConfirm(fieldsToImport);
+    const { fieldsToImport, meta } = _buildProfileImportConfirmPayload(
+      selectedFields,
+      editableData,
+      extractedData,
+    );
+    if (Object.keys(fieldsToImport).length === 0) return;
+    onConfirm(fieldsToImport, meta);
   };
 
   const categories = categorizeFields(editableData);
   const selectedCount = Object.values(selectedFields).filter(Boolean).length;
   const totalCount = Object.keys(editableData).length;
+  const sourceCounts = countRowSources(editableData, fieldSources);
 
   return (
     <ResponsiveModal
@@ -633,24 +801,21 @@ const ProfileImportConfirmModal = ({
           onCancel={onCancel}
           selectedCount={selectedCount}
           totalCount={totalCount}
+          sourceCounts={sourceCounts}
           onSelectAll={handleSelectAll}
           onSelectNone={handleSelectNone}
         />
       }
     >
-      {CATEGORY_SECTIONS.map(({ key, icon, title }) => (
-        <FieldCategorySection
-          key={key}
-          icon={icon}
-          title={title}
-          fields={categories[key]}
-          currentProfile={currentProfile}
-          editableData={editableData}
-          selectedFields={selectedFields}
-          onToggle={handleFieldToggle}
-          onChange={handleFieldChange}
-        />
-      ))}
+      <CategorySections
+        categories={categories}
+        currentProfile={currentProfile}
+        editableData={editableData}
+        selectedFields={selectedFields}
+        fieldSources={fieldSources}
+        onToggle={handleFieldToggle}
+        onChange={handleFieldChange}
+      />
     </ResponsiveModal>
   );
 };

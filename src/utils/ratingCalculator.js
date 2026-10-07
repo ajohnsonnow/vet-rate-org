@@ -159,14 +159,14 @@ export function checkBilateralFactor(conditions) {
   }
 
   for (const bodyPart of bilateralPairs) {
-    const left = conditions.find(
+    const left = conditions.some(
       (c) =>
         normalizeSide(c.name).includes(bodyPart) &&
         normalizeSide(c.name).includes("left") &&
         c.rating > 0,
     );
 
-    const right = conditions.find(
+    const right = conditions.some(
       (c) =>
         normalizeSide(c.name).includes(bodyPart) &&
         normalizeSide(c.name).includes("right") &&

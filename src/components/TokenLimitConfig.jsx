@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { getAIStatus } from "../utils/unifiedAIService";
-import { useLanguage } from "../contexts/LanguageContext";
+import { describeDeviceModel } from "../utils/deviceCapabilityDetector";
 
 // Storage keys
 const TOKEN_LIMIT_KEY = "vetrate_token_limit_config";
@@ -181,17 +181,48 @@ const findClosestThresholdValue = (thresholdMap, tokenLimit) => {
   return thresholdMap[closestThreshold];
 };
 
+const hasConfiguredAI = (aiStatus) =>
+  Boolean(
+    aiStatus.cloudAvailable ||
+    aiStatus.localAvailable ||
+    aiStatus.swarmAvailable ||
+    aiStatus.wllamaAvailable ||
+    aiStatus.localServerAvailable,
+  );
+
+const LOCAL_FALLBACK_CAPABILITIES =
+  MODEL_CAPABILITIES["Llama-3.2-3B-Instruct-q4f32_1-MLC"];
+
+const getLoadedModelName = (aiStatus) => {
+  const loaded = aiStatus.swarmStatus?.model;
+  return loaded
+    ? describeDeviceModel({ recommendedModels: [loaded] }).displayName
+    : aiStatus.localModelName || "On-device AI";
+};
+
+// null when no AI is configured, so no model is named.
 const getModelForStatus = (aiStatus) => {
-  if (aiStatus.effectiveMode === "local") {
-    const modelId =
-      localStorage.getItem("vet_rate_local_ai_model") ||
-      "Llama-3.2-3B-Instruct-q4f32_1-MLC";
-    return (
-      MODEL_CAPABILITIES[modelId] ||
-      MODEL_CAPABILITIES["Llama-3.2-3B-Instruct-q4f32_1-MLC"]
-    );
+  if (!hasConfiguredAI(aiStatus)) return null;
+  if (aiStatus.effectiveMode === "cloud") {
+    return MODEL_CAPABILITIES["gemini-2.5-flash"];
   }
-  return MODEL_CAPABILITIES["gemini-2.5-flash"];
+  if (aiStatus.effectiveMode !== "local") {
+    return {
+      ...LOCAL_FALLBACK_CAPABILITIES,
+      name: getLoadedModelName(aiStatus),
+    };
+  }
+  const modelId =
+    localStorage.getItem("vet_rate_local_ai_model") ||
+    "Llama-3.2-3B-Instruct-q4f32_1-MLC";
+  return MODEL_CAPABILITIES[modelId] || LOCAL_FALLBACK_CAPABILITIES;
+};
+
+const NO_MODEL_LIMITS = {
+  ...MODEL_CAPABILITIES["gemini-2.5-flash"],
+  name: null,
+  warnings: null,
+  vramImpact: null,
 };
 
 const getWarningForModel = (currentModel, tokenLimit) => {
@@ -235,7 +266,7 @@ const ConfigHeader = ({ showAdvanced, onToggleAdvanced }) => (
     </div>
     <button
       onClick={onToggleAdvanced}
-      className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
+      className="min-h-[44px] px-2 text-sm text-purple-600 dark:text-purple-400 hover:underline"
     >
       {showAdvanced ? "Hide Details" : "Show Details"}
     </button>
@@ -247,14 +278,18 @@ const CurrentModelInfo = ({ currentModel, tokenLimit }) => (
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-          Current Model: {currentModel.name}
+          {currentModel.name
+            ? `Current Model: ${currentModel.name}`
+            : "No AI is set up yet. Set up Cloud AI or Local AI to choose a model."}
         </p>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-          Context Window: {currentModel.maxContext.toLocaleString()} tokens
-        </p>
+        {currentModel.name && (
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+            Context Window: {currentModel.maxContext.toLocaleString()} tokens
+          </p>
+        )}
       </div>
       <div className="text-right">
-        <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+        <p className="text-lg font-bold text-purple-800 dark:text-purple-200">
           {tokenLimit.toLocaleString()}
         </p>
         <p className="text-xs text-gray-600 dark:text-gray-400">tokens</p>
@@ -322,8 +357,8 @@ const CustomInput = ({ customValue, onChange, onApply, currentModel }) => (
         onClick={onApply}
         disabled={
           !customValue ||
-          parseInt(customValue, 10) < 128 ||
-          parseInt(customValue, 10) > currentModel.absoluteMax
+          Number.parseInt(customValue, 10) < 128 ||
+          Number.parseInt(customValue, 10) > currentModel.absoluteMax
         }
         className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-400 text-white rounded-lg font-semibold text-sm transition-colors"
       >
@@ -447,7 +482,7 @@ const AdvancedDetails = ({ currentModel, aiStatus }) => (
     {/* Model-Specific Recommendations */}
     <div className="pt-3 border-t border-gray-300 dark:border-gray-700">
       <h5 className="font-bold text-gray-900 dark:text-gray-100 mb-2">
-        For {currentModel.name}:
+        For {currentModel.name ?? "your AI model"}:
       </h5>
       <ul className="list-disc ml-5 space-y-1 text-sm text-gray-700 dark:text-gray-300">
         <li>
@@ -506,7 +541,6 @@ const UseCaseGuide = () => (
  * TokenLimitConfig Component
  */
 const TokenLimitConfig = () => {
-  const { _t } = useLanguage();
   const [tokenLimit, setTokenLimit] = useState(getTokenLimit());
   const [customValue, setCustomValue] = useState("");
   const [isCustom, setIsCustom] = useState(false);
@@ -521,7 +555,7 @@ const TokenLimitConfig = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const currentModel = getModelForStatus(aiStatus);
+  const currentModel = getModelForStatus(aiStatus) ?? NO_MODEL_LIMITS;
   const warning = getWarningForModel(currentModel, tokenLimit);
   const vramImpact = getVRAMImpactForModel(currentModel, aiStatus, tokenLimit);
 
@@ -542,7 +576,7 @@ const TokenLimitConfig = () => {
 
   // Apply custom value
   const handleCustomApply = () => {
-    const value = parseInt(customValue, 10);
+    const value = Number.parseInt(customValue, 10);
     if (value && value >= 128 && value <= currentModel.absoluteMax) {
       setTokenLimit(value);
       saveTokenLimit(value);

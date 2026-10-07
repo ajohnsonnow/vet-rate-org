@@ -7,7 +7,8 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { parseClaimLetter } = await import("./musterCallProcessor");
+const { parseClaimLetter, parseRatingDecision } =
+  await import("./musterCallProcessor");
 
 function realDecisionLetterText() {
   return `Department of Veterans Affairs
@@ -48,8 +49,10 @@ describe("musterCallProcessor: parseClaimLetter (real letter phrasing)", () => {
   it("extracts per-issue grant/deny/continue outcomes from a real decision letter", async () => {
     const result = await parseClaimLetter(realDecisionLetterText());
 
-    expect(result.claimNumber).toBe("123456789");
+    expect(result.vaFileNumber).toBe("123456789");
+    expect(result.claimNumber).toBeNull();
     expect(result.letterDate).toBe("November 15, 2025");
+    expect(result.decisionDate).toBe("November 15, 2025");
     expect(result.decisions).toHaveLength(3);
 
     const tinnitus = result.decisions.find((d) =>
@@ -223,10 +226,30 @@ describe("musterCallProcessor: parseClaimLetter (pdf.js page-line layout)", () =
       { percentage: 70, effectiveDate: "Mar 31, 2023" },
       { percentage: 80, effectiveDate: "Sep 15, 2023" },
     ]);
+    // No "Date:" letterhead line anywhere in this letter - decisionDate
+    // falls back to the newest effective date it actually states.
+    expect(result.decisionDate).toBe("September 15, 2023");
     expect(result.conditions).toHaveLength(5);
     expect(result.conditions.map((c) => c.rating)).toEqual([20, 10, 10, 10, 0]);
-    expect(result.claimNumber).toBe("000000000");
+    expect(result.vaFileNumber).toBe("000000000");
     expect(result.status).toBe("mixed");
+  });
+
+  it("keeps a bilateral pair distinct when both conditions share a >40-char name prefix (regression)", async () => {
+    // Real letters grant paired-extremity conditions as two full sentences
+    // that differ only in "left hip" / "right hip" at the very end. When
+    // that shared prefix is 40+ characters, decisionKey's front-truncated
+    // dedup key collapsed the second sentence into the first and dropped a
+    // real, separately-rated condition.
+    const text =
+      "Service connection for Iliotibial band syndrome Greater trochanteric pain syndrome (not bursitis), left hip is granted with an evaluation of 0 percent effective September 15, 2023. " +
+      "Service connection for Iliotibial band syndrome Greater trochanteric pain syndrome (not bursitis), right hip is granted with an evaluation of 0 percent effective September 15, 2023.";
+    const result = await parseClaimLetter(text);
+
+    expect(result.decisions).toHaveLength(2);
+    expect(result.decisions[0].condition).toMatch(/left hip$/);
+    expect(result.decisions[1].condition).toMatch(/right hip$/);
+    expect(result.conditions).toHaveLength(2);
   });
 
   it("does not hang on a large claim letter where the file/date/evidence regexes almost-but-never match (regression: ReDoS)", async () => {
@@ -241,5 +264,98 @@ describe("musterCallProcessor: parseClaimLetter (pdf.js page-line layout)", () =
       `WHAT WE NEED FROM YOU ${"z".repeat(50000)}\n`;
     const result = await parseWithinBudget(pathological);
     expect(result).toBeDefined();
+  });
+});
+
+// pdf.js text items as extractStandardText (advancedOCR.js) sees them: the
+// parser's text joins them with spaces, letterheadText keeps the hasEOL breaks.
+const LETTERHEAD_ITEMS = [
+  { str: "DEPARTMENT OF VETERANS AFFAIRS", hasEOL: true },
+  { str: "Veterans Benefits Administration", hasEOL: true },
+  { str: "Claim received May 29, 2023", hasEOL: true },
+  { str: "May 8, 2024", hasEOL: true },
+  { str: "VETERAN NAME", hasEOL: true },
+  { str: "We made a decision on your VA benefits claim", hasEOL: true },
+  {
+    str: "Evaluation of lumbosacral strain, which is currently 10 percent disabling, is increased to 20 percent effective September 15, 2023.",
+    hasEOL: false,
+  },
+];
+const spacedLetterText = `--- PAGE 1 ---\n${LETTERHEAD_ITEMS.map((i) => i.str).join(" ")}\n\n`;
+const letterheadText = LETTERHEAD_ITEMS.map(
+  (i) => i.str + (i.hasEOL ? "\n" : " "),
+).join("");
+
+describe("musterCallProcessor: parseClaimLetter letterhead date", () => {
+  it("reads the letter's own date from the extractor's letterhead lines, not an effective date", async () => {
+    const result = await parseClaimLetter(spacedLetterText, {
+      letterheadText,
+    });
+    expect(result.decisionDate).toBe("May 8, 2024");
+    expect(result.decisionDateKind).toBe("letter");
+  });
+
+  it("cannot find the letterhead date in the space-joined page text alone", async () => {
+    const result = await parseClaimLetter(spacedLetterText);
+    expect(result.decisionDate).toBe("September 15, 2023");
+    expect(result.decisionDateKind).toBe("effective");
+  });
+
+  it("reads the letterhead date for a rating decision too", async () => {
+    const result = await parseRatingDecision(spacedLetterText, {
+      letterheadText,
+    });
+    expect(result.decisionDate).toBe("May 8, 2024");
+    expect(result.decisionDateKind).toBe("letter");
+  });
+
+  it("falls back to the newest effective date and says so when there is no letterhead date", async () => {
+    const text =
+      "We made a decision on your VA benefits claim\nEvaluation of lumbosacral strain, which is currently 10 percent disabling, is increased to 20 percent effective September 15, 2023.";
+    const result = await parseClaimLetter(text);
+    expect(result.decisionDate).toBe("September 15, 2023");
+    expect(result.decisionDateKind).toBe("effective");
+  });
+});
+
+describe("musterCallProcessor: ratings a letter restates rather than decides", () => {
+  it("reads the rating a Higher-Level Review restates when it only decides an effective date", async () => {
+    const result = await parseClaimLetter(
+      "DECISION Entitlement to an earlier effective date for the 50 percent evaluation of post-traumatic stress disorder is denied. " +
+        "REASONS FOR DECISION The claim for increase was received on March 31, 2023. " +
+        "We have assigned a 50 percent evaluation for your post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS)) based on: Anxiety",
+    );
+    expect(result.conditions).toEqual([
+      expect.objectContaining({
+        name: "post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS))",
+        rating: 50,
+        outcome: "continued",
+      }),
+    ]);
+    expect(
+      result.decisions.filter((d) => d.outcome === "denied" && !d.issue),
+    ).toEqual([]);
+  });
+
+  it("keeps the decided rating when the reasons restate it", async () => {
+    const result = await parseClaimLetter(
+      "1. Evaluation of tinnitus, which is currently 0 percent disabling, is increased to 10 percent effective March 31, 2023. " +
+        "We have assigned a 10 percent evaluation for your tinnitus based on: recurrent tinnitus",
+    );
+    expect(result.conditions).toHaveLength(1);
+    expect(result.conditions[0]).toMatchObject({
+      rating: 10,
+      outcome: "increased",
+    });
+  });
+
+  it("does not turn payment-table prose into rated conditions", async () => {
+    const result = await parseRatingDecision(
+      "$420.00 Jul 1, 2007 Original award, 30% Jul 1, 2008 Compensation rating adjusted to 40% Your overall or combined rating is 30% effective June 30, 2007",
+    );
+    expect(result.conditions.map((c) => c.name)).not.toContain(
+      "Original award,",
+    );
+    expect(result.conditions).toEqual([]);
   });
 });

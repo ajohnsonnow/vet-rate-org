@@ -14,6 +14,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
 } from "react";
 
 // Storage key for language preference
@@ -696,7 +697,7 @@ function interpolateParams(text, params) {
   let result = text;
   for (const [paramKey, paramValue] of Object.entries(params)) {
     result = result.replace(
-      new RegExp(`\\{${paramKey}\\}`, "g"),
+      new RegExp(String.raw`\{${paramKey}\}`, "g"),
       String(paramValue),
     );
   }
@@ -723,6 +724,8 @@ const LanguageContext = createContext(null);
 /**
  * useLanguage hook - Access language functionality
  */
+export const useOptionalLanguage = () => useContext(LanguageContext);
+
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
@@ -797,16 +800,27 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.dir = SUPPORTED_LANGUAGES[language].direction;
   }, [language]);
 
-  const value = {
-    language,
-    setLanguage,
-    t,
-    getSection,
-    getCurrentLanguage,
-    getAvailableLanguages,
-    isEnglish,
-    SUPPORTED_LANGUAGES,
-  };
+  const value = useMemo(
+    () => ({
+      language,
+      setLanguage,
+      t,
+      getSection,
+      getCurrentLanguage,
+      getAvailableLanguages,
+      isEnglish,
+      SUPPORTED_LANGUAGES,
+    }),
+    [
+      language,
+      setLanguage,
+      t,
+      getSection,
+      getCurrentLanguage,
+      getAvailableLanguages,
+      isEnglish,
+    ],
+  );
 
   return (
     <LanguageContext.Provider value={value}>

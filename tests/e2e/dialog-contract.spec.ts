@@ -114,8 +114,18 @@ test("non-dismissable splash ignores Escape (safety gate)", async ({
   await page.goto("/");
   await splash.waitFor({ state: "visible" });
   await page.keyboard.press("Escape");
-  // Give any (incorrect) close a chance to fire before asserting it didn't.
-  await page.waitForTimeout(300);
+  // Give any (incorrect) close a chance to fire before asserting it didn't -
+  // a React state update + repaint needs at least two animation frames plus
+  // a macrotask turn to land, so waiting on those (not a guessed duration)
+  // is the minimum real time an incorrect close would need to manifest.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setTimeout(resolve, 0)),
+        );
+      }),
+  );
   await expect(splash).toBeVisible();
 });
 

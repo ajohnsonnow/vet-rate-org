@@ -121,8 +121,7 @@ export function isConditionAlreadyRated(
   const normalize = (s) =>
     s
       .toLowerCase()
-      // eslint-disable-next-line sonarjs/slow-regex -- negated character class `[^)]*` cannot backtrack; each char is consumed at most once
-      .replace(/\([^)]*\)/g, " ")
+      .replace(/\([^)]{0,300}\)/g, " ")
       .replace(/\b(left|right|bilateral)\b/g, " ")
       .replace(/[^a-z0-9]+/g, " ")
       .trim();
@@ -130,15 +129,17 @@ export function isConditionAlreadyRated(
   const tokenKey = (normalized) =>
     normalized.split(" ").filter(Boolean).sort().join(" ");
 
-  const secondaryKeys = secondaryConditionName
-    .split("/")
-    .map((part) => tokenKey(normalize(part)))
-    .filter(Boolean);
+  const secondaryKeys = new Set(
+    secondaryConditionName
+      .split("/")
+      .map((part) => tokenKey(normalize(part)))
+      .filter(Boolean),
+  );
 
   return userDisabilities.some((disability) => {
     const normalizedDisability = normalize(disability);
     if (!normalizedDisability) return false;
-    return secondaryKeys.includes(tokenKey(normalizedDisability));
+    return secondaryKeys.has(tokenKey(normalizedDisability));
   });
 }
 
@@ -369,7 +370,6 @@ function addMentalHealthTinnitusSuggestions(
   suggestions,
   alreadySuggested,
 ) {
-  const _hasPTSD = normalizedDisabilities.some((d) => d.slug === "ptsd");
   const hasTinnitus = normalizedDisabilities.some((d) => d.slug === "tinnitus");
   const hasMigraines = userDisabilities.some(
     (d) =>

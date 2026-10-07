@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { stressTestStatement, isAIAvailable } from "../utils/aiStatementHelper";
 import { getAIStatus, isAnyAIAvailable } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -9,6 +10,7 @@ import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
 import VoiceInputButton from "./VoiceInput";
+import SmallModelCaveat from "./SmallModelCaveat";
 
 /**
  * RedTeam Component - "The Statement Stress Test"
@@ -29,7 +31,7 @@ function useStressTest() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const runStressTest = async (draftStatement) => {
+  const runStressTest = async (draftStatement, draftStatementIsDocument) => {
     if (!draftStatement.trim()) {
       setError("Please paste your draft statement first.");
       return;
@@ -54,7 +56,9 @@ function useStressTest() {
     setResults(null);
 
     try {
-      const response = await stressTestStatement(draftStatement);
+      const response = await stressTestStatement(draftStatement, {
+        isDocument: draftStatementIsDocument,
+      });
 
       if (response.success) {
         setResults(response.data);
@@ -74,7 +78,16 @@ function useStressTest() {
   return { results, isLoading, error, runStressTest };
 }
 
-function usePdfDropIn(setDraftStatement) {
+// Split out of usePdfDropIn purely to keep it under the line-count limit -
+// same two setter calls, same order, every reset call site.
+function _clearDraftStatement(setDraftStatement, setDraftStatementIsDocument) {
+  setDraftStatement("");
+  setDraftStatementIsDocument(false);
+}
+
+// Exported for this hook's own regression test (analyzePDF's result shape) -
+// not part of the component's public interface otherwise.
+export function usePdfDropIn(setDraftStatement, setDraftStatementIsDocument) {
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfOcrProgress, setPdfOcrProgress] = useState(null);
   const [pdfIsDragging, setPdfIsDragging] = useState(false);
@@ -84,15 +97,19 @@ function usePdfDropIn(setDraftStatement) {
   const processPdfFile = async (file) => {
     setPdfFile(file);
     setPdfError(null);
-    setDraftStatement("");
+    _clearDraftStatement(setDraftStatement, setDraftStatementIsDocument);
 
     try {
       const result = await analyzePDF(file, (progress) => {
         setPdfOcrProgress(progress);
       });
 
-      if (result.success && result.text) {
+      // analyzePDF (ocr.js) never returns a `success` field - it either
+      // resolves with the extracted result or throws, caught below. Same
+      // defect class fixed in DecisionDecoder.jsx's extractFileTextAndPreview.
+      if (result.text) {
         setDraftStatement(result.text);
+        setDraftStatementIsDocument(true); // ADR-009: document-derived
       } else {
         setPdfError(result.error || "Failed to extract text from PDF");
       }
@@ -144,7 +161,7 @@ function usePdfDropIn(setDraftStatement) {
   const handleRemovePdf = () => {
     setPdfFile(null);
     setPdfOcrProgress(null);
-    setDraftStatement("");
+    _clearDraftStatement(setDraftStatement, setDraftStatementIsDocument);
     setPdfError(null);
     if (pdfFileInputRef.current) {
       pdfFileInputRef.current.value = "";
@@ -225,42 +242,12 @@ const RedTeamHeader = ({ onClose, onOpenAISettings, onReportBug }) => (
   <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-3xl">🎖️</span>
-        </div>
-        <div>
-          <h2
-            id="red-team-title"
-            className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
-          >
-            The Red Team
-            <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
-              AI
-            </span>
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-              BETA
-            </span>
-          </h2>
-          <p className="text-red-100 text-sm sm:text-base mt-1">
-            Statement Stress Test • Find Weak Language
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <LLMRecommendationBadge toolId="red-team" />
-        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Red Team"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -277,8 +264,42 @@ const RedTeamHeader = ({ onClose, onOpenAISettings, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-3xl">🎖️</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="red-team-title"
+            className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
+          >
+            The Red Team{" "}
+            <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
+              AI
+            </span>
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              BETA
+            </span>
+          </h2>
+          <p className="text-red-100 text-sm sm:text-base mt-1">
+            Statement Stress Test • Find Weak Language
+          </p>
+        </div>
       </div>
-    </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <LLMRecommendationBadge toolId="red-team" />
+        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Red Team"
+          />
+        )}
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -739,7 +760,7 @@ const WeakSpotsList = ({ weakSpots }) => {
       <div className="space-y-3 max-h-80 overflow-y-auto">
         {weakSpots.map((spot, index) => (
           <div
-            key={index}
+            key={spot.issue || spot.quote}
             className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border-l-4 border-red-500"
           >
             <div className="flex items-start gap-3">
@@ -794,6 +815,7 @@ const ResultsCard = ({ results }) => {
   if (!results) return null;
   return (
     <div className="space-y-4">
+      <SmallModelCaveat />
       <ScoreCard score={results.score} />
       <CritiqueSummary critique={results.critique} />
       <WeakSpotsList weakSpots={results.weak_spots} />
@@ -886,30 +908,65 @@ const WeakLanguageTipsCard = () => (
   </div>
 );
 
+// ADR-009: does the CURRENT draftStatement text come from the Drop-In PDF
+// tab's OCR/PDF.js extraction (document) rather than the veteran
+// typing/dictating it (context)? Bundled with draftStatement itself purely
+// to keep RedTeam's main component under the line-count limit.
+function useDraftStatementInput() {
+  const [draftStatement, setDraftStatement] = useState("");
+  const [draftStatementIsDocument, setDraftStatementIsDocument] =
+    useState(false);
+  const pdf = usePdfDropIn(setDraftStatement, setDraftStatementIsDocument);
+
+  // A manual edit or dictation always means "typed", never "document".
+  const handleDraftStatementChange = (value) => {
+    setDraftStatement(value);
+    setDraftStatementIsDocument(false);
+  };
+
+  return {
+    draftStatement,
+    draftStatementIsDocument,
+    handleDraftStatementChange,
+    pdf,
+  };
+}
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
+// Split out of RedTeam purely to keep it under the line-count limit - same
+// markup, same behavior.
+const RedTeamFooter = ({ hasResults, onClose }) => (
+  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <BuyMeCoffee show={hasResults} trigger="red-team" />
+    <button
+      onClick={onClose}
+      className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+    >
+      Close
+    </button>
+  </div>
+);
+
+// AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
 const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
-  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
-  const [draftStatement, setDraftStatement] = useState("");
+  const {
+    draftStatement,
+    draftStatementIsDocument,
+    handleDraftStatementChange,
+    pdf,
+  } = useDraftStatementInput();
   const { results, isLoading, error, runStressTest } = useStressTest();
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'pdf'
-  const pdf = usePdfDropIn(setDraftStatement);
   useAIStatusPolling();
 
-  const handleStressTest = () => runStressTest(draftStatement);
+  const handleStressTest = () =>
+    runStressTest(draftStatement, draftStatementIsDocument);
 
   const footer = (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-      <BuyMeCoffee show={results !== null} trigger="red-team" />
-      <button
-        onClick={onClose}
-        className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-      >
-        Close
-      </button>
-    </div>
+    <RedTeamFooter hasResults={results !== null} onClose={onClose} />
   );
 
   return (
@@ -942,7 +999,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
             <PasteInputPanel
               inputMethod={inputMethod}
               draftStatement={draftStatement}
-              setDraftStatement={setDraftStatement}
+              setDraftStatement={handleDraftStatementChange}
             />
             <PdfInputPanel
               inputMethod={inputMethod}

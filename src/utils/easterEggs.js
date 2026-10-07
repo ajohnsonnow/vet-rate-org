@@ -12,7 +12,7 @@
  * @see https://doomwiki.org/wiki/IDDQD
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 /**
  * Classic cheat codes that trigger easter eggs
@@ -83,14 +83,17 @@ function _processIddqdKeydown(prev, key, setIsActive, setActivationCount) {
 export const useIDDQD = () => {
   const [isActive, setIsActive] = useState(false);
   const [activationCount, setActivationCount] = useState(0);
-  const [_inputBuffer, setInputBuffer] = useState("");
+  const inputBufferRef = useRef("");
 
   useEffect(() => {
     const handleKeydown = (e) => {
       // Only process single character keys
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        setInputBuffer((prev) =>
-          _processIddqdKeydown(prev, e.key, setIsActive, setActivationCount),
+        inputBufferRef.current = _processIddqdKeydown(
+          inputBufferRef.current,
+          e.key,
+          setIsActive,
+          setActivationCount,
         );
       }
     };
@@ -101,7 +104,7 @@ export const useIDDQD = () => {
 
   const deactivate = useCallback(() => {
     setIsActive(false);
-    setInputBuffer("");
+    inputBufferRef.current = "";
   }, []);
 
   return { isActive, deactivate, activationCount };
@@ -115,22 +118,20 @@ export const useIDDQD = () => {
  */
 export const useKonamiCode = () => {
   const [isTriggered, setIsTriggered] = useState(false);
-  const [_sequence, setSequence] = useState([]);
+  const sequenceRef = useRef([]);
 
   useEffect(() => {
     const handleKeydown = (e) => {
-      setSequence((prev) => {
-        const newSeq = [...prev, e.key].slice(-10);
+      const newSeq = [...sequenceRef.current, e.key].slice(-10);
 
-        if (JSON.stringify(newSeq) === JSON.stringify(CHEAT_CODES.KONAMI)) {
-          // eslint-disable-next-line no-console
-          console.log("🎮 KONAMI CODE ACTIVATED");
-          setIsTriggered(true);
-          return [];
-        }
-
-        return newSeq;
-      });
+      if (JSON.stringify(newSeq) === JSON.stringify(CHEAT_CODES.KONAMI)) {
+        // eslint-disable-next-line no-console
+        console.log("🎮 KONAMI CODE ACTIVATED");
+        setIsTriggered(true);
+        sequenceRef.current = [];
+      } else {
+        sequenceRef.current = newSeq;
+      }
     };
 
     window.addEventListener("keydown", handleKeydown);
@@ -139,11 +140,73 @@ export const useKonamiCode = () => {
 
   const reset = useCallback(() => {
     setIsTriggered(false);
-    setSequence([]);
+    sequenceRef.current = [];
   }, []);
 
   return { isTriggered, reset };
 };
+
+const GAMEPAD_BUTTON_MAP = {
+  0: " ", // A/X → Space (Use/Shoot)
+  1: "Escape", // B/O → Escape (Menu)
+  2: "Tab", // X/□ → Tab (Map)
+  3: "Enter", // Y/△ → Enter
+  4: "q", // LB → Previous weapon
+  5: "e", // RB → Next weapon
+  6: "Shift", // LT → Run
+  7: "Control", // RT → Fire (alternate)
+  12: "ArrowUp", // D-pad Up
+  13: "ArrowDown", // D-pad Down
+  14: "ArrowLeft", // D-pad Left
+  15: "ArrowRight", // D-pad Right
+};
+
+function _dispatchGamepadKey(key, type) {
+  window.dispatchEvent(
+    new KeyboardEvent(type, {
+      key,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+}
+
+function _handleGamepadButtons(gp, lastButtonState) {
+  gp.buttons.forEach((button, index) => {
+    const key = GAMEPAD_BUTTON_MAP[index];
+    if (!key) return;
+
+    const wasPressed = lastButtonState[index];
+    const isPressed = button.pressed;
+
+    if (isPressed && !wasPressed) {
+      _dispatchGamepadKey(key, "keydown");
+    } else if (!isPressed && wasPressed) {
+      _dispatchGamepadKey(key, "keyup");
+    }
+
+    lastButtonState[index] = isPressed;
+  });
+}
+
+function _handleGamepadStick(gp) {
+  // Handle left stick for movement (with deadzone)
+  const DEADZONE = 0.3;
+  const leftX = gp.axes[0];
+  const leftY = gp.axes[1];
+
+  if (leftY < -DEADZONE) _dispatchGamepadKey("ArrowUp", "keydown");
+  else _dispatchGamepadKey("ArrowUp", "keyup");
+
+  if (leftY > DEADZONE) _dispatchGamepadKey("ArrowDown", "keydown");
+  else _dispatchGamepadKey("ArrowDown", "keyup");
+
+  if (leftX < -DEADZONE) _dispatchGamepadKey("ArrowLeft", "keydown");
+  else _dispatchGamepadKey("ArrowLeft", "keyup");
+
+  if (leftX > DEADZONE) _dispatchGamepadKey("ArrowRight", "keydown");
+  else _dispatchGamepadKey("ArrowRight", "keyup");
+}
 
 /**
  * Hook for Xbox/PlayStation controller support via Gamepad API
@@ -162,31 +225,6 @@ export const useGamepadBridge = (isActive) => {
     let animationId;
     const lastButtonState = {};
 
-    const BUTTON_MAP = {
-      0: " ", // A/X → Space (Use/Shoot)
-      1: "Escape", // B/O → Escape (Menu)
-      2: "Tab", // X/□ → Tab (Map)
-      3: "Enter", // Y/△ → Enter
-      4: "q", // LB → Previous weapon
-      5: "e", // RB → Next weapon
-      6: "Shift", // LT → Run
-      7: "Control", // RT → Fire (alternate)
-      12: "ArrowUp", // D-pad Up
-      13: "ArrowDown", // D-pad Down
-      14: "ArrowLeft", // D-pad Left
-      15: "ArrowRight", // D-pad Right
-    };
-
-    const dispatchKey = (key, type) => {
-      window.dispatchEvent(
-        new KeyboardEvent(type, {
-          key,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    };
-
     const pollGamepad = () => {
       const gamepads = navigator.getGamepads();
       const gp = gamepads[0] || gamepads[1] || gamepads[2] || gamepads[3];
@@ -199,39 +237,8 @@ export const useGamepadBridge = (isActive) => {
           console.log("🎮 Controller connected:", gp.id);
         }
 
-        // Handle buttons
-        gp.buttons.forEach((button, index) => {
-          const key = BUTTON_MAP[index];
-          if (!key) return;
-
-          const wasPressed = lastButtonState[index];
-          const isPressed = button.pressed;
-
-          if (isPressed && !wasPressed) {
-            dispatchKey(key, "keydown");
-          } else if (!isPressed && wasPressed) {
-            dispatchKey(key, "keyup");
-          }
-
-          lastButtonState[index] = isPressed;
-        });
-
-        // Handle left stick for movement (with deadzone)
-        const DEADZONE = 0.3;
-        const leftX = gp.axes[0];
-        const leftY = gp.axes[1];
-
-        if (leftY < -DEADZONE) dispatchKey("ArrowUp", "keydown");
-        else dispatchKey("ArrowUp", "keyup");
-
-        if (leftY > DEADZONE) dispatchKey("ArrowDown", "keydown");
-        else dispatchKey("ArrowDown", "keyup");
-
-        if (leftX < -DEADZONE) dispatchKey("ArrowLeft", "keydown");
-        else dispatchKey("ArrowLeft", "keyup");
-
-        if (leftX > DEADZONE) dispatchKey("ArrowRight", "keydown");
-        else dispatchKey("ArrowRight", "keyup");
+        _handleGamepadButtons(gp, lastButtonState);
+        _handleGamepadStick(gp);
       } else if (isConnected) {
         setIsConnected(false);
         setControllerName("");

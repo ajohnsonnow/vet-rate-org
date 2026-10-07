@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { isAIAvailable } from "../utils/aiStatementHelper";
 import { generateAI } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 
@@ -213,36 +214,12 @@ const WatchdogHeader = ({
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-3xl">📡</span>
-        </div>
-        <div>
-          <h2 id="watchdog-title" className="text-2xl sm:text-3xl font-bold">
-            Legislative Watchdog{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h2>
-          <p className="text-orange-100 text-sm sm:text-base mt-1">
-            VA Rule Change Radar • Never Be Blindsided
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Legislative Watchdog"
-          />
-        )}
-        <LLMRecommendationBadge toolId="legislative-watchdog" />
-        <AIStatusBadge />
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -259,8 +236,36 @@ const WatchdogHeader = ({
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-3xl">📡</span>
+        </div>
+        <div className="min-w-0">
+          <h2 id="watchdog-title" className="text-2xl sm:text-3xl font-bold">
+            Legislative Watchdog{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-orange-100 text-sm sm:text-base mt-1">
+            VA Rule Change Radar • Never Be Blindsided
+          </p>
+        </div>
       </div>
-    </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Legislative Watchdog"
+          />
+        )}
+        <LLMRecommendationBadge toolId="legislative-watchdog" />
+        <AIStatusBadge />
+      </div>
+    </HeaderCloseSlot>
 
     {/* Alert Badges */}
     <div className="relative mt-4 flex flex-wrap gap-2">
@@ -365,9 +370,9 @@ const UpdateCardAffectedConditions = ({ affectedConditions }) => (
       🎯 Conditions Affected:
     </p>
     <div className="flex flex-wrap gap-1">
-      {affectedConditions.map((condition, idx) => (
+      {affectedConditions.map((condition) => (
         <span
-          key={idx}
+          key={condition}
           className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs rounded-full"
         >
           {condition}
@@ -607,7 +612,7 @@ const WhyTrackRuleChanges = () => (
           When the VA <strong>proposes changes to rating criteria</strong> (like
           Tinnitus or Sleep Apnea), veterans who file{" "}
           <strong>BEFORE the change</strong> often keep their current rating.
-          Don&apos;t get caught off guard-
+          Don&apos;t get caught off guard-{" "}
           <strong>file early if you see changes coming</strong>.
         </p>
       </div>
@@ -776,7 +781,11 @@ async function runLegislativeAIAnalysis(
   try {
     const prompt = buildLegislativeAnalysisPrompt(doc);
 
-    const response = await generateAI(prompt);
+    // ADR-009: "context" - doc is a public Federal Register record this app
+    // fetched itself, not a veteran-uploaded document.
+    const response = await generateAI(prompt, {
+      dataClass: AI_DATA_CLASS.CONTEXT,
+    });
 
     if (response) {
       setAIAnalysis((prev) => ({
@@ -823,15 +832,12 @@ function computeAlertCounts(allUpdates) {
 }
 
 function useLegislativeWatchdogState() {
-  const { _t } = useLanguage();
-
   const [loading, setLoading] = useState(true);
   const [federalRegisterDocs, setFederalRegisterDocs] = useState([]);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all"); // 'all', 'proposed', 'active', 'urgent'
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [_showAISettings, _setShowAISettings] = useState(false);
   const [analyzingDoc, setAnalyzingDoc] = useState(null);
   const [aiAnalysis, setAIAnalysis] = useState({});
 

@@ -20,7 +20,7 @@ LLMs can generate persuasive, confident-sounding text that is factually wrong. F
 Add `ANTI_HALLUCINATION_SUFFIX` to every AI prompt:
 
 ```javascript
-import { ANTI_HALLUCINATION_SUFFIX } from '../utils/aiSystemPrompts';
+import { ANTI_HALLUCINATION_SUFFIX } from "../utils/aiSystemPrompts";
 
 const prompt = `
 ${userQuestion}
@@ -39,27 +39,28 @@ This tells the AI what it IS and ISN'T before it generates anything.
 Validate every AI response before showing it to the user:
 
 ```javascript
-import { validateAIResponse } from '../utils/aiSystemPrompts';
+import { validateAIResponse } from "../utils/aiSystemPrompts";
 
 const aiResponse = await callLLM(prompt);
 
 const validation = validateAIResponse(aiResponse, {
-  loadedRegulations: ['3.303', '3.310', '4.71a'], // CFR sections you loaded
+  loadedRegulations: ["3.303", "3.310", "4.71a"], // CFR sections you loaded
   hasStatistics: false, // Did you load actual VA statistics?
 });
 
 if (!validation.isValid) {
   // BLOCKING ERRORS - Regenerate the response
-  console.error('AI response blocked:', validation.errors);
+  console.error("AI response blocked:", validation.errors);
   return {
-    error: 'The AI generated an unsafe response. Please rephrase your question.',
+    error:
+      "The AI generated an unsafe response. Please rephrase your question.",
     details: validation.errors,
   };
 }
 
 if (validation.warnings.length > 0) {
   // NON-BLOCKING WARNINGS - Show response but flag issues
-  console.warn('AI response warnings:', validation.warnings);
+  console.warn("AI response warnings:", validation.warnings);
   showWarningToUser(validation.warnings);
 }
 ```
@@ -69,23 +70,23 @@ if (validation.warnings.length > 0) {
 Show disclaimers wherever AI content appears:
 
 ```jsx
-import AIDisclaimerBanner from '../components/AIDisclaimerBanner';
+import AIDisclaimerBanner from "../components/AIDisclaimerBanner";
 
 function MyAITool() {
   return (
     <div>
       {/* Medical content */}
       <AIDisclaimerBanner context="medical" />
-      
+
       {/* Legal content */}
       <AIDisclaimerBanner context="legal" />
-      
+
       {/* Predictions/ratings */}
       <AIDisclaimerBanner context="prediction" />
-      
+
       {/* General AI content */}
       <AIDisclaimerBanner context="general" />
-      
+
       <div>{aiGeneratedContent}</div>
     </div>
   );
@@ -102,7 +103,7 @@ These violations **prevent** the response from being shown:
    - ❌ "As a doctor, I can say..."
    - ❌ "I diagnose you with PTSD"
    - ❌ "As a lawyer, you should..."
-   
+
 2. **Outcome Guarantees**
    - ❌ "Your claim will definitely be approved"
    - ❌ "You are guaranteed 70%"
@@ -138,15 +139,17 @@ These issues are **flagged** but don't block the response:
 ## Examples: Good vs. Bad Responses
 
 ### ❌ BAD: Confident Hallucination
+
 ```
 User: "Will I get approved for PTSD?"
 
-AI: "Based on your service history, you have an 85% chance of approval. 
-As a medical professional, I can see you clearly have combat-related PTSD. 
+AI: "Based on your service history, you have an 85% chance of approval.
+As a medical professional, I can see you clearly have combat-related PTSD.
 The VA must approve your claim under 38 CFR § 3.304."
 ```
 
 **Problems:**
+
 - Probability claim (85%)
 - Medical roleplay ("as a medical professional")
 - Guarantee ("must approve")
@@ -154,10 +157,11 @@ The VA must approve your claim under 38 CFR § 3.304."
 **Result:** ❌ BLOCKED
 
 ### ✅ GOOD: Grounded, Honest Response
+
 ```
 User: "Will I get approved for PTSD?"
 
-AI: "I cannot predict whether your claim will be approved. Only VA raters 
+AI: "I cannot predict whether your claim will be approved. Only VA raters
 review evidence and make decisions. However, I can explain the requirements:
 
 According to 38 CFR § 3.304(f), PTSD service connection requires:
@@ -165,12 +169,13 @@ According to 38 CFR § 3.304(f), PTSD service connection requires:
 2. In-service stressor event (combat, fear of hostile military activity, or verified trauma)
 3. Medical nexus linking the stressor to current symptoms
 
-⚠️ **Important**: I am not a doctor and cannot diagnose PTSD or predict outcomes. 
-This is educational information only. Consult a mental health professional for 
+⚠️ **Important**: I am not a doctor and cannot diagnose PTSD or predict outcomes.
+This is educational information only. Consult a mental health professional for
 diagnosis and a VA-accredited representative for claim-specific guidance."
 ```
 
 **Why it's good:**
+
 - ✅ Says "I cannot predict"
 - ✅ Cites specific regulation (38 CFR § 3.304(f))
 - ✅ Includes disclaimer
@@ -181,12 +186,12 @@ diagnosis and a VA-accredited representative for claim-specific guidance."
 ## Code Example: Full Implementation
 
 ```javascript
-import { 
-  validateAIResponse, 
+import {
+  validateAIResponse,
   ANTI_HALLUCINATION_SUFFIX,
   REQUIRED_DISCLAIMERS,
-} from '../utils/aiSystemPrompts';
-import AIDisclaimerBanner from '../components/AIDisclaimerBanner';
+} from "../utils/aiSystemPrompts";
+import AIDisclaimerBanner from "../components/AIDisclaimerBanner";
 
 async function askAI(userQuestion, veteranData, loadedRegulations) {
   // 1. Build prompt with guardrails
@@ -195,7 +200,7 @@ VETERAN'S QUESTION:
 ${userQuestion}
 
 LOADED 38 CFR REGULATIONS:
-${loadedRegulations.map(reg => `- 38 CFR § ${reg.section}: ${reg.title}`).join('\n')}
+${loadedRegulations.map((reg) => `- 38 CFR § ${reg.section}: ${reg.title}`).join("\n")}
 
 VETERAN'S DATA:
 ${JSON.stringify(veteranData, null, 2)}
@@ -205,23 +210,24 @@ ${ANTI_HALLUCINATION_SUFFIX}
 
   // 2. Call LLM
   const aiResponse = await callLLM(prompt);
-  
+
   // 3. Validate response
   const validation = validateAIResponse(aiResponse, {
-    loadedRegulations: loadedRegulations.map(r => r.section),
+    loadedRegulations: loadedRegulations.map((r) => r.section),
     hasStatistics: false,
   });
-  
+
   // 4. Handle blocking errors
   if (!validation.isValid) {
-    console.error('AI safety violation:', validation.errors);
+    console.error("AI safety violation:", validation.errors);
     return {
       error: true,
-      message: 'The AI attempted to provide unsafe guidance. Please rephrase your question or consult a VA-accredited representative.',
+      message:
+        "The AI attempted to provide unsafe guidance. Please rephrase your question or consult a VA-accredited representative.",
       technicalDetails: validation.errors, // For debugging
     };
   }
-  
+
   // 5. Add required disclaimers
   let finalResponse = aiResponse;
   if (/medical|diagnos|symptom|C&P exam/i.test(aiResponse)) {
@@ -233,7 +239,7 @@ ${ANTI_HALLUCINATION_SUFFIX}
   if (/approval|rating|percentage|will (receive|get)/i.test(aiResponse)) {
     finalResponse += REQUIRED_DISCLAIMERS.RATING_PREDICTIONS;
   }
-  
+
   // 6. Return with warnings
   return {
     response: finalResponse,
@@ -245,34 +251,37 @@ ${ANTI_HALLUCINATION_SUFFIX}
 // In your React component:
 function AIChat({ onAskQuestion }) {
   const [response, setResponse] = useState(null);
-  
+
   const handleSubmit = async (question) => {
     const result = await askAI(question, veteranData, regulations);
-    
+
     if (result.error) {
       alert(result.message);
       return;
     }
-    
+
     setResponse(result);
   };
-  
+
   return (
     <div>
       <QuestionInput onSubmit={handleSubmit} />
-      
+
       {response && (
         <>
           {/* Show disclaimer based on content */}
-          <AIDisclaimerBanner 
+          <AIDisclaimerBanner
             context={
-              /medical/i.test(response.response) ? 'medical' :
-              /legal/i.test(response.response) ? 'legal' :
-              /rating|approval/i.test(response.response) ? 'prediction' :
-              'general'
-            } 
+              /medical/i.test(response.response)
+                ? "medical"
+                : /legal/i.test(response.response)
+                  ? "legal"
+                  : /rating|approval/i.test(response.response)
+                    ? "prediction"
+                    : "general"
+            }
           />
-          
+
           {/* Show warnings if present */}
           {response.warnings.length > 0 && (
             <div className="bg-orange-100 border border-orange-400 p-3 mb-3 rounded">
@@ -284,11 +293,9 @@ function AIChat({ onAskQuestion }) {
               </ul>
             </div>
           )}
-          
+
           {/* Actual response */}
-          <div className="ai-response">
-            {response.response}
-          </div>
+          <div className="ai-response">{response.response}</div>
         </>
       )}
     </div>
@@ -298,12 +305,12 @@ function AIChat({ onAskQuestion }) {
 
 ## When to Use Which Disclaimer
 
-| Content Type | Disclaimer Context | Why |
-|-------------|-------------------|-----|
-| Discusses symptoms, diagnoses, medical records | `context="medical"` | AI cannot diagnose or interpret medical evidence |
-| Discusses appeals, litigation, representation | `context="legal"` | AI cannot provide legal advice |
-| Discusses claim approval, rating percentages | `context="prediction"` | AI cannot predict VA decisions |
-| General claim guidance | `context="general"` | Default disclaimer |
+| Content Type                                   | Disclaimer Context     | Why                                              |
+| ---------------------------------------------- | ---------------------- | ------------------------------------------------ |
+| Discusses symptoms, diagnoses, medical records | `context="medical"`    | AI cannot diagnose or interpret medical evidence |
+| Discusses appeals, litigation, representation  | `context="legal"`      | AI cannot provide legal advice                   |
+| Discusses claim approval, rating percentages   | `context="prediction"` | AI cannot predict VA decisions                   |
+| General claim guidance                         | `context="general"`    | Default disclaimer                               |
 
 ## Checklist for Adding AI Features
 
@@ -349,8 +356,8 @@ const badResponses = [
   "According to 38 CFR § 9999.99...", // Fake regulation
 ];
 
-badResponses.forEach(response => {
-  const result = validateAIResponse(response, { loadedRegulations: ['3.303'] });
+badResponses.forEach((response) => {
+  const result = validateAIResponse(response, { loadedRegulations: ["3.303"] });
   console.assert(!result.isValid, `Should block: "${response}"`);
 });
 
@@ -360,8 +367,8 @@ const warningResponses = [
   "PTSD symptoms include nightmares and anxiety.", // Medical topic, no disclaimer
 ];
 
-warningResponses.forEach(response => {
-  const result = validateAIResponse(response, { loadedRegulations: ['3.303'] });
+warningResponses.forEach((response) => {
+  const result = validateAIResponse(response, { loadedRegulations: ["3.303"] });
   console.assert(result.isValid, `Should pass: "${response}"`);
   console.assert(result.warnings.length > 0, `Should warn: "${response}"`);
 });

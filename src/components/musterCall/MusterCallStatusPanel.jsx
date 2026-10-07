@@ -123,8 +123,29 @@ function MusterCallBatchProgress({ processingState, batch, onStop }) {
   );
 }
 
+// ADR-009: shown when generateMusterCallReport fell back to the built-in
+// parser summary because only an off-device AI was configured - mirrors
+// BlueButtonXRay/DD214Analyzer's OffDeviceNotice styling/pattern.
+function MusterCallOffDeviceNotice({ notice }) {
+  if (!notice) return null;
+
+  return (
+    <div
+      className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 rounded-r-lg"
+      role="status"
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-2xl" aria-hidden="true">
+          🔒
+        </span>
+        <p className="text-amber-700 dark:text-amber-300 text-sm">{notice}</p>
+      </div>
+    </div>
+  );
+}
+
 function MusterCallResults({ batch }) {
-  const { results, report, showReport, setShowReport } = batch;
+  const { results, report, offDeviceNotice, showReport, setShowReport } = batch;
   return (
     <div className="space-y-6">
       {/* Success Banner */}
@@ -168,6 +189,8 @@ function MusterCallResults({ batch }) {
         </div>
       </div>
 
+      <MusterCallOffDeviceNotice notice={offDeviceNotice} />
+
       {/* LLM Report */}
       {report && (
         <div
@@ -177,8 +200,7 @@ function MusterCallResults({ batch }) {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span className="text-2xl">🤖</span>
-              AI Analysis & Recommendations
+              <span className="text-2xl">🤖</span> AI Analysis & Recommendations
             </h3>
             <div className="flex items-center gap-3">
               <ReportBugLink context="muster-call-report" />

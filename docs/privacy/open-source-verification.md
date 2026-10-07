@@ -9,6 +9,7 @@
 Anyone can claim their software is secure. Open source lets you **prove** it.
 
 This guide shows how to verify:
+
 - ✅ Code matches what's running on the live site
 - ✅ No hidden data collection
 - ✅ No tracking or analytics
@@ -29,12 +30,14 @@ This guide shows how to verify:
 ## Quick Start (5 minutes)
 
 ### What You Need
+
 - Web browser (Chrome, Firefox, Edge, Safari)
 - No programming knowledge required
 
 ### Steps
 
 1. **Visit the GitHub Repository**
+
    ```
    https://github.com/ajohnsonnow/vet-rate-org
    ```
@@ -68,10 +71,12 @@ This guide shows how to verify:
 #### 1. Compare Live Site to Code
 
 **Open Two Browser Tabs:**
+
 - Tab 1: `https://vet-rate.org`
 - Tab 2: `https://github.com/ajohnsonnow/vet-rate-org`
 
 **Check:**
+
 - Do features match the README description?
 - Does the UI match screenshots in the repo?
 - Are there features on the live site not in the code? (red flag)
@@ -79,6 +84,7 @@ This guide shows how to verify:
 #### 2. Check Dependencies (What Libraries Are Used)
 
 **Go to `package.json` on GitHub:**
+
 ```
 https://github.com/ajohnsonnow/vet-rate-org/blob/main/package.json
 ```
@@ -86,12 +92,14 @@ https://github.com/ajohnsonnow/vet-rate-org/blob/main/package.json
 **Look for suspicious packages:**
 
 **✅ Good (Normal for web apps):**
+
 - `react` - Frontend framework
 - `vite` - Build tool
 - `lucide-react` - Icon library
 - `jspdf` - PDF generation (client-side)
 
 **🚨 Bad (Data collection):**
+
 - `google-analytics` - Tracking
 - `facebook-pixel` - Tracking
 - `mixpanel` - Analytics
@@ -99,6 +107,7 @@ https://github.com/ajohnsonnow/vet-rate-org/blob/main/package.json
 - Any package with "analytics", "tracking", or "telemetry" in the name
 
 **If you see suspicious packages:**
+
 1. Search GitHub for how they're used
 2. Check if data collection is opt-in
 3. Report via Bug Squasher if privacy claims don't match
@@ -108,6 +117,7 @@ https://github.com/ajohnsonnow/vet-rate-org/blob/main/package.json
 **Use GitHub's Search Feature:**
 
 Go to the repo and search for:
+
 - `analytics.google.com`
 - `facebook.com/pixel`
 - `mixpanel.com`
@@ -120,11 +130,13 @@ Go to the repo and search for:
 #### 4. Check for Hidden Configuration
 
 **Look for these files:**
+
 - `.env` - Environment variables
 - `.env.example` - Example env file (should be public)
 - `src/config.js` - App configuration
 
 **Check for:**
+
 - API keys (should be user-provided, not hardcoded)
 - Analytics IDs (shouldn't exist)
 - Server URLs (should only be Google Gemini or eCFR)
@@ -138,12 +150,14 @@ Go to the repo and search for:
 #### 1. Clone the Repository (Optional)
 
 **If you know Git:**
+
 ```bash
 git clone https://github.com/ajohnsonnow/vet-rate-org.git
 cd vet-rate-org
 ```
 
 **Benefits:**
+
 - Search code locally (faster)
 - Run your own version
 - Compare files to live site
@@ -151,6 +165,7 @@ cd vet-rate-org
 #### 2. Search for Network Requests
 
 **Look for API calls in the code:**
+
 ```bash
 # In the repo directory:
 grep -r "fetch(" src/
@@ -159,11 +174,13 @@ grep -r "XMLHttpRequest" src/
 ```
 
 **Expected:**
+
 - `fetch()` to Google Gemini (AI feature)
 - External links to eCFR.gov (regulations)
 - No internal API calls (`/api/...`)
 
 **Red flags:**
+
 - `fetch()` to unknown domains
 - POST requests with form data
 - Hidden API endpoints
@@ -173,16 +190,18 @@ grep -r "XMLHttpRequest" src/
 **File: `vite.config.js`**
 
 **Should see:**
+
 ```javascript
 // Simple static build config
 export default {
   // No API proxy
   // No backend server
   // Just build settings
-}
+};
 ```
 
 **Red flags:**
+
 ```javascript
 // Server proxy (means backend exists)
 server: {
@@ -199,6 +218,7 @@ server: {
 **Why:** Shows ALL dependencies, including transitive ones
 
 **What to check:**
+
 - Do dependencies of dependencies include tracking?
 - Are there security vulnerabilities? (GitHub should flag these)
 
@@ -218,6 +238,7 @@ Look for high/critical vulnerabilities in dependencies.
 **Why:** Ensures build doesn't inject tracking
 
 **How:**
+
 1. Build locally: `npm run build`
 2. Inspect `dist/` folder
 3. Look for unexpected files or scripts
@@ -236,18 +257,21 @@ Look for high/critical vulnerabilities in dependencies.
 **Example: User enters name in form**
 
 1. Where is it stored?
+
    ```javascript
    // Should be: localStorage
-   localStorage.setItem('vetrate_profile', JSON.stringify(data));
+   localStorage.setItem("vetrate_profile", JSON.stringify(data));
    ```
 
 2. Is it sent anywhere?
+
    ```javascript
    // Should NOT see:
-   fetch('/api/save-profile', { body: data });
+   fetch("/api/save-profile", { body: data });
    ```
 
 3. Is it encrypted?
+
    ```javascript
    // For localStorage, not necessary (stays local)
    // For network: should use HTTPS (check site URL)
@@ -258,6 +282,7 @@ Look for high/critical vulnerabilities in dependencies.
 **Expected:** No authentication system
 
 **If auth exists:**
+
 - How are passwords stored? (should be hashed)
 - Are tokens secure? (httpOnly cookies, not localStorage)
 - Is there session management?
@@ -298,6 +323,7 @@ npx snyk test
 ```
 
 **Check for malicious packages:**
+
 - Research any unknown dependencies
 - Check npm/GitHub for security issues
 - Look at download stats (very low = suspicious)
@@ -307,18 +333,20 @@ npx snyk test
 **How are API keys stored?**
 
 **Expected:**
+
 ```javascript
 // User-provided, stored in localStorage
-const apiKey = localStorage.getItem('vetrate_gemini_key');
+const apiKey = localStorage.getItem("vetrate_gemini_key");
 ```
 
 **Red flags:**
+
 ```javascript
 // Hardcoded in code
-const apiKey = 'AIza...';
+const apiKey = "AIza...";
 
 // Sent to server for "validation"
-fetch('/api/validate-key', { body: { key: apiKey } });
+fetch("/api/validate-key", { body: { key: apiKey } });
 ```
 
 #### 6. Content Security Policy Review
@@ -326,11 +354,13 @@ fetch('/api/validate-key', { body: { key: apiKey } });
 **Check if CSP is implemented:**
 
 **Live Site:**
+
 1. Open DevTools → Network tab
 2. Click main document request
 3. Check Response Headers for `Content-Security-Policy`
 
 **Expected CSP:**
+
 ```
 default-src 'self';
 script-src 'self' 'unsafe-inline';
@@ -339,6 +369,7 @@ connect-src 'self' https://generativelanguage.googleapis.com https://ecfr.gov;
 ```
 
 **Red flags in CSP:**
+
 ```
 connect-src *;  // Allows any connection
 script-src 'unsafe-eval';  // Allows eval()
@@ -389,6 +420,7 @@ diff -r dist-1 dist-2
 ### Critical (Report Immediately)
 
 🚨 **Code Red:**
+
 - Active tracking/analytics code
 - Data POSTed to unknown servers
 - Hardcoded API keys
@@ -399,6 +431,7 @@ diff -r dist-1 dist-2
 ### High Priority (Investigate)
 
 ⚠️ **Yellow Alert:**
+
 - Vague commit messages
 - Large binary files added
 - Deleted git history
@@ -409,6 +442,7 @@ diff -r dist-1 dist-2
 ### Medium (Monitor)
 
 ℹ️ **Worth Noting:**
+
 - Old dependencies with known vulnerabilities
 - Poor code quality
 - Missing documentation
@@ -421,12 +455,14 @@ diff -r dist-1 dist-2
 ### Found Something Suspicious?
 
 #### 1. Document It
+
 - Which file? (path + line number)
 - What did you find?
 - Why is it concerning?
 - Screenshots or code snippets
 
 #### 2. Verify It's Not a False Positive
+
 - Check if it's commented-out code
 - Look for explanation in comments
 - Search issues/discussions for context
@@ -434,21 +470,25 @@ diff -r dist-1 dist-2
 #### 3. Report It
 
 **Public (Preferred for Security Issues):**
+
 - GitHub Issues: [github.com/ajohnsonnow/vet-rate-org/issues](https://github.com/ajohnsonnow/vet-rate-org/issues)
 - Tag: `security` or `privacy`
 
 **Anonymous:**
+
 - Use Bug Squasher tool on vet-rate.org
 - Email: (See repo README for contact)
 
 #### 4. Responsible Disclosure
 
 For **critical** vulnerabilities (data breach risk):
+
 1. Report privately first (GitHub Security Advisories)
 2. Give 90 days for fix
 3. Public disclosure after patch
 
 For **privacy violations** (tracking discovered):
+
 1. Report publicly immediately
 2. Veterans deserve to know
 
@@ -459,16 +499,19 @@ For **privacy violations** (tracking discovered):
 ### How to Stay Informed
 
 #### Watch the Repository
+
 1. Star the repo on GitHub
 2. Click "Watch" → "All Activity"
 3. Get notified of all changes
 
 #### Review Pull Requests
+
 - See what changes are proposed
 - Comment on suspicious additions
 - Help review for security
 
 #### Join Discussions
+
 - GitHub Discussions tab
 - Ask questions about architecture
 - Share audit findings
@@ -480,6 +523,7 @@ For **privacy violations** (tracking discovered):
 ### Why Self-Host?
 
 **Reasons:**
+
 - 100% control
 - No trust required
 - Custom modifications
@@ -511,6 +555,7 @@ npm run build
 ### Verify Your Build
 
 **Compare to official site:**
+
 ```bash
 # Get checksums
 sha256sum dist/index.html
@@ -527,17 +572,20 @@ sha256sum dist/assets/*
 ### Stay Vigilant
 
 **Monthly checks:**
+
 - Review recent commits
 - Check for new dependencies
 - Re-run `npm audit`
 - Compare live site behavior
 
 **Automated tools:**
+
 - GitHub Dependabot (auto-enabled)
 - CodeQL security scanning
 - Community security reviews
 
 **Red flag events:**
+
 - Sudden code obfuscation
 - Unexplained dependency additions
 - Changes to data handling
@@ -550,14 +598,17 @@ sha256sum dist/assets/*
 ### Learn More
 
 **Git & GitHub:**
+
 - [GitHub Docs](https://docs.github.com/)
 - [Git Basics](https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control)
 
 **Web Security:**
+
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [MDN Security](https://developer.mozilla.org/en-US/docs/Web/Security)
 
 **Open Source Auditing:**
+
 - [Linux Foundation Best Practices](https://bestpractices.coreinfrastructure.org/)
 - [Supply Chain Security](https://slsa.dev/)
 
@@ -566,10 +617,12 @@ sha256sum dist/assets/*
 ## Credits
 
 **Security Researchers:**
+
 - Report credited security findings (with permission)
 - Hall of Fame for responsible disclosures
 
 **Community Auditors:**
+
 - Anyone who reviews the code
 - Contributors who improve security
 

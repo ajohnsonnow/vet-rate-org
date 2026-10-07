@@ -7,12 +7,131 @@
  * Data from 2025 VA analysis and BVA decision patterns.
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   APPEALS_LANE_DATA,
   EFFECTIVE_DATE_RULES,
 } from "../data/bvaSuccessData";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { getMyRatings } from "../utils/veteranProfile";
+import { getSavedClaims } from "../utils/claimsStorage";
+import { normalizeConditionName } from "../utils/conditionName";
+import { loadVKB } from "../utils/veteranKnowledgeBase";
+
+const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+
+// Every condition name the veteran already has on file (My Ratings + saved
+// claims), deduped the same way NexusBuilder/Pathfinder do - used only as
+// grounding context in the fallback banner below, never to answer a
+// case-fact question on its own (we have no denial/outcome data for these).
+function getTrackedConditionNames() {
+  const seen = new Set();
+  const names = [];
+  getMyRatings().forEach((r) => {
+    const key = normalizeConditionName(r.name);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(r.name);
+  });
+  getSavedClaims().forEach((c) => {
+    const key = normalizeConditionName(c.conditionName);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(c.conditionName);
+  });
+  return names;
+}
+
+// Most recent dated denial in the VKB's parsed decision history, or null.
+// Each denied claim entry carries exactly one condition name (see
+// _recordDenials, veteranKnowledgeBase.js) - undated entries are skipped
+// since there's nothing to compute "time since denial" from.
+function findLatestDenial(vkb) {
+  const claims = Array.isArray(vkb?.vaClaimsHistory?.claims)
+    ? vkb.vaClaimsHistory.claims
+    : [];
+  // Letters store dates as prose ("September 15, 2023"), so compare parsed
+  // times, not strings.
+  const dated = claims.filter(
+    (c) => c.status === "denied" && Number.isFinite(Date.parse(c.decisionDate)),
+  );
+  if (dated.length === 0) return null;
+  return dated.reduce((latest, c) =>
+    Date.parse(c.decisionDate) > Date.parse(latest.decisionDate) ? c : latest,
+  );
+}
+
+// Date.parse reads "2023-09-15" as UTC midnight, which is the previous day
+// anywhere west of UTC, so a date-only value is formatted in UTC.
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+const formatDenialDate = (value) =>
+  new Date(Date.parse(value)).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: ISO_DAY.test(value) ? "UTC" : undefined,
+  });
+
+function computeTimeSinceDenial(decisionDate) {
+  const deniedAt = new Date(decisionDate).getTime();
+  if (Number.isNaN(deniedAt)) return null;
+  return Date.now() - deniedAt < ONE_YEAR_MS ? "under1year" : "over1year";
+}
+
+// Seeds `answers.timeSinceDenial` from the veteran's actual latest denial on
+// file (if the VKB has one), so question 3 opens pre-answered instead of
+// asking them to redo the under/over-a-year math themselves. Runs once per
+// mount; never overwrites an already-set answer.
+function useAppealsLaneRecordsPrefill(setAnswers) {
+  const [latestDenial, setLatestDenial] = useState(null);
+  const [prefilled, setPrefilled] = useState(false);
+  const [trackedConditions] = useState(getTrackedConditionNames);
+  const ranRef = useRef(false);
+
+  useEffect(() => {
+    if (ranRef.current) return;
+    ranRef.current = true;
+    loadVKB().then((vkb) => {
+      const denial = findLatestDenial(vkb);
+      if (!denial) return;
+      const defaultAnswer = computeTimeSinceDenial(denial.decisionDate);
+      if (!defaultAnswer) return;
+      setLatestDenial(denial);
+      setPrefilled(true);
+      setAnswers((prev) =>
+        prev.timeSinceDenial === null
+          ? { ...prev, timeSinceDenial: defaultAnswer }
+          : prev,
+      );
+    });
+  }, [setAnswers]);
+
+  return { latestDenial, prefilled, trackedConditions };
+}
+
+function RecordsPrefillBanner({ latestDenial, prefilled, trackedConditions }) {
+  if (latestDenial && prefilled) {
+    return (
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">
+        📋 We filled this in from your records — your{" "}
+        {latestDenial.conditions?.join(", ") || "condition"} denial on{" "}
+        {formatDenialDate(latestDenial.decisionDate)} — change anything
+        that&apos;s wrong.
+      </div>
+    );
+  }
+
+  if (trackedConditions.length > 0) {
+    return (
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">
+        📋 We found {trackedConditions.join(", ")} in your saved records — pick
+        the answers below that match what happened.
+      </div>
+    );
+  }
+
+  return null;
+}
 
 // Visual styling per recommended lane. Any lane not listed (e.g.
 // "gatherEvidence") falls back to DEFAULT_LANE_STYLE.
@@ -132,12 +251,14 @@ function AppealsLaneHeader({ onClose }) {
           Choose the right path for your situation
         </p>
       </div>
-      {/* mr-20 keeps the close button clear of the fixed Quick Exit
-          panic button on phones (WCAG 2.5.8 target collision) */}
+      {/* N13: no mr-20 phone offset - Quick Exit repositions itself to
+          top-left below `sm` (QuickExitButton.jsx), and ResponsiveModal's
+          shared `!mt-20` gutter clears it vertically, so the close × stays
+          flush top-right at every width instead of shifting left. */}
       <button
         onClick={onClose}
         aria-label="Close"
-        className="mr-20 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl text-white hover:text-blue-200 sm:mr-0"
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl text-white hover:text-blue-200"
       >
         ×
       </button>
@@ -194,9 +315,10 @@ function NewEvidenceQuestion({ value, onAnswer }) {
         NEW means: nexus letter dated after denial, medical records dated after
         denial, buddy statements not previously submitted
       </p>
-      <div className="flex gap-3">
+      <div className="flex gap-3" role="group" aria-label="New evidence">
         <button
           onClick={() => onAnswer("yes")}
+          aria-pressed={value === "yes"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "yes"
               ? "bg-green-600 text-white"
@@ -207,6 +329,7 @@ function NewEvidenceQuestion({ value, onAnswer }) {
         </button>
         <button
           onClick={() => onAnswer("no")}
+          aria-pressed={value === "no"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "no"
               ? "bg-red-600 text-white"
@@ -226,7 +349,11 @@ function EvidenceTypeQuestion({ value, onSelect }) {
       <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
         2. What type of new evidence do you have?
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div
+        className="grid grid-cols-1 md:grid-cols-2 gap-2"
+        role="group"
+        aria-label="Type of new evidence"
+      >
         {[
           {
             id: "nexus",
@@ -244,6 +371,7 @@ function EvidenceTypeQuestion({ value, onSelect }) {
           <button
             key={opt.id}
             onClick={() => onSelect(opt.id)}
+            aria-pressed={value === opt.id}
             className={`p-3 rounded-lg text-left transition-colors ${
               value === opt.id
                 ? "bg-blue-600 text-white"
@@ -269,9 +397,10 @@ function RaterErrorQuestion({ value, onAnswer }) {
         Error means: ignored evidence IN your file, misread medical evidence,
         math error, failed duty to assist
       </p>
-      <div className="flex gap-3">
+      <div className="flex gap-3" role="group" aria-label="Rater error">
         <button
           onClick={() => onAnswer("yes")}
+          aria-pressed={value === "yes"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "yes"
               ? "bg-yellow-600 text-white"
@@ -282,6 +411,7 @@ function RaterErrorQuestion({ value, onAnswer }) {
         </button>
         <button
           onClick={() => onAnswer("no")}
+          aria-pressed={value === "no"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "no"
               ? "bg-red-600 text-white"
@@ -301,9 +431,10 @@ function TimeSinceDenialQuestion({ value, onAnswer }) {
       <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
         3. How long since your denial?
       </h3>
-      <div className="flex gap-3">
+      <div className="flex gap-3" role="group" aria-label="Time since denial">
         <button
           onClick={() => onAnswer("under1year")}
+          aria-pressed={value === "under1year"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "under1year"
               ? "bg-green-600 text-white"
@@ -314,6 +445,7 @@ function TimeSinceDenialQuestion({ value, onAnswer }) {
         </button>
         <button
           onClick={() => onAnswer("over1year")}
+          aria-pressed={value === "over1year"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "over1year"
               ? "bg-orange-600 text-white"
@@ -352,9 +484,9 @@ function RecommendationHeader({ recommendation, laneData, laneStyle }) {
 function RecommendationReasoning({ reasoning }) {
   return (
     <div className="space-y-2 mb-4">
-      {reasoning.map((reason, idx) => (
+      {reasoning.map((reason) => (
         <div
-          key={idx}
+          key={reason}
           className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
         >
           <span className="text-gray-400">→</span>
@@ -602,6 +734,7 @@ const AppealsLaneAdvisor = ({ onClose }) => {
   });
   const [showTimelines, setShowTimelines] = useState(false);
   const [showEffectiveDate, setShowEffectiveDate] = useState(false);
+  const recordsPrefill = useAppealsLaneRecordsPrefill(setAnswers);
 
   const recommendation = useMemo(
     () => computeRecommendation(answers),
@@ -623,6 +756,8 @@ const AppealsLaneAdvisor = ({ onClose }) => {
       <div className="space-y-6">
         {/* 2025 Stats Banner */}
         <StatsBanner />
+
+        <RecordsPrefillBanner {...recordsPrefill} />
 
         {/* Question Flow */}
         <QuestionFlow answers={answers} setAnswers={setAnswers} />

@@ -33,7 +33,7 @@ const CONFIG = {
 };
 
 // Storage keys to monitor for changes
-const MONITORED_STORAGE_KEYS = [
+const MONITORED_STORAGE_KEYS = new Set([
   "vet_rate_veteran_profile",
   "vet_rate_my_ratings",
   "vet_rate_saved_claims",
@@ -46,7 +46,7 @@ const MONITORED_STORAGE_KEYS = [
   "vet_rate_evidence_timeline",
   "vet_rate_gap_analyses",
   "vet_rate_nexus_letters",
-];
+]);
 
 // ============================================================================
 // INTERNAL STATE
@@ -56,6 +56,58 @@ let backupTimer = null;
 let backupInProgress = false;
 let backupListeners = [];
 let _lastBackupTime = null;
+// The real (unwrapped) localStorage.setItem, captured once by startAutoBackup
+// and restored by stopAutoBackup. Also doubles as the "already patched"
+// guard: without it, a second startAutoBackup() call (nothing currently
+// prevents that) would capture the *already-wrapped* setItem as "original"
+// and wrap it again, chaining calls to the previous wrapper on every write
+// instead of replacing it.
+let originalSetItem = null;
+
+// A real `localStorage` is an instance of the `Storage` interface - a
+// "legacy platform object" whose spec-defined named-property setter
+// intercepts `localStorage.setItem = fn` as an *instance* assignment (per
+// WebIDL, that's indistinguishable from `localStorage.setItem = fn` meaning
+// "write a storage entry named 'setItem'"). Verified directly (not assumed):
+// Firefox and WebKit both follow that and silently no-op the override -
+// `localStorage.getItem('setItem')` afterward holds the wrapper's own source
+// code, and every write still goes through the ORIGINAL, unpatched setItem.
+// Chromium happens not to enforce this for own-property overrides, which is
+// why the instance-assignment approach used to look correct there. Patching
+// the PROTOTYPE's setItem instead - an ordinary object, not a legacy
+// platform object, so `[[DefineOwnProperty]]` there is ordinary - is
+// unaffected by that trap and verified identical across Chromium, Firefox,
+// and WebKit.
+//
+// Deliberately not `localStorage instanceof Storage`: verified directly, this
+// project's own vitest+jsdom test environment gives `localStorage` and the
+// bare global `Storage` reference from two different realms, so `instanceof`
+// (and even `sessionStorage.constructor === Storage`) reads false for a
+// genuine, unpatched `Storage` instance - the check would silently fall back
+// to instance assignment even where the real bug is reproducible. Walking
+// the actual prototype chain sidesteps that: it never compares against the
+// `Storage` global at all, so it isn't sensitive to which realm exposed it.
+// Falls back to instance assignment only for something with no real
+// prototype chain, e.g. this project's test shim (src/__tests__/setup.js),
+// a plain object literal - `Object.getPrototypeOf` on that is
+// `Object.prototype` unconditionally.
+function getStoragePatchTarget() {
+  const proto = Object.getPrototypeOf(localStorage);
+  return proto === Object.prototype ? null : proto;
+}
+
+function patchLocalStorageSetItem(fn) {
+  const target = getStoragePatchTarget();
+  if (target) {
+    Object.defineProperty(target, "setItem", {
+      value: fn,
+      writable: true,
+      configurable: true,
+    });
+  } else {
+    localStorage.setItem = fn;
+  }
+}
 
 // ============================================================================
 // INDEXEDDB SETUP
@@ -279,7 +331,7 @@ const downloadBackup = async (backup) => {
     a.download = `VetRate-Backup-${new Date().toISOString().split("T")[0]}.json`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
 
     // Update last download time
@@ -351,44 +403,32 @@ export const restoreFromBackup = async (backupId) => {
  * @returns {Promise<Object>} Import result
  */
 export const importBackupFile = async (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+  const backup = JSON.parse(await file.text());
 
-    reader.onload = async (e) => {
-      try {
-        const backup = JSON.parse(e.target.result);
+  // Validate backup format
+  if (!backup.version || !backup.data || !backup.timestamp) {
+    throw new Error("Invalid backup file format");
+  }
 
-        // Validate backup format
-        if (!backup.version || !backup.data || !backup.timestamp) {
-          reject(new Error("Invalid backup file format"));
-          return;
-        }
-
-        // Restore data
-        Object.entries(backup.data).forEach(([key, value]) => {
-          if (value === undefined) return;
-          localStorage.setItem(key, JSON.stringify(value));
-        });
-
-        // Save to IndexedDB for history
-        await saveBackupToIndexedDB(backup);
-
-        resolve({
-          success: true,
-          timestamp: backup.timestamp,
-          message: "Backup imported successfully",
-        });
-
-        // Reload page
-        setTimeout(() => window.location.reload(), 1000);
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    reader.onerror = () => reject(reader.error);
-    reader.readAsText(file);
+  // Restore data
+  Object.entries(backup.data).forEach(([key, value]) => {
+    if (value === undefined) return;
+    localStorage.setItem(key, JSON.stringify(value));
   });
+
+  // Save to IndexedDB for history
+  await saveBackupToIndexedDB(backup);
+
+  const result = {
+    success: true,
+    timestamp: backup.timestamp,
+    message: "Backup imported successfully",
+  };
+
+  // Reload page
+  setTimeout(() => window.location.reload(), 1000);
+
+  return result;
 };
 
 /**
@@ -446,20 +486,44 @@ export const triggerBackup = () => {
  * Monitor localStorage changes and trigger backups
  */
 export const startAutoBackup = () => {
+  if (originalSetItem) return; // already patched - see the guard comment above
+
   // Override localStorage.setItem to monitor changes
-  const originalSetItem = localStorage.setItem;
-  localStorage.setItem = function (key, value) {
+  originalSetItem = localStorage.setItem;
+  patchLocalStorageSetItem(function (key, value) {
     // Call original method
-    originalSetItem.call(localStorage, key, value);
+    originalSetItem.call(this, key, value);
 
     // Trigger backup if it's a monitored key
-    if (MONITORED_STORAGE_KEYS.includes(key)) {
+    if (MONITORED_STORAGE_KEYS.has(key)) {
       triggerBackup();
     }
-  };
+  });
 
   // eslint-disable-next-line no-console
   console.log("✅ Auto-backup system started");
+};
+
+/**
+ * Stop the auto-backup system: cancels any pending debounced backup and
+ * un-patches localStorage.setItem. Must run as part of every full data
+ * delete (Atomic Wipe, Quick Exit's panic redirect) - a backup already
+ * scheduled by triggerBackup() before the wipe fires ~2s later regardless of
+ * how thoroughly storage was just cleared (clearing storage does not cancel
+ * a pending setTimeout), and would otherwise write a fresh snapshot back
+ * into IndexedDB (or, if any other in-memory state is still saved to a
+ * monitored key after the wipe, back into localStorage itself) right after
+ * a veteran asked for everything to be gone.
+ */
+export const stopAutoBackup = () => {
+  if (backupTimer) {
+    clearTimeout(backupTimer);
+    backupTimer = null;
+  }
+  if (originalSetItem) {
+    patchLocalStorageSetItem(originalSetItem);
+    originalSetItem = null;
+  }
 };
 
 /**
@@ -497,8 +561,7 @@ export const getBackupStats = async () => {
     totalBackups: backups.length,
     totalSizeBytes: totalSize,
     totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
-    oldestBackup:
-      backups.length > 0 ? backups[backups.length - 1].timestamp : null,
+    oldestBackup: backups.length > 0 ? backups.at(-1).timestamp : null,
     newestBackup: backups.length > 0 ? backups[0].timestamp : null,
   };
 };
@@ -599,6 +662,7 @@ export default {
   initAutoBackup,
   performBackup,
   triggerBackup,
+  stopAutoBackup,
   getAllBackups,
   restoreFromBackup,
   importBackupFile,

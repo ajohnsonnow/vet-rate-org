@@ -323,8 +323,8 @@ function QualityWarningsList({ warnings }) {
             Quality Warnings:
           </h5>
           <ul className="text-sm text-yellow-700 dark:text-yellow-400 space-y-1">
-            {warnings.map((warning, index) => (
-              <li key={index}>• {warning}</li>
+            {warnings.map((warning) => (
+              <li key={warning}>• {warning}</li>
             ))}
           </ul>
         </div>
@@ -420,7 +420,8 @@ export default function PlatoonSergeantReview({
       console.log("🎖️ PlatoonSergeantReview received progress:", {
         overallProgress,
         progressProp: progress.progress,
-        fullProgress: progress,
+        stage: progress.stage,
+        state: progress.state,
       });
     }
   }, [progress, overallProgress]);

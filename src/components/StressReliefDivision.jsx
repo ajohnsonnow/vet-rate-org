@@ -14,37 +14,20 @@
  * @author Vet-Rate.org Stress Relief Division
  */
 
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  Suspense,
-  lazy,
-} from "react";
-import {
-  useIDDQD,
-  useGamepadBridge,
-  useDoomPerformance,
-} from "../utils/easterEggs";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useIDDQD, useGamepadBridge } from "../utils/easterEggs";
 import useFocusTrap from "../hooks/useFocusTrap";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 
-// Lazy load the heavy iframe only when activated
-const DoomFrame = lazy(() =>
-  Promise.resolve({
-    default: ({ _onClose }) => (
-      <iframe
-        title="DOOM Classic (1993)"
-        src="https://archive.org/embed/msdos_DOOM_1993"
-        aria-label="DOOM - Stress Relief Division"
-        className="w-full h-full border-0"
-        allow="autoplay; fullscreen; gamepad"
-        allowFullScreen
-      />
-    ),
-  }),
-);
+// A same-page iframe would sit inside the panic key's own tab: giving it
+// focus hands every keydown to a document safetyRedirect.js's window
+// listeners cannot see at all (cross-origin, no event bubbling across the
+// frame boundary), so triple-Escape stops working for as long as it holds
+// focus - a blockable panic key is never acceptable. A same-tab link would
+// also load archive.org's document inside the app's own origin context.
+// Opening it in a new tab keeps the panic key reachable no matter what has
+// focus, and keeps the third party out of this document entirely.
+const DOOM_URL = "https://archive.org/embed/msdos_DOOM_1993";
 
 const buildBootMessages = (isControllerConnected, controllerName) => [
   "> INITIALIZING VET-RATE DIAGNOSTIC TOOL...",
@@ -90,20 +73,27 @@ const LegalDisclaimer = () => (
   </div>
 );
 
-const LauncherButtons = ({ onStart, onClose }) => (
-  <div className="flex gap-4">
-    <button
-      onClick={onStart}
-      className="flex-1 bg-green-600 text-black font-bold py-3 px-6 hover:bg-green-400 transition-all duration-200 border-2 border-green-400 shadow-[0_0_10px_rgba(0,255,0,0.5)] hover:shadow-[0_0_20px_rgba(0,255,0,0.8)]"
-    >
-      ▶ INITIATE RELIEF PROTOCOL
-    </button>
-    <button
-      onClick={onClose}
-      className="bg-red-900 text-red-300 font-bold py-3 px-6 hover:bg-red-700 transition-all duration-200 border-2 border-red-600"
-    >
-      ✕ ABORT
-    </button>
+const LauncherButtons = ({ onClose }) => (
+  <div className="flex flex-col gap-2">
+    <div className="flex gap-4">
+      <a
+        href={DOOM_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 text-center bg-green-600 text-black font-bold py-3 px-6 hover:bg-green-400 transition-all duration-200 border-2 border-green-400 shadow-[0_0_10px_rgba(0,255,0,0.5)] hover:shadow-[0_0_20px_rgba(0,255,0,0.8)]"
+      >
+        ▶ INITIATE RELIEF PROTOCOL (opens in a new tab)
+      </a>
+      <button
+        onClick={onClose}
+        className="bg-red-900 text-red-300 font-bold py-3 px-6 hover:bg-red-700 transition-all duration-200 border-2 border-red-600"
+      >
+        ✕ ABORT
+      </button>
+    </div>
+    <p className="text-xs text-green-700 text-center">
+      Leaves Vet-Rate.org and opens archive.org in a new browser tab.
+    </p>
   </div>
 );
 
@@ -122,12 +112,7 @@ const ControllerStatusBar = ({ isControllerConnected, controllerName }) => (
  * The Retro-Terminal Launcher Component
  * Styled like an old CRT monitor from 1993
  */
-const DoomLauncher = ({
-  onStart,
-  onClose,
-  isControllerConnected,
-  controllerName,
-}) => {
+const DoomLauncher = ({ onClose, isControllerConnected, controllerName }) => {
   const [isBooting, setIsBooting] = useState(true);
   const [bootText, setBootText] = useState([]);
 
@@ -169,8 +154,8 @@ const DoomLauncher = ({
         <div className="relative z-0 p-4 min-h-[300px]">
           {/* Header */}
           <div className="text-green-500 text-xl mb-4 animate-pulse flex items-center gap-2">
-            <span className="text-red-500">█</span>
-            VET-RATE STRESS RELIEF DIVISION
+            <span className="text-red-500">█</span> VET-RATE STRESS RELIEF
+            DIVISION{""}
             <span className="text-red-500">█</span>
           </div>
 
@@ -178,9 +163,7 @@ const DoomLauncher = ({
 
           {!isBooting && <LegalDisclaimer />}
 
-          {!isBooting && (
-            <LauncherButtons onStart={onStart} onClose={onClose} />
-          )}
+          {!isBooting && <LauncherButtons onClose={onClose} />}
 
           <ControllerStatusBar
             isControllerConnected={isControllerConnected}
@@ -223,13 +206,12 @@ const CrtGlitchStyles = () => (
   `}</style>
 );
 
-const OverlayHeader = ({ gameStarted, fps, onClose }) => (
-  <div className="absolute top-4 right-4 flex items-center gap-4">
-    {gameStarted && (
-      <span className="text-green-500 font-mono text-sm">
-        {fps > 0 ? `${fps} FPS` : "LOADING..."}
-      </span>
-    )}
+const OverlayHeader = ({ onClose }) => (
+  // top-20 below `sm` clears the fixed top-left Quick Exit button; sm:right-28
+  // clears its top-right position at `sm:` and up, since this overlay is
+  // always full-bleed (no responsive centering to move the close button away
+  // from the true viewport corner the way ResponsiveModal's panels do).
+  <div className="absolute top-20 right-4 sm:top-4 sm:right-28 flex items-center gap-4">
     <button
       onClick={onClose}
       className="text-red-500 hover:text-red-300 font-mono text-2xl transition-colors"
@@ -240,66 +222,18 @@ const OverlayHeader = ({ gameStarted, fps, onClose }) => (
   </div>
 );
 
-const GameInstructions = () => (
-  <div className="mt-4 text-green-600 font-mono text-xs text-center max-w-xl">
-    <p>
-      CONTROLS: Arrow Keys = Move | Ctrl = Fire | Space = Use/Open | Shift = Run
-    </p>
-    <p className="mt-1 text-green-800">
-      Press ESC inside game for menu • Click game area to capture input
-    </p>
-  </div>
-);
-
-const GameContent = ({
-  gameStarted,
-  onStart,
-  onClose,
-  isControllerConnected,
-  controllerName,
-}) => {
-  if (!gameStarted) {
-    return (
-      <DoomLauncher
-        onStart={onStart}
-        onClose={onClose}
-        isControllerConnected={isControllerConnected}
-        controllerName={controllerName}
-      />
-    );
-  }
-
-  return (
-    <div className="w-full max-w-4xl aspect-[4/3] bg-black border-4 border-green-800 shadow-[0_0_30px_rgba(0,255,0,0.3)]">
-      <Suspense
-        fallback={
-          <div className="w-full h-full flex items-center justify-center text-green-500 font-mono animate-pulse">
-            LOADING DEMON-SLAYER MODE...
-          </div>
-        }
-      >
-        <DoomFrame onClose={onClose} />
-      </Suspense>
-    </div>
-  );
-};
-
 /**
  * Main Doom Container Component
  * Handles the full lifecycle of the easter egg
  */
 const StressReliefDivision = () => {
   const { isActive, deactivate, activationCount } = useIDDQD();
-  const [gameStarted, setGameStarted] = useState(false);
   const [showGlitch, setShowGlitch] = useState(false);
   const { isConnected: isControllerConnected, controllerName } =
     useGamepadBridge(isActive);
-  const { fps } = useDoomPerformance(gameStarted);
   const overlayRef = useRef(null);
 
   // Trap Tab focus inside the overlay and restore it to the opener on close.
-  // ESC is intentionally left to the gameStarted-aware window handler below so
-  // it can pass through to DOOM's own menu while the game is running.
   useFocusTrap(overlayRef, { active: isActive });
   useBodyScrollLock(isActive);
 
@@ -311,28 +245,25 @@ const StressReliefDivision = () => {
     }
   }, [isActive, activationCount]);
 
-  // Handle escape key to close
+  // Handle escape key to close. The game itself now always opens in a new
+  // tab (see DOOM_URL above), so there is no in-page game state for Escape
+  // to defer to - every Escape while this overlay is active closes it.
   useEffect(() => {
     if (!isActive) return;
 
     const handleEscape = (e) => {
-      if (e.key === "Escape" && !gameStarted) {
+      if (e.key === "Escape") {
         deactivate();
       }
     };
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [isActive, gameStarted, deactivate]);
+  }, [isActive, deactivate]);
 
   const handleClose = useCallback(() => {
-    setGameStarted(false);
     deactivate();
   }, [deactivate]);
-
-  const handleStart = useCallback(() => {
-    setGameStarted(true);
-  }, []);
 
   if (!isActive) return null;
 
@@ -350,11 +281,7 @@ const StressReliefDivision = () => {
         aria-label="Stress Relief Division - Doom Easter Egg"
       >
         {/* Header with close button */}
-        <OverlayHeader
-          gameStarted={gameStarted}
-          fps={fps}
-          onClose={handleClose}
-        />
+        <OverlayHeader onClose={handleClose} />
 
         {/* Watermark */}
         <div className="absolute bottom-4 left-4 text-green-900/50 font-mono text-xs">
@@ -362,16 +289,11 @@ const StressReliefDivision = () => {
         </div>
 
         {/* Content */}
-        <GameContent
-          gameStarted={gameStarted}
-          onStart={handleStart}
+        <DoomLauncher
           onClose={handleClose}
           isControllerConnected={isControllerConnected}
           controllerName={controllerName}
         />
-
-        {/* Instructions */}
-        {gameStarted && <GameInstructions />}
       </div>
 
       {/* Inject CRT glitch keyframes */}

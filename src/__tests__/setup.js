@@ -1,6 +1,11 @@
 import { afterEach } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import "@testing-library/jest-dom";
+
+// The default 1s wait is too short on a shared CI runner under coverage:
+// tests that pass locally timed out there in waitFor/findBy, a different one
+// each run. A passing wait still returns as soon as it is satisfied.
+configure({ asyncUtilTimeout: 5000 });
 
 // jsdom's `localStorage` differs by Node version: on some runtimes it is absent
 // or lacks the Storage methods (providers that read it on mount blow up); on

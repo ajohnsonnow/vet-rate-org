@@ -21,6 +21,8 @@ export default defineConfig({
     hookTimeout: 15000,
     coverage: {
       provider: "v8",
+      // lcov feeds SonarQube (sonar.javascript.lcov.reportPaths).
+      reporter: ["text", "html", "json", "lcov"],
       thresholds: {
         // Thresholds reflect testable logic (calculators, utils, security-critical code).
         // The "raise to 70%" target from AUDIT_FINDINGS #30 is not the right
@@ -34,10 +36,13 @@ export default defineConfig({
         // Sprint additions (cfileAnalyzer, unifiedAIService, musterCallProcessor)
         // diluted global numbers without new unit tests — browser/GPU files still
         // exercised via Playwright E2E. Floors reflect actual testable baseline.
-        lines: 29,
-        functions: 29,
-        branches: 20,
-        statements: 28,
+        // 2026-09-24: components and contexts are now measured too (they
+        // have testing-library tests, and SonarQube counts them), taking
+        // lines to ~49%. Floors ratcheted to just below that.
+        lines: 47,
+        functions: 40,
+        branches: 35,
+        statements: 46,
         // Per-file floors for security-critical utilities (RT12-3).
         // Values are ~5% below observed coverage from 2026-06-20 run.
         "src/utils/fileTypeGuards.js": {
@@ -82,8 +87,6 @@ export default defineConfig({
         "src/examples/**",
         "src/debug/**",
         "src/workers/**", // WebWorkers — require real browser
-        "src/contexts/**", // React contexts — require component tree
-        "src/components/**", // 150+ UI components — E2E tested via Playwright
         "src/i18n/**", // Static translation data (extracted from contexts; no test logic)
         "src/generated/**", // Build-time generated files (design tokens, palettes)
         "src/**/*.test.{js,jsx}",

@@ -103,8 +103,8 @@ describe("migratePacket", () => {
   });
 
   it("returns non-object input unchanged", () => {
-    expect(migratePacket(null)).toBe(null);
-    expect(migratePacket(undefined)).toBe(undefined);
+    expect(migratePacket(null)).toBeNull();
+    expect(migratePacket(undefined)).toBeUndefined();
     expect(migratePacket([1, 2])).toEqual([1, 2]);
   });
 });
@@ -132,7 +132,7 @@ describe("ensureQuota", () => {
     const result = await ensureQuota(1024);
 
     expect(result.ok).toBe(true);
-    expect(result.remaining).toBe(null);
+    expect(result.remaining).toBeNull();
   });
 
   it("returns ok when there is enough quota", async () => {

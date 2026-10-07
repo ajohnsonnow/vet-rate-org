@@ -9,8 +9,8 @@
  */
 
 import { useState, useCallback, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   searchPdfForKeyword,
   searchPdfForMultipleKeywords,
@@ -20,25 +20,30 @@ import {
 import { escapeHtml } from "../utils/sanitize";
 
 const ModalHeader = ({ onClose }) => (
-  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <div className="text-3xl">🔍</div>
-      <div>
-        <h1 id="record-search-title" className="text-xl font-bold text-white">
-          The Needle in the Haystack
-        </h1>
-        <p className="text-blue-100 text-sm">
-          Search 2,000+ page PDFs in seconds
-        </p>
-      </div>
-    </div>
-    <button
-      onClick={onClose}
-      className="text-white hover:text-blue-200 transition-colors text-2xl font-bold"
-      aria-label="Close"
+  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-blue-200 transition-colors text-2xl font-bold"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      }
     >
-      ×
-    </button>
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="text-3xl">🔍</div>
+        <div className="min-w-0">
+          <h1 id="record-search-title" className="text-xl font-bold text-white">
+            The Needle in the Haystack
+          </h1>
+          <p className="text-blue-100 text-sm">
+            Search 2,000+ page PDFs in seconds
+          </p>
+        </div>
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -166,7 +171,7 @@ const SearchBox = ({
           checked={caseSensitive}
           onChange={(e) => setCaseSensitive(e.target.checked)}
           className="rounded"
-        />
+        />{" "}
         Case Sensitive
       </label>
       <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
@@ -175,7 +180,7 @@ const SearchBox = ({
           checked={wholeWord}
           onChange={(e) => setWholeWord(e.target.checked)}
           className="rounded"
-        />
+        />{" "}
         Whole Word Only
       </label>
     </div>
@@ -230,9 +235,9 @@ const ResultsList = ({ results, totalMatches, searchTerm }) => (
       {results.length} locations
     </h3>
     <div className="space-y-3 max-h-96 overflow-y-auto">
-      {results.map((result, index) => (
+      {results.map((result) => (
         <div
-          key={index}
+          key={`${result.page}-${result.context}`}
           className="bg-gray-900 border border-gray-700 rounded-lg p-4"
         >
           <div className="flex items-start justify-between mb-2">
@@ -557,7 +562,7 @@ const useRecordSearchState = () => {
     setIsDragging(false);
 
     const droppedFile = e.dataTransfer?.files?.[0];
-    if (droppedFile && droppedFile.type === "application/pdf") {
+    if (droppedFile?.type === "application/pdf") {
       doLoadFile(droppedFile, { setError, setFile, setResults, setFileData });
     } else {
       setError("Please drop in a PDF file.");
@@ -608,7 +613,6 @@ const useRecordSearchState = () => {
 };
 
 const RecordSearch = ({ onClose }) => {
-  const { _t } = useLanguage();
   const s = useRecordSearchState();
 
   return (

@@ -33,7 +33,7 @@ export const DEVICE_TIERS = {
  */
 const parseAndroidVersion = (userAgent) => {
   const match = userAgent.match(/Android\s+(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+  return match ? Number.parseInt(match[1], 10) : null;
 };
 
 /**
@@ -43,7 +43,7 @@ const parseAndroidVersion = (userAgent) => {
 const parseIOSVersion = (userAgent) => {
   // iOS UA: "iPhone OS 18_7" or "CPU iPhone OS 18_7 like Mac OS X"
   const match = userAgent.match(/(?:iPhone|iPad|iPod).*?OS\s+(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+  return match ? Number.parseInt(match[1], 10) : null;
 };
 
 /**
@@ -169,7 +169,7 @@ const applyHighEndAdvice = (advice) => {
   advice.localAI.label = "🔒 Local AI (Privacy Focused)";
   advice.localAI.badge = "✨ Recommended for your device";
   advice.localAI.description =
-    "Runs entirely on your device. No data leaves your phone.";
+    "Runs entirely on your device. No data leaves your device.";
   advice.cloudAI.description =
     "Fast but sends data to Google. Use Local AI for privacy.";
 };

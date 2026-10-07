@@ -336,7 +336,7 @@ const FormationHeader = ({
 }) => (
   <div className="flex items-center justify-between">
     <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-      📋 Documents in Formation
+      📋 Documents in Formation{" "}
       <span className="text-sm font-normal text-gray-500">
         (Drag to reorder)
       </span>

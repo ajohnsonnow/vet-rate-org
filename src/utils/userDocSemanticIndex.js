@@ -80,8 +80,7 @@ const SNIPPET_CHARS = 240;
  */
 export function parsePages(fullText) {
   const src = String(fullText || "");
-  // eslint-disable-next-line sonarjs/slow-regex -- input is the user's own uploaded document text, not attacker-controlled
-  const markerRe = /--- PAGE (\d+)[^\n]*---/g;
+  const markerRe = /--- PAGE (\d{1,6})[^\n]{0,200}---/g;
   const markers = [...src.matchAll(markerRe)];
   if (markers.length === 0) {
     const t = src.trim();
@@ -92,7 +91,7 @@ export function parsePages(fullText) {
     const start = markers[i].index + markers[i][0].length;
     const end = i + 1 < markers.length ? markers[i + 1].index : src.length;
     pages.push({
-      pageNumber: parseInt(markers[i][1], 10),
+      pageNumber: Number.parseInt(markers[i][1], 10),
       text: src.slice(start, end).trim(),
     });
   }
@@ -381,7 +380,7 @@ export async function semanticSearchDocument({
   embed = embedText,
   store,
 }) {
-  if (!sessionKey || !queryText || !queryText.trim()) return [];
+  if (!sessionKey || !queryText?.trim()) return [];
   const queryVec = await embed(queryText);
   const ownStore = !store;
   const vecStore = store || (await createIdbStore());

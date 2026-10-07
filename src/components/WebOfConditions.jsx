@@ -11,10 +11,12 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
+import { getMyRatings } from "../utils/veteranProfile";
+import { matchConditionToKnownKey } from "../utils/conditionName";
 
 /**
  * Secondary Condition Relationships Database
@@ -515,6 +517,45 @@ const CONDITION_WEB = {
   },
 };
 
+// {key, label} pairs for matchConditionToKnownKey - every primary and
+// secondary node label in the static CONDITION_WEB knowledge map (both key
+// and label are the same display string here), built once at module load.
+const CONDITION_WEB_NODES_LIST = (() => {
+  const seen = new Set();
+  const list = [];
+  Object.keys(CONDITION_WEB).forEach((primary) => {
+    if (!seen.has(primary)) {
+      seen.add(primary);
+      list.push({ key: primary, label: primary });
+    }
+    CONDITION_WEB[primary].secondaries.forEach((s) => {
+      if (seen.has(s.condition)) return;
+      seen.add(s.condition);
+      list.push({ key: s.condition, label: s.condition });
+    });
+  });
+  return list;
+})();
+
+/**
+ * First of the veteran's rated conditions (getMyRatings) that matches a node
+ * in the static CONDITION_WEB knowledge map, or null if none match / no
+ * ratings are saved. Real VA letters spell condition names out in full, so
+ * this goes through matchConditionToKnownKey rather than an exact
+ * normalized-name lookup.
+ */
+const findSeedNodeFromMyRatings = () => {
+  const ratings = getMyRatings();
+  for (const rating of ratings) {
+    const match = matchConditionToKnownKey(
+      rating.name,
+      CONDITION_WEB_NODES_LIST,
+    );
+    if (match) return match;
+  }
+  return null;
+};
+
 /**
  * Get all unique conditions for the visualization
  */
@@ -776,7 +817,7 @@ const renderGraphLinks = (
   selectedLink,
   onLinkClick,
 ) =>
-  links.map((link, i) => {
+  links.map((link) => {
     const sourcePos = positions[link.source];
     const targetPos = positions[link.target];
     if (!sourcePos || !targetPos) return null;
@@ -788,7 +829,7 @@ const renderGraphLinks = (
         selectedLink?.target === link.target);
 
     return (
-      <g key={i}>
+      <g key={`${link.source}-${link.target}`}>
         <line
           x1={sourcePos.x}
           y1={sourcePos.y}
@@ -918,9 +959,8 @@ const GraphDefs = () => (
 const GraphInstructionsOverlay = () => (
   <div className="absolute bottom-4 left-4 bg-gray-900/80 rounded-xl p-4 max-w-sm">
     <p className="text-purple-300 text-sm">
-      <span className="text-lg mr-2">💡</span>
-      Click a node to see its connections, or click a link to see the nexus
-      logic.
+      <span className="text-lg mr-2">💡</span> Click a node to see its
+      connections, or click a link to see the nexus logic.
     </p>
   </div>
 );
@@ -1027,37 +1067,12 @@ const WebOfConditionsHeader = ({ onClose, onReportBug }) => (
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <span className="text-3xl">🕸️</span>
-        </div>
-        <div>
-          <h2
-            id="web-of-conditions-title"
-            className="text-2xl sm:text-3xl font-bold text-black"
-          >
-            Web of Conditions{" "}
-            <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h2>
-          <p className="text-yellow-800 text-sm sm:text-base mt-1">
-            Interactive Secondary Condition Map
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="dark"
-            moduleName="Web of Conditions"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-black hover:bg-black/10 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -1074,8 +1089,35 @@ const WebOfConditionsHeader = ({ onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
+          <span className="text-3xl">🕸️</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="web-of-conditions-title"
+            className="text-2xl sm:text-3xl font-bold text-black"
+          >
+            Web of Conditions{" "}
+            <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-yellow-800 text-sm sm:text-base mt-1">
+            Interactive Secondary Condition Map
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="dark"
+          moduleName="Web of Conditions"
+        />
+      )}
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -1161,9 +1203,9 @@ const NodeDetailsPanel = ({
           : "Connected Primary Conditions"}
       </h4>
 
-      {connections.map((conn, i) => (
+      {connections.map((conn) => (
         <button
-          key={i}
+          key={`${conn.source}-${conn.target}`}
           onClick={() =>
             onLinkClick({
               source: conn.source,
@@ -1192,9 +1234,9 @@ const NodeDetailsPanel = ({
     {CONDITION_WEB[selectedNode] && (
       <div className="bg-purple-900/20 border border-purple-700/30 rounded-xl p-4">
         <p className="text-purple-200 text-sm">
-          <span className="text-lg mr-2">⚡</span>
-          This is a <strong>primary condition</strong> that can establish
-          secondary service connection for{" "}
+          <span className="text-lg mr-2">⚡</span> This is a{" "}
+          <strong>primary condition</strong> that can establish secondary
+          service connection for{" "}
           {CONDITION_WEB[selectedNode].secondaries.length} other conditions.
         </p>
       </div>
@@ -1240,9 +1282,8 @@ const HowToUseGuide = () => (
 
     <div className="bg-indigo-900/30 border border-indigo-700/50 rounded-xl p-4">
       <p className="text-indigo-200 text-sm">
-        <span className="text-lg mr-2">🎯</span>
-        Click any connection to see the <strong>medical nexus</strong>{" "}
-        explaining the relationship.
+        <span className="text-lg mr-2">🎯</span> Click any connection to see the{" "}
+        <strong>medical nexus</strong> explaining the relationship.
       </p>
     </div>
   </>
@@ -1329,15 +1370,12 @@ const DetailsPanel = ({
   return <DefaultDetailsPanel />;
 };
 
-function useWebOfConditionsGraph() {
-  const containerRef = useRef(null);
+// Tracks the graph container's size, recomputing on window resize. Split
+// out of useWebOfConditionsGraph purely to keep its function body under the
+// line-count limit. Same logic, same order of operations.
+function useContainerDimensions(containerRef) {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [hoveredNode, setHoveredNode] = useState(null);
-  const [selectedLink, setSelectedLink] = useState(null);
-  const [filterCategory, setFilterCategory] = useState(null);
 
-  // Update dimensions on resize
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -1352,7 +1390,27 @@ function useWebOfConditionsGraph() {
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
     return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
+  }, [containerRef]);
+
+  return dimensions;
+}
+
+function useWebOfConditionsGraph() {
+  const containerRef = useRef(null);
+  const dimensions = useContainerDimensions(containerRef);
+  // Seed the graph open on one of the veteran's rated conditions (if any
+  // matches the knowledge map) instead of the blank "how to use" screen.
+  // Read once via lazy useState init (not useRef(expr), which would
+  // silently re-run this localStorage read on every re-render - including
+  // the frequent ones from hoveredNode changing on every node hover).
+  // seedNode remembers the seeded id so the notice banner only shows while
+  // that seed is still the active selection.
+  const [seedNode] = useState(() => findSeedNodeFromMyRatings());
+  const [selectedNode, setSelectedNode] = useState(() => seedNode);
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const [selectedLink, setSelectedLink] = useState(null);
+  const [filterCategory, setFilterCategory] = useState(null);
+  const seededFromRecords = seedNode !== null && selectedNode === seedNode;
 
   // Build nodes and links
   const { nodes, links } = useMemo(
@@ -1423,15 +1481,29 @@ function useWebOfConditionsGraph() {
     connections,
     handleNodeClick,
     handleLinkClick,
+    seededFromRecords,
   };
 }
+
+const SeedFromRecordsBanner = ({ show, conditionName }) => {
+  if (!show) return null;
+
+  return (
+    <div className="mb-4 bg-purple-900 border border-purple-700 rounded-xl p-3">
+      <p className="text-purple-200 text-sm">
+        <span className="text-lg mr-2">📋</span> We started you off with{" "}
+        <strong>{conditionName}</strong> from your saved ratings — explore its
+        connections, or pick a different condition below.
+      </p>
+    </div>
+  );
+};
 
 export default function WebOfConditions({
   onClose,
   onSelectCondition,
   onReportBug,
 }) {
-  const { _t } = useLanguage();
   const graph = useWebOfConditionsGraph();
 
   return (
@@ -1453,6 +1525,11 @@ export default function WebOfConditions({
             onSelectCategory={graph.setFilterCategory}
           />
         </div>
+
+        <SeedFromRecordsBanner
+          show={graph.seededFromRecords}
+          conditionName={graph.selectedNode}
+        />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">

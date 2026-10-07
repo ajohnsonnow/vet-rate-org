@@ -297,7 +297,7 @@ function _drawRatingTypeAndInstructions(ctx) {
   doc.setFont(undefined, "bold");
   doc.setTextColor(75, 85, 99);
   doc.text(
-    `RATING TYPE: ${result.ratingCriteria.type.replace(/-/g, " ").toUpperCase()}`,
+    `RATING TYPE: ${result.ratingCriteria.type.replaceAll("-", " ").toUpperCase()}`,
     margin,
     pos.y,
   );
@@ -405,7 +405,7 @@ function _drawPercentageTable(ctx) {
 
     // Sort ratings in descending order
     const sortedRatings = Object.entries(result.ratingCriteria.ratings).sort(
-      ([a], [b]) => parseInt(b) - parseInt(a),
+      ([a], [b]) => Number.parseInt(b) - Number.parseInt(a),
     );
 
     sortedRatings.forEach(([percentage, criteria], index) => {

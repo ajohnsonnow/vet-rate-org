@@ -21,18 +21,29 @@ import {
   getAIStatus,
   resetAICircuitBreaker,
   reloadSwarmEngine,
+  getDocumentAIRouting,
   AI_MODES,
 } from "./unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "./aiDataClassPolicy";
 import {
   validateDiagnosticCode,
   lookupDiagnosticCodeByName,
 } from "./hallucinationTrap";
+import { getAllConditions } from "../services/knowledgeQuery";
 import { scanDocumentForCrisis } from "./crisisInterceptor";
 import { untrustedSection } from "./aiSystemPrompts";
 import { scrubText } from "./piiScrubber";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 import { AI_CHUNK_RATE } from "../data/aiPerformanceProfile";
 import { segmentPages, chunkBySegment } from "./cFilePageSegmenter";
+import {
+  parseDecisionLetter,
+  parseCodeSheet,
+  extractBigThree,
+} from "./vaDocumentParser";
 
 // ============================================================================
 // CONFIGURATION - Token limits and chunking settings
@@ -279,8 +290,7 @@ function _repairNormalizeControlChars(content) {
 
 function _repairMissingOpeningQuote(content) {
   const fixed = content.replace(
-    // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
-    /(:\s*)(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]+?)("\s*[,\n}\]])/g,
+    /(:\s{0,20})(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]{1,2000}?)("\s{0,20}[,\n}\]])/g,
     (_, colon, value, closingPart) => `${colon}"${value.trim()}${closingPart}`,
   );
   return JSON.parse(fixed);
@@ -312,8 +322,7 @@ function _repairCloseOpenBrackets(content) {
 }
 
 function _repairInsertMissingCommas(content) {
-  // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
-  const fixed = content.replace(/\}\s*\n(\s*)\{/g, "},\n$1{");
+  const fixed = content.replace(/\}\s{0,20}\n(\s{0,20})\{/g, "},\n$1{");
   return JSON.parse(fixed);
 }
 
@@ -380,7 +389,7 @@ function _repairFindLastCompleteObject(content) {
 }
 
 function _repairSingleQuotes(content) {
-  return JSON.parse(content.replace(/'/g, '"'));
+  return JSON.parse(content.replaceAll("'", '"'));
 }
 
 function _repairUnquotedPropertyNames(content) {
@@ -602,10 +611,10 @@ function _parsePageMarkers(fullText) {
 
   while ((match = pageMarkerRegex.exec(fullText)) !== null) {
     if (pages.length > 0) {
-      pages[pages.length - 1].endIndex = match.index;
+      pages.at(-1).endIndex = match.index;
     }
     pages.push({
-      pageNum: parseInt(match[1], 10),
+      pageNum: Number.parseInt(match[1], 10),
       startIndex: match.index,
       endIndex: fullText.length, // Will be updated on next iteration
     });
@@ -704,7 +713,7 @@ function splitIntoChunks(fullText, aiMode) {
       {
         text: fullText,
         startPage: pages[0].pageNum,
-        endPage: pages[pages.length - 1].pageNum,
+        endPage: pages.at(-1).pageNum,
         chunkIndex: 0,
       },
     ];
@@ -758,8 +767,7 @@ const PAGE_RELEVANCE_PATTERN = new RegExp(
  * filter would discard nearly everything, the original text is returned.
  */
 export function screenRelevantPages(fullText) {
-  // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
-  const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
+  const pageRegex = /--- PAGE (\d{1,6})[^\n]{0,200}---/g;
   const markers = [...fullText.matchAll(pageRegex)];
   if (markers.length < 10) {
     return { text: fullText, totalPages: markers.length, skippedPages: 0 };
@@ -775,7 +783,10 @@ export function screenRelevantPages(fullText) {
     const body = block.slice(markers[i][0].length);
     if (PAGE_RELEVANCE_PATTERN.test(body)) {
       kept.push(block);
-      keptPages.push({ pageNum: parseInt(markers[i][1], 10), text: block });
+      keptPages.push({
+        pageNum: Number.parseInt(markers[i][1], 10),
+        text: block,
+      });
     } else {
       skippedPages++;
     }
@@ -784,7 +795,7 @@ export function screenRelevantPages(fullText) {
   if (kept.length < markers.length * 0.1) {
     // Filter looks wrong for this document - analyze everything instead.
     const allPages = markers.map((m, i) => ({
-      pageNum: parseInt(m[1], 10),
+      pageNum: Number.parseInt(m[1], 10),
       text: fullText.slice(
         m.index,
         i + 1 < markers.length ? markers[i + 1].index : fullText.length,
@@ -1138,15 +1149,15 @@ function _extractNumericMonthDay(str) {
   const ymd = str.match(/\b\d{4}-(\d{1,2})(?:-(\d{1,2}))?/);
   if (ymd) {
     return {
-      month: parseInt(ymd[1], 10),
-      day: ymd[2] ? parseInt(ymd[2], 10) : 0,
+      month: Number.parseInt(ymd[1], 10),
+      day: ymd[2] ? Number.parseInt(ymd[2], 10) : 0,
     };
   }
   const mdy = str.match(/\b(\d{1,2})\/(?:(\d{1,2})\/)?\d{4}/);
   if (mdy) {
     return {
-      month: parseInt(mdy[1], 10),
-      day: mdy[2] ? parseInt(mdy[2], 10) : 0,
+      month: Number.parseInt(mdy[1], 10),
+      day: mdy[2] ? Number.parseInt(mdy[2], 10) : 0,
     };
   }
   return { month: 0, day: 0 };
@@ -1156,7 +1167,7 @@ function normalizeDateKey(dateStr) {
   if (!dateStr) return "";
   const str = String(dateStr).toLowerCase().trim();
 
-  const yearMatch = str.match(/\b(\d{4})\b/);
+  const yearMatch = /\b(\d{4})\b/.exec(str);
   if (!yearMatch) return str;
   const year = yearMatch[1];
 
@@ -1179,8 +1190,8 @@ function normalizeDateKey(dateStr) {
   let day = 0;
 
   if (month) {
-    const dayMatch = str.match(/\b(\d{1,2})\b/);
-    if (dayMatch) day = parseInt(dayMatch[1], 10);
+    const dayMatch = /\b(\d{1,2})\b/.exec(str);
+    if (dayMatch) day = Number.parseInt(dayMatch[1], 10);
   } else {
     const numeric = _extractNumericMonthDay(str);
     month = numeric.month;
@@ -1342,14 +1353,14 @@ function parseApproxDate(dateStr) {
 
   // Try standard date format first
   const standardDate = new Date(dateStr);
-  if (!isNaN(standardDate)) {
+  if (!Number.isNaN(standardDate.getTime())) {
     return standardDate.getTime();
   }
 
   // Extract year
   const yearMatch = dateStr.match(/\d{4}/);
   if (yearMatch) {
-    const year = parseInt(yearMatch[0], 10);
+    const year = Number.parseInt(yearMatch[0], 10);
 
     // Try to extract month
     const monthNames = [
@@ -1392,7 +1403,7 @@ function parseApproxDate(dateStr) {
  */
 export function enforceValidDiagnosticCodes(analysis) {
   const rejected = [];
-  if (!analysis || !Array.isArray(analysis.potential_claims)) {
+  if (!Array.isArray(analysis?.potential_claims)) {
     return rejected;
   }
 
@@ -1571,9 +1582,15 @@ function _buildSemanticOpts(onProgress, abortController, options) {
   };
 }
 
-async function _determineAiModeAndChunks(fullText, onProgress) {
-  const aiStatus = getAIStatus();
-  const aiMode = aiStatus.effectiveMode;
+async function _determineAiModeAndChunks(fullText, onProgress, aiMode) {
+  // ADR-009: `aiMode` is the ACTUAL on-device backend a document call will
+  // dispatch to (getDocumentAIRouting().onDeviceMode from analyzeCFile) -
+  // NOT getAIStatus().effectiveMode, which can be CLOUD (Cloud preferred +
+  // key configured) even while an on-device engine sits ready. Sizing
+  // chunks/prompt for cloud's ~2.7M-char budget when the call is about to
+  // dispatch on-device anyway silently truncates the document through the
+  // on-device backend's own last-resort context-fit guard, and mislabels
+  // the result's metadata.aiMode as "cloud".
 
   // Special check for Warrant Council mode - ensure model is fully loaded
   if (aiMode === "swarm") {
@@ -1641,7 +1658,7 @@ async function _analyzeSingleChunkPath(
     current: 1,
     total: 1,
   });
-  const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
+  const result = await analyzeChunk(chunks[0], 1, 1, onProgress, 0, aiMode);
   surfaceDocumentedConditions(result, fullText);
   enrichClaimsWithDiagnosticCodes(result);
   const rejectedCodes = enforceValidDiagnosticCodes(result);
@@ -1718,6 +1735,7 @@ function _buildMultiChunkState(
 
   return {
     totalChunks,
+    aiMode,
     isLocalAIMode,
     chunkScores,
     floorIndices,
@@ -1909,6 +1927,7 @@ async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
         ctx.totalChunks,
         ctx.onProgress,
         attempt,
+        ctx.aiMode,
       );
       lastError = null;
       break;
@@ -2077,6 +2096,727 @@ async function _finalizeMultiChunkResult(
   };
 }
 
+// D20-8: the rating-decision parsers' section-header and "name ... NN%" scans
+// also fire on decision-letter scaffolding, so their raw "condition" can be a
+// bare percentage, a heading ("Service connection", "Combined evaluation"),
+// a sentence fragment ("shows evaluation") or a clause cut off mid-phrase.
+// A name made only of these words names no medical condition.
+const NON_CONDITION_WORDS = new Set([
+  "a",
+  "an",
+  "the",
+  "of",
+  "for",
+  "is",
+  "was",
+  "shows",
+  "show",
+  "service",
+  "connection",
+  "connected",
+  "evaluation",
+  "evaluations",
+  "rating",
+  "ratings",
+  "combined",
+  "overall",
+  "total",
+  "percent",
+  "effective",
+  "date",
+  "decision",
+  "granted",
+  "denied",
+  "continued",
+  "increased",
+  "condition",
+  "conditions",
+  "disability",
+  "disabilities",
+  "claim",
+  "issue",
+  "issues",
+  "entitlement",
+  "medical",
+  "description",
+  "assigned",
+  "sc",
+  "page",
+  "pages",
+  "reason",
+  "reasons",
+  "evidence",
+  "enclosure",
+  "enclosures",
+  "form",
+  "forms",
+  "va",
+  "your",
+  "you",
+  "no",
+  "not",
+  "longer",
+  "have",
+  "has",
+  "been",
+  "be",
+  "are",
+  "were",
+  "this",
+  "veteran",
+  "benefits",
+  "benefit",
+  "other",
+  "symptom",
+  "symptoms",
+  "examination",
+  "record",
+  "records",
+  "rated",
+  "following",
+  "shown",
+  "continues",
+  "left",
+  "right",
+  "bilateral",
+  "chronic",
+  "acute",
+  "mild",
+  "moderate",
+  "severe",
+  "status",
+  "post",
+  "history",
+  "residuals",
+]);
+// A qualifier after a comma ("Sinusitis, chronic") is the VA schedule's own
+// wording; only one with no comma before it is a name cut off.
+const DANGLING_QUALIFIERS = new Set([
+  "degenerative",
+  "chronic",
+  "acute",
+  "recurrent",
+]);
+const DANGLING_END_WORDS = new Set([
+  "of",
+  "and",
+  "or",
+  "with",
+  "the",
+  "an",
+  "to",
+  "for",
+  "due",
+  "secondary",
+  "by",
+  "in",
+  "on",
+  "at",
+  "without",
+]);
+const MAX_CONDITION_NAME_CHARS = 400;
+
+const NAME_EDGE_CHARS = new Set([..." ,;:.-–"]);
+const NAME_PERCENT_RE = /\d{1,3}\s{0,3}(?:%|percent\b)/i;
+const NAME_CLAUSE_START_RE = /\s(?:which|that)\b/i;
+
+let catalogueIndex = null;
+
+// Words of the 38 CFR catalogue's condition names, built on first use.
+function _catalogueWords() {
+  if (!catalogueIndex) {
+    catalogueIndex = new Set(
+      getAllConditions().flatMap(
+        (d) =>
+          String(d.conditionName)
+            .toLowerCase()
+            .match(/[a-z]+/g) || [],
+      ),
+    );
+  }
+  return catalogueIndex;
+}
+
+function _trimNameEdges(name) {
+  let start = 0;
+  let end = name.length;
+  while (start < end && NAME_EDGE_CHARS.has(name[start])) start++;
+  while (end > start && NAME_EDGE_CHARS.has(name[end - 1])) end--;
+  return name.slice(start, end);
+}
+
+// Letter wording a cut-off name can end on ("tinnitus effective date",
+// "sprain, status post", "migraines is"), removed from the end only. Longer
+// phrases come before the shorter phrase they contain.
+const TRAILING_PHRASES = [
+  "effective date",
+  "effective",
+  "granted",
+  "denied",
+  "continued",
+  "confirmed",
+  "shown",
+  "continues",
+  "because",
+  "since",
+  "evaluated",
+  "rated",
+  "assigned",
+  "based on",
+  "based",
+  "claimed as",
+  "claimed",
+  "status post",
+  "currently",
+  "previously",
+  "formerly",
+  "is",
+  "was",
+  "are",
+  "were",
+  "has",
+  "have",
+  "been",
+  "be",
+].map((phrase) => phrase.split(" "));
+
+function _trailingPhraseLength(words) {
+  const lowered = words.map((w) => _trimNameEdges(w).toLowerCase());
+  const hit = TRAILING_PHRASES.find(
+    (parts) =>
+      words.length > parts.length &&
+      parts.every((p, i) => lowered[lowered.length - parts.length + i] === p),
+  );
+  return hit ? hit.length : 0;
+}
+
+function _stripTrailingClauses(name) {
+  let words = name.split(" ");
+  for (let n = _trailingPhraseLength(words); n > 0; ) {
+    words = words.slice(0, -n);
+    n = _trailingPhraseLength(words);
+  }
+  return _trimNameEdges(words.join(" "));
+}
+
+// A last annotation that is open or holds only letter wording
+// ("(claimed as", "(previously)").
+const EMPTY_ANNOTATIONS = new Set([
+  "",
+  "claimed",
+  "claimed as",
+  "also claimed",
+  "also claimed as",
+  "previously",
+  "formerly",
+  "currently",
+  "evaluated",
+  "evaluated as",
+  "which",
+]);
+
+// The VA sometimes types an annotation opener twice with no space and one
+// closing bracket: "(also claimed as(also claimed as X)".
+const DOUBLED_ANNOTATION_OPENER_RE = /\(([^()]{2,40}?)\s*\(\1(?=\s)/gi;
+
+function _dropEmptyAnnotation(text) {
+  const open = text.lastIndexOf("(");
+  if (open === -1) return text;
+  let inner = text.slice(open + 1).trim();
+  if (inner.endsWith(")")) inner = inner.slice(0, -1).trim();
+  return EMPTY_ANNOTATIONS.has(inner.toLowerCase())
+    ? text.slice(0, open)
+    : text;
+}
+
+function _stripNameNoise(name) {
+  const flat = _dropEmptyAnnotation(
+    name
+      .replace(/\s+/g, " ")
+      .replace(DOUBLED_ANNOTATION_OPENER_RE, "($1")
+      .replace(/\((?:formerly|previously|currently|which)[^)]{0,80}\)/gi, ""),
+  );
+  const cuts = [
+    flat.search(NAME_PERCENT_RE),
+    flat.search(NAME_CLAUSE_START_RE),
+  ];
+  const cutAt = Math.min(...cuts.filter((i) => i !== -1), flat.length);
+  return _stripTrailingClauses(_trimNameEdges(flat.slice(0, cutAt)));
+}
+
+function _balanceParens(name) {
+  let fixed = name;
+  const count = (ch) => fixed.split(ch).length - 1;
+  while (count(")") > count("(") && fixed.endsWith(")")) {
+    fixed = _trimNameEdges(fixed.slice(0, -1));
+  }
+  if (_closesBeforeOpening(fixed)) return null;
+  if (count("(") > count(")")) fixed += ")".repeat(count("(") - count(")"));
+  return count("(") === count(")") ? fixed : null;
+}
+
+// A ")" with no "(" before it is the tail of a neighbouring table row the
+// name was read across, not part of this name.
+function _closesBeforeOpening(text) {
+  let depth = 0;
+  for (const ch of text) {
+    if (ch === "(") depth++;
+    else if (ch === ")" && --depth < 0) return true;
+  }
+  return false;
+}
+
+const MIN_CUT_LETTERS = 3;
+
+// A multi-word name whose last word is not a catalogue word but is the start
+// of one ("... stress disor", "... sleep ap") was cut off mid-word.
+function _endsMidWord(name) {
+  const lastToken = name.split(/[\s-]+/).pop();
+  if (!/^[A-Za-z]{2,}$/.test(lastToken) || !name.includes(" ")) return false;
+  if (lastToken === lastToken.toUpperCase()) return false;
+  const last = lastToken.toLowerCase();
+  const words = _catalogueWords();
+  if (words.has(last)) return false;
+  for (const w of words) {
+    if (w.length >= last.length + MIN_CUT_LETTERS && w.startsWith(last)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Names that stop one word short of the condition they begin.
+const CUT_BEFORE_HEAD_TAILS = [
+  "post-traumatic stress",
+  "posttraumatic stress",
+  "obstructive sleep",
+];
+
+function _endsOnBareQualifier(lower, words) {
+  const last = words[words.length - 1];
+  if (!DANGLING_QUALIFIERS.has(last)) return false;
+  return !/,\s*[a-z]+$/.test(lower);
+}
+
+function _isTruncatedName(name) {
+  if (name.length > MAX_CONDITION_NAME_CHARS) return true;
+  const lower = name.toLowerCase();
+  const words = lower.split(/\s+/);
+  return (
+    DANGLING_END_WORDS.has(words[words.length - 1]) ||
+    _endsOnBareQualifier(lower, words) ||
+    lower === "sleep" ||
+    CUT_BEFORE_HEAD_TAILS.some((t) => lower === t || lower.endsWith(` ${t}`)) ||
+    _endsMidWord(name)
+  );
+}
+
+const MONTH = String.raw`(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?`;
+const DATE_TAIL = String.raw`\s*[,:-]?\s*`;
+const DATE_PREFIX_RES = [
+  new RegExp(
+    String.raw`^${MONTH}\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}${DATE_TAIL}`,
+    "i",
+  ),
+  new RegExp(String.raw`^\d{1,2}\s+${MONTH}\s+\d{4}${DATE_TAIL}`, "i"),
+  new RegExp(String.raw`^${MONTH}\s+\d{4}${DATE_TAIL}`, "i"),
+  /^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*[,:-]?\s*/,
+  /^\d{4}-\d{2}-\d{2}\s*[,:-]?\s*/,
+];
+const BOILERPLATE_PREFIX_RES = [
+  /^service[- ]connected\s+(?=disabilit)/i,
+  /^(?:disabilit(?:y|ies)|condition|diagnosis|evaluation)\s+(?:of|for)\s+/i,
+  /^service[- ]connection\s+(?:is\s+)?(?:for|of)\s+/i,
+  /^(?:claimed|claim|entitlement)\s+(?:as|for|to)\s+/i,
+  /^(?:a|an|the)\s+/i,
+];
+// The lookahead keeps a hyphenated name ("in-service ...", "At-rest tremor")
+// out of the fragment rule: only a whole clause-opening word counts.
+const FRAGMENT_START_RES = [
+  /^(?:of|and|or|with|to|for|by|in|on|at)(?=\s|$)/i,
+  /^(?:which|that|as|from|is|was|shows?)(?=\s|$)/i,
+  /^(?:due|secondary)\s+to(?=\s|$)/i,
+];
+
+function _startsAsFragment(name) {
+  if (/^in\s+situ\b/i.test(name)) return false;
+  if (/^[A-Z]{2}$/.test(name)) return false;
+  // "Secondary to A, B" lists the conditions themselves.
+  if (/^(?:due|secondary)\s+to\b/i.test(name) && name.includes(",")) {
+    return false;
+  }
+  return FRAGMENT_START_RES.some((re) => re.test(name));
+}
+
+function _stripNamePrefixes(name) {
+  let current = name;
+  for (let i = 0; i < 8; i++) {
+    let next = current;
+    for (const re of [...DATE_PREFIX_RES, ...BOILERPLATE_PREFIX_RES]) {
+      next = next.replace(re, "");
+    }
+    next = _trimNameEdges(next);
+    if (next === current) break;
+    current = next;
+  }
+  return current;
+}
+
+// Repeated word or phrase ("left left knee", "Bilateral hearing loss hearing
+// loss", "Tinnitus, tinnitus"): the later copy is dropped.
+function _dropAdjacentRepeats(tokens) {
+  const key = (t) => _trimNameEdges(t.toLowerCase());
+  const out = [...tokens];
+  for (let n = Math.floor(out.length / 2); n >= 1; n--) {
+    let i = 0;
+    while (i + 2 * n <= out.length) {
+      const same = out
+        .slice(i, i + n)
+        .every((t, k) => key(t) === key(out[i + n + k]));
+      if (same) out.splice(i + n, n);
+      else i++;
+    }
+  }
+  return out;
+}
+
+const nameKey = (text) => text.toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+
+// A name that is one phrase twice: "Tinnitus and Tinnitus", "Lumbar strain /
+// lumbar strain", or run together at the join ("hearing losshearing loss").
+function _collapseWholeNameRepeat(name) {
+  const pieces = name.split(/[,;&/]|\band\b|\bor\b/i).filter((p) => nameKey(p));
+  if (
+    pieces.length >= 2 &&
+    pieces.every((p) => nameKey(p) === nameKey(pieces[0]))
+  ) {
+    return pieces[0].trim();
+  }
+  const compact = nameKey(name);
+  const half = compact.length / 2;
+  const isDoubled =
+    Number.isInteger(half) &&
+    half >= 4 &&
+    compact.slice(0, half) === compact.slice(half) &&
+    !_catalogueWords().has(compact);
+  if (!isDoubled) return name;
+  let seen = 0;
+  for (let i = 0; i < name.length; i++) {
+    if (/[A-Za-z0-9]/.test(name[i])) seen++;
+    if (seen === half) return _trimNameEdges(name.slice(0, i + 1));
+  }
+  return name;
+}
+
+// Run-together duplicates: "Tinnitus Tinnitus" or "tinnitustinnitus". A real
+// catalogue word that happens to double ("beriberi") is left alone.
+function _collapseRepeats(name) {
+  const tokens = _dropAdjacentRepeats(
+    _collapseWholeNameRepeat(name).split(" "),
+  );
+  return _trimNameEdges(
+    tokens
+      .map((t) => {
+        const mid = t.length / 2;
+        const isDoubled =
+          t.length >= 8 &&
+          Number.isInteger(mid) &&
+          /^[A-Za-z]+$/.test(t) &&
+          t.slice(0, mid).toLowerCase() === t.slice(mid).toLowerCase() &&
+          !_catalogueWords().has(t.toLowerCase());
+        return isDoubled ? t.slice(0, mid) : t;
+      })
+      .join(" "),
+  );
+}
+
+// Scaffolding words only, ignoring tokens that carry a digit ("Page 3 of 7",
+// "VA Form 21-526EZ"). A name that is nothing but digit tokens is not scaffolding.
+function _isScaffoldingOnly(name) {
+  const lower = name.toLowerCase();
+  const letterWords = lower.match(/[a-z]+/g) || [];
+  if (letterWords.every(_isScaffoldingWord)) return true;
+  const plain = lower
+    .split(/\s+/)
+    .filter((t) => !/\d/.test(t))
+    .map((t) => t.replace(/[^a-z]/g, ""));
+  return plain.length > 0 && plain.every(_isScaffoldingWord);
+}
+
+const MIN_GLUED_WORD_LETTERS = 4;
+
+// OCR can glue two scaffolding words into one token ("Serviceconnection").
+// Only pieces of 4+ letters count, so short words ("a", "no", "be") cannot
+// stitch a real condition word together.
+function _isScaffoldingWord(word) {
+  if (NON_CONDITION_WORDS.has(word)) return true;
+  const reachable = [true];
+  for (let end = 1; end <= word.length; end++) {
+    reachable[end] = false;
+    for (let start = 0; start <= end - MIN_GLUED_WORD_LETTERS; start++) {
+      if (reachable[start] && NON_CONDITION_WORDS.has(word.slice(start, end))) {
+        reachable[end] = true;
+        break;
+      }
+    }
+  }
+  return reachable[word.length];
+}
+
+function _isFragmentName(name) {
+  return _startsAsFragment(name) || _isTruncatedName(name);
+}
+
+// Returns the cleaned condition name, or null when the text is not a
+// condition (bare number/percentage, scaffolding words only, or a fragment).
+// Date/article/boilerplate prefixes are stripped and run-together duplicates
+// collapsed. Two-letter all-caps acronyms (ED, MS) are real conditions. A name
+// the 38 CFR catalogue recognises is never dropped as a fragment; an unknown
+// name is kept unless it is plainly a fragment.
+export function _cleanConditionName(rawName) {
+  if (typeof rawName !== "string") return null;
+  const stripped = _collapseRepeats(
+    _stripNamePrefixes(_stripNameNoise(rawName)),
+  );
+  if (!/[a-z]{3}/i.test(stripped) && !/\b[A-Z]{2}\b/.test(stripped)) {
+    return null;
+  }
+  const name = _balanceParens(stripped);
+  if (!name) return null;
+  if (_isScaffoldingOnly(name)) return null;
+  if (_isFragmentName(name) && !lookupDiagnosticCodeByName(name)) return null;
+  return name;
+}
+
+// D19-2: turns a local parser's found condition into the same claim shape
+// surfaceDocumentedConditions already pushes, so both signals merge into one
+// list with one downstream contract (enrichClaimsWithDiagnosticCodes /
+// enforceValidDiagnosticCodes). Returns null when the name is not a condition.
+function _localParserClaim(
+  rawName,
+  diagnosticCode,
+  percent,
+  status,
+  effectiveDate,
+  source,
+) {
+  const name =
+    source === "code-sheet" && typeof rawName === "string"
+      ? rawName.replace(/\s+/g, " ").trim()
+      : _cleanConditionName(rawName);
+  if (!name) return null;
+  const parts = [`found in your document (${source.replace("-", " ")})`];
+  if (typeof percent === "number" && !Number.isNaN(percent)) {
+    parts.push(`rated ${percent}%`);
+  }
+  if (status === "DENIED") parts.push("denied");
+  else if (status === "GRANTED") parts.push("granted");
+  if (effectiveDate) parts.push(`effective ${effectiveDate}`);
+
+  return {
+    condition: name,
+    diagnosticCode: diagnosticCode || null,
+    likelihood: "medium",
+    inServiceEvent: "",
+    currentDiagnosis: "unclear",
+    nexusStrength: "unclear",
+    missing_element:
+      "Auto-surfaced from your uploaded document's own extracted data - verify against your exam findings and file if applicable.",
+    evidence_pages: [],
+    recommendation: `"${name}" was ${parts.join(", ")}.`,
+    source: `local-parser:${source}`,
+  };
+}
+
+// Compared by letters and digits only, so a name OCR glued into one token
+// ("nightsweats") is the same condition as its spaced copy.
+function _isSameCondition(a, b) {
+  return (
+    typeof a === "string" &&
+    typeof b === "string" &&
+    nameKey(a) !== "" &&
+    nameKey(a) === nameKey(b)
+  );
+}
+
+const _spaceCount = (text) => text.split(/\s+/).length;
+
+// The spaced copy of a glued name is the better-read one: the kept finding
+// takes its wording.
+function _adoptBetterSpelling(kept, claim) {
+  if (_spaceCount(claim.condition) <= _spaceCount(kept.condition)) return;
+  kept.recommendation = kept.recommendation?.replace(
+    `"${kept.condition}"`,
+    `"${claim.condition}"`,
+  );
+  kept.condition = claim.condition;
+}
+
+function _pushIfNewCondition(claims, claim) {
+  if (!claim?.condition) return;
+  const kept = claims.find((c) =>
+    _isSameCondition(c.condition, claim.condition),
+  );
+  if (kept) {
+    _adoptBetterSpelling(kept, claim);
+    return;
+  }
+  claims.push(claim);
+}
+
+// Rating-decision letter signal: parseDecisionLetter (vaDocumentParser.js,
+// already used by Muster Call's own parseRatingDecisionDocument) plus
+// extractBigThree's header-agnostic "name NN% ... date" scan for whatever a
+// clean SECTION-HEADER-based parse misses.
+function _claimsFromDecisionLetter(fullText) {
+  const claims = [];
+  const data = parseDecisionLetter(fullText);
+  if (data.success) {
+    for (const c of data.conditions) {
+      claims.push(
+        _localParserClaim(
+          c.name,
+          c.diagnosticCode,
+          c.percent,
+          c.status,
+          c.effectiveDate,
+          "rating-decision",
+        ),
+      );
+    }
+  }
+  for (const c of extractBigThree(fullText)) {
+    claims.push(
+      _localParserClaim(
+        c.condition,
+        null,
+        c.percent,
+        null,
+        c.effectiveDate,
+        "rating-decision",
+      ),
+    );
+  }
+  return claims;
+}
+
+// Code-sheet signal: parseCodeSheet (vaDocumentParser.js) already resolves
+// the latest rating code sheet (vaCodeSheet.js) internally.
+function _claimsFromCodeSheet(fullText) {
+  const data = parseCodeSheet(fullText);
+  if (!data.success) return [];
+  return data.conditions.map((c) =>
+    _localParserClaim(
+      c.name,
+      c.diagnosticCode,
+      c.percent,
+      null,
+      null,
+      "code-sheet",
+    ),
+  );
+}
+
+// Claim-letter signal: musterCallProcessor.js's own parseClaimLetter covers
+// development/award letters that don't hit the stricter rating-decision
+// section headers. Dynamically imported the same way this file already
+// pulls in diamondSwarm - musterCallProcessor is a large module and this
+// fallback path only runs when no on-device AI is ready.
+//
+// Reads data.decisions (every per-issue outcome the letter states,
+// including denials), not data.conditions (parseClaimLetter's own
+// decisionsToConditions keeps only RATED_OUTCOMES entries with a non-null
+// rating, so a denial - exactly the appealable finding a veteran needs to
+// see - was silently excluded). Labeled "decision text" rather than "claim
+// letter": parseClaimLetter's per-issue extraction is a plain prose/sentence
+// scan that fires on any decision-bearing letter, not only development/
+// award letters, so "claim letter" mislabeled a real rating-decision finding
+// as something else.
+async function _claimsFromClaimLetter(fullText) {
+  const { parseClaimLetter } = await import("./musterCallProcessor");
+  const data = await parseClaimLetter(fullText);
+  return (data.decisions || [])
+    .filter((d) => !d.issue)
+    .map((d) =>
+      _localParserClaim(
+        d.condition,
+        null,
+        d.rating,
+        d.outcome === "denied" ? "DENIED" : null,
+        d.effectiveDate,
+        "decision-text",
+      ),
+    );
+}
+
+// D19-2: the off-device fallback used to run ONLY a 4-condition foot-terms
+// grounded scan (surfaceDocumentedConditions below) - across 32 real
+// decision letters that found 0 claims. Runs the app's real rating-decision/
+// code-sheet/claim-letter parsers (not a second, narrower implementation)
+// over the veteran's own document text first, merging every condition any
+// of them found into potential_claims, deduped by name.
+async function _surfaceLocalParserConditions(result, fullText) {
+  const allClaims = [
+    ..._claimsFromDecisionLetter(fullText),
+    ..._claimsFromCodeSheet(fullText),
+    ...(await _claimsFromClaimLetter(fullText)),
+  ];
+  for (const claim of allClaims) {
+    _pushIfNewCondition(result.potential_claims, claim);
+  }
+}
+
+function _buildOffDeviceSummary(potentialClaims) {
+  if (potentialClaims.length === 0) {
+    return (
+      "The built-in document scan (no AI available) did not find any " +
+      "claimable conditions, ratings, or decisions in this document. Load " +
+      "an on-device AI for a deeper analysis, or review the file manually."
+    );
+  }
+  const names = potentialClaims.map((c) => c.condition).join(", ");
+  return (
+    `The built-in document scan (no AI available) found ${potentialClaims.length} ` +
+    `potential condition(s) directly in your document's own text: ${names}. ` +
+    "Load an on-device AI for a deeper analysis."
+  );
+}
+
+// ADR-009: only an off-device AI is configured. C-File text is
+// document-derived and stays on-device only, so skip AI entirely rather
+// than burn chunk retries against a routing decision that can't change
+// mid-run - go straight to the local parsers + grounded documented-term
+// scan (surfaceDocumentedConditions) already used elsewhere in this file as
+// a safety net alongside AI results.
+async function _buildOffDeviceFallbackResult(fullText, providerLabel) {
+  const result = createEmptyChunkResult();
+  await _surfaceLocalParserConditions(result, fullText);
+  surfaceDocumentedConditions(result, fullText);
+  enrichClaimsWithDiagnosticCodes(result);
+  const rejectedCodes = enforceValidDiagnosticCodes(result);
+  result.failedChunks = [];
+  result.summary = _buildOffDeviceSummary(result.potential_claims);
+
+  return {
+    success: true,
+    analysis: result,
+    metadata: {
+      analyzedAt: new Date().toISOString(),
+      textLength: fullText.length,
+      aiMode: "off_device_blocked",
+      chunksProcessed: 0,
+      boilerplatePagesSkipped: 0,
+      pagesExcludedFromAI: 0,
+      chunksExcludedFromAI: 0,
+      semanticIndex: { indexed: false, reason: "off_device_blocked" },
+      rejectedDiagnosticCodes: rejectedCodes,
+      offDeviceBlocked: true,
+      offDeviceNotice: buildDocumentOffDeviceNotice(providerLabel),
+      foundNothing: result.potential_claims.length === 0,
+    },
+  };
+}
+
 export async function analyzeCFile(
   apiKey,
   fullText,
@@ -2097,8 +2837,19 @@ export async function analyzeCFile(
     throw new Error("Insufficient text content to analyze");
   }
 
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    onProgress("On-device AI unavailable - using built-in document scan...", {
+      phase: "analyze",
+    });
+    return _buildOffDeviceFallbackResult(
+      fullText,
+      routing.blockedProviderLabel,
+    );
+  }
+
   const { aiMode, isLocalAIMode, chunks, skippedPages } =
-    await _determineAiModeAndChunks(fullText, onProgress);
+    await _determineAiModeAndChunks(fullText, onProgress, routing.onDeviceMode);
   const totalChunks = chunks.length;
 
   if (totalChunks === 1) {
@@ -2323,13 +3074,16 @@ async function _requestChunkAnalysis(
   totalChunks,
   onProgress,
   attempt = 0,
+  aiMode = null,
 ) {
-  // Detect if we're using local AI (smaller context). effectiveMode is the
-  // resolved routing target - the raw stored mode can disagree with it
-  // (e.g. "auto"), which silently gave local generations the short cloud
-  // timeout and the full-size prompt.
-  const status = getAIStatus();
-  const effectiveMode = status.effectiveMode || status.mode;
+  // ADR-009: `aiMode` is the ACTUAL on-device backend this document call
+  // will dispatch to (threaded down from analyzeCFile's getDocumentAIRouting()
+  // call, via ctx.aiMode) - NOT a fresh getAIStatus().effectiveMode read,
+  // which can disagree (Cloud preferred + an on-device engine ready) and
+  // silently pick the full-size cloud prompt/timeout for a call that is
+  // about to run on-device anyway. Falls back to a fresh read only for a
+  // caller that doesn't have a resolved mode yet (none in this file).
+  const effectiveMode = aiMode || getAIStatus().effectiveMode;
   const isLocalAI =
     effectiveMode === AI_MODES.LOCAL ||
     effectiveMode === AI_MODES.SWARM ||
@@ -2395,6 +3149,8 @@ async function _requestChunkAnalysis(
   let response;
   try {
     response = await generateAI(userPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "cfile-analyzer",
       temperature: isLocalAI ? 0.1 : 0.2,
       maxTokens: localMaxTokens,
       expectJSON: true,
@@ -2501,6 +3257,7 @@ async function analyzeChunk(
   totalChunks,
   onProgress,
   attempt = 0,
+  aiMode = null,
 ) {
   const contentStr = await _requestChunkAnalysis(
     chunk,
@@ -2508,6 +3265,7 @@ async function analyzeChunk(
     totalChunks,
     onProgress,
     attempt,
+    aiMode,
   );
   const analysisResult = _parseChunkAiResponse(contentStr);
 
@@ -2560,15 +3318,14 @@ async function analyzeChunk(
  * No overlap, no size limits - each page is its own entry.
  */
 function parseAllPages(fullText) {
-  // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
-  const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
+  const pageRegex = /--- PAGE (\d{1,6})[^\n]{0,200}---/g;
   const pages = [];
   let prev = null;
   let match;
   while ((match = pageRegex.exec(fullText)) !== null) {
     if (prev) {
       pages.push({
-        pageNum: parseInt(prev[1], 10),
+        pageNum: Number.parseInt(prev[1], 10),
         text: fullText.slice(prev.index + prev[0].length, match.index).trim(),
       });
     }
@@ -2576,7 +3333,7 @@ function parseAllPages(fullText) {
   }
   if (prev) {
     pages.push({
-      pageNum: parseInt(prev[1], 10),
+      pageNum: Number.parseInt(prev[1], 10),
       text: fullText.slice(prev.index + prev[0].length).trim(),
     });
   }
@@ -2631,6 +3388,8 @@ async function _requestPageAnalysis(pageText, pageNum, totalPages, onProgress) {
   let response;
   try {
     response = await generateAI(userPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "cfile-analyzer",
       temperature: isLocalAI ? 0.1 : 0.2,
       maxTokens: maxOutputTokens,
       expectJSON: true,
@@ -2768,6 +3527,47 @@ function _prepareMedicalPages(fullText, onProgress) {
   return { medicalPages, skippedPages };
 }
 
+/** Back off before a retry attempt; a no-op on the first (attempt === 0) try. */
+async function _waitForRetryBackoff(attempt) {
+  if (attempt > 0) {
+    await new Promise((r) => setTimeout(r, CHUNK_RETRY_BACKOFF_MS * attempt));
+  }
+}
+
+/** Wait out an open AI circuit breaker before the caller retries the page. */
+async function _waitForCircuitBreaker(pageNum, i, ctx) {
+  ctx.onProgress(`AI engine paused - waiting 30s before page ${pageNum}…`, {
+    phase: "circuit-wait",
+    current: i + 1,
+    total: ctx.totalPages,
+  });
+  await new Promise((r) => setTimeout(r, 31000));
+  resetAICircuitBreaker();
+}
+
+/**
+ * Decide how `_runPageWithRetries` should respond to one page-analysis
+ * failure: retry (after waiting out an open circuit breaker), give up on
+ * this page with an empty result, propagate a user cancellation, or fall
+ * through to the loop's normal next-attempt behavior.
+ */
+async function _resolvePageRetryAction(error, pageNum, i, ctx, circuitWaits) {
+  if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
+    await _waitForCircuitBreaker(pageNum, i, ctx);
+    return "retry";
+  }
+  if (
+    error.message?.includes("context window") ||
+    error.message?.includes("too large for Local AI")
+  ) {
+    return "giveUp";
+  }
+  if (error.message === "Analysis cancelled by user") {
+    return "cancelled";
+  }
+  return "none";
+}
+
 async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
   let result = null;
   let lastError = null;
@@ -2778,11 +3578,7 @@ async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
       throw new Error("Analysis cancelled by user");
     }
     try {
-      if (attempt > 0) {
-        await new Promise((r) =>
-          setTimeout(r, CHUNK_RETRY_BACKOFF_MS * attempt),
-        );
-      }
+      await _waitForRetryBackoff(attempt);
       result = await analyzePage(text, pageNum, ctx.totalPages, ctx.onProgress);
       lastError = null;
       break;
@@ -2792,31 +3588,23 @@ async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
         `Error on page ${pageNum} (attempt ${attempt + 1}): ${error?.message}`,
       );
 
-      if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
+      const action = await _resolvePageRetryAction(
+        error,
+        pageNum,
+        i,
+        ctx,
+        circuitWaits,
+      );
+      if (action === "retry") {
         circuitWaits++;
-        ctx.onProgress(
-          `AI engine paused - waiting 30s before page ${pageNum}…`,
-          {
-            phase: "circuit-wait",
-            current: i + 1,
-            total: ctx.totalPages,
-          },
-        );
-        await new Promise((r) => setTimeout(r, 31000));
-        resetAICircuitBreaker();
         attempt--;
         continue;
       }
-
-      if (
-        error.message?.includes("context window") ||
-        error.message?.includes("too large for Local AI")
-      ) {
+      if (action === "giveUp") {
         result = createEmptyChunkResult();
         break;
       }
-
-      if (error.message === "Analysis cancelled by user") throw error;
+      if (action === "cancelled") throw error;
     }
   }
 
@@ -2943,9 +3731,15 @@ export { attemptJSONRepair };
  * Estimate chunks needed for a given text length
  * Useful for showing user what to expect before processing
  */
+// D19-2: sized for whichever backend a document call will ACTUALLY
+// dispatch to (getDocumentAIRouting().onDeviceMode), not
+// getAIStatus().effectiveMode - which can read CLOUD (Cloud preferred + key
+// configured) even while an on-device engine sits ready, sizing the
+// pre-flight estimate for the wrong backend's context window.
 export function estimateChunks(textLength) {
-  const aiStatus = getAIStatus();
-  const maxChars = getMaxCharsPerChunk(aiStatus.effectiveMode);
+  const routing = getDocumentAIRouting();
+  const aiMode = routing.onDeviceMode || getAIStatus().effectiveMode;
+  const maxChars = getMaxCharsPerChunk(aiMode);
   return Math.ceil(textLength / maxChars);
 }
 
@@ -2953,8 +3747,8 @@ export function estimateChunks(textLength) {
  * Get context window info for current AI mode
  */
 export function getContextWindowInfo() {
-  const aiStatus = getAIStatus();
-  const aiMode = aiStatus.effectiveMode;
+  const routing = getDocumentAIRouting();
+  const aiMode = routing.onDeviceMode || getAIStatus().effectiveMode;
 
   if (
     aiMode === AI_MODES.LOCAL ||

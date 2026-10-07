@@ -17,8 +17,17 @@
  * All data stays 100% on the veteran's device - never sent to servers.
  */
 
+import { logger } from "./logger";
 import { markAsModified } from "./persistentStorage";
 import { ensureQuota } from "./storage";
+import { awardDisplayName } from "./combatService";
+import {
+  getServiceEntryForDocument,
+  getVeteranProfile,
+} from "./veteranProfile";
+import { isSameCalendarDay } from "./serviceEntryDate";
+import { scrubText, redactVeteranIdentifiers } from "./piiScrubber";
+import { loadVKB } from "./veteranKnowledgeBase";
 
 // ============================================================
 // DATABASE CONFIGURATION
@@ -55,9 +64,27 @@ const openPacketDB = () => {
       reject(request.error);
     };
 
+    request.onblocked = () => {
+      console.warn(
+        "My Packet database is waiting for another tab to release it.",
+      );
+    };
+
     request.onsuccess = () => {
-      packetDB = request.result;
-      resolve(packetDB);
+      const db = request.result;
+      packetDB = db;
+      // A connection that outlives its own upgrade blocks every other tab's
+      // open forever; closing on versionchange/close also keeps a dead handle
+      // from being reused.
+      const drop = () => {
+        db.close();
+        if (packetDB === db) packetDB = null;
+      };
+      db.onversionchange = drop;
+      db.onclose = () => {
+        if (packetDB === db) packetDB = null;
+      };
+      resolve(db);
     };
 
     request.onupgradeneeded = (event) => {
@@ -86,6 +113,17 @@ const openPacketDB = () => {
       }
     };
   });
+};
+
+// After a step timed out the cached connection may be the stuck one: drop it
+// so the retry opens a fresh connection instead of queueing behind it.
+export const resetPacketConnection = () => {
+  try {
+    packetDB?.close();
+  } catch {
+    // already closed
+  }
+  packetDB = null;
 };
 
 // ============================================================
@@ -299,14 +337,17 @@ export const saveDocumentToPacket = async (doc) => {
 
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
+      tx.onabort = () =>
+        reject(
+          tx.error || new DOMException("Transaction aborted", "AbortError"),
+        );
     });
 
     // Update localStorage metadata cache
     await updatePacketMetadata();
     markAsModified();
 
-    // eslint-disable-next-line no-console
-    console.log(`📁 Saved to My Packet: ${document.fileName} (${id})`);
+    logger.info(`📁 Saved to My Packet: ${document.classification} (${id})`);
     const result = { success: true, documentId: id };
     if (!quota.ok) result.quotaWarning = quota.message;
     return result;
@@ -388,17 +429,18 @@ export const getPacketDocumentsByType = async (classification) => {
 /**
  * Get ALL full documents (with raw text) - use carefully, can be large
  */
-export const getAllPacketDocuments = async () => {
+export const getAllPacketDocuments = async ({ strict = false } = {}) => {
   try {
     const db = await openPacketDB();
-    return new Promise((resolve) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction([PACKET_STORE_NAME], "readonly");
       const request = tx.objectStore(PACKET_STORE_NAME).getAll();
       request.onsuccess = () => resolve(request.result || []);
-      request.onerror = () => resolve([]);
+      request.onerror = () => (strict ? reject(request.error) : resolve([]));
     });
   } catch (error) {
     console.error("Failed to get all packet documents:", error);
+    if (strict) throw error;
     return [];
   }
 };
@@ -560,63 +602,12 @@ export const getDocumentExtractedData = async (documentId) => {
 };
 
 /**
- * Get ALL raw text concatenated for use in AI prompts.
- * This gives AI tools complete context about the veteran.
- *
- * @param {Object} options - Options
- * @param {string|string[]} options.types - Filter by document type(s)
- * @param {number} options.maxChars - Maximum total characters
- * @returns {Promise<string>} Concatenated text from all documents
- */
-export const getAllDocumentText = async (options = {}) => {
-  try {
-    const allDocs = await getAllPacketDocuments();
-    let filteredDocs = allDocs;
-
-    // Filter by type if specified
-    if (options.types) {
-      const typeArray = Array.isArray(options.types)
-        ? options.types
-        : [options.types];
-      filteredDocs = allDocs.filter((d) =>
-        typeArray.includes(d.classification),
-      );
-    }
-
-    // Sort by upload date (oldest first for chronological context)
-    filteredDocs.sort(
-      (a, b) => new Date(a.uploadDate) - new Date(b.uploadDate),
-    );
-
-    let combinedText = "";
-    for (const doc of filteredDocs) {
-      const label = PACKET_DOC_LABELS[doc.classification] || doc.classification;
-      const header = `\n=== ${label}: ${doc.fileName} (${doc.uploadDate.split("T")[0]}) ===\n`;
-      combinedText += header + (doc.rawText || "") + "\n\n";
-
-      // Check size limit
-      if (options.maxChars && combinedText.length > options.maxChars) {
-        combinedText = combinedText.substring(0, options.maxChars);
-        combinedText +=
-          "\n\n[... DOCUMENT TEXT TRUNCATED FOR AI PROCESSING ...]\n";
-        break;
-      }
-    }
-
-    return combinedText;
-  } catch (error) {
-    console.error("Failed to get all document text:", error);
-    return "";
-  }
-};
-
-/**
  * Get ALL extracted structured data for use by AI tools.
  * Returns a combined object with data organized by document type.
  */
-export const getAllExtractedData = async () => {
+export const getAllExtractedData = async ({ strict = false } = {}) => {
   try {
-    const allDocs = await getAllPacketDocuments();
+    const allDocs = await getAllPacketDocuments({ strict });
     const data = {
       dd214s: [],
       claimLetters: [],
@@ -670,6 +661,7 @@ export const getAllExtractedData = async () => {
     return data;
   } catch (error) {
     console.error("Failed to get all extracted data:", error);
+    if (strict) throw error;
     return {
       dd214s: [],
       claimLetters: [],
@@ -869,11 +861,10 @@ export const clearPacket = async () => {
  *
  * @param {Object} options - Options
  * @param {number} options.maxTokens - Approximate max tokens (chars/2)
- * @param {boolean} options.includeRawText - Include raw document text
  * @param {string[]} options.types - Filter to specific doc types
  * @returns {Promise<string>} AI-ready context string
  */
-function _groupDocsByType(allDocs, types) {
+export function _groupDocsByType(allDocs, types) {
   const grouped = {};
   for (const doc of allDocs) {
     if (types && !types.includes(doc.classification)) continue;
@@ -889,27 +880,78 @@ function _formatDeployment(d) {
   return `${place} ${dates}`;
 }
 
-function _formatServiceRecordDoc(doc, options) {
-  const data = doc.extractedData || {};
-  if (Object.keys(data).length === 0) {
-    if (options.includeRawText && doc.rawText) {
-      return `[Raw text from ${doc.fileName}]\n${doc.rawText.substring(0, 2000)}\n\n`;
+// ADR-007: the entry date line is now a projection of the SAME canonical
+// resolver every other consumer uses, not the document's own raw
+// extractedData - getServiceEntryForDocument proves this specific document
+// is linked to a canonical period before overriding its own printed value,
+// so a veteran's correction (or a later document's higher-precedence date)
+// is visible here too, with honest provenance, instead of this AI-context
+// line silently disagreeing with the Service tab/dossier/system prompt.
+function _formatServiceEntryLine(data, documentEntryDate, fileName) {
+  const p = getServiceEntryForDocument(fileName);
+  if (p) {
+    let line = `  Entry: ${p.date}`;
+    if (p.derived) line += " (calculated from net service)";
+    // p.documentDate (startDateCorrection.documentDate) is period-level,
+    // not per-document - a later document merging onto this same period
+    // (a code sheet, say) refreshes it to ITS OWN incoming date, so it can
+    // disagree with what THIS specific fileName actually printed. This
+    // packet doc's own extractedData (documentEntryDate) is always this
+    // document's real value.
+    if (
+      p.source === "veteran" &&
+      documentEntryDate &&
+      !isSameCalendarDay(documentEntryDate, p.date)
+    ) {
+      line += ` (veteran-corrected; this document shows ${documentEntryDate})`;
     }
-    return "";
+    return `${line}\n`;
   }
+  const derived = !!(data.entryDateDerived || data.serviceStartDateDerived);
+  return `  Entry: ${documentEntryDate}${derived ? " (calculated from net service)" : ""}\n`;
+}
 
-  let out = `File: ${doc.fileName}\n`;
-  if (data.fullName) out += `  Name: ${data.fullName}\n`;
+// Owner decision D (2026-09-28, ADR-008): a DD-214/NGB-22's own extracted
+// `fullName` is a direct veteran identifier - it never enters an AI
+// context, full stop, the same as VKB's buildPersonalContext. This used to
+// print `  Name: ${data.fullName}` here.
+export function _formatServiceRecordBasics(data, fileName) {
+  let out = "";
   if (data.branch) out += `  Branch: ${data.branch}\n`;
   if (data.component) out += `  Component: ${data.component}\n`;
-  if (data.rank) out += `  Rank: ${data.rank} (${data.payGrade || ""})\n`;
-  if (data.mos) out += `  MOS: ${data.mos} - ${data.mosTitle || ""}\n`;
-  if (data.entryDate) out += `  Entry: ${data.entryDate}\n`;
+  // F19 (final13 QA re-review, 2026-09-28): the same D13-7 empty-placeholder
+  // defect (fixed in veteranKnowledgeBase.js's Period line) was still live
+  // here - a rank with no extracted pay grade printed "SGT ()", and a MOS
+  // with no title left a trailing " - ".
+  if (data.rank) {
+    const payGradePart = data.payGrade ? ` (${data.payGrade})` : "";
+    out += `  Rank: ${data.rank}${payGradePart}\n`;
+  }
+  if (data.mos) {
+    const mosTitlePart = data.mosTitle ? ` - ${data.mosTitle}` : "";
+    out += `  MOS: ${data.mos}${mosTitlePart}\n`;
+  }
+  const documentEntryDate = data.entryDate ?? data.serviceStartDate;
+  if (documentEntryDate) {
+    out += _formatServiceEntryLine(data, documentEntryDate, fileName);
+  }
   if (data.separationDate) out += `  Separation: ${data.separationDate}\n`;
   if (data.characterOfService)
     out += `  Character: ${data.characterOfService}\n`;
+  return out;
+}
+
+// D11-5 (final11 QA, 2026-09-27): award objects reaching this function have
+// no flat `.name` when they came from ribbonRackData.parseDD214Text (Muster
+// Call's regex path emits {award: {name}, matchedText}, not {name}) - `a.name
+// || a` fell through to the whole object, printing "[object Object]" into
+// this packet doc's AI context. awardDisplayName (combatService.js) already
+// handles every award shape in circulation; reused here instead of
+// duplicating that shape knowledge.
+export function _formatServiceRecordHighlights(data) {
+  let out = "";
   if (data.awards?.length) {
-    out += `  Awards: ${data.awards.map((a) => a.name || a).join("; ")}\n`;
+    out += `  Awards: ${data.awards.map((a) => awardDisplayName(a)).join("; ")}\n`;
   }
   if (data.combatService?.hasVerifiedCombat) {
     out += `  Combat: YES (${data.combatService.indicators?.join(", ") || "verified"})\n`;
@@ -920,11 +962,97 @@ function _formatServiceRecordDoc(doc, options) {
   if (data.specialQualifications?.length) {
     out += `  Qualifications: ${data.specialQualifications.join(", ")}\n`;
   }
+  return out;
+}
+
+// D15-3: DD214Analyzer.jsx classifies EVERY service-record upload as
+// PACKET_DOC_TYPES.DD214 regardless of which form it actually is (an
+// NGB-22 the analyzer processed lands in the same packet group as a real
+// DD-214 - Muster Call's own import path classifies correctly, so this
+// only matters for documents that went through DD214Analyzer). The
+// group's label alone is therefore unreliable; the document's OWN
+// extracted form type (`masterRecordType`, or `documentTypes[0]` as a
+// fallback - both are fields DD214Analyzer's AI schema always returns,
+// never gated by ADR-008 since neither is a direct identifier) is the
+// source of truth whenever it names a form this app has its own label
+// for. Order-independent by construction - it reads only the document's
+// own already-saved data, never anything about WHEN or in what sequence
+// other documents were imported.
+const EXTRACTED_TYPE_TO_PACKET_TYPE = {
+  DD214: PACKET_DOC_TYPES.DD214,
+  NGB22: PACKET_DOC_TYPES.NGB22,
+  DD256: PACKET_DOC_TYPES.DD256,
+  DD257: PACKET_DOC_TYPES.DD257,
+  DD215: PACKET_DOC_TYPES.DD215,
+};
+
+// D15-3: strip anything but letters/digits and uppercase before the lookup,
+// so "NGB-22" / "NGB 22" / "ngb22" (all real model/OCR output shapes) match
+// EXTRACTED_TYPE_TO_PACKET_TYPE's plain "NGB22" key the same as an exact one.
+function _normalizeExtractedType(value) {
+  return typeof value === "string"
+    ? value.replace(/[^A-Za-z0-9]/g, "").toUpperCase()
+    : value;
+}
+
+// D15-3: documentClassifier routinely misclassifies a genuine NGB-22 scan
+// as "DD214" (FIX-15's own note in musterCallProcessor.js), which is what
+// archiveDocumentInPacket's group label (`fallbackLabel` here) is keyed on
+// - so a real NGB-22 could read "DD-214 (Service Record)" in the packet.
+// parseServiceRecord's own output only ever carries `formType` (NEVER
+// `masterRecordType`/`documentTypes` - those are DD214Analyzer's AI-schema
+// field names, a different pipeline entirely), so a Muster Call-imported
+// document's own recorded formType is checked too, and wins over the
+// group's classification-derived fallback whenever it names a form this
+// app has its own label for.
+function _resolveDocTypeLabel(doc, fallbackLabel) {
+  const extractedType = _normalizeExtractedType(
+    doc.extractedData?.masterRecordType ||
+      doc.extractedData?.documentTypes?.[0] ||
+      doc.extractedData?.formType,
+  );
+  const packetType =
+    extractedType && EXTRACTED_TYPE_TO_PACKET_TYPE[extractedType];
+  return packetType ? PACKET_DOC_LABELS[packetType] : fallbackLabel;
+}
+
+// Owner decision D (2026-09-28, ADR-008): a veteran's real exported
+// document filenames commonly carry their own surname/first name and the
+// last four of their VA file number (VA's own export naming convention).
+// Every AI-context label built from a document uses a neutral, structural
+// label - document type + upload date + index - instead of the raw
+// fileName, so a document label can never itself be an identifier. The
+// real fileName is still shown in the veteran-facing UI (My Packet's
+// document list) - only the AI-context text goes through this.
+function _neutralDocLabel(doc, typeLabel, index) {
+  const date = (doc.uploadDate || "").split("T")[0] || "unknown date";
+  const resolvedLabel = _resolveDocTypeLabel(doc, typeLabel);
+  return `${resolvedLabel} ${date} (#${index + 1})`;
+}
+
+// D13-4: no raw-OCR-text fallback here (dropped a dormant, never-called
+// `options.includeRawText` branch that used to embed up to 2000 chars of a
+// document's raw text - a claim letter's raw OCR is its own letterhead,
+// carrying the veteran's name/address/VA file number). A service record
+// with no structured extraction contributes nothing, same as any other
+// doc type once JSON.stringify(doc.extractedData) itself was replaced by
+// an explicit safe-field whitelist below.
+export function _formatServiceRecordDoc(
+  doc,
+  typeLabel = "Service record",
+  index = 0,
+) {
+  const data = doc.extractedData || {};
+  if (Object.keys(data).length === 0) return "";
+
+  let out = `Document: ${_neutralDocLabel(doc, typeLabel, index)}\n`;
+  out += _formatServiceRecordBasics(data, doc.fileName);
+  out += _formatServiceRecordHighlights(data);
   out += "\n";
   return out;
 }
 
-function _formatServiceRecordSection(grouped, options) {
+function _formatServiceRecordSection(grouped) {
   const serviceRecordTypes = [
     PACKET_DOC_TYPES.DD214,
     PACKET_DOC_TYPES.NGB22,
@@ -934,24 +1062,45 @@ function _formatServiceRecordSection(grouped, options) {
   let out = "";
   for (const type of serviceRecordTypes) {
     if (!grouped[type]) continue;
-    out += `--- ${PACKET_DOC_LABELS[type]} ---\n`;
-    for (const doc of grouped[type]) {
-      out += _formatServiceRecordDoc(doc, options);
-    }
+    const typeLabel = PACKET_DOC_LABELS[type];
+    out += `--- ${typeLabel} ---\n`;
+    grouped[type].forEach((doc, index) => {
+      out += _formatServiceRecordDoc(doc, typeLabel, index);
+    });
     delete grouped[type];
   }
   return out;
+}
+
+// D12-5 residual (final12 QA re-review, 2026-09-27): musterCallProcessor's
+// buildSegmentedCFileResult stores `summary` as quickScanCFile()'s scan
+// object ({estimatedPages, hasCodeSheet, hasDD214, hasDBQs, hasBVA,
+// detectedTypes}), not prose - `String(summary)` printed "[object Object]"
+// into every AI tool's context. cfileAnalyzer.js's separate AI-analysis path
+// still emits a plain string summary, so that shape is rendered unchanged.
+function _formatCFileSummaryLine(summary) {
+  if (!summary) return "";
+  if (typeof summary === "string") return summary.slice(0, 400);
+  if (typeof summary !== "object") return "";
+  const pages = Number.isFinite(summary.estimatedPages)
+    ? `~${summary.estimatedPages} pages`
+    : "";
+  const types = Array.isArray(summary.detectedTypes)
+    ? summary.detectedTypes.join(", ")
+    : "";
+  return [pages, types && `detected: ${types}`].filter(Boolean).join(", ");
 }
 
 // Structured C-File formatter - replaces the 500-char JSON blob for C-Files.
 // The extractedData is the C-File analysis object (potential_claims, timeline,
 // summary, exposures), so emit readable condition/evidence lines an AI tool can
 // actually use. Conditions are AI SUGGESTIONS (not filed claims) - labelled so.
-function _formatCFileDoc(doc) {
+export function _formatCFileDoc(doc, index = 0) {
   const data = doc.extractedData || {};
-  let out = `File: ${doc.fileName} (${(doc.uploadDate || "").split("T")[0]})\n`;
-  if (data.summary) {
-    out += `  Summary: ${String(data.summary).slice(0, 400)}\n`;
+  let out = `Document: ${_neutralDocLabel(doc, "C-File", index)}\n`;
+  const summaryLine = _formatCFileSummaryLine(data.summary);
+  if (summaryLine) {
+    out += `  Summary: ${summaryLine}\n`;
   }
   const claims = Array.isArray(data.potential_claims)
     ? data.potential_claims
@@ -984,29 +1133,249 @@ function _formatCFileSection(grouped) {
   const cFiles = grouped[PACKET_DOC_TYPES.C_FILE];
   if (!cFiles || cFiles.length === 0) return "";
   let out = `--- ${PACKET_DOC_LABELS[PACKET_DOC_TYPES.C_FILE]} ---\n`;
-  for (const doc of cFiles) {
-    out += _formatCFileDoc(doc);
-  }
+  cFiles.forEach((doc, index) => {
+    out += _formatCFileDoc(doc, index);
+  });
   // Remove so it does NOT also fall through to the truncated JSON blob below.
   delete grouped[PACKET_DOC_TYPES.C_FILE];
   return out;
 }
 
-function _formatOtherDocsSection(grouped) {
+// D13-4: every musterCallProcessor.js parser bakes a `raw: text.substring(0,
+// N)` field straight into extractedData (a claim letter's letterhead - the
+// veteran's own name/home address/VA file number), and a document type with
+// no dedicated parser resolves to ONLY that raw field
+// (parseDocumentByType's default branch). Dumping doc.extractedData whole
+// used to embed all of it verbatim. An explicit allowlist of known-safe,
+// non-identifying field names - never `raw`/`type`/`error`, never
+// `vaFileNumber` (often literally the veteran's SSN, per parseClaimLetter's
+// own comment), never `claimNumber` (document-identifying, not needed for
+// analysis) - so a document with nothing but the raw-text fallback
+// contributes nothing at all instead of leaking it.
+const PACKET_CONTEXT_SAFE_FIELDS = [
+  "combinedRating",
+  "combinedRatingHistory",
+  "effectiveDate",
+  "decisionDate",
+  "claimDate",
+  "letterDate",
+  "decisions",
+  "conditions",
+  "evidenceNeeded",
+  "responseDeadlineDays",
+  "status",
+  "condition",
+  "diagnosis",
+  "diagnoses",
+  "nexusOpinion",
+  "opinion",
+  "rationale",
+  "examDate",
+  "examiner",
+  "dateOfService",
+  "treatments",
+  "medications",
+  "provider",
+];
+
+// F5 (final13 QA re-review, 2026-09-28): several allowlisted fields are
+// near-raw OCR text rather than tightly-structured extraction -
+// evidenceNeeded is a regex capture of up to 800 chars of page text
+// (musterCallProcessor.js's parseClaimLetter), and diagnosis/rationale/
+// opinion/provider/examiner are similarly loosely bounded. A letterhead or
+// footer landing inside that captured span (a running page header pdf.js
+// emits at the end of a content stream, a "write your name and file
+// number" line) carries the veteran's own name/VA file number straight
+// through the allowlist. Scrubbed for the numeric PII piiScrubber.js can
+// actually detect (SSN/VA file number/phone/email/DOB/address) before
+// being embedded - it has no name-detection (no regex catches a bare
+// name), so this narrows the exposure rather than closing it outright.
+const FREE_TEXT_SAFE_FIELDS = new Set([
+  "evidenceNeeded",
+  "diagnosis",
+  "diagnoses",
+  "rationale",
+  "opinion",
+  "nexusOpinion",
+  "provider",
+  "examiner",
+]);
+
+function _scrubFreeTextValue(value) {
+  if (typeof value === "string") return scrubText(value);
+  if (Array.isArray(value)) {
+    return value.map((v) => (typeof v === "string" ? scrubText(v) : v));
+  }
+  return value;
+}
+
+// D15-4: was `JSON.stringify(safe).substring(0, 500)` - a fixed character
+// cut with no regard for where a value ended, routinely slicing mid-JSON
+// (an unterminated string, a dangling `"field":` with the rest of its
+// value cut off). `_safeExtractedDataSummary`'s null check was also
+// top-level only - a nested sub-field (a `{years:0,months:null,days:5}`-
+// shaped service-time object, say) still printed `"months":null` into the
+// blob. Rendered as readable "Label: value" lines instead of JSON:
+// _deepCleanNullish drops null/undefined/empty values at EVERY depth, and
+// nothing is ever cut mid-value - a field line is either included whole or
+// dropped whole (see the char-budget loop in _formatOtherDocsSection).
+function _humanizeFieldLabel(field) {
+  return field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+// D15-4: an LLM-parsed field can come back holding the literal STRING
+// "null" (a common model output for "no value") rather than a real JS
+// null - that string is truthy and non-empty by every other check here, so
+// it survived to render as "Status: null" instead of being dropped like an
+// actual null would be.
+function _isEmptyValue(value) {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed === "" || trimmed.toLowerCase() === "null";
+  }
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object") return Object.keys(value).length === 0;
+  return false;
+}
+
+function _deepCleanNullish(value) {
+  if (_isEmptyValue(value)) return undefined;
+  if (Array.isArray(value)) {
+    const cleaned = value
+      .map(_deepCleanNullish)
+      .filter((v) => !_isEmptyValue(v));
+    return cleaned.length > 0 ? cleaned : undefined;
+  }
+  if (typeof value === "object") {
+    const cleaned = {};
+    for (const [key, val] of Object.entries(value)) {
+      const cleanedVal = _deepCleanNullish(val);
+      if (!_isEmptyValue(cleanedVal)) cleaned[key] = cleanedVal;
+    }
+    return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+  }
+  return value;
+}
+
+// Renders an already-deep-cleaned value as a compact, readable string -
+// never JSON.stringify, so the result can never contain a literal "null"
+// or an unbalanced brace/quote from a mid-value cut.
+function _renderReadableValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(_renderReadableValue).join("; ");
+  }
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(
+        ([key, val]) =>
+          `${_humanizeFieldLabel(key)}: ${_renderReadableValue(val)}`,
+      )
+      .join(", ");
+  }
+  return String(value);
+}
+
+function _safeExtractedDataSummary(extractedData) {
+  const safe = {};
+  for (const field of PACKET_CONTEXT_SAFE_FIELDS) {
+    const rawValue = extractedData[field];
+    const scrubbedValue = FREE_TEXT_SAFE_FIELDS.has(field)
+      ? _scrubFreeTextValue(rawValue)
+      : rawValue;
+    const cleaned = _deepCleanNullish(scrubbedValue);
+    if (cleaned === undefined) continue;
+    safe[field] = cleaned;
+  }
+  return safe;
+}
+
+// Whole-line budget, never a mid-value cut: a field's "Label: value" line
+// is either included in full or dropped in full once the running total
+// would exceed the budget - unlike the old fixed substring(0, 500), no
+// value is ever sliced partway through.
+const MAX_OTHER_DOC_SUMMARY_CHARS = 2000;
+// D15-4: a single field (a multi-issue rating decision's `decisions`
+// array, one line per issue) can be large enough to consume the ENTIRE
+// doc budget on its own, leaving nothing for every field that comes after
+// it (evidenceNeeded, responseDeadlineDays, rationale) even though each
+// would fit easily by itself. Capping any one field's own share guarantees
+// the remaining fields still get a chance at the rest of the budget.
+const MAX_SINGLE_FIELD_CHARS = Math.floor(MAX_OTHER_DOC_SUMMARY_CHARS * 0.6);
+
+// D15-4 regression: a multi-issue rating decision's `decisions` array (25+
+// items for a real decision letter) rendered as ONE line via
+// `_renderReadableValue`'s array branch (`.join("; ")`) - a single line
+// that alone exceeds the whole-doc budget. The original `break` on the
+// first over-budget line then dropped every field that came AFTER it too
+// (evidenceNeeded, responseDeadlineDays, rationale), even ones that would
+// have fit on their own. Rendering an array field as one line PER ITEM
+// lets individual decisions be included up to the budget instead of an
+// all-or-nothing blob, and `continue` (not `break`) below means one
+// oversized line only costs itself, not every field after it.
+function _fieldLines(field, value) {
+  const label = _humanizeFieldLabel(field);
+  if (Array.isArray(value)) {
+    return value.map(
+      (item, i) => `    ${label} ${i + 1}: ${_renderReadableValue(item)}\n`,
+    );
+  }
+  return [`    ${label}: ${_renderReadableValue(value)}\n`];
+}
+
+function _formatOtherDoc(doc, label, index) {
+  let out = `  ${_neutralDocLabel(doc, label, index)}\n`;
+  const safe = _safeExtractedDataSummary(doc.extractedData || {});
+  let summaryChars = 0;
+  for (const [field, value] of Object.entries(safe)) {
+    let fieldChars = 0;
+    for (const line of _fieldLines(field, value)) {
+      if (summaryChars + line.length > MAX_OTHER_DOC_SUMMARY_CHARS) continue;
+      if (fieldChars + line.length > MAX_SINGLE_FIELD_CHARS) continue;
+      out += line;
+      summaryChars += line.length;
+      fieldChars += line.length;
+    }
+  }
+  return out;
+}
+
+export function _formatOtherDocsSection(grouped) {
   let out = "";
   for (const [type, docs] of Object.entries(grouped)) {
     const label = PACKET_DOC_LABELS[type] || type;
     out += `--- ${label} (${docs.length} document${docs.length > 1 ? "s" : ""}) ---\n`;
-    for (const doc of docs) {
-      out += `  ${doc.fileName} (${doc.uploadDate.split("T")[0]})\n`;
-      if (doc.extractedData && Object.keys(doc.extractedData).length > 0) {
-        const summary = JSON.stringify(doc.extractedData).substring(0, 500);
-        out += `  Data: ${summary}\n`;
-      }
-    }
+    docs.forEach((doc, index) => {
+      out += _formatOtherDoc(doc, label, index);
+    });
     out += "\n";
   }
   return out;
+}
+
+// ADR-008: generatePacketContext is called both directly (VSO/AI tools that
+// only want the document archive) and as one half of getVeteranAIContext -
+// it must self-apply the final redaction pass rather than rely on a caller
+// to do it, since a direct caller has no reason to know that's needed.
+// Best-effort: an identifier-load failure (e.g. no IndexedDB) must never
+// block the packet context itself from returning.
+async function _redactPacketContext(context) {
+  try {
+    const vkb = await loadVKB();
+    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+      .map((c) => c.claimNumber)
+      .filter(Boolean);
+    // ADR-008: merge in the flat legacy profile - it's the only place
+    // firstName/lastName/serviceNumber/mailingStreet/mailingCity live.
+    const personal = { ...getVeteranProfile(), ...vkb?.personal };
+    return redactVeteranIdentifiers(context, personal, claimNumbers);
+  } catch {
+    return context;
+  }
 }
 
 export const generatePacketContext = async (options = {}) => {
@@ -1021,7 +1390,7 @@ export const generatePacketContext = async (options = {}) => {
     const grouped = _groupDocsByType(allDocs, options.types);
 
     // DD214s first (most important for claims)
-    context += _formatServiceRecordSection(grouped, options);
+    context += _formatServiceRecordSection(grouped);
 
     // C-Files get a structured formatter (conditions + missing evidence +
     // summary) instead of the truncated JSON blob used for other types.
@@ -1030,13 +1399,19 @@ export const generatePacketContext = async (options = {}) => {
     // Other document types
     context += _formatOtherDocsSection(grouped);
 
-    // Trim to max size
-    if (context.length > maxChars) {
-      context = context.substring(0, maxChars) + "\n[... TRUNCATED ...]\n";
-    }
+    // ADR-008: redact BEFORE truncating - cutting first can leave a
+    // partial name/file-number token (e.g. a surname sliced to "Faketo"
+    // immediately before "[... TRUNCATED ...]") that no longer matches a
+    // whole known value and survives the cut.
+    const redacted = await _redactPacketContext(context);
 
-    context += "=== END MY PACKET ===\n";
-    return context;
+    if (redacted.length > maxChars) {
+      return (
+        redacted.substring(0, maxChars) +
+        "\n[... TRUNCATED ...]\n=== END MY PACKET ===\n"
+      );
+    }
+    return redacted + "=== END MY PACKET ===\n";
   } catch (error) {
     console.error("Failed to generate packet context:", error);
     return "";
@@ -1073,7 +1448,6 @@ export default {
   searchPacketDocuments,
   getDocumentRawText,
   getDocumentExtractedData,
-  getAllDocumentText,
   getAllExtractedData,
   getPacketStats,
   hasPacketDocuments,

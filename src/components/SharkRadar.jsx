@@ -8,7 +8,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   analyzeContract,
   getRiskLevelColors,
@@ -412,7 +411,7 @@ const RiskLevelCard = ({ data }) => (
                 : "text-yellow-600 dark:text-yellow-400"
             }`}
           >
-            Recommendation: {data.recommendation.replaceAll(/_/g, " ")}
+            Recommendation: {data.recommendation.replaceAll("_", " ")}
           </p>
         )}
       </div>
@@ -420,15 +419,24 @@ const RiskLevelCard = ({ data }) => (
   </div>
 );
 
-const FallbackNotice = ({ data }) => {
+const FallbackNotice = ({ data, offDeviceBlocked }) => {
   if (!data._usedFallback) return null;
+
+  // ADR-009: "No AI Loaded" is only accurate when there really is none - an
+  // off-device-blocked run has an AI configured, it just can't see this
+  // document, so the heading must say that instead of contradicting the
+  // notice text directly below it (see DenialDecoder/DecisionDecoder's
+  // equivalent "On-Device AI Only" heading for the same case).
+  const heading = offDeviceBlocked
+    ? "Keyword Analysis (On-Device AI Only)"
+    : "Keyword Analysis (No AI Loaded)";
 
   return (
     <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg flex items-start gap-2">
       <span className="text-amber-500 flex-shrink-0">🔍</span>
       <div>
         <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-          Keyword Analysis (No AI Loaded)
+          {heading}
         </p>
         <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
           {data._fallbackNote}
@@ -469,8 +477,8 @@ const RedFlagsList = ({ flags }) => {
         {flags.length})
       </h3>
       <div className="space-y-4">
-        {flags.map((flag, index) => (
-          <RedFlagCard key={index} flag={flag} />
+        {flags.map((flag) => (
+          <RedFlagCard key={flag.violation} flag={flag} />
         ))}
       </div>
     </div>
@@ -486,9 +494,9 @@ const PositiveSignsList = ({ signs }) => {
         <CheckIcon /> Positive Signs
       </h3>
       <ul className="space-y-2">
-        {signs.map((sign, index) => (
+        {signs.map((sign) => (
           <li
-            key={index}
+            key={sign}
             className="flex items-start gap-2 text-green-700 dark:text-green-300"
           >
             <span className="text-green-500 mt-0.5">✓</span>
@@ -534,15 +542,15 @@ const PredatoryWarningActions = ({ riskLevel }) => {
   );
 };
 
-const ScanResults = ({ results }) => {
-  if (!results || !results.success) return null;
+export const ScanResults = ({ results }) => {
+  if (!results?.success) return null;
 
-  const { data } = results;
+  const { data, offDeviceBlocked } = results;
 
   return (
     <div className="space-y-6">
       <RiskLevelCard data={data} />
-      <FallbackNotice data={data} />
+      <FallbackNotice data={data} offDeviceBlocked={offDeviceBlocked} />
       <RedFlagsList flags={data.flags} />
       <PositiveSignsList signs={data.positive_signs} />
       <PredatoryWarningActions riskLevel={data.risk_level} />
@@ -632,7 +640,6 @@ function useSharkRadarPersistence({ setApiKey, setHasConsented, setAIStatus }) {
  * Main Shark Radar Component
  */
 export default function SharkRadar() {
-  const { _t } = useLanguage();
   const [textInput, setTextInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
@@ -644,11 +651,6 @@ export default function SharkRadar() {
   const [aiStatus, setAIStatus] = useState(getAIStatus());
 
   useSharkRadarPersistence({ setApiKey, setHasConsented, setAIStatus });
-
-  const _handleSaveKey = (key) => {
-    localStorage.setItem("vetrate_gemini_key", key);
-    setApiKey(key);
-  };
 
   const handleConsent = () => {
     localStorage.setItem("vetrate_ai_consent", "true");

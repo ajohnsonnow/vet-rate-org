@@ -10,6 +10,7 @@
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { describePdfPasswordError } from "./fileTypeGuards";
+import { FileReadError, forLog, isFileReadFailure } from "./fileReadFailure";
 
 /**
  * Wire pdf.js's onPassword callback to a prompt+retry. The VA ships encrypted
@@ -91,7 +92,7 @@ export async function ripTextFromPdf(
         }
       } catch (pageError) {
         failedPages++;
-        console.warn(`Error extracting page ${i}:`, pageError);
+        console.warn(`Error extracting page ${i}:`, forLog(pageError));
         fullText += `--- PAGE ${i} ---\n[Page extraction error]\n\n`;
         onProgress(i, numPages);
       }
@@ -113,7 +114,7 @@ export async function ripTextFromPdf(
       pagesRead: numPages - failedPages,
     };
   } catch (error) {
-    console.error("PDF extraction error:", error);
+    console.error("PDF extraction error:", forLog(error));
     const pwError = describePdfPasswordError(error);
     if (pwError) throw pwError;
     throw new Error(`Failed to read PDF: ${error.message}`);
@@ -126,12 +127,7 @@ export async function ripTextFromPdf(
  * @returns {Promise<ArrayBuffer>}
  */
 export function readFileAsArrayBuffer(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsArrayBuffer(file);
-  });
+  return file.arrayBuffer();
 }
 
 /**
@@ -245,6 +241,7 @@ async function extractPageAndTrack(pdf, pageNum, pageState) {
   try {
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
+    page.cleanup();
     const pageText = textContent.items
       .map((item) => item.str)
       .join(" ")
@@ -259,7 +256,10 @@ async function extractPageAndTrack(pdf, pageNum, pageState) {
       stat: { pageNum, chars },
     };
   } catch (pageErr) {
-    console.warn(`processLargePDF: page ${pageNum} error:`, pageErr.message);
+    // A file that stops being readable part way is a failed document, not a
+    // run of empty pages that would be saved as if they had been read.
+    if (isFileReadFailure(pageErr)) throw new FileReadError();
+    console.warn(`processLargePDF: page ${pageNum} error:`, forLog(pageErr));
     pageState.pagesEmpty++;
     return {
       textBlock: `--- PAGE ${pageNum} ---\n[extraction error]\n\n`,
@@ -308,6 +308,7 @@ async function processBatch({
   // Write batch to IDB, then let it be garbage-collected
   const batchIndex = Math.floor((startPage - 1) / batchSize);
   await writeBatchToDB(db, sessionKey, batchIndex, batchText, batchStats);
+  pdf.cleanup();
 
   if (onBatch) {
     onBatch({
@@ -357,9 +358,10 @@ export async function processLargePDF(file, options = {}) {
 
   const db = await openCFileDB();
   const objectUrl = URL.createObjectURL(file);
+  let loadingTask = null;
 
   try {
-    const loadingTask = pdfjsLib.getDocument({
+    loadingTask = pdfjsLib.getDocument({
       url: objectUrl,
       rangeChunkSize: 65536, // 64 KB per HTTP range chunk - enables streaming
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
@@ -418,10 +420,23 @@ export async function processLargePDF(file, options = {}) {
   } catch (error) {
     const pwError = describePdfPasswordError(error);
     if (pwError) throw pwError;
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw error;
   } finally {
+    await releaseLoadingTask(loadingTask);
     URL.revokeObjectURL(objectUrl);
     db.close();
+  }
+}
+
+// Destroying the loading task frees pdf.js's worker and the file bytes it
+// pulled in; left open, every large document stays resident until the tab
+// closes. A release that fails must not replace the result already read.
+async function releaseLoadingTask(loadingTask) {
+  try {
+    await loadingTask?.destroy();
+  } catch (error) {
+    console.warn(`PDF release failed: ${forLog(error)}`);
   }
 }
 

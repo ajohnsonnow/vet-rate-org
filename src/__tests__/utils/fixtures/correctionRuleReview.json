@@ -1,0 +1,1162 @@
+{
+  "_source": "QA adversarial review of the correction rules, 2026-10-06 (rule-review.md and its rr- scripts). Every sentence is a true statement, a question, or the veteran's own account; no rule may fire on any of them. firedInReview says whether the rule fired on it at e4915857. Three sentences QA withdrew as not clearly true are left out.",
+  "sentences": [
+    {
+      "rule": "ratings-added-together",
+      "sentence": "My representative told me VA adds the ratings together, and I was surprised to get 70 percent.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "I thought the ratings are added together until I read my decision letter.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "10% + 10% = 20% for two 10 percent ratings once the 19 is rounded.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "A lot of veterans assume 50% + 30% = 80%, but the combined value is 65%, which rounds to 70%.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "Dependents are different: the pay table adds the ratings-based dependent amount at 30 percent and above.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "The combined ratings table is the table VA uses; it is the bilateral factor that adds the 10 percent of the paired value.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "For pay purposes my 30% + 20% = 50% is what I expected, and the letter said 40%.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "Before proceeding with further combinations, 10 percent of the combined value of the right and left sides is added.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "Step 2: 60% + 20% = 68% using the combined ratings table.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "ratings-added-together",
+      "sentence": "Ask the examiner which formula adds the ratings of the paired joints before the bilateral factor.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "bilateral-same-side",
+      "sentence": "My left knee and left ankle are both on the same side, and the bilateral factor is for one on each side.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "bilateral-same-side",
+      "sentence": "I have bilateral knee pain, and the hip pain is on the same side as my worse knee.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "bilateral-same-side",
+      "sentence": "The bilateral factor needs one condition on each side; two on the same side are simply combined.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "bilateral-same-side",
+      "sentence": "Is the bilateral factor used when both conditions are on the same side?",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "bilateral-same-side",
+      "sentence": "Bilateral hearing loss was diagnosed in 2019, and the ringing is loudest on the same side as the blast.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "bilateral-same-side",
+      "sentence": "He has bilateral plantar fasciitis and limps toward the same side every morning.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "bilateral-same-side",
+      "sentence": "Two conditions on the same side get no bilateral factor.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-higher-of-two",
+      "sentence": "Combined ratings are a separate step; within one disability, 38 CFR 4.7 assigns the higher of two evaluations when the picture more nearly approximates it.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "ratings-higher-of-two",
+      "sentence": "A veteran who qualifies for both pension and compensation receives the higher of the two.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-higher-of-two",
+      "sentence": "My mother receives the higher of the two survivor benefits.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-higher-of-two",
+      "sentence": "With two or more disabilities each is rated on its own, and where one disability sits between levels the examiner picks the higher of the two.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-higher-of-two",
+      "sentence": "If CRDP and CRSC both apply, the retiree receives the higher of the two.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "ratings-higher-of-two",
+      "sentence": "Multiple disabilities of one knee can be rated separately, and for instability the rater chose the higher of two possible codes.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-threshold-omits-forty",
+      "sentence": "For TDIU the schedule asks for one disability at 60 percent or more, or a combined rating of 70 percent with one disability at forty percent.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-threshold-omits-forty",
+      "sentence": "TDIU looks for one disability at 60% or more, or a combined rating of 70% or more. In the second case one of them has to be at least 40%.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-threshold-omits-forty",
+      "sentence": "I was told TDIU needs 60% or more, or a combined rating of 70%, and I am at 80% with PTSD at 70%.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-threshold-omits-forty",
+      "sentence": "Is TDIU available at 60% or more, or a combined rating of 70% or more?",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-threshold-omits-forty",
+      "sentence": "My VSO wrote that unemployability needs 60 percent or more, or combined rating of 70 percent, and that I meet it.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "You do not need new and material evidence anymore; new and relevant evidence is enough.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "You do not need new and material evidence anymore; new and relevant evidence is enough.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "The standard you must meet today is new and relevant, which is no higher than new and material.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "The standard you must meet today is new and relevant, which is no higher than new and material.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "You may see the phrase new and material evidence in letters from before the Appeals Modernization Act; today the test is new and relevant.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "You may see the phrase new and material evidence in letters from before the Appeals Modernization Act; today the test is new and relevant.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "After a decision is final you need new and relevant evidence, not new and material evidence, to have it readjudicated.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "After a decision is final you need new and relevant evidence, not new and material evidence, to have it readjudicated.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "The letter says the claim was previously denied and new and material evidence was not received.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "The letter says the claim was previously denied and new and material evidence was not received.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "The rating decision of March 2016 found that new and material evidence had been submitted and reopened the claim.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "The rating decision of March 2016 found that new and material evidence had been submitted and reopened the claim.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "He was told he must submit new and material evidence back then.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "He was told he must submit new and material evidence back then.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "A Supplemental Claim does need new and relevant evidence; you will not be held to new and material.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "A Supplemental Claim does need new and relevant evidence; you will not be held to new and material.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "New and material is the wrong phrase now, so you should write new and relevant on the form.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-and-material-standard",
+      "sentence": "New and material is the wrong phrase now, so you should write new and relevant on the form.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "I filed my Notice of Disagreement on VA Form 21-0958 in 2017.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "My first supplemental claim (VA Form 21-526b) went in during 2014.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "I sent my Board appeal on VA Form 9 and later the new VA Form 10182.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "File the Supplemental Claim (VA Form 20-0995) and attach a lay statement (VA Form 21-10210).",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "A Higher-Level Review on VA Form 20-0996 cannot take the evidence a Supplemental Claim (VA Form 20-0995) can.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "The Board appeal uses VA Form 10182; the Higher-Level Review uses VA Form 20-0996.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "After my Higher-Level Review (VA Form 20-0996) was denied I filed VA Form 10182 to request a Board hearing.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "For the intent to file use VA Form 21-0966, then the claim itself on VA Form 21-526EZ.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "My VSO mailed the Notice of Disagreement on the old VA Form 21-0958a.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "I filed a Board appeal using VA Form 10182, and with it a Supplemental Claim on the same day using VA Form 20-0995.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "I mailed the appeal to the Board (VA Form 9) in 2015.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "VA Form 20-0995 to file a Supplemental Claim and VA Form 20-0996 to request a Higher-Level Review are both on va.gov.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "In 2018 the Notice of Disagreement (VA Form 21-0958) was the form; now a Board appeal is VA Form 10182.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "In the legacy system I perfected my appeal to the Board (VA Form 9, the substantive appeal).",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "My Higher-Level Review (VA Form 20-0996) came back, and my Supplemental Claim (VA Form 20-0995) is pending.",
+      "topics": [],
+      "firedInReview": false
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "I asked for a Higher-Level Review on the Supplemental Claim decision using VA Form 20-0996.",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "I chose a Board hearing using the Supplemental Claim decision as the one under appeal (VA Form 10182).",
+      "topics": [],
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The herbicide presumption applies to service in Thailand on or after January 9, 1962.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The herbicide presumption applies to service in Thailand on or after January 9, 1962.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The herbicide presumption applies to service in Thailand on or after January 9, 1962.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "If you deployed to Iraq after September 11, 2001, you are covered.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "If you deployed to Iraq after September 11, 2001, you are covered.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "If you deployed to Iraq after September 11, 2001, you are covered.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Because you served in Iraq after September 11, 2001, you may also have five years of VA health care eligibility.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Because you served in Iraq after September 11, 2001, you may also have five years of VA health care eligibility.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Because you served in Iraq after September 11, 2001, you may also have five years of VA health care eligibility.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The PACT Act applies to service members whose claims VA received on or after August 10, 2022 for effective-date purposes.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The PACT Act applies to service members whose claims VA received on or after August 10, 2022 for effective-date purposes.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The PACT Act applies to service members whose claims VA received on or after August 10, 2022 for effective-date purposes.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The Camp Lejeune presumption applies to service there after July 31, 1953.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The Camp Lejeune presumption applies to service there after July 31, 1953.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The Camp Lejeune presumption applies to service there after July 31, 1953.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "For Vietnam, the veteran must have served on or after January 9, 1962 and before May 8, 1975.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "For Vietnam, the veteran must have served on or after January 9, 1962 and before May 8, 1975.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "For Vietnam, the veteran must have served on or after January 9, 1962 and before May 8, 1975.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Deployments after September 11, 2001:\n- Iraq, 2004 to 2005",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Deployments after September 11, 2001:\n- Iraq, 2004 to 2005",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Deployments after September 11, 2001:\n- Iraq, 2004 to 2005",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Radiation presumptions are limited to service in specific operations after July 16, 1945.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Radiation presumptions are limited to service in specific operations after July 16, 1945.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Radiation presumptions are limited to service in specific operations after July 16, 1945.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "To be a Gulf War veteran for section 3.317 you must have served in Southwest Asia on or after August 2, 1990.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": false
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "To be a Gulf War veteran for section 3.317 you must have served in Southwest Asia on or after August 2, 1990.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": false
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "To be a Gulf War veteran for section 3.317 you must have served in Southwest Asia on or after August 2, 1990.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": false
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Kuwait and Iraq are covered from August 2, 1990; Afghanistan from September 11, 2001.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": false
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Kuwait and Iraq are covered from August 2, 1990; Afghanistan from September 11, 2001.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": false
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Kuwait and Iraq are covered from August 2, 1990; Afghanistan from September 11, 2001.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": false
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "I deployed to Kuwait on September 11, 2001 with my unit.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "I deployed to Kuwait on September 11, 2001 with my unit.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "I deployed to Kuwait on September 11, 2001 with my unit.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "My husband left for Iraq two weeks after September 11, 2001.",
+      "topics": ["toxic-exposure"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "My husband left for Iraq two weeks after September 11, 2001.",
+      "topics": ["herbicide"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "My husband left for Iraq two weeks after September 11, 2001.",
+      "topics": ["pact-act"],
+      "question": "I served in Thailand in 1970 and in Iraq in 2004. What presumptive conditions apply to me?",
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-wrong-single-threshold",
+      "sentence": "With two or more disabilities you need one disability rated at 40% or more, or two that count as one because they share a cause.",
+      "topics": ["tdiu"],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-wrong-single-threshold",
+      "sentence": "You have one disability rated at 70%, or two if the knee is counted apart from the hip.",
+      "topics": ["tdiu"],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-wrong-single-threshold",
+      "sentence": "Housebound pay looks for a single disability rated at 100 percent, or two tests under the statute, and it is a separate benefit from TDIU.",
+      "topics": ["tdiu"],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-wrong-single-threshold",
+      "sentence": "My file shows one disability rated at 50 percent, or two if you count the scar.",
+      "topics": ["tdiu"],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-wrong-single-threshold",
+      "sentence": "The second route needs one disability ratable at 40 percent or more, or two or more disabilities of one body system adding up to it.",
+      "topics": ["tdiu"],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-barred-by-any-employment",
+      "sentence": "If you are employed in a substantially gainful occupation, you cannot receive TDIU.",
+      "topics": ["tdiu"],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-barred-by-any-employment",
+      "sentence": "If you are employed full-time and earn above the poverty threshold, you will not get TDIU.",
+      "topics": ["tdiu"],
+      "firedInReview": false
+    },
+    {
+      "rule": "tdiu-barred-by-any-employment",
+      "sentence": "While you are employed at a job that pays well above the poverty line, you cannot qualify for TDIU.",
+      "topics": ["tdiu"],
+      "firedInReview": false
+    },
+    {
+      "rule": "tdiu-barred-by-any-employment",
+      "sentence": "My VSO said that because I am employed part-time you cannot get TDIU, which turned out to be wrong.",
+      "topics": ["tdiu"],
+      "firedInReview": true
+    },
+    {
+      "rule": "tdiu-barred-by-any-employment",
+      "sentence": "I was working part-time when I applied for TDIU.",
+      "topics": ["tdiu"],
+      "firedInReview": false
+    },
+    {
+      "rule": "year-from-receiving-a-form",
+      "sentence": "File the Intent to File on VA Form 21-0966; VA will use that date if it gets your complete claim within one year of receiving that form.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "year-from-receiving-a-form",
+      "sentence": "VA must have the completed application within 1 year of receiving that form from you.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "year-from-receiving-a-form",
+      "sentence": "My claim was complete within one year of receiving that form at the regional office, so the earlier date held.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "year-from-receiving-a-form",
+      "sentence": "Within one year of VA receiving that form, send the full claim.",
+      "topics": ["intent-to-file"],
+      "firedInReview": false
+    },
+    {
+      "rule": "year-from-receiving-a-form",
+      "sentence": "You have one year from the day VA receives the intent to file.",
+      "topics": ["intent-to-file"],
+      "firedInReview": false
+    },
+    {
+      "rule": "new-claim-to-reopen",
+      "sentence": "Rather than reopen the old claim, for a worse condition you should file a new claim for increase.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-claim-to-reopen",
+      "sentence": "If VA closed it as abandoned and you want to reopen that claim, you need to file a new claim.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-claim-to-reopen",
+      "sentence": "When I tried to reopen my claim in 2016 the clerk said I must file a new claim.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-claim-to-reopen",
+      "sentence": "You cannot reopen a withdrawn claim; you have to file a new claim.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "new-claim-to-reopen",
+      "sentence": "Reopening is for a decided claim, and for a condition VA has never decided you should file a new claim.",
+      "topics": ["intent-to-file"],
+      "firedInReview": false
+    },
+    {
+      "rule": "intent-paragraph-for-supplemental-claim",
+      "sentence": "Under 38 CFR 3.155(b) an intent to file holds the date for an original claim, but after a denial you should file a Supplemental Claim, which that paragraph leaves out.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "intent-paragraph-for-supplemental-claim",
+      "sentence": "38 CFR 3.155(b) covers the intent to file, and separately you must file a Supplemental Claim under 3.2501 for the denied knee.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "intent-paragraph-for-supplemental-claim",
+      "sentence": "Per 3.155(b) the intent to file protects your new claim for sleep apnea, and for the denied back issue you need to file a Supplemental Claim.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "intent-paragraph-for-supplemental-claim",
+      "sentence": "The intent to file in 3.155(b) is for the new condition only, so for the denied one you should file a Supplemental Claim.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "intent-paragraph-for-supplemental-claim",
+      "sentence": "3.155(b) lets you hold a date with an intent to file. You should file a Supplemental Claim for the denied issue.",
+      "topics": ["intent-to-file"],
+      "firedInReview": false
+    },
+    {
+      "rule": "intent-form-as-application",
+      "sentence": "VA's intent-to-file application (VA Form 21-0966) only holds your date.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "intent-form-as-application",
+      "sentence": "The Intent to File a Claim for Compensation application (VA Form 21-0966) is one page.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "intent-form-as-application",
+      "sentence": "Hold your date while you finish the application (VA Form 21-0966 does that for a year).",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "intent-form-as-application",
+      "sentence": "I mailed my complete claim (VA Form 21-0966 had gone in the month before) in June.",
+      "topics": ["intent-to-file"],
+      "firedInReview": true
+    },
+    {
+      "rule": "intent-form-as-application",
+      "sentence": "The intent to file application form (VA Form 21-0966) is separate from the 21-526EZ.",
+      "topics": ["intent-to-file"],
+      "firedInReview": false
+    },
+    {
+      "rule": "appeal-said-to-need-new-evidence",
+      "sentence": "After the one-year window has passed you cannot appeal the decision without new evidence.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "appeal-said-to-need-new-evidence",
+      "sentence": "Once a year has gone by, you cannot challenge the denial unless you have new and relevant evidence or can show clear and unmistakable error.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "appeal-said-to-need-new-evidence",
+      "sentence": "The VSO told me I cannot appeal without new evidence, so I waited.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "appeal-said-to-need-new-evidence",
+      "sentence": "After a Higher-Level Review decision you cannot challenge it with another Higher-Level Review without new evidence going in by another route.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "appeal-said-to-need-new-evidence",
+      "sentence": "You cannot appeal to the Court of Appeals for Veterans Claims without new briefing, but evidence is closed there.",
+      "topics": ["decision-review"],
+      "firedInReview": false
+    },
+    {
+      "rule": "appeal-said-to-need-new-evidence",
+      "sentence": "More than a year after the letter, you may not appeal it unless you have new evidence.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "higher-level-review-new-evidence",
+      "sentence": "If you have new evidence, a Higher-Level Review is the wrong lane.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "higher-level-review-new-evidence",
+      "sentence": "New evidence is barred in a Higher-Level Review.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "higher-level-review-new-evidence",
+      "sentence": "During a Higher-Level Review the reviewer may find a duty-to-assist error and send the claim back so VA gathers additional evidence.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "higher-level-review-new-evidence",
+      "sentence": "I am requesting a Higher-Level Review because the rater ignored the additional evidence I sent in March.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "higher-level-review-new-evidence",
+      "sentence": "A Higher-Level Review looks only at the file as it stood; new evidence is ignored.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "higher-level-review-new-evidence",
+      "sentence": "Choose the Higher-Level Review when you have nothing to add, and the Board evidence docket when you have new evidence.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "higher-level-review-new-evidence",
+      "sentence": "My Higher-Level Review was returned for a duty to assist error and VA then asked me for additional evidence.",
+      "topics": ["decision-review"],
+      "firedInReview": true
+    },
+    {
+      "rule": "higher-level-review-new-evidence",
+      "sentence": "In my Higher-Level Review request I included a personal statement of the errors I saw.",
+      "topics": ["decision-review"],
+      "firedInReview": false
+    },
+    {
+      "rule": "any",
+      "sentence": "I have bilateral knee pain, and the hip pain is on the same side as my worse knee.",
+      "toolId": "personal-statement",
+      "question": "Condition: bilateral knee strain. Current text: my knees hurt",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "My bilateral hearing loss was diagnosed in 2019, and the ringing is loudest on the same side as the blast.",
+      "toolId": "personal-statement",
+      "question": "Condition: hearing loss. Current text: ringing",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "He has bilateral plantar fasciitis and limps toward the same side every morning.",
+      "toolId": "buddy-statement",
+      "question": "Witness statement about plantar fasciitis",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "My representative told me VA adds the ratings together, and I was surprised to get 70 percent.",
+      "toolId": "personal-statement",
+      "question": "Condition: lumbar strain. Current text: ratings",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "I thought the ratings are added together until I read my decision letter.",
+      "toolId": "personal-statement",
+      "question": "Condition: lumbar strain",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "For pay purposes my 30% + 20% = 50% is what I expected, and the letter said 40%.",
+      "toolId": "personal-statement",
+      "question": "Condition: knee",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "I was told TDIU needs 60% or more, or a combined rating of 70%, and I am at 80% with PTSD at 70%.",
+      "toolId": "tdiu-narrative",
+      "question": "Describe work impact",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "My VSO wrote that unemployability needs 60 percent or more, or combined rating of 70 percent, and that I meet it.",
+      "toolId": "tdiu-narrative",
+      "question": "Describe work impact",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "My VSO said that because I am employed part-time you cannot get TDIU, which turned out to be wrong.",
+      "toolId": "tdiu-narrative",
+      "question": "Describe work impact",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "I was working part-time when I applied for TDIU.",
+      "toolId": "tdiu-narrative",
+      "question": "Describe work impact",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "My mother receives the higher of the two survivor benefits.",
+      "toolId": "personal-statement",
+      "question": "Condition: survivor",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "I asked for a Higher-Level Review on the Supplemental Claim decision using VA Form 20-0996.",
+      "toolId": "appeal-statement",
+      "question": "Why the decision is incorrect",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "I appealed the Supplemental Claim decision to the Board (VA Form 10182) in May.",
+      "toolId": "appeal-statement",
+      "question": "Why the decision is incorrect",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "I filed my Notice of Disagreement on VA Form 21-0958 in 2017.",
+      "toolId": "appeal-statement",
+      "question": "Why the decision is incorrect",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "I am requesting a Higher-Level Review because the rater ignored the additional evidence I sent in March.",
+      "toolId": "appeal-statement",
+      "question": "Why the decision is incorrect: Higher-Level Review",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "The VSO told me I cannot appeal without new evidence, so I waited.",
+      "toolId": "appeal-statement",
+      "question": "Why the decision is incorrect: I want to appeal",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "When I tried to reopen my claim in 2016 the clerk said I must file a new claim.",
+      "toolId": "appeal-statement",
+      "question": "I want to reopen my claim",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "He was told he must submit new and material evidence back then.",
+      "toolId": "buddy-statement",
+      "question": "Witness statement",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "I deployed to Kuwait three weeks after September 11, 2001.",
+      "toolId": "personal-statement",
+      "question": "Condition: asthma from burn pits",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "My husband left for Kuwait two weeks after September 11, 2001.",
+      "toolId": "buddy-statement",
+      "question": "Witness: my husband, burn pit exposure",
+      "firedInReview": null
+    },
+    {
+      "rule": "any",
+      "sentence": "My symptoms began in Iraq in 2004 and have continued since I came home.",
+      "toolId": "personal-statement",
+      "question": "Condition: asthma from burn pits",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The Camp Lejeune presumption applies to service there after July 31, 1953.",
+      "toolId": "pact-navigator",
+      "question": "I was at Camp Lejeune in 1986 and deployed to Kuwait in 1991. What presumptive conditions cover me?",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "For Vietnam, the veteran must have served on or after January 9, 1962 and before May 8, 1975.",
+      "toolId": "pact-navigator",
+      "question": "My father served in Vietnam and I served in Iraq. Which presumptive lists apply to each of us?",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "If you deployed to Iraq after September 11, 2001, you are covered.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Because you deployed to Iraq in 2004, well after August 2, 1990, you are a covered Veteran.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Your deployments after September 11, 2001:\n- Iraq, 2004 to 2005",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The law was signed on August 10, 2022, and your Iraq service is covered.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "Benefits under the Act are limited by when you file: service counts whenever it was, but pay starts on or after August 10, 2022.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The herbicide presumption applies to service in Vietnam on or after January 9, 1962.",
+      "toolId": "pact-navigator",
+      "question": "Vietnam veteran with chronic respiratory issues - what PACT conditions apply?",
+      "firedInReview": null
+    },
+    {
+      "rule": "coverage-date-for-wrong-place",
+      "sentence": "The Gulf War illness rule in section 3.317 applies to service in Afghanistan on or after September 19, 2001, and to Kuwait from 1990.",
+      "toolId": "pact-navigator",
+      "question": "Gulf War veteran, Kuwait 1991, burn pits. What applies?",
+      "firedInReview": null
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "I appealed the Supplemental Claim decision to the Board (VA Form 10182).",
+      "topics": [],
+      "firedInReview": null
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "You can ask for a Higher-Level Review of a Supplemental Claim decision (VA Form 20-0996).",
+      "topics": [],
+      "firedInReview": null
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "After the Supplemental Claim was denied, the Board appeal (VA Form 10182) was my next step.",
+      "topics": [],
+      "firedInReview": null
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "A Supplemental Claim decision can itself go to a Higher-Level Review using VA Form 20-0996.",
+      "topics": [],
+      "firedInReview": null
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "File the Higher-Level Review (VA Form 20-0996) within one year.",
+      "topics": [],
+      "firedInReview": null
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "Your intent to file (VA Form 21-0966) holds the date.",
+      "topics": [],
+      "firedInReview": null
+    },
+    {
+      "rule": "form-for-another-filing",
+      "sentence": "The intent to file is followed by the claim on VA Form 21-526EZ.",
+      "topics": [],
+      "firedInReview": null
+    }
+  ],
+  "decoderFields": {
+    "plain_english": "The letter says the claim was previously denied and new and material evidence was not received.",
+    "va_reasoning": "The rating decision of March 2016 found that new and material evidence had been submitted and reopened the claim.",
+    "favorable_findings": [
+      "VA accepted the additional evidence you sent with your Higher-Level Review request in error and returned it."
+    ],
+    "action_plan": [
+      "If you have new evidence, a Higher-Level Review is the wrong lane.",
+      "More than a year after the letter, you may not appeal it unless you have new evidence."
+    ]
+  }
+}

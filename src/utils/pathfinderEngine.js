@@ -10,6 +10,7 @@
  */
 
 import { generateAI, isAnyAIAvailable, getAIStatus } from "./unifiedAIService";
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 
 // The specialized system prompt for strategy analysis
 const PATHFINDER_SYSTEM_PROMPT = `You are a Senior VA Claims Strategist. Your goal is to analyze a veteran's current disability profile and suggest "High Probability" secondary claims based on established medical connections.
@@ -79,6 +80,36 @@ COMMON HIGH-VALUE SECONDARY CONNECTIONS TO CONSIDER:
 - PTSD → Depression, Anxiety, Sleep Apnea, Migraines, IBS, GERD
 - Hearing Loss → Tinnitus, Migraines, Balance disorders`;
 
+// Parses/validates the raw AI text into the {opportunities, ...} shape
+// analyzeStrategy returns - split out purely to keep analyzeStrategy under
+// the line-count limit; same parsing/validation, same error messages.
+function _parseStrategyResponse(content) {
+  const contentStr =
+    typeof content === "string" ? content : JSON.stringify(content);
+
+  let result;
+  try {
+    let cleanContent = contentStr.trim();
+    // Remove markdown formatting if present
+    if (cleanContent.startsWith("```json"))
+      cleanContent = cleanContent.slice(7);
+    if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+    if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
+
+    result = JSON.parse(cleanContent.trim());
+  } catch (parseError) {
+    console.error("Parse error:", parseError, contentStr.substring(0, 500));
+    throw new Error("Failed to parse AI response. Please try again.");
+  }
+
+  if (!result.opportunities) {
+    throw new Error("AI response missing opportunities. Please try again.");
+  }
+
+  result.opportunities.sort((a, b) => (a.priority || 5) - (b.priority || 5));
+  return result;
+}
+
 /**
  * Generate strategic analysis using Unified AI Service
  * Seamlessly works with both Cloud (Gemini) and Local (WebLLM) AI
@@ -91,6 +122,7 @@ export async function analyzeStrategy(
   apiKey,
   currentRatings,
   additionalContext = "",
+  { additionalContextIsDocument = true } = {},
 ) {
   // Check if ANY AI is available (Cloud or Local)
   if (!isAnyAIAvailable()) {
@@ -131,7 +163,19 @@ Provide a comprehensive strategy analysis with secondary claim opportunities.`;
 
   try {
     // Use unified AI service - automatically chooses Cloud or Local
+    // ADR-009: the caller (Pathfinder.jsx) tracks whether additionalContext
+    // came from an uploaded file's OCR'd text (document) or the veteran
+    // typing directly (context) - see additionalContextIsDocument. This
+    // call site can't tell on its own, so it fails closed to "document"
+    // when the caller doesn't say (e.g. any other caller of this exported
+    // function). Without this distinction, EVERY call - including the
+    // common case of typed ratings with no document involved at all - was
+    // blocked outright for a cloud-only veteran with no on-device fallback.
     const response = await generateAI(userPrompt, {
+      dataClass: additionalContextIsDocument
+        ? AI_DATA_CLASS.DOCUMENT
+        : AI_DATA_CLASS.CONTEXT,
+      toolId: "pathfinder",
       temperature: 0.4,
       maxTokens: 8192,
       expectJSON: true,
@@ -145,38 +189,7 @@ Provide a comprehensive strategy analysis with secondary claim opportunities.`;
       throw new Error("No content received from AI");
     }
 
-    // Ensure content is a string before processing
-    const contentStr =
-      typeof content === "string" ? content : JSON.stringify(content);
-
-    // Parse JSON response
-    let result;
-    try {
-      let cleanContent = contentStr.trim();
-      // Remove markdown formatting if present
-      if (cleanContent.startsWith("```json"))
-        cleanContent = cleanContent.slice(7);
-      if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
-      if (cleanContent.endsWith("```"))
-        cleanContent = cleanContent.slice(0, -3);
-
-      result = JSON.parse(cleanContent.trim());
-    } catch (parseError) {
-      console.error("Parse error:", parseError, contentStr.substring(0, 500));
-      throw new Error("Failed to parse AI response. Please try again.");
-    }
-
-    // Validate required fields
-    if (!result.opportunities) {
-      throw new Error("AI response missing opportunities. Please try again.");
-    }
-
-    // Sort opportunities by priority
-    if (result.opportunities) {
-      result.opportunities.sort(
-        (a, b) => (a.priority || 5) - (b.priority || 5),
-      );
-    }
+    const result = _parseStrategyResponse(content);
 
     return {
       success: true,

@@ -74,7 +74,7 @@ describe("DutyStationMap projection - equal-area verification", () => {
 
   it("loads 241 bundled country features, each with a unique name", () => {
     const features = loadWorldFeatures();
-    expect(features.length).toBe(241);
+    expect(features).toHaveLength(241);
     const names = features.map((f) => f.properties?.name);
     expect(names.every(Boolean)).toBe(true);
     expect(new Set(names).size).toBe(241);

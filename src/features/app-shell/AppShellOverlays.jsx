@@ -1,6 +1,8 @@
 import CrisisListener from "../crisis/CrisisListener";
 import QuickExitButton from "../../components/QuickExitButton";
 import SecurityBadge from "../../components/SecurityBadge";
+import InterruptedImportNotice from "../../components/musterCall/InterruptedImportNotice";
+import UnreadableProfileNotice from "../../components/UnreadableProfileNotice";
 import MobileBottomNavWrapper from "../mobile-nav/MobileBottomNavWrapper";
 
 /**
@@ -22,6 +24,8 @@ export default function AppShellOverlays({ userConditions }) {
       <CrisisListener />
       <QuickExitButton position="top-right" variant="subtle" />
       <SecurityBadge />
+      <InterruptedImportNotice />
+      <UnreadableProfileNotice />
       <MobileBottomNavWrapper userConditions={userConditions} />
     </>
   );

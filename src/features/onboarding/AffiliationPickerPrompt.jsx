@@ -67,7 +67,7 @@ export default function AffiliationPickerPrompt({ onDone }) {
           <span className="font-medium text-gray-800 dark:text-gray-200">
             Accessibility → Affiliation
           </span>
-          .
+          {"."}
         </p>
         <AffiliationPicker />
       </div>

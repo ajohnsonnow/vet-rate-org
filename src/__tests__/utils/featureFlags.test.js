@@ -43,10 +43,22 @@ describe("isFeatureEnabled - fail-open semantics", () => {
   });
 
   it("returns true when localStorage throws (fail-open)", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementationOnce(() => {
-      throw new Error("storage unavailable");
-    });
+    // setup.js installs a plain-object localStorage shim (not a real
+    // Storage instance) so every test runtime is spy-able the same way;
+    // spying on Storage.prototype instead silently no-ops here, and this
+    // test would pass vacuously (isFeatureEnabled returning true anyway via
+    // the "no cache" path, without actually exercising the throw at all) -
+    // see maintenanceMode.test.js's identical fix for the full rationale.
+    const getItemSpy = vi
+      .spyOn(localStorage, "getItem")
+      .mockImplementation(() => {
+        throw new Error("storage unavailable");
+      });
+
+    expect(() => isFeatureEnabled("ai")).not.toThrow();
     expect(isFeatureEnabled("ai")).toBe(true);
+
+    getItemSpy.mockRestore();
   });
 });
 

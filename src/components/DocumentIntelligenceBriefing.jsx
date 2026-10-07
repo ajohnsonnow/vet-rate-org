@@ -7,6 +7,7 @@
  * User verifies extracted data before saving to VKB
  */
 
+import { logger } from "../utils/logger";
 import { useState, useEffect } from "react";
 import { getDocumentTypeLabel } from "../utils/documentClassifier";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -23,11 +24,15 @@ import {
   getShowStateAwards,
   setShowStateAwards,
 } from "../utils/veteranProfile";
+import { isSameCalendarDay } from "../utils/serviceEntryDate";
+import { parseExplicitDate } from "../utils/dateUtils";
 import { BadgeDisplay, CombatIndicatorSummary } from "./BadgeDisplay";
 import { parseDD214Badges } from "../data/badgeData";
+import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
+import { getReadingNotices } from "../utils/readingNotices";
 
 // Internal/metadata fields skipped when filtering extracted data for display
-const EXCLUDED_METADATA_FIELDS = [
+const EXCLUDED_METADATA_FIELDS = new Set([
   "type",
   "raw",
   "error",
@@ -35,7 +40,15 @@ const EXCLUDED_METADATA_FIELDS = [
   "multiDocument",
   "documentIndex",
   "totalDocuments",
-];
+  // Sibling flag for serviceStartDate (musterCallProcessor.js's
+  // parseServiceRecord): a raw boolean the veteran would otherwise have to
+  // verify like any other field. It drives the "(calculated from net
+  // service)" note on the serviceStartDate row instead (see FieldGroup).
+  "serviceStartDateDerived",
+  // Shown plainly at the top of the briefing (DocumentReadingNotices), not as
+  // a field to verify.
+  "aiAnalysisNotice",
+]);
 
 function FieldEditControls({ editValue, onChange, onSave, onCancel }) {
   return (
@@ -70,6 +83,7 @@ function FieldEditControls({ editValue, onChange, onSave, onCancel }) {
 
 function FieldValueDisplay({
   value,
+  derivedNote,
   onEdit,
   onDelete,
   showDeleteConfirm,
@@ -80,6 +94,12 @@ function FieldValueDisplay({
     <div className="flex items-center gap-2">
       <span className="text-sm text-gray-900 dark:text-white font-mono">
         {value}
+        {derivedNote && (
+          <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
+            {" "}
+            ({derivedNote})
+          </span>
+        )}
       </span>
       <button
         type="button"
@@ -119,6 +139,24 @@ function FieldValueDisplay({
   );
 }
 
+function FieldLabelWithTooltip({ label, tooltip }) {
+  return (
+    <div className="flex items-center gap-2 mb-1">
+      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        {label}
+      </label>
+      {tooltip && (
+        <span
+          className="text-xs text-gray-500 dark:text-gray-400 cursor-help"
+          aria-label={tooltip}
+        >
+          💡
+        </span>
+      )}
+    </div>
+  );
+}
+
 /**
  * Field verification checkbox with inline editing
  */
@@ -126,6 +164,7 @@ const VerifiableField = ({
   label,
   value,
   tooltip,
+  derivedNote,
   onChange,
   checked,
   onCheckChange,
@@ -173,19 +212,7 @@ const VerifiableField = ({
       />
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {label}
-          </label>
-          {tooltip && (
-            <span
-              className="text-xs text-gray-500 dark:text-gray-400 cursor-help"
-              aria-label={tooltip}
-            >
-              💡
-            </span>
-          )}
-        </div>
+        <FieldLabelWithTooltip label={label} tooltip={tooltip} />
 
         {isEditing ? (
           <FieldEditControls
@@ -197,6 +224,7 @@ const VerifiableField = ({
         ) : (
           <FieldValueDisplay
             value={value}
+            derivedNote={derivedNote}
             onEdit={() => setIsEditing(true)}
             onDelete={onDelete}
             showDeleteConfirm={showDeleteConfirm}
@@ -824,7 +852,7 @@ function useDocumentNavigation(totalDocuments) {
 function filterAndGroupFields(currentData, classification) {
   const filtered = {};
   for (const [field, value] of Object.entries(currentData)) {
-    if (EXCLUDED_METADATA_FIELDS.includes(field)) continue;
+    if (EXCLUDED_METADATA_FIELDS.has(field)) continue;
     if (value === null || value === undefined || value === "") continue;
     if (Array.isArray(value) && value.length === 0) continue;
     if (shouldCollectField(field, classification.type)) {
@@ -854,35 +882,91 @@ function filterAndGroupFields(currentData, classification) {
  * Owns the per-document verification state: detects conflicts, filters the
  * raw extracted fields down to collectible ones, and groups them by category.
  */
-function useDocumentBriefingData({
-  currentData,
-  classification,
-  filename,
-  providedConflicts,
-  currentDocIndex,
-  totalDocuments,
-  isMultiDocument,
+// Debug logging to trace data flow
+function useDocumentBriefingDebugLog({
   extractedData,
+  classification,
+  isMultiDocument,
+  totalDocuments,
 }) {
-  const [editedData, setEditedData] = useState({});
-  const [verifiedFields, setVerifiedFields] = useState({});
-  const [conflicts, setConflicts] = useState([]);
-  const [filteredData, setFilteredData] = useState({});
-  const [groupedFields, setGroupedFields] = useState({});
-
-  // Debug logging to trace data flow
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log("🛡️ SigInt Briefing received extractedData:", extractedData);
-    // eslint-disable-next-line no-console
-    console.log("🛡️ SigInt Briefing classification:", classification);
+    logger.info("🛡️ SigInt Briefing classification", {
+      type: classification?.type,
+    });
     if (isMultiDocument) {
       // eslint-disable-next-line no-console
       console.log(`🛡️ Multiple documents detected: ${totalDocuments} DD214(s)`);
     }
   }, [extractedData, classification, isMultiDocument, totalDocuments]);
+}
 
-  // Detect conflicts on mount and when document changes
+// ADR-007 W1: a prior veteran correction on this exact document (a
+// re-import) seeds the field with that correction, not the raw
+// re-extraction - the veteran already resolved this once.
+function _seedPriorCorrection(currentData, priorServiceStartCorrection) {
+  if (!priorServiceStartCorrection?.date || !currentData) return currentData;
+  return { ...currentData, serviceStartDate: priorServiceStartCorrection.date };
+}
+
+// Field filtering only depends on currentData/classification — compute and
+// render it synchronously so the checkboxes exist immediately.
+// detectConflicts (run separately, async) must NOT gate field rendering:
+// gating it here left a window, right after the modal opens, where
+// filteredData/groupedFields were still {} — zero fields means zero
+// checkboxes, which a "0 unchecked" verification check reads as vacuously
+// fully-verified, letting a consumer click Verify & Save before the real
+// fields (and their checkboxes) have populated.
+function _resetFieldsForDocument(
+  currentData,
+  priorServiceStartCorrection,
+  classification,
+  setters,
+) {
+  const {
+    setEditedData,
+    setVerifiedFields,
+    setTypedFields,
+    setFilteredData,
+    setGroupedFields,
+  } = setters;
+  const seededData = _seedPriorCorrection(
+    currentData,
+    priorServiceStartCorrection,
+  );
+  setEditedData(seededData || {});
+  setVerifiedFields({});
+  setTypedFields(new Set());
+  const { filtered, grouped } = filterAndGroupFields(
+    seededData,
+    classification,
+  );
+  setFilteredData(filtered);
+  setGroupedFields(grouped);
+}
+
+// Detect conflicts on mount and when document changes. Extracted from
+// useDocumentBriefingData to stay under the 80-line function cap.
+function useDocumentBriefingConflictEffect(args) {
+  const {
+    currentData,
+    classification,
+    filename,
+    providedConflicts,
+    currentDocIndex,
+    totalDocuments,
+    isMultiDocument,
+    priorServiceStartCorrection,
+    setters,
+  } = args;
+  const {
+    setEditedData,
+    setVerifiedFields,
+    setTypedFields,
+    setFilteredData,
+    setGroupedFields,
+    setConflicts,
+  } = setters;
+
   useEffect(() => {
     let cancelled = false;
 
@@ -897,30 +981,18 @@ function useDocumentBriefingData({
       "fields",
     );
 
-    // Reset state for new document
-    setEditedData(currentData || {});
-    setVerifiedFields({});
-
-    // Field filtering only depends on currentData/classification — compute
-    // and render it synchronously so the checkboxes exist immediately.
-    // detectConflicts below is async network/heuristic latency that must
-    // NOT gate field rendering: gating it here left a window, right after
-    // the modal opens, where filteredData/groupedFields were still {} —
-    // zero fields means zero checkboxes, which a "0 unchecked" verification
-    // check reads as vacuously fully-verified. A consumer that acts on that
-    // (e.g. the stress harness's checkbox loop) proceeds to click
-    // Verify & Save before the real fields — and their checkboxes — have
-    // populated, hitting the disabled button and hanging until timeout.
-    const { filtered, grouped } = filterAndGroupFields(
+    _resetFieldsForDocument(
       currentData,
+      priorServiceStartCorrection,
       classification,
+      {
+        setEditedData,
+        setVerifiedFields,
+        setTypedFields,
+        setFilteredData,
+        setGroupedFields,
+      },
     );
-    // eslint-disable-next-line no-console
-    console.log("🛡️ Filtered fields:", Object.keys(filtered));
-    setFilteredData(filtered);
-    // eslint-disable-next-line no-console
-    console.log("🛡️ Grouped fields:", grouped);
-    setGroupedFields(grouped);
 
     const loadConflicts = async () => {
       const detected = await detectConflicts(
@@ -949,7 +1021,59 @@ function useDocumentBriefingData({
     providedConflicts,
     isMultiDocument,
     totalDocuments,
+    priorServiceStartCorrection,
+    setEditedData,
+    setVerifiedFields,
+    setTypedFields,
+    setFilteredData,
+    setGroupedFields,
+    setConflicts,
   ]);
+}
+
+function useDocumentBriefingData({
+  currentData,
+  classification,
+  filename,
+  providedConflicts,
+  currentDocIndex,
+  totalDocuments,
+  isMultiDocument,
+  extractedData,
+  priorServiceStartCorrection,
+}) {
+  const [editedData, setEditedData] = useState({});
+  const [verifiedFields, setVerifiedFields] = useState({});
+  const [conflicts, setConflicts] = useState([]);
+  const [filteredData, setFilteredData] = useState({});
+  const [groupedFields, setGroupedFields] = useState({});
+  const [typedFields, setTypedFields] = useState(new Set());
+
+  useDocumentBriefingDebugLog({
+    extractedData,
+    classification,
+    isMultiDocument,
+    totalDocuments,
+  });
+
+  useDocumentBriefingConflictEffect({
+    currentData,
+    classification,
+    filename,
+    providedConflicts,
+    currentDocIndex,
+    totalDocuments,
+    isMultiDocument,
+    priorServiceStartCorrection,
+    setters: {
+      setEditedData,
+      setVerifiedFields,
+      setTypedFields,
+      setFilteredData,
+      setGroupedFields,
+      setConflicts,
+    },
+  });
 
   return {
     editedData,
@@ -957,11 +1081,44 @@ function useDocumentBriefingData({
     verifiedFields,
     setVerifiedFields,
     conflicts,
+    typedFields,
+    setTypedFields,
     filteredData,
     setFilteredData,
     groupedFields,
     setGroupedFields,
   };
+}
+
+// D11-1: groupedFields (what FieldGroup actually renders) previously never
+// changed on edit - the review modal kept showing the ORIGINAL OCR value
+// after the veteran clicked [Edit] and saved a correction, even though the
+// corrected value was (via editedData) what actually got persisted on
+// Verify & Save. Rebuilds only the category the field lives in.
+function _syncGroupedFieldsOnEdit(prevGrouped, field, newValue) {
+  let changed = false;
+  const next = {};
+  for (const [category, fields] of Object.entries(prevGrouped)) {
+    if (field in fields) {
+      next[category] = { ...fields, [field]: newValue };
+      changed = true;
+    } else {
+      next[category] = fields;
+    }
+  }
+  return changed ? next : prevGrouped;
+}
+
+function _removeArrayItem(prev, field, indexToDelete) {
+  const currentArray = prev[field];
+  if (!Array.isArray(currentArray)) return prev;
+  const updatedArray = currentArray.filter((_, idx) => idx !== indexToDelete);
+  if (updatedArray.length === 0) {
+    const updated = { ...prev };
+    delete updated[field];
+    return updated;
+  }
+  return { ...prev, [field]: updatedArray };
 }
 
 function useDocumentFieldActions({
@@ -970,14 +1127,32 @@ function useDocumentFieldActions({
   setEditedData,
   setVerifiedFields,
   setGroupedFields,
+  setTypedFields,
   classification,
 }) {
   const handleFieldCheck = (field, checked) => {
     setVerifiedFields((prev) => ({ ...prev, [field]: checked }));
   };
 
-  const handleFieldEdit = (field, newValue) => {
+  // ADR-007 W1: the one place a field's value changes, shared by an actual
+  // typed edit (handleFieldEdit) and picking a side of a detected conflict
+  // (handleConflictResolve) - only a typed edit is a veteran CORRECTION
+  // (tracked in typedFields, which gates the serviceEntryCorrection sent
+  // on Verify & Save); picking a conflict value is never one, even when it
+  // happens to change the field.
+  const applyFieldValue = (field, newValue, { typed }) => {
     setEditedData((prev) => ({ ...prev, [field]: newValue }));
+    setFilteredData((prev) =>
+      field in prev ? { ...prev, [field]: newValue } : prev,
+    );
+    setGroupedFields((prev) => _syncGroupedFieldsOnEdit(prev, field, newValue));
+    if (typed) {
+      setTypedFields((prev) => new Set(prev).add(field));
+    }
+  };
+
+  const handleFieldEdit = (field, newValue) => {
+    applyFieldValue(field, newValue, { typed: true });
   };
 
   // Delete a field that was incorrectly extracted by OCR
@@ -1011,63 +1186,39 @@ function useDocumentFieldActions({
     // eslint-disable-next-line no-console
     console.log(`🗑️ Deleting item ${indexToDelete} from array field: ${field}`);
 
-    setFilteredData((prev) => {
-      const currentArray = prev[field];
-      if (!Array.isArray(currentArray)) return prev;
-
-      const updatedArray = currentArray.filter(
-        (_, idx) => idx !== indexToDelete,
-      );
-
-      if (updatedArray.length === 0) {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      }
-
-      return { ...prev, [field]: updatedArray };
-    });
-
-    setEditedData((prev) => {
-      const currentArray = prev[field];
-      if (!Array.isArray(currentArray)) return prev;
-
-      const updatedArray = currentArray.filter(
-        (_, idx) => idx !== indexToDelete,
-      );
-
-      if (updatedArray.length === 0) {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      }
-
-      return { ...prev, [field]: updatedArray };
-    });
-
-    // Re-group after deletion
-    setTimeout(() => {
-      const grouped = groupFieldsByCategory(filteredData, classification?.type);
-      setGroupedFields(grouped);
-    }, 0);
+    setFilteredData((prev) => _removeArrayItem(prev, field, indexToDelete));
+    setEditedData((prev) => _removeArrayItem(prev, field, indexToDelete));
+    // Regrouping itself now happens in the useEffect below, reading
+    // filteredData fresh once React commits this update - a setTimeout
+    // here captured whatever `filteredData` this render closed over,
+    // BEFORE the array-item delete above ever reached it (G11).
   };
+
+  // G11: regroups from whatever filteredData currently is, not a value a
+  // setTimeout closed over one render behind - fixes handleArrayItemDelete's
+  // stale-closure regroup.
+  useEffect(() => {
+    setGroupedFields(groupFieldsByCategory(filteredData, classification?.type));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredData, classification]);
 
   return {
     handleFieldCheck,
     handleFieldEdit,
     handleFieldDelete,
     handleArrayItemDelete,
+    applyFieldValue,
   };
 }
 
-function useConflictResolution({ conflicts, setEditedData }) {
+function useConflictResolution({ conflicts, applyFieldValue }) {
   const handleConflictResolve = (field, resolution) => {
     const conflict = conflicts.find((c) => c.field === field);
     if (!conflict) return;
     if (resolution === "existing") {
-      setEditedData((prev) => ({ ...prev, [field]: conflict.existing }));
+      applyFieldValue(field, conflict.existing, { typed: false });
     } else if (resolution === "new") {
-      setEditedData((prev) => ({ ...prev, [field]: conflict.newValue }));
+      applyFieldValue(field, conflict.newValue, { typed: false });
     }
   };
 
@@ -1327,9 +1478,9 @@ function ConflictsSection({ conflicts, onResolve }) {
         Detected
       </h3>
       <div className="space-y-3">
-        {conflicts.map((conflict, index) => (
+        {conflicts.map((conflict) => (
           <ConflictWarning
-            key={index}
+            key={conflict.field}
             conflict={conflict}
             onResolve={onResolve}
           />
@@ -1488,41 +1639,51 @@ function formatConditionItem({
   return details ? `${name} — ${details}` : name;
 }
 
+// Format an award object from parseDD214Text.
+function formatAwardArrayItem(item) {
+  const name = item.award.name;
+  let qty = "";
+  if (item.quantity > 1) {
+    qty = ` (${item.quantity}x)`;
+  }
+  const devices =
+    item.devices?.length > 0
+      ? ` w/ ${item.devices.map((d) => d.type.replace("_", " ")).join(", ")}`
+      : "";
+  return `${name}${qty}${devices}`;
+}
+
+// Dispatch a plain object item to the formatter matching its shape.
+function formatObjectArrayItem(item) {
+  if (item.condition && item.outcome) {
+    return formatDecisionItem(item);
+  }
+  if (
+    item.type &&
+    (item.category || item.snippet || typeof item.confidence === "number")
+  ) {
+    return formatSegmentItem(item);
+  }
+  if (
+    item.name &&
+    (item.rating != null ||
+      item.ratedPercentage != null ||
+      item.serviceConnected != null)
+  ) {
+    return formatConditionItem(item);
+  }
+  return item.name || item.title || item.value || JSON.stringify(item);
+}
+
 // Format array items for display
 export function formatArrayItem(item) {
   if (typeof item === "string") return item;
   // Handle award objects from parseDD214Text
   if (item?.award?.name) {
-    const name = item.award.name;
-    let qty = "";
-    if (item.quantity > 1) {
-      qty = ` (${item.quantity}x)`;
-    }
-    const devices =
-      item.devices?.length > 0
-        ? ` w/ ${item.devices.map((d) => d.type.replace("_", " ")).join(", ")}`
-        : "";
-    return `${name}${qty}${devices}`;
+    return formatAwardArrayItem(item);
   }
   if (item && typeof item === "object") {
-    if (item.condition && item.outcome) {
-      return formatDecisionItem(item);
-    }
-    if (
-      item.type &&
-      (item.category || item.snippet || typeof item.confidence === "number")
-    ) {
-      return formatSegmentItem(item);
-    }
-    if (
-      item.name &&
-      (item.rating != null ||
-        item.ratedPercentage != null ||
-        item.serviceConnected != null)
-    ) {
-      return formatConditionItem(item);
-    }
-    return item.name || item.title || item.value || JSON.stringify(item);
+    return formatObjectArrayItem(item);
   }
   return String(item);
 }
@@ -1701,7 +1862,7 @@ function ArrayValueField({
               onChange={(e) => handleToggleStateAwards(e.target.checked)}
               className="w-3.5 h-3.5"
             />
-            Show state awards
+            {""}Show state awards
           </label>
         )}
 
@@ -1789,6 +1950,7 @@ function FieldGroup({
   hasConflict,
   onFieldDelete,
   onArrayItemDelete,
+  serviceStartDateDerived,
 }) {
   return (
     <div>
@@ -1843,6 +2005,9 @@ function FieldGroup({
               }
               value={String(value)}
               tooltip={getTooltip(key)}
+              derivedNote={
+                key === "serviceStartDate" ? serviceStartDateDerived : null
+              }
               checked={verifiedFields[key] || false}
               onCheckChange={(checked) => onFieldCheck(key, checked)}
               onChange={(newValue) => onFieldEdit(key, newValue)}
@@ -1866,6 +2031,7 @@ function DocumentFieldGroups({
   hasConflict,
   onFieldDelete,
   onArrayItemDelete,
+  serviceStartDateDerived,
 }) {
   return (
     <div className="space-y-6 mb-6">
@@ -1882,6 +2048,7 @@ function DocumentFieldGroups({
           hasConflict={hasConflict}
           onFieldDelete={onFieldDelete}
           onArrayItemDelete={onArrayItemDelete}
+          serviceStartDateDerived={serviceStartDateDerived}
         />
       ))}
     </div>
@@ -1942,6 +2109,7 @@ function ExtractedInformationSection({
   onArrayItemDelete,
   classification,
   onAddField,
+  serviceStartDateDerived,
 }) {
   return (
     <div className="py-6">
@@ -1964,6 +2132,7 @@ function ExtractedInformationSection({
           hasConflict={hasConflict}
           onFieldDelete={onFieldDelete}
           onArrayItemDelete={onArrayItemDelete}
+          serviceStartDateDerived={serviceStartDateDerived}
         />
       )}
 
@@ -2012,6 +2181,8 @@ function useDocumentBriefingSourceState({
 
   const [saveToVKB, setSaveToVKB] = useState(true);
   const [updateProfile, setUpdateProfile] = useState(true);
+  const priorServiceStartCorrection =
+    extractionResult?.priorServiceStartCorrection;
 
   const documentData = useDocumentBriefingData({
     currentData,
@@ -2022,6 +2193,7 @@ function useDocumentBriefingSourceState({
     totalDocuments,
     isMultiDocument,
     extractedData,
+    priorServiceStartCorrection,
   });
 
   return {
@@ -2042,6 +2214,7 @@ function useDocumentBriefingSourceState({
     setSaveToVKB,
     updateProfile,
     setUpdateProfile,
+    priorServiceStartCorrection,
     ...documentData,
   };
 }
@@ -2085,9 +2258,33 @@ function useUnverifiedFieldWarning(
   }, [filteredData, verifiedFields, hasFields, allFieldsVerified, conflicts]);
 }
 
+// ADR-007 W1: replaces _stillDerived - the label now distinguishes a
+// genuine calculated guess from a previously-saved veteran correction the
+// reset effect seeded this field with, instead of collapsing both to a
+// single boolean.
+function _displayedStartMarker(editedValue, currentData, prior) {
+  if (prior?.date && isSameCalendarDay(editedValue, prior.date)) {
+    return "your saved correction";
+  }
+  // A prior correction only seeds the field's initial value - once the
+  // veteran retypes the document's own raw value (undoing that
+  // correction), this must show the guess for what it is, not fall
+  // through silently just because a prior correction still exists.
+  if (
+    currentData?.serviceStartDateDerived &&
+    isSameCalendarDay(editedValue, currentData?.serviceStartDate)
+  ) {
+    return "calculated from net service";
+  }
+  return null;
+}
+
 function buildVerifyAndSaveHandler({
   verifiedFields,
   editedData,
+  typedFields,
+  currentData,
+  priorServiceStartCorrection,
   onVerify,
   saveToVKB,
   updateProfile,
@@ -2100,12 +2297,38 @@ function buildVerifyAndSaveHandler({
       .filter((key) => verifiedFields[key])
       .reduce((acc, key) => ({ ...acc, [key]: editedData[key] }), {});
 
+    // ADR-007 §9 (W1): a correction is only ever sent when the veteran
+    // actually TYPED it (typedFields), checked it as verified, and it
+    // genuinely differs from the value the field started this document at
+    // - the prior saved correction when this document was already
+    // corrected once, or this document's own raw printed value otherwise.
+    // Comparing only against the raw value meant retyping the document's
+    // own date to undo a prior correction looked like "no change" and was
+    // silently dropped (setServiceEntryDate already reverts a period back
+    // to its document value when the two match - see
+    // veteranProfile.serviceEntryCorrections.test.js's revert-semantics
+    // suite - this only needed to actually be sent).
+    const startFieldBaseline =
+      priorServiceStartCorrection?.date ?? currentData?.serviceStartDate;
+    const typedNewStart =
+      typedFields.has("serviceStartDate") &&
+      verifiedFields.serviceStartDate &&
+      !isSameCalendarDay(editedData.serviceStartDate, startFieldBaseline);
+    const serviceEntryCorrection = typedNewStart
+      ? {
+          date: editedData.serviceStartDate,
+          documentStartDate: parseExplicitDate(currentData?.serviceStartDate),
+          documentEndDate: parseExplicitDate(currentData?.serviceEndDate),
+        }
+      : undefined;
+
     onVerify({
       verifiedData,
       saveToVKB,
       updateProfile,
       filename,
       classification: classification?.type,
+      serviceEntryCorrection,
       resolvedConflicts: conflicts.map((c) => ({
         ...c,
         resolvedValue: editedData[c.field],
@@ -2120,6 +2343,54 @@ function buildVerifyAndSaveHandler({
  * Owns all state, data-loading, and derived values for the Document
  * Intelligence Briefing modal.
  */
+function useDocumentBriefingFieldHandlers(sourceState) {
+  const {
+    classification,
+    editedData,
+    setEditedData,
+    setVerifiedFields,
+    conflicts,
+    filteredData,
+    setFilteredData,
+    setGroupedFields,
+    setTypedFields,
+  } = sourceState;
+
+  const {
+    handleFieldCheck,
+    handleFieldEdit,
+    handleFieldDelete,
+    handleArrayItemDelete,
+    applyFieldValue,
+  } = useDocumentFieldActions({
+    filteredData,
+    setFilteredData,
+    setEditedData,
+    setVerifiedFields,
+    setGroupedFields,
+    setTypedFields,
+    classification,
+  });
+
+  const { handleConflictResolve, hasConflict } = useConflictResolution({
+    conflicts,
+    applyFieldValue,
+  });
+
+  const getTooltip = (field) => getFieldTooltip(field, classification?.type);
+
+  return {
+    handleFieldCheck,
+    handleFieldEdit,
+    handleFieldDelete,
+    handleArrayItemDelete,
+    handleConflictResolve,
+    hasConflict,
+    getTooltip,
+    editedData,
+  };
+}
+
 function useDocumentBriefingController({
   extractionResult,
   providedConflicts,
@@ -2134,14 +2405,12 @@ function useDocumentBriefingController({
     classification,
     saveToVKB,
     updateProfile,
-    editedData,
-    setEditedData,
     verifiedFields,
-    setVerifiedFields,
+    typedFields,
     conflicts,
     filteredData,
-    setFilteredData,
-    setGroupedFields,
+    currentData,
+    priorServiceStartCorrection,
   } = sourceState;
 
   const {
@@ -2149,25 +2418,18 @@ function useDocumentBriefingController({
     handleFieldEdit,
     handleFieldDelete,
     handleArrayItemDelete,
-  } = useDocumentFieldActions({
-    filteredData,
-    setFilteredData,
-    setEditedData,
-    setVerifiedFields,
-    setGroupedFields,
-    classification,
-  });
-
-  const { handleConflictResolve, hasConflict } = useConflictResolution({
-    conflicts,
-    setEditedData,
-  });
-
-  const getTooltip = (field) => getFieldTooltip(field, classification?.type);
+    handleConflictResolve,
+    hasConflict,
+    getTooltip,
+    editedData,
+  } = useDocumentBriefingFieldHandlers(sourceState);
 
   const handleVerifyAndSave = buildVerifyAndSaveHandler({
     verifiedFields,
     editedData,
+    typedFields,
+    currentData,
+    priorServiceStartCorrection,
     onVerify,
     saveToVKB,
     updateProfile,
@@ -2175,6 +2437,12 @@ function useDocumentBriefingController({
     classification,
     conflicts,
   });
+
+  const serviceStartDateNote = _displayedStartMarker(
+    editedData.serviceStartDate,
+    currentData,
+    priorServiceStartCorrection,
+  );
 
   const allFieldsVerified =
     Object.keys(filteredData).length > 0 &&
@@ -2202,6 +2470,7 @@ function useDocumentBriefingController({
     handleVerifyAndSave,
     allFieldsVerified,
     hasFields,
+    serviceStartDateNote,
   };
 }
 
@@ -2327,6 +2596,7 @@ function DocumentBriefingBody({
   setSaveToVKB,
   updateProfile,
   setUpdateProfile,
+  serviceStartDateNote,
 }) {
   return (
     <>
@@ -2364,6 +2634,7 @@ function DocumentBriefingBody({
           setEditedData,
           setVerifiedFields,
         )}
+        serviceStartDateDerived={serviceStartDateNote}
       />
 
       <DocumentBriefingOptionsAndHelp
@@ -2394,6 +2665,7 @@ function DocumentBriefingModal({
   handleVerifyAndSave,
   allFieldsVerified,
   hasFields,
+  readingNotices,
   ...bodyProps
 }) {
   return (
@@ -2424,6 +2696,7 @@ function DocumentBriefingModal({
       labelledBy="doc-intel-briefing-title"
       size="xl"
     >
+      <DocumentReadingNotices {...readingNotices} />
       <DocumentBriefingBody
         {...bodyProps}
         filename={filename}
@@ -2458,6 +2731,7 @@ export default function DocumentIntelligenceBriefing({
   return (
     <DocumentBriefingModal
       {...state}
+      readingNotices={getReadingNotices(extractionResult)}
       onSkip={onSkip}
       onClose={onClose}
       onOpenDD214Analyzer={onOpenDD214Analyzer}

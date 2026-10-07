@@ -6,8 +6,9 @@
  * Everything AI-related in one mission briefing.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   getAIStatus,
   unloadLocalAI,
@@ -17,109 +18,26 @@ import {
   useDeviceCapability,
   DEVICE_TIERS,
 } from "../utils/useDeviceCapability";
+import DeviceCapabilityCard from "./DeviceCapabilityCard";
+import FallbackModelNotice from "./FallbackModelNotice";
+import GeminiApiKeyForm from "./GeminiApiKeyForm";
 import TokenLimitConfig from "./TokenLimitConfig";
 import PresetSelector from "./PresetSelector";
 import ReportBugLink from "./ReportBugLink";
 import GPUSelector from "./GPUSelector";
+import {
+  buildCommandCenterModels,
+  getDeviceModelSummary,
+  useDeviceModel,
+} from "../utils/localModelLabels";
 
 const GEMINI_KEY_STORAGE = "vetrate_gemini_key";
 
-// ╔══════════════════════════════════════════════════════════════════════════════╗
-// ║  🎖️ THE WARRANT COUNCIL - VetRate's Custom Fine-Tuned AI Models             ║
-// ║══════════════════════════════════════════════════════════════════════════════║
-// ║  Each model maps to a REAL Army Warrant Officer MOS specialty:              ║
-// ║  • 350F - All Source Intelligence Technician (analyzes everything)          ║
-// ║  • 270A - Legal Administrator (documents & regulations)                      ║
-// ║  • 352N - SIGINT Analysis Technician (deciphers signals & patterns)         ║
-// ║══════════════════════════════════════════════════════════════════════════════║
-// ║  Desktop 7B = Senior Warrants (CWO3-CWO5) - Full SCIF-level analysis        ║
-// ║  Mobile 1.7B = Junior Warrants (WO1-CWO2) - Field-deployable ops            ║
-// ╚══════════════════════════════════════════════════════════════════════════════╝
-const MODELS = [
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 🖥️ DESKTOP EDITIONS (7B) - Senior Warrants - SCIF-Level Analysis
-  // ═══════════════════════════════════════════════════════════════════════════
-  {
-    id: "vetrate-auditor-7b-v2",
-    name: '🎖️ CWO3 "HAWKEYE" - 350F All Source Intel',
-    description:
-      "Fuses all claim intel: service records, medical evidence, 38 CFR regs, and BVA precedent",
-    size: "~1-2 GB",
-    vramRequired: "~4 GB",
-    recommended: true,
-    bestFor: "Deep claim audits, evidence correlation, multi-source analysis",
-    tier: "full",
-    callSign: "HAWKEYE",
-    mos: "350F",
-  },
-  {
-    id: "vetrate-writer-7b-v2",
-    name: '🎖️ CWO4 "PHANTOM" - 270A Legal Admin',
-    description:
-      "JAG-trained documentation expert: personal statements, nexus letters, and appeal briefs",
-    size: "~1-2 GB",
-    vramRequired: "~4 GB",
-    bestFor: "Legal documents, NODs, HLR scripts, formal correspondence",
-    tier: "full",
-    callSign: "PHANTOM",
-    mos: "270A",
-  },
-  {
-    id: "vetrate-rater-7b-v2",
-    name: '🎖️ CWO5 "ORACLE" - 352N SIGINT Analyst',
-    description:
-      "Muster Call SigInt specialist: deciphers rating patterns, bilateral math, SMC codes, and TDIU thresholds",
-    size: "~1-2 GB",
-    vramRequired: "~4 GB",
-    bestFor: "Complex calculations, pattern analysis, SMC/TDIU strategy",
-    tier: "full",
-    callSign: "ORACLE",
-    mos: "352N",
-  },
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 📱 MOBILE EDITIONS (1.7B) - Junior Warrants - Field Ops
-  // Knowledge-distilled from Senior Warrants for tactical deployment
-  // ═══════════════════════════════════════════════════════════════════════════
-  {
-    id: "vetrate-auditor-1.7b-mobile-v1",
-    name: '📱 WO1 "SCOUT" - 350F Field Intel',
-    description:
-      "Quick intel sweep: spots red flags, gathers initial HUMINT, preps for Senior analysis",
-    size: "~1-2 GB",
-    vramRequired: "~2 GB",
-    bestFor: "Fast claim triage, evidence spotting, mobile recon",
-    tier: "mobile",
-    mobileOptimized: true,
-    callSign: "SCOUT",
-    mos: "350F",
-  },
-  {
-    id: "vetrate-writer-1.7b-mobile-v1",
-    name: '📱 CWO2 "SCRIBE" - 270A Field Admin',
-    description:
-      "Rapid field documentation: captures testimony, outlines statements, secures the narrative",
-    size: "~1-2 GB",
-    vramRequired: "~2 GB",
-    bestFor: "Quick statement drafts, bullet capture, field notes",
-    tier: "mobile",
-    mobileOptimized: true,
-    callSign: "SCRIBE",
-    mos: "270A",
-  },
-  {
-    id: "vetrate-rater-1.7b-mobile-v1",
-    name: '📱 CWO2 "CIPHER" - 352N Field SIGINT',
-    description:
-      "Tactical signal decoding: quick rating reads, basic pattern recognition on-the-move",
-    size: "~1-2 GB",
-    vramRequired: "~2 GB",
-    bestFor: "Fast rating estimates, quick math checks, field calculations",
-    tier: "mobile",
-    mobileOptimized: true,
-    callSign: "CIPHER",
-    mos: "352N",
-  },
-];
+// The Warrant Council roles: each entry selects an assistant role, and every
+// role runs on the stock model the device profile picks. Names and sizes come
+// from utils/localModelLabels.js. The retired "-1.7b-mobile-v1" ids still
+// resolve to a role through roleFromModelId in diamondSwarm.js.
+const MODELS = buildCommandCenterModels(null);
 
 const getAIStatusIndicatorClass = (aiStatus) => {
   if (aiStatus.isPrivate) return "bg-green-500/30 text-green-200";
@@ -141,13 +59,6 @@ const getLocalAICardBorderClass = (aiStatus, webGPUStatus) => {
     return "border-gray-200 bg-gray-50 hover:border-cyan-500/50 dark:border-gray-700 dark:bg-gray-800/50";
   }
   return "border-gray-200 bg-gray-50 opacity-60 dark:border-gray-700 dark:bg-gray-800/30";
-};
-
-const getDeviceTierLabel = (tier) => {
-  if (tier === DEVICE_TIERS.HIGH_END) return "🚀 High-End";
-  if (tier === DEVICE_TIERS.MID_RANGE) return "⚡ Mid-Range";
-  if (tier === DEVICE_TIERS.LEGACY) return "📱 Legacy";
-  return "❓ Unknown";
 };
 
 async function checkWebGPU(setWebGPUStatus) {
@@ -322,6 +233,11 @@ async function initializeLocalEngine({
   }
 }
 
+// An on-device model counts as loaded whether it came from the legacy local
+// engine or the Warrant Council swarm, wherever it was loaded from.
+const isLocalReady = (status) =>
+  status.effectiveMode === "local" || Boolean(status.swarmAvailable);
+
 function useLocalAIEngine(webGPUStatus, selectedModel) {
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [isReady, setIsReady] = useState(false);
@@ -336,8 +252,7 @@ function useLocalAIEngine(webGPUStatus, selectedModel) {
 
   // Check if AI is already ready
   useEffect(() => {
-    const status = getAIStatus();
-    if (status.effectiveMode === "local") {
+    if (isLocalReady(getAIStatus())) {
       setIsReady(true);
     }
   }, []);
@@ -347,7 +262,7 @@ function useLocalAIEngine(webGPUStatus, selectedModel) {
     const interval = setInterval(() => {
       const status = getAIStatus();
       setAIStatus(status);
-      if (status.effectiveMode === "local" && !isReady) {
+      if (isLocalReady(status) && !isReady) {
         setIsReady(true);
       }
     }, 500);
@@ -439,31 +354,12 @@ const AICommandCenterBrandBanner = ({ aiStatus, onClose, onReportBug }) => (
   <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 px-6 py-5 text-white">
     <div className="absolute right-0 top-0 h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/10" />
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-          <span className="text-3xl">🛡️</span>
-        </div>
-        <div>
-          <h2 id="ai-command-center-title" className="text-2xl font-bold">
-            AI Command Center
-          </h2>
-          <p className="mt-1 text-sm text-cyan-200">
-            Faraday Cage Protocol • All AI Settings in One Place
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="AI Command Center"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
-          className="rounded-lg p-2 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white/80 transition-colors hover:bg-white/20 hover:text-white"
           aria-label="Close dialog"
         >
           <svg
@@ -480,8 +376,29 @@ const AICommandCenterBrandBanner = ({ aiStatus, onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+          <span className="text-3xl">🛡️</span>
+        </div>
+        <div className="min-w-0">
+          <h2 id="ai-command-center-title" className="text-2xl font-bold">
+            AI Command Center
+          </h2>
+          <p className="mt-1 text-sm text-cyan-200">
+            Faraday Cage Protocol • All AI Settings in One Place
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="AI Command Center"
+        />
+      )}
+    </HeaderCloseSlot>
 
     {/* Status Indicator */}
     <div
@@ -557,7 +474,7 @@ function ModelPickerButton({ model, isSelected, onSelect }) {
             {model.description}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            {model.size} download • {model.vramRequired} VRAM
+            Download: {model.size} • VRAM: {model.vramRequired}
           </p>
         </div>
         {isSelected && (
@@ -575,18 +492,21 @@ function ModelSelectionPanel({
   loadProgress,
   onInitialize,
 }) {
+  const deviceModel = useDeviceModel();
+  const models = useMemo(
+    () => buildCommandCenterModels(deviceModel),
+    [deviceModel],
+  );
   return (
     <div className="mt-4 space-y-3">
       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        Select AI Model:
+        Select AI Role:
       </p>
       <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
-        The specialties below share one underlying engine today - the app
-        automatically downloads whichever build (~1-2 GB) fits your device.
-        Specialty-tuned models are in testing and aren't live yet.
+        {getDeviceModelSummary(deviceModel)}
       </p>
       <div className="grid gap-2">
-        {MODELS.map((model) => (
+        {models.map((model) => (
           <ModelPickerButton
             key={model.id}
             model={model}
@@ -750,6 +670,7 @@ function TestBoxPanel({
 function ActiveLocalAIPanel({ isUnloading, onUnload, testBox }) {
   return (
     <>
+      <FallbackModelNotice className="mt-4" />
       <div className="mt-4 flex gap-2">
         <span className="flex-1 rounded-lg bg-green-100 px-4 py-2 text-center text-sm font-medium text-green-700 dark:bg-green-500/20 dark:text-green-300">
           ✅ AI Active & Private
@@ -847,64 +768,6 @@ function LocalAICard({
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function GeminiApiKeyForm({
-  apiKey,
-  setApiKey,
-  showApiKey,
-  setShowApiKey,
-  apiKeySaved,
-  onSave,
-  onClear,
-}) {
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="relative">
-        <input
-          type={showApiKey ? "text" : "password"}
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="Enter Gemini API key..."
-          className="w-full rounded-lg border-2 border-gray-300 bg-white px-4 py-2 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-        />
-        <button
-          type="button"
-          onClick={() => setShowApiKey(!showApiKey)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-white"
-        >
-          {showApiKey ? "👁️" : "👁️‍🗨️"}
-        </button>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          onClick={onSave}
-          disabled={!apiKey.trim()}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-        >
-          {apiKeySaved ? "✓ Saved!" : "💾 Save Key"}
-        </button>
-        {apiKey && (
-          <button
-            onClick={onClear}
-            className="rounded-lg bg-red-100 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-
-      <a
-        href="https://aistudio.google.com/app/apikey"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
-      >
-        🔗 Get free API key from Google AI Studio →
-      </a>
     </div>
   );
 }
@@ -1032,7 +895,7 @@ function SetupTab({
         <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-bold text-cyan-600 dark:text-cyan-400">
             1
-          </span>
+          </span>{" "}
           Choose Your AI
         </h3>
 
@@ -1079,46 +942,7 @@ function SetupTab({
   );
 }
 
-function DeviceCapabilityCard({ deviceCapability, webGPUStatus }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-      <h4 className="mb-3 flex items-center gap-2 font-bold text-gray-900 dark:text-white">
-        <span>📱</span> Device Capability
-      </h4>
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
-          <p className="text-xs text-gray-500">Device Tier</p>
-          <p className="font-semibold text-gray-900 dark:text-white">
-            {getDeviceTierLabel(deviceCapability.tier)}
-          </p>
-        </div>
-        <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
-          <p className="text-xs text-gray-500">WebGPU</p>
-          <p
-            className={`font-semibold ${webGPUStatus.supported ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-          >
-            {webGPUStatus.supported ? "✅ Supported" : "❌ Not Available"}
-          </p>
-        </div>
-        {webGPUStatus.supported && webGPUStatus.device && (
-          <div className="col-span-2 rounded-lg bg-white p-3 dark:bg-gray-900/50">
-            <p className="text-xs text-gray-500">Active GPU</p>
-            <p className="font-semibold text-cyan-600 dark:text-cyan-400">
-              {webGPUStatus.device}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function AdvancedTab({
-  selectedPreset,
-  onPresetChange,
-  webGPUStatus,
-  deviceCapability,
-}) {
+function AdvancedTab({ selectedPreset, onPresetChange, webGPUStatus }) {
   return (
     <>
       {/* Token Limit */}
@@ -1126,6 +950,7 @@ function AdvancedTab({
         <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
           <span>📊</span> Response Length
         </h3>
+        <FallbackModelNotice />
         <TokenLimitConfig />
       </div>
 
@@ -1173,10 +998,7 @@ function AdvancedTab({
       </div>
 
       {/* Device Info */}
-      <DeviceCapabilityCard
-        deviceCapability={deviceCapability}
-        webGPUStatus={webGPUStatus}
-      />
+      <DeviceCapabilityCard webGPUStatus={webGPUStatus} />
     </>
   );
 }
@@ -1284,7 +1106,6 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
             selectedPreset={selectedPreset}
             onPresetChange={handlePresetChange}
             webGPUStatus={webGPUStatus}
-            deviceCapability={deviceCapability}
           />
         )}
       </div>

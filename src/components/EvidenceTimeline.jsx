@@ -10,8 +10,17 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getTimelineEvents, saveTimelineEvents } from "../utils/veteranProfile";
 import { loadVKB } from "../utils/veteranKnowledgeBase";
+import {
+  timelineEventKey,
+  buildImportedTimelineEvent,
+  datedVkbEvents,
+  dropStaleCFileCopies,
+  freshVkbEvents,
+  recordRemovedTimelineEvent,
+} from "../utils/timelineStoreSync";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatLocalDate } from "../utils/dateUtils";
 
 // Event categories with their visual styles
@@ -55,12 +64,20 @@ const EVENT_TYPES = {
 };
 
 function detectTimelineGaps(timelineEvents) {
-  if (timelineEvents.length < 2) {
+  // D-C (final10 QA, 2026-09-25): a National Guard/Reserve enlistment date
+  // is not the start of active duty - years between drill weekends with
+  // nothing to show is normal for that component, not missing evidence.
+  // Excluded from gap-pairing only (still shown on the timeline itself,
+  // which renders the full, unfiltered `timelineEvents`).
+  const gapAnchors = timelineEvents.filter(
+    (e) => e.eventType !== "guard_enlistment",
+  );
+  if (gapAnchors.length < 2) {
     return [];
   }
 
   // Sort events by date
-  const sorted = [...timelineEvents].sort(
+  const sorted = [...gapAnchors].sort(
     (a, b) => new Date(a.date) - new Date(b.date),
   );
 
@@ -131,16 +148,48 @@ function drawTimelineGapWarnings(
   });
 }
 
+function eventX(eventDate, { firstDate, lastDate, padding, lineWidth }) {
+  return (
+    padding + ((eventDate - firstDate) / (lastDate - firstDate)) * lineWidth
+  );
+}
+
+// Year labels alternate between an "above" row (even index) and a "below"
+// row (odd index). Events sorted date-ascending give a non-decreasing x per
+// row, so several events landing within MIN_YEAR_LABEL_GAP_PX of each other
+// on the same row would otherwise paint their year text on top of each
+// other (e.g. "2020" over "2020" garbling into unreadable digits). Exported
+// for unit testing.
+const MIN_YEAR_LABEL_GAP_PX = 36;
+
+export function selectYearLabelIndices(sortedEvents, geometry) {
+  const lastX = { above: -Infinity, below: -Infinity };
+  return sortedEvents.map((event, index) => {
+    const row = index % 2 === 0 ? "above" : "below";
+    const x = eventX(new Date(event.date), geometry);
+    const gap = x - lastX[row];
+    // An invalid event.date produces a NaN gap; Number.isNaN guards it
+    // explicitly since every direct comparison against NaN is false,
+    // including `< MIN_YEAR_LABEL_GAP_PX` (which would otherwise fall
+    // through to the "show it" branch below instead of skipping it).
+    if (Number.isNaN(gap) || gap < MIN_YEAR_LABEL_GAP_PX) return false;
+    lastX[row] = x;
+    return true;
+  });
+}
+
 function drawTimelineEventMarkers(
   ctx,
   sortedEvents,
   { firstDate, lastDate, lineY, padding, lineWidth },
 ) {
+  const geometry = { firstDate, lastDate, padding, lineWidth };
+  const showYearLabel = selectYearLabelIndices(sortedEvents, geometry);
+
   // Draw events
   sortedEvents.forEach((event, index) => {
     const eventDate = new Date(event.date);
-    const x =
-      padding + ((eventDate - firstDate) / (lastDate - firstDate)) * lineWidth;
+    const x = eventX(eventDate, geometry);
 
     // Draw event marker
     const eventColor = EVENT_TYPES[event.type]?.color || "#6b7280";
@@ -165,7 +214,9 @@ function drawTimelineEventMarkers(
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Draw year label
+    // Draw year label (skipped when it would collide with the previous
+    // label on the same row - see selectYearLabelIndices)
+    if (!showYearLabel[index]) return;
     ctx.fillStyle = "#e5e7eb";
     ctx.font = "bold 12px sans-serif";
     ctx.textAlign = "center";
@@ -205,7 +256,7 @@ function renderEvidenceTimelineCanvas(
   );
 
   const firstDate = new Date(sorted[0].date);
-  const lastDate = new Date(sorted[sorted.length - 1].date);
+  const lastDate = new Date(sorted.at(-1).date);
 
   // Draw main timeline line
   const lineY = height / 2;
@@ -219,62 +270,236 @@ function renderEvidenceTimelineCanvas(
   drawTimelineStartEndLabels(ctx, geometry);
 }
 
+// Drops duplicate date+description entries, keeping the first occurrence -
+// used both to re-dedupe the merged list against whatever the timeline's
+// real current state turns out to be (see the functional setTimelineEvents
+// call below) and, indirectly, within a single incoming batch.
+function dedupeTimelineEvents(events) {
+  const seen = new Set();
+  return events.filter((e) => {
+    const key = timelineEventKey(e);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function _isServiceEntryEventType(eventType) {
+  return eventType === "guard_enlistment" || eventType === "service_entry";
+}
+
+// ADR-007 R10: a local copy imported from a PROJECTED VKB service-entry
+// event goes stale the moment a correction changes that same projection's
+// date/description - re-importing must replace it, not leave a second,
+// outdated entry sitting alongside the fresh one. A legacy copy (no
+// sourceKey, from before this tracking existed) is stale once no current
+// VKB service-entry event still matches its own (date, description).
+// Veteran-added events (numeric id, never a "vkb_" import) are never
+// touched - EvidenceTimeline has no edit path for them, only add/remove.
+function _isStaleImportedServiceEntryEvent(local, projectedEvents, knownKeys) {
+  if (!_isServiceEntryEventType(local.eventType)) return false;
+  if (typeof local.id !== "string" || !local.id.startsWith("vkb_")) {
+    return false;
+  }
+  if (local.sourceKey) {
+    const match = projectedEvents.find(
+      (p) => p.projectionKey === local.sourceKey,
+    );
+    if (!match) return true;
+    return match.date !== local.date || match.description !== local.description;
+  }
+  return !knownKeys.has(timelineEventKey(local));
+}
+
+// Also tracks WHICH specific projectionKeys the removed copies were stale
+// against, so the caller can rebuild only those exact copies - never every
+// event currently in the projection. Without this, a copy the veteran
+// deliberately removed (performRemoveEvent) or a period that was never
+// imported at all comes back silently the next time any OTHER copy goes
+// stale, since both are equally "missing from kept". A stale LEGACY copy
+// (no sourceKey) only maps to a replacement when exactly one current
+// projected event shares its eventType - with two+ candidates there's no
+// way to prove which one it was, so (same "never guess a link" rule as
+// everywhere else) it's just dropped, not guessed.
+function _dropStaleServiceEntryEvents(events, projectedEvents, knownKeys) {
+  const staleProjectionKeys = new Set();
+  const legacyStaleTypes = new Set();
+  const kept = events.filter((local) => {
+    const stale = _isStaleImportedServiceEntryEvent(
+      local,
+      projectedEvents,
+      knownKeys,
+    );
+    if (stale) {
+      if (local.sourceKey) staleProjectionKeys.add(local.sourceKey);
+      else legacyStaleTypes.add(local.eventType);
+    }
+    return !stale;
+  });
+  legacyStaleTypes.forEach((eventType) => {
+    const candidates = projectedEvents.filter((p) => p.eventType === eventType);
+    if (candidates.length === 1) {
+      staleProjectionKeys.add(candidates[0].projectionKey);
+    }
+  });
+  return { kept, removed: events.length - kept.length, staleProjectionKeys };
+}
+
+function _importConfirmMessage(addedCount, updatedCount, removedCount = 0) {
+  const parts = [];
+  if (updatedCount > 0) parts.push(`update ${updatedCount} event(s)`);
+  if (addedCount > 0) parts.push(`add ${addedCount} new event(s)`);
+  if (removedCount > 0) {
+    parts.push(`remove ${removedCount} event(s) your records no longer hold`);
+  }
+  const text = parts.join(", ");
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)} on the timeline, based on your analyzed records?`;
+}
+
+// Shared by performImportFromRecords and syncProjectedServiceEntryEvents:
+// loads the VKB's dated evidenceTimeline/evidence items, plus the
+// ADR-007-projected service-entry/enlistment subset of them and every
+// (date, description) key currently claimed by a service-entry event.
+async function _loadServiceEntryProjection() {
+  const vkb = await loadVKB({ strict: true });
+  const vkbEvents = datedVkbEvents(vkb);
+  const projectedEvents = vkbEvents.filter(
+    (e) => e.projected && _isServiceEntryEventType(e.eventType),
+  );
+  const knownServiceEntryKeys = new Set(
+    vkbEvents
+      .filter((e) => _isServiceEntryEventType(e.eventType))
+      .map((e) =>
+        timelineEventKey({
+          date: e.date,
+          description: e.description || e.text,
+        }),
+      ),
+  );
+  return { vkbEvents, projectedEvents, knownServiceEntryKeys };
+}
+
 // Pull dated events the C-File analyzer filed into the VKB
 // (evidenceTimeline entries + dated evidence items) into this timeline.
+// `auto` (first-open auto-import) skips the confirm/alert dialogs a manual
+// button click still shows, and reports back how many events were added so
+// the caller can show its own inline notice instead.
 async function performImportFromRecords({
   timelineEvents,
   setTimelineEvents,
   onEventsUpdate,
+  auto = false,
 }) {
   try {
-    const vkb = await loadVKB();
-    const vkbEvents = [
-      ...(Array.isArray(vkb?.evidenceTimeline) ? vkb.evidenceTimeline : []),
-      ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
-    ].filter((e) => e?.date && (e.description || e.text));
+    const { vkbEvents, projectedEvents, knownServiceEntryKeys } =
+      await _loadServiceEntryProjection();
+    const { kept: serviceKept, removed: serviceRemoved } =
+      projectedEvents.length > 0
+        ? _dropStaleServiceEntryEvents(
+            timelineEvents,
+            projectedEvents,
+            knownServiceEntryKeys,
+          )
+        : { kept: timelineEvents, removed: 0 };
+    const workingEvents = dropStaleCFileCopies(vkbEvents, serviceKept);
+    const staleRemoved =
+      serviceRemoved + (serviceKept.length - workingEvents.length);
 
-    const normalize = (s) =>
-      String(s || "")
-        .toLowerCase()
-        .replace(/\s+/g, " ")
-        .trim();
-    const existing = new Set(
-      timelineEvents.map((e) => `${e.date}|${normalize(e.description)}`),
+    // Dedupe against the (stale-filtered) existing timeline events AND, as
+    // items are accepted, against each other - migrateOffSchemaVKB copies
+    // legacy evidence[] entries into evidenceTimeline[], so the same item
+    // can otherwise show up in both vkbEvents halves and get added twice.
+    const fresh = freshVkbEvents(vkbEvents, workingEvents).map(([e, i]) =>
+      buildImportedTimelineEvent(e, i),
     );
-    const fresh = vkbEvents
-      .filter(
-        (e) => !existing.has(`${e.date}|${normalize(e.description || e.text)}`),
-      )
-      .map((e, i) => ({
-        id: `vkb_${Date.now()}_${i}`,
-        type: "records",
-        date: e.date,
-        description: e.description || e.text,
-        title: String(e.description || e.text).substring(0, 50),
-        category: "Medical Records",
-        sourceDocumentId: e.sourceDocumentId || null,
-      }));
 
-    if (fresh.length === 0) {
-      alert("No new dated events found in your records.");
-      return;
+    if (fresh.length === 0 && staleRemoved === 0) {
+      if (!auto) alert("No new dated events found in your records.");
+      return [];
     }
+    const updatedCount = Math.min(staleRemoved, fresh.length);
+    const addedCount = fresh.length - updatedCount;
     if (
+      !auto &&
       !window.confirm(
-        `Add ${fresh.length} event(s) from your analyzed records to the timeline?`,
+        _importConfirmMessage(
+          addedCount,
+          updatedCount,
+          staleRemoved - updatedCount,
+        ),
       )
     ) {
-      return;
+      return [];
     }
-    const updated = [...timelineEvents, ...fresh];
+    const updated = dedupeTimelineEvents([...workingEvents, ...fresh]);
     setTimelineEvents(updated);
     saveTimelineEvents(updated);
     if (onEventsUpdate) {
       onEventsUpdate(updated);
     }
+    return fresh;
   } catch (e) {
     console.error("Failed to import events from records:", e);
-    alert("Could not read your records. Please try again.");
+    if (!auto) alert("Could not read your records. Please try again.");
+    return [];
+  }
+}
+
+// D13-2: keeps already-imported service-entry/enlistment timeline events
+// synced to the VKB's ADR-007 projection every time this component mounts
+// - not just on the very first, store-empty open - so a correction made
+// through any editor (VKB viewer, My Packet, FormsHelper, Muster Call
+// review) is reflected here too without the veteran clicking "Import from
+// My Records" again. Silent (no confirm/alert, no notice): this only ever
+// REPLACES a copy that was itself found stale (sourceKey still present in
+// the projection, but date/description changed) or a legacy copy that no
+// longer matches any current service-entry event - it never resurrects a
+// projected event the veteran deliberately removed, or adds one that was
+// never imported at all, just because some OTHER copy went stale. A
+// veteran-added event (numeric id, no sourceKey match attempted) is never
+// touched - same guarantee as the manual re-import path.
+//
+// Reads the CURRENT store (not a mount-time snapshot) only after the
+// await below resolves, and writes it back with no further await in
+// between - performAddEvent/performRemoveEvent persist synchronously, so
+// this can never observe, then clobber, a hand-add/remove that happened
+// while the projection was loading.
+async function syncProjectedServiceEntryEvents({
+  setTimelineEvents,
+  onEventsUpdate,
+}) {
+  try {
+    const { projectedEvents, knownServiceEntryKeys } =
+      await _loadServiceEntryProjection();
+    if (projectedEvents.length === 0) return;
+
+    const currentEvents = getTimelineEvents();
+    const { kept, removed, staleProjectionKeys } = _dropStaleServiceEntryEvents(
+      currentEvents,
+      projectedEvents,
+      knownServiceEntryKeys,
+    );
+    if (removed === 0) return;
+
+    const existing = new Set(kept.map(timelineEventKey));
+    const replacements = [];
+    projectedEvents.forEach((p, i) => {
+      if (!staleProjectionKeys.has(p.projectionKey)) return;
+      const key = timelineEventKey({
+        date: p.date,
+        description: p.description || p.text,
+      });
+      if (existing.has(key)) return;
+      existing.add(key);
+      replacements.push(buildImportedTimelineEvent(p, i));
+    });
+
+    const updated = dedupeTimelineEvents([...kept, ...replacements]);
+    setTimelineEvents(updated);
+    saveTimelineEvents(updated);
+    if (onEventsUpdate) onEventsUpdate(updated);
+  } catch (e) {
+    console.error("Failed to sync service-entry timeline events:", e);
   }
 }
 
@@ -324,6 +549,8 @@ function performRemoveEvent({
   setTimelineEvents,
   onEventsUpdate,
 }) {
+  const removed = timelineEvents.find((e) => e.id === id);
+  if (removed) recordRemovedTimelineEvent(removed);
   const updated = timelineEvents.filter((e) => e.id !== id);
   setTimelineEvents(updated);
 
@@ -338,36 +565,12 @@ function performRemoveEvent({
 function TimelineModalHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-slate-600 to-gray-700 p-4 shadow-lg">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🧵</span>
-          <div>
-            <h2
-              id="evidence-timeline-title"
-              className="text-xl font-bold text-white"
-            >
-              🧵 The Continuity Thread - Evidence Timeline{" "}
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                BETA
-              </span>
-            </h2>
-            <p className="text-sm text-slate-100">
-              Visual nexus timeline with gap detection
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="The Continuity Thread"
-            />
-          )}
-          {onClose && (
+      <HeaderCloseSlot
+        close={
+          onClose && (
             <button
               onClick={onClose}
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+              className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
               aria-label="Close"
             >
               <svg
@@ -384,9 +587,34 @@ function TimelineModalHeader({ onClose, onReportBug }) {
                 />
               </svg>
             </button>
-          )}
+          )
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl">🧵</span>
+          <div className="min-w-0">
+            <h2
+              id="evidence-timeline-title"
+              className="text-xl font-bold text-white"
+            >
+              🧵 The Continuity Thread - Evidence Timeline{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                BETA
+              </span>
+            </h2>
+            <p className="text-sm text-slate-100">
+              Visual nexus timeline with gap detection
+            </p>
+          </div>
         </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="The Continuity Thread"
+          />
+        )}
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -401,9 +629,9 @@ function GapWarningsList({ gaps }) {
       <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
         ⚠️ Evidence Gaps Detected: {gaps.length}
       </h3>
-      {gaps.map((gap, idx) => (
+      {gaps.map((gap) => (
         <div
-          key={idx}
+          key={`${gap.start.date}-${gap.end.date}`}
           className={`border-l-4 p-4 rounded ${
             gap.severity === "CRITICAL"
               ? "border-red-500 bg-red-900/20"
@@ -691,6 +919,130 @@ function ExportTimelineButton({ events }) {
   );
 }
 
+function AutoImportedNotice({ count }) {
+  if (!count) return null;
+
+  return (
+    <div className="mb-6 bg-cyan-900/20 border border-cyan-500/30 rounded p-3">
+      <p className="text-cyan-200 text-sm">
+        📂 We filled in {count} event{count === 1 ? "" : "s"} from your saved
+        records — review below and remove anything that&apos;s wrong.
+      </p>
+    </div>
+  );
+}
+
+// First open with no events at all (nothing persisted, nothing passed in):
+// silently try the same "Import from My Records" the button runs, so the
+// veteran isn't staring at a blank timeline the app could have filled in.
+// The existing date+description dedupe means a later reopen (events.length
+// > 0 by then) never re-runs this or duplicates entries. On every OTHER
+// mount (events already persisted), instead run the D13-2 service-entry
+// sync so a correction made elsewhere since the last open (or since this
+// timeline's very first auto-import) is never left showing a stale
+// calculated date. Split out of EvidenceTimeline purely to keep its
+// function body under the line-count limit. Same logic, same order of
+// operations.
+function useEvidenceTimelineAutoImport({
+  timelineEvents,
+  setTimelineEvents,
+  onEventsUpdate,
+}) {
+  const [autoImportedCount, setAutoImportedCount] = useState(0);
+  const autoImportedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoImportedRef.current) return;
+    autoImportedRef.current = true;
+    if (timelineEvents.length === 0) {
+      performImportFromRecords({
+        timelineEvents: [],
+        setTimelineEvents,
+        onEventsUpdate,
+        auto: true,
+      }).then((fresh) => {
+        if (fresh.length > 0) setAutoImportedCount(fresh.length);
+      });
+    } else {
+      syncProjectedServiceEntryEvents({
+        setTimelineEvents,
+        onEventsUpdate,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return autoImportedCount;
+}
+
+// The canvas' CSS height (its `width` is fluid - see setupHiDpiCanvas).
+// Falls back to the pre-HiDPI 800px width only when real layout isn't
+// available (jsdom in unit tests never computes clientWidth/getBoundingClientRect,
+// both read 0 there), so tests exercising the render path keep working.
+const CANVAS_CSS_HEIGHT = 200;
+const FALLBACK_CANVAS_CSS_WIDTH = 800;
+
+// Sizes the canvas' backing pixel buffer to its real CSS width *
+// devicePixelRatio (instead of a fixed 800 always squeezed down to fit),
+// then scales the drawing context so every coordinate `renderEvidenceTimelineCanvas`
+// uses is a real CSS pixel - a "12px" ctx.font comes out 12 CSS px tall on
+// screen instead of ~0.4x that once a narrow phone's `w-full` shrinks an
+// 800px-wide canvas down to fit (QA S46: year labels ~5px tall at 390px).
+function setupHiDpiCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth =
+    canvas.clientWidth ||
+    canvas.getBoundingClientRect().width ||
+    FALLBACK_CANVAS_CSS_WIDTH;
+
+  canvas.width = Math.max(1, Math.round(cssWidth * dpr));
+  canvas.height = Math.max(1, Math.round(CANVAS_CSS_HEIGHT * dpr));
+  canvas.style.height = `${CANVAS_CSS_HEIGHT}px`;
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, cssWidth, cssHeight: CANVAS_CSS_HEIGHT };
+}
+
+// Owns the gap-detection state and canvas redraw for the timeline. Split
+// out of EvidenceTimeline purely to keep its function body under the
+// line-count limit. Same logic, same order of operations.
+function useEvidenceTimelineGaps({ timelineEvents, canvasRef }) {
+  const [gaps, setGaps] = useState([]);
+
+  const drawTimeline = (currentGaps) => {
+    const canvas = canvasRef.current;
+    if (!canvas || timelineEvents.length === 0) return;
+    const { ctx, cssWidth, cssHeight } = setupHiDpiCanvas(canvas);
+    renderEvidenceTimelineCanvas(
+      ctx,
+      cssWidth,
+      cssHeight,
+      timelineEvents,
+      currentGaps,
+    );
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || timelineEvents.length === 0) return undefined;
+
+    const currentGaps = detectTimelineGaps(timelineEvents);
+    setGaps(currentGaps);
+    drawTimeline(currentGaps);
+
+    // Redraws at the new CSS width on container resize (viewport rotation,
+    // window resize) so the HiDPI buffer never goes stale/blurry.
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(() => drawTimeline(currentGaps));
+    observer.observe(canvas);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timelineEvents]);
+
+  return gaps;
+}
+
 function TimelineModalBody({
   onClose,
   onReportBug,
@@ -704,6 +1056,7 @@ function TimelineModalBody({
   onAddEvent,
   onRemoveEvent,
   onImportFromRecords,
+  autoImportedCount,
 }) {
   return (
     <ResponsiveModal
@@ -722,6 +1075,8 @@ function TimelineModalBody({
           Visualize your nexus. Spot evidence gaps that could sink your claim.
         </p>
       </div>
+
+      <AutoImportedNotice count={autoImportedCount} />
 
       {/* Canvas Timeline */}
       {timelineEvents.length > 0 && (
@@ -775,28 +1130,13 @@ const EvidenceTimeline = ({
     description: "",
     category: "Service Event",
   });
-  const [gaps, setGaps] = useState([]);
   const canvasRef = useRef(null);
-
-  const drawTimeline = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || timelineEvents.length === 0) return;
-    renderEvidenceTimelineCanvas(
-      canvas.getContext("2d"),
-      canvas.width,
-      canvas.height,
-      timelineEvents,
-      gaps,
-    );
-  };
-
-  useEffect(() => {
-    if (timelineEvents.length > 0) {
-      setGaps(detectTimelineGaps(timelineEvents));
-      drawTimeline();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timelineEvents]);
+  const gaps = useEvidenceTimelineGaps({ timelineEvents, canvasRef });
+  const autoImportedCount = useEvidenceTimelineAutoImport({
+    timelineEvents,
+    setTimelineEvents,
+    onEventsUpdate,
+  });
 
   const importFromRecords = () =>
     performImportFromRecords({
@@ -837,6 +1177,7 @@ const EvidenceTimeline = ({
       onAddEvent={addEvent}
       onRemoveEvent={removeEvent}
       onImportFromRecords={importFromRecords}
+      autoImportedCount={autoImportedCount}
     />
   );
 };

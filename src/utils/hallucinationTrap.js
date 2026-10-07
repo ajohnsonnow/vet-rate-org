@@ -125,14 +125,14 @@ export const validateDiagnosticCode = (code) => {
  */
 const findSimilarCodes = (code) => {
   const codeStr = String(code);
-  const codeNum = parseInt(codeStr, 10);
+  const codeNum = Number.parseInt(codeStr, 10);
 
-  if (isNaN(codeNum)) return [];
+  if (Number.isNaN(codeNum)) return [];
 
   // Find codes within ±10
   const similar = disabilityData
     .filter((d) => {
-      const dCode = parseInt(d.diagnosticCode, 10);
+      const dCode = Number.parseInt(d.diagnosticCode, 10);
       return Math.abs(dCode - codeNum) <= 10;
     })
     .slice(0, 3)
@@ -297,6 +297,75 @@ export const annotateConditionVerification = (conditions) => {
   });
 };
 
+function _hasConditionShape(item) {
+  return Boolean(
+    item &&
+    typeof item === "object" &&
+    (item.diagnosticCode || item.code || item.dc || item.diagnostic_code),
+  );
+}
+
+// A validation-skipped passthrough result for AI responses that don't look
+// like diagnostic-code data at all (e.g. DecisionDecoder-shaped responses).
+function _passthroughResult(safeData) {
+  return {
+    success: true,
+    safeData,
+    rejected: [],
+    skipped: true, // Indicate we skipped validation for non-condition response
+    stats: { total: 0, valid: 0, invalid: 0, successRate: 100 },
+  };
+}
+
+// Pull the conditions array to validate out of `data`, handling the several
+// known AI response shapes (bare array, .conditions, .results,
+// .potential_claims, single condition object). Returns either
+// `{ conditions }` to hand off to validateConditions, or `{ result }` to
+// short-circuit validateAIResponse with a passthrough/error result.
+function _extractConditionsForValidation(data) {
+  if (Array.isArray(data)) {
+    // Check if this array contains condition-like objects (with diagnostic
+    // codes). If not, skip validation (e.g. arrays of strings, action items).
+    const hasConditionObjects = data.some(_hasConditionShape);
+    if (hasConditionObjects || data.length === 0) {
+      return { conditions: data };
+    }
+    return { result: _passthroughResult(data) };
+  }
+
+  if (data.conditions && Array.isArray(data.conditions)) {
+    return { conditions: data.conditions };
+  }
+  if (data.results && Array.isArray(data.results)) {
+    return { conditions: data.results };
+  }
+  if (data.potential_claims && Array.isArray(data.potential_claims)) {
+    // C-File analyzer format
+    return { conditions: data.potential_claims };
+  }
+
+  if (typeof data === "object") {
+    // Check if this looks like a condition object (has diagnosticCode,
+    // code, or dc). If not, it's probably a different response format
+    // (like DecisionDecoder) and we should skip validation.
+    const hasConditionFields =
+      data.diagnosticCode || data.code || data.dc || data.diagnostic_code;
+    if (hasConditionFields) {
+      return { conditions: [data] };
+    }
+    return { result: _passthroughResult(data) };
+  }
+
+  return {
+    result: {
+      success: false,
+      error: "Unrecognized AI response format",
+      safeData: [],
+      rejected: [],
+    },
+  };
+}
+
 /**
  * Parse and validate AI response (handles JSON strings or objects)
  * @param {string|Object} aiResponse - Response from AI
@@ -327,64 +396,8 @@ export const validateAIResponse = (aiResponse) => {
       }
     }
 
-    // Handle different response formats
-    let conditions = [];
-
-    if (Array.isArray(data)) {
-      // Check if this array contains condition-like objects (with diagnostic codes)
-      // If not, skip validation (e.g., arrays of strings, action items, etc.)
-      const hasConditionObjects = data.some(
-        (item) =>
-          item &&
-          typeof item === "object" &&
-          (item.diagnosticCode || item.code || item.dc || item.diagnostic_code),
-      );
-
-      if (hasConditionObjects || data.length === 0) {
-        conditions = data;
-      } else {
-        // Array doesn't contain diagnostic code objects - pass through unchanged
-        return {
-          success: true,
-          safeData: data,
-          rejected: [],
-          skipped: true,
-          stats: { total: 0, valid: 0, invalid: 0, successRate: 100 },
-        };
-      }
-    } else if (data.conditions && Array.isArray(data.conditions)) {
-      conditions = data.conditions;
-    } else if (data.results && Array.isArray(data.results)) {
-      conditions = data.results;
-    } else if (data.potential_claims && Array.isArray(data.potential_claims)) {
-      // C-File analyzer format
-      conditions = data.potential_claims;
-    } else if (typeof data === "object") {
-      // Check if this looks like a condition object (has diagnosticCode, code, or dc)
-      // If not, it's probably a different response format (like DecisionDecoder)
-      // and we should skip validation
-      const hasConditionFields =
-        data.diagnosticCode || data.code || data.dc || data.diagnostic_code;
-      if (hasConditionFields) {
-        conditions = [data];
-      } else {
-        // Not a diagnostic code response - pass through unchanged
-        return {
-          success: true,
-          safeData: data,
-          rejected: [],
-          skipped: true, // Indicate we skipped validation for non-condition response
-          stats: { total: 0, valid: 0, invalid: 0, successRate: 100 },
-        };
-      }
-    } else {
-      return {
-        success: false,
-        error: "Unrecognized AI response format",
-        safeData: [],
-        rejected: [],
-      };
-    }
+    const { conditions, result } = _extractConditionsForValidation(data);
+    if (result) return result;
 
     return validateConditions(conditions);
   } catch (error) {
@@ -408,10 +421,10 @@ export const getDatabaseStats = () => {
     bodySystems: [...new Set(disabilityData.map((d) => d.bodySystem))].length,
     codeRange: {
       min: Math.min(
-        ...disabilityData.map((d) => parseInt(d.diagnosticCode, 10)),
+        ...disabilityData.map((d) => Number.parseInt(d.diagnosticCode, 10)),
       ),
       max: Math.max(
-        ...disabilityData.map((d) => parseInt(d.diagnosticCode, 10)),
+        ...disabilityData.map((d) => Number.parseInt(d.diagnosticCode, 10)),
       ),
     },
   };

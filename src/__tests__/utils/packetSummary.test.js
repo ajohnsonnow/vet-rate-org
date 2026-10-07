@@ -5,6 +5,7 @@ import {
   buildConditionSynthesis,
   buildPacketTldr,
   buildPacketSummary,
+  getStatedCombinedRating,
 } from "../../utils/packetSummary";
 
 const dd214Doc = {
@@ -154,6 +155,45 @@ describe("buildDocumentFindings", () => {
     });
     expect(findings.conditions).toEqual(["Tinnitus"]);
   });
+
+  it("keeps a long re-characterized VA condition name but not long run-on text", () => {
+    const longVaName =
+      "lumbosacral strain, degenerative disc disease other than intervertebral disc syndrome, intervertebral disc syndrome, thoracic degenerative arthritis, lumbar and thoracic spine scoliosis (previously rated as lumbago) (claimed as osteoarthritis, post traumatic, mid lower back thoracolumbar spine)";
+    const runOn = `Evidence reviewed (VA exam). ${"The examiner noted pain. ".repeat(8)}`;
+    const findings = buildDocumentFindings({
+      fileName: "letter.pdf",
+      extractedData: { conditions: [longVaName, runOn] },
+    });
+    expect(findings.conditions).toEqual([longVaName]);
+  });
+});
+
+describe("buildDocumentFindings: calculated entry date", () => {
+  it("does not flag a printed entry date as calculated", () => {
+    const findings = buildDocumentFindings(dd214Doc);
+    const enteredService = findings.scalars.find(
+      (s) => s.label === "Entered service",
+    );
+    expect(enteredService.value).toBe("2010-06-01");
+    expect(enteredService.derived).toBe(false);
+  });
+
+  it("flags an NGB-22's calculated entry date (separation date minus net service)", () => {
+    const findings = buildDocumentFindings({
+      fileName: "ngb22.pdf",
+      extractedData: {
+        formType: "NGB22",
+        serviceStartDate: "2012-03-14",
+        serviceStartDateDerived: true,
+        separationDate: "2020-03-14",
+      },
+    });
+    const enteredService = findings.scalars.find(
+      (s) => s.label === "Entered service",
+    );
+    expect(enteredService.value).toBe("2012-03-14");
+    expect(enteredService.derived).toBe(true);
+  });
 });
 
 describe("buildAllDocumentFindings", () => {
@@ -273,6 +313,27 @@ describe("buildPacketTldr", () => {
     );
   });
 
+  it("does not flag a missing separation date when a service period on file has an end date, the same source BDDBuilder uses (regression D13)", () => {
+    const tldr = buildPacketTldr(
+      {
+        serviceHistory: {
+          servicePeriods: [
+            {
+              serviceStartDate: "2010-01-01",
+              serviceEndDate: "2014-01-01",
+              branch: "Army",
+            },
+          ],
+        },
+      },
+      [],
+      [],
+    );
+    expect(tldr.gaps).not.toContain(
+      "Separation date is not recorded in your service history.",
+    );
+  });
+
   it("does not flag a missing DD-214 when one is on file", () => {
     const docs = buildAllDocumentFindings(documentsByCategory);
     const tldr = buildPacketTldr(vkb, docs, []);
@@ -309,5 +370,46 @@ describe("buildPacketSummary", () => {
     expect(summary.documents).toEqual([]);
     expect(summary.conditions).toEqual([]);
     expect(summary.tldr.isEmpty).toBe(true);
+  });
+});
+
+describe("getStatedCombinedRating", () => {
+  it("returns the newest letter's stated rating with its date and source", () => {
+    expect(
+      getStatedCombinedRating({
+        vaClaimsHistory: {
+          currentCombinedRating: 80,
+          currentCombinedRatingDate: "May 8, 2024",
+          currentCombinedRatingDateKind: "letter",
+          currentCombinedRatingSource: "letter.pdf",
+        },
+      }),
+    ).toEqual({
+      rating: 80,
+      date: "May 8, 2024",
+      dateKind: "letter",
+      source: "letter.pdf",
+    });
+  });
+
+  it("returns null when no letter stated a combined rating", () => {
+    expect(getStatedCombinedRating({ vaClaimsHistory: {} })).toBeNull();
+    expect(getStatedCombinedRating(null)).toBeNull();
+  });
+});
+
+describe("buildPacketTldr: rated conditions", () => {
+  it("lists the highest-rated conditions first", () => {
+    const rated = [
+      { name: "Rhinitis", ratedPercentage: 0 },
+      { name: "Tinnitus", ratedPercentage: 10 },
+      { name: "PTSD", ratedPercentage: 50 },
+      { name: "Spine", ratedPercentage: 20 },
+    ];
+    const tldr = buildPacketTldr({}, [], rated);
+    const bullet = tldr.bullets.find((b) => b.icon === "📊");
+    expect(bullet.text).toBe(
+      "Rated conditions on file: PTSD (50%), Spine (20%), Tinnitus (10%).",
+    );
   });
 });

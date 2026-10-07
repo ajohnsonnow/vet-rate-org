@@ -37,11 +37,7 @@ const GENESIS_HASH = "0".repeat(64);
  */
 async function sha256Hex(text) {
   const data = new TextEncoder().encode(String(text ?? ""));
-  if (
-    typeof globalThis.crypto !== "undefined" &&
-    globalThis.crypto.subtle &&
-    typeof globalThis.crypto.subtle.digest === "function"
-  ) {
+  if (typeof globalThis.crypto?.subtle?.digest === "function") {
     const hashBuf = await globalThis.crypto.subtle.digest("SHA-256", data);
     return [...new Uint8Array(hashBuf)]
       .map((b) => b.toString(16).padStart(2, "0"))

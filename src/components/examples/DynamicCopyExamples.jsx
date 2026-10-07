@@ -5,10 +5,8 @@
 
 import React from "react";
 import { useAboutUsContent, useDynamicCopy } from "../hooks/useDynamicCopy";
-import { useLanguage } from "../../contexts/LanguageContext";
 
 export const AboutUsExample = () => {
-  const { _t } = useLanguage();
   const aboutUs = useAboutUsContent();
   const { stats } = useDynamicCopy();
 
@@ -20,9 +18,9 @@ export const AboutUsExample = () => {
           {aboutUs.theCodebase.heading}
         </h2>
         <div className="space-y-4">
-          {aboutUs.theCodebase.paragraphs.map((paragraph, index) => (
+          {aboutUs.theCodebase.paragraphs.map((paragraph) => (
             <p
-              key={index}
+              key={paragraph}
               className="text-lg leading-relaxed text-gray-700 dark:text-gray-300"
             >
               {paragraph}
@@ -74,7 +72,7 @@ const StatCard = ({ label, value }) => (
  */
 
 export const BuyMeACoffeeExample = () => {
-  const { copy, _stats } = useDynamicCopy();
+  const { copy } = useDynamicCopy();
   const coffee = copy.buyMeACoffee;
 
   // Randomly select a caption (or rotate through them)
@@ -87,8 +85,8 @@ export const BuyMeACoffeeExample = () => {
 
       {/* Body with line breaks preserved */}
       <div className="space-y-3 mb-6">
-        {coffee.longForm.body.split("\n\n").map((paragraph, index) => (
-          <p key={index} className="text-gray-700 dark:text-gray-300">
+        {coffee.longForm.body.split("\n\n").map((paragraph) => (
+          <p key={paragraph} className="text-gray-700 dark:text-gray-300">
             {paragraph}
           </p>
         ))}
