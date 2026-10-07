@@ -233,6 +233,11 @@ async function initializeLocalEngine({
   }
 }
 
+// An on-device model counts as loaded whether it came from the legacy local
+// engine or the Warrant Council swarm, wherever it was loaded from.
+const isLocalReady = (status) =>
+  status.effectiveMode === "local" || Boolean(status.swarmAvailable);
+
 function useLocalAIEngine(webGPUStatus, selectedModel) {
   const [aiStatus, setAIStatus] = useState(getAIStatus());
   const [isReady, setIsReady] = useState(false);
@@ -247,8 +252,7 @@ function useLocalAIEngine(webGPUStatus, selectedModel) {
 
   // Check if AI is already ready
   useEffect(() => {
-    const status = getAIStatus();
-    if (status.effectiveMode === "local") {
+    if (isLocalReady(getAIStatus())) {
       setIsReady(true);
     }
   }, []);
@@ -258,7 +262,7 @@ function useLocalAIEngine(webGPUStatus, selectedModel) {
     const interval = setInterval(() => {
       const status = getAIStatus();
       setAIStatus(status);
-      if (status.effectiveMode === "local" && !isReady) {
+      if (isLocalReady(status) && !isReady) {
         setIsReady(true);
       }
     }, 500);
@@ -501,7 +505,6 @@ function ModelSelectionPanel({
       <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
         {getDeviceModelSummary(deviceModel)}
       </p>
-      <FallbackModelNotice />
       <div className="grid gap-2">
         {models.map((model) => (
           <ModelPickerButton
@@ -667,6 +670,7 @@ function TestBoxPanel({
 function ActiveLocalAIPanel({ isUnloading, onUnload, testBox }) {
   return (
     <>
+      <FallbackModelNotice className="mt-4" />
       <div className="mt-4 flex gap-2">
         <span className="flex-1 rounded-lg bg-green-100 px-4 py-2 text-center text-sm font-medium text-green-700 dark:bg-green-500/20 dark:text-green-300">
           ✅ AI Active & Private
@@ -946,6 +950,7 @@ function AdvancedTab({ selectedPreset, onPresetChange, webGPUStatus }) {
         <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
           <span>📊</span> Response Length
         </h3>
+        <FallbackModelNotice />
         <TokenLimitConfig />
       </div>
 
