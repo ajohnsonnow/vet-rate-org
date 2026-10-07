@@ -107,11 +107,24 @@ async function dropScanAndOpenImportDialog() {
   await waitFor(() => expect(analyzeDocument).toHaveBeenCalledTimes(1));
   await waitFor(() => expect(analyze.disabled).toBe(false));
   fireEvent.click(analyze);
-  return screen.findByRole(
+  const importButton = await screen.findByRole(
     "button",
     { name: /Import Selected Fields/ },
     { timeout: 5000 },
   );
+  // The dialog commits its buttons first and its rows, with their ticks, in
+  // a later effect. Every test here goes on to use the rows.
+  await screen.findAllByRole("checkbox");
+  return importButton;
+}
+
+// Import is disabled until a row is ticked, and a click on a disabled button
+// does nothing. Wait for the button the click needs, then for the alert,
+// which the component raises only after every store write has finished.
+async function clickImportAndWaitForSave(importButton) {
+  await waitFor(() => expect(importButton.disabled).toBe(false));
+  fireEvent.click(importButton);
+  await waitFor(() => expect(window.alert).toHaveBeenCalled());
 }
 
 const tick = (name) => screen.getByRole("checkbox", { name });
@@ -122,11 +135,10 @@ describe("the results card says what actually happened", () => {
 
   it("says nothing is saved until the import is confirmed, then says it was", async () => {
     const importButton = await dropScanAndOpenImportDialog();
-    expect(screen.getByText(NOTHING_SAVED)).toBeTruthy();
+    expect(await screen.findByText(NOTHING_SAVED)).toBeTruthy();
     expect(screen.queryByText(SAVED)).toBeNull();
 
-    fireEvent.click(importButton);
-    await waitFor(() => expect(window.alert).toHaveBeenCalled());
+    await clickImportAndWaitForSave(importButton);
 
     expect(await screen.findByText(SAVED)).toBeTruthy();
     expect(screen.queryByText(NOTHING_SAVED)).toBeNull();
@@ -144,8 +156,7 @@ describe("clicking Import Selected Fields writes exactly what was ticked", () =>
       (label) => fireEvent.click(tick(label)),
     );
 
-    fireEvent.click(importButton);
-    await waitFor(() => expect(window.alert).toHaveBeenCalled());
+    await clickImportAndWaitForSave(importButton);
 
     const profile = getVeteranProfile();
     expect(profile.branch).toBeFalsy();
@@ -160,15 +171,19 @@ describe("clicking Import Selected Fields writes exactly what was ticked", () =>
 
   it("files the name in the Knowledge Base only when its box was ticked", async () => {
     const importButton = await dropScanAndOpenImportDialog();
-    fireEvent.click(importButton);
-    await waitFor(() => expect(window.alert).toHaveBeenCalled());
+    await clickImportAndWaitForSave(importButton);
 
+    await waitFor(() => expect(stores.addDocumentToVKB).toHaveBeenCalled());
     const filed = stores.addDocumentToVKB.mock.calls[0][0].extractedData;
     expect(filed.fullName).toBeUndefined();
     expect(filed.dateOfBirth).toBeUndefined();
-    const packet = stores.saveDocumentToPacket.mock.calls
-      .map(([saved]) => saved)
-      .find((saved) => saved.aiAnalysis);
+    const packet = await waitFor(() => {
+      const archived = stores.saveDocumentToPacket.mock.calls
+        .map(([saved]) => saved)
+        .find((saved) => saved.aiAnalysis);
+      expect(archived).toBeTruthy();
+      return archived;
+    });
     expect(JSON.stringify(packet.extractedData)).not.toMatch(/faketon|1984/i);
     expect(JSON.stringify(packet.aiAnalysis)).not.toMatch(/faketon|1984/i);
   });
