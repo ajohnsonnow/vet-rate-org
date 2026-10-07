@@ -609,10 +609,14 @@ const SymptomLoggerAISettingsPanel = ({ aiStatus, setAIStatus }) => (
         setAIStatus(getAIStatus());
       }}
     />
-    <p className="text-xs text-white/70 mt-2">
-      ✨ AI can help suggest triggers, activity impact, and clinical-style notes
-      for your symptom entries.
-    </p>
+    {suggestionsOff(aiStatus) ? (
+      <SuggestionsOffNote className="mt-2 !text-white" />
+    ) : (
+      <p className="text-xs text-white/70 mt-2">
+        ✨ AI can help suggest triggers, activity impact, and clinical-style
+        notes for your symptom entries.
+      </p>
+    )}
   </div>
 );
 
@@ -1253,9 +1257,14 @@ const TriggersNotesFields = ({
 const suggestionsOff = (aiStatus) =>
   Boolean(aiStatus.anyAvailable) && smallModelAnswering(aiStatus);
 
-const SuggestionsOffNote = () => {
+const SuggestionsOffNote = ({ className }) => {
   const { t } = useLanguage();
-  return <RewordingOffNote text={t("smallModelCaveat", "rewordingOff")} />;
+  return (
+    <RewordingOffNote
+      text={t("smallModelCaveat", "rewordingOff")}
+      className={className}
+    />
+  );
 };
 
 const LogAttackTab = ({ aiStatus: fullStatus, ...rest }) => (

@@ -7,7 +7,7 @@
  * offered them as before. All values are invented.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
 import { APP_TRANSLATIONS } from "../../i18n/translations";
 
@@ -147,4 +147,61 @@ describe("Symptom Logger AI suggestion", () => {
       expect(notes()).toEqual([]);
     },
   );
+});
+
+describe("promises of AI suggestions", () => {
+  const TIP = /Click the sparkle .* icon next to any field/;
+  const PANEL = /AI can help suggest triggers, activity impact/;
+  const openNexus = () =>
+    render(
+      <LanguageProvider>
+        <NexusBuilder
+          onClose={() => {}}
+          onSave={() => true}
+          condition="Tinnitus"
+        />
+      </LanguageProvider>,
+    );
+  function openLoggerSettings() {
+    render(
+      <LanguageProvider>
+        <SymptomLogger onClose={() => {}} />
+      </LanguageProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "AI Settings" }));
+  }
+
+  it("are not made on a small model: no sparkle tip on any Nexus Builder step", () => {
+    ai.status = SMALL;
+    openNexus();
+
+    expect(document.body.textContent).not.toMatch(TIP);
+    fireEvent.click(screen.getByRole("button", { name: /next step/i }));
+    expect(document.body.textContent).not.toMatch(TIP);
+  });
+
+  it("are not made on a small model: the Symptom Logger's AI panel says suggestions are off", () => {
+    ai.status = SMALL;
+    openLoggerSettings();
+
+    expect(document.body.textContent).not.toMatch(PANEL);
+    expect(notes().map((note) => note.textContent)).toEqual([
+      REWORDING_OFF,
+      REWORDING_OFF,
+    ]);
+  });
+
+  it.each([
+    ["a larger on-device model", LARGER],
+    ["the cloud", CLOUD],
+  ])("are made as before with %s", (_name, status) => {
+    ai.status = status;
+    openNexus();
+    expect(document.body.textContent).toMatch(TIP);
+    cleanup();
+
+    openLoggerSettings();
+    expect(document.body.textContent).toMatch(PANEL);
+    expect(notes()).toEqual([]);
+  });
 });
