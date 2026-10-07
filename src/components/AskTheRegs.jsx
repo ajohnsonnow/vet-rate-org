@@ -11,6 +11,7 @@ import { smallModelAnswering } from "../utils/smallModelAnswering";
 import ModelAnswerCaveat from "./ModelAnswerCaveat";
 import { onDeviceModelAnswering } from "../utils/modelAnswerCaveat";
 import {
+  NEEDS_AI_FOR_ANSWER,
   REGULATION_SEARCH_DISCLOSURE,
   SEARCH_RESULTS_LABEL,
   isReservedPassage,
@@ -110,7 +111,7 @@ const SEARCH_ONLY_TITLE = "Search results, not an AI answer";
 // veteran asked for this search, so it is shown, labelled as a search. Every
 // passage sits under its section number and heading, a reserved section is
 // never shown, and the first-use download of the search model is disclosed.
-function SearchOnlyResult({ passages }) {
+function SearchOnlyResult({ passages, needsAI }) {
   const shown = passages.filter((passage) => !isReservedPassage(passage));
   return (
     <div className="space-y-3">
@@ -121,6 +122,9 @@ function SearchOnlyResult({ passages }) {
       >
         <p className="min-w-0">{SEARCH_RESULTS_LABEL}</p>
         <p className="mt-2 min-w-0 text-xs">{REGULATION_SEARCH_DISCLOSURE}</p>
+        {needsAI && (
+          <p className="mt-2 min-w-0 text-xs">{NEEDS_AI_FOR_ANSWER}</p>
+        )}
       </div>
       {shown.length === 0 && (
         <p className="text-sm text-gray-800 dark:text-gray-200">
@@ -146,21 +150,38 @@ function SearchOnlyResult({ passages }) {
   );
 }
 
-function AskTheRegsResult({ aiAvailable, error, result }) {
-  if (result?.passages) return <SearchOnlyResult passages={result.passages} />;
+function AskTheRegsResult({ aiAvailable, error, result, onRetry }) {
+  if (result?.passages) {
+    return (
+      <SearchOnlyResult passages={result.passages} needsAI={result.needsAI} />
+    );
+  }
   return (
     <>
       {!aiAvailable && (
         <p className="text-sm text-amber-700 dark:text-amber-400">
-          No AI mode is configured yet - tap the status badge above to set one
-          up before asking.
+          No AI mode is set up yet. Ask still searches the regulations and shows
+          the closest text. Tap the AI status above to set up an AI mode for a
+          written answer.
         </p>
       )}
 
       {error && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-300">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>{error}</p>
+        <div
+          role="alert"
+          className="space-y-2 rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-300"
+        >
+          <p className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="min-h-[44px] rounded-lg bg-red-700 px-4 py-2 font-semibold text-white hover:bg-red-800"
+          >
+            Try again
+          </button>
         </div>
       )}
 
@@ -204,28 +225,33 @@ export default function AskTheRegs({ onClose }) {
   const handleAsk = async () => {
     const trimmed = question.trim();
     if (!trimmed) return;
-    if (!aiAvailable) {
-      setError("Set up an AI mode (local or cloud) to ask a question.");
-      return;
-    }
-
     setIsAsking(true);
     setError(null);
     setResult(null);
     try {
       const status = getAIStatus();
-      const res = smallModelAnswering(status)
-        ? { passages: await retrieveRegulationText(trimmed) }
-        : {
-            ...(await answerLegalQuestion(trimmed, {
-              generateAI: generateAIText,
-            })),
-            modelWritten: onDeviceModelAnswering(status),
-          };
+      // The search needs no AI model: with none set up, or with only a
+      // small-class one, it is shown as a search, not as an answer.
+      const res =
+        !aiAvailable || smallModelAnswering(status)
+          ? {
+              passages: await retrieveRegulationText(trimmed),
+              needsAI: !aiAvailable,
+            }
+          : {
+              ...(await answerLegalQuestion(trimmed, {
+                generateAI: generateAIText,
+              })),
+              modelWritten: onDeviceModelAnswering(status),
+            };
       setResult(res);
     } catch (err) {
       console.error("Ask the Regs error:", err);
-      setError("Something went wrong answering that question. Try again.");
+      setError(
+        aiAvailable && !smallModelAnswering(getAIStatus())
+          ? "Something went wrong answering that question. Try again."
+          : "The regulation search could not run. Try again.",
+      );
     } finally {
       setIsAsking(false);
     }
@@ -266,6 +292,7 @@ export default function AskTheRegs({ onClose }) {
           aiAvailable={aiAvailable}
           error={error}
           result={result}
+          onRetry={handleAsk}
         />
       </div>
     </ResponsiveModal>

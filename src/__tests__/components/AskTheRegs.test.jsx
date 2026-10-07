@@ -90,10 +90,12 @@ const INJECTION_RESULT = {
 };
 
 describe("AskTheRegs", () => {
-  it("disables asking and shows a setup hint when no AI mode is configured", () => {
+  it("says, before asking, that Ask still searches the regulations when no AI mode is configured", () => {
     mockIsAnyAIAvailable.mockReturnValue(false);
     render(<AskTheRegs onClose={vi.fn()} />);
-    expect(screen.getByText(/set one up before asking/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Ask still searches the regulations/i),
+    ).toBeInTheDocument();
   });
 
   it("calls legalAnswerer.answer with the question and a generateAI adapter that unwraps {text, mode}", async () => {

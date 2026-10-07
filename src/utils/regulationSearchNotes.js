@@ -4,6 +4,9 @@ export const SEARCH_RESULTS_LABEL =
 export const REGULATION_SEARCH_DISCLOSURE =
   "The first time you search, your device downloads a search model (about 34 MB) from Hugging Face and keeps it. The search runs on your device; your question is not sent there.";
 
+export const NEEDS_AI_FOR_ANSWER =
+  "An AI answer needs an AI mode set up. Tap the AI status at the top of this window to set one up.";
+
 /** A section the regulations reserve has no text, so it is never shown. */
 export const isReservedPassage = (passage) =>
   /\[Reserved\]/i.test(passage?.title ?? "") ||
