@@ -436,6 +436,29 @@ export const STATES: { name: string; reach: (page: Page) => Promise<void> }[] =
           .last()
           .waitFor({ timeout: 10000 });
         await page.waitForTimeout(3000);
+        const problem = await page.evaluate(() => {
+          const title = document.querySelector(
+            "#tour-ai-navigator-expanded h3",
+          );
+          if (!title) return "the assistant title element is missing";
+          const box = title.getBoundingClientRect();
+          if (box.width < 40)
+            return `the assistant title is ${Math.round(box.width)}px wide`;
+          if (title.scrollWidth > title.clientWidth + 1) {
+            return "the assistant title is clipped";
+          }
+          const hit = document.elementFromPoint(
+            box.left + box.width / 2,
+            box.top + box.height / 2,
+          );
+          // The title takes no pointer events, so a hit on a plain ancestor of it is the title showing through.
+          return hit &&
+            hit.closest("#tour-ai-navigator-expanded") &&
+            (title.contains(hit) || hit.contains(title))
+            ? null
+            : `the assistant title is covered by <${hit?.tagName.toLowerCase()} class="${String(hit?.className).slice(0, 80)}">`;
+        });
+        if (problem) throw new Error(problem);
       },
     },
   ];

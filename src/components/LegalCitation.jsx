@@ -43,14 +43,14 @@ export function LegalCitation({
   );
 
   return (
-    <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs leading-tight text-slate-700">
+    <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs leading-tight text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
       {safeUrl ? (
         <a
           href={safeUrl}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`${citation || "Citation"} (opens in new tab)`}
-          className="text-blue-700 underline decoration-dotted hover:decoration-solid"
+          className="text-blue-700 underline decoration-dotted hover:decoration-solid dark:text-blue-300"
           title={title || ""}
         >
           {inner}
@@ -59,12 +59,18 @@ export function LegalCitation({
         inner
       )}
       {dateLabel ? (
-        <span className="text-slate-500" title="Last fetched">
+        <span
+          className="text-slate-600 dark:text-slate-300"
+          title="Last fetched"
+        >
           · {dateLabel}
         </span>
       ) : null}
       {typeof score === "number" ? (
-        <span className="text-slate-400" title="Cosine similarity to query">
+        <span
+          className="text-slate-600 dark:text-slate-300"
+          title="Cosine similarity to query"
+        >
           · {score.toFixed(2)}
         </span>
       ) : null}

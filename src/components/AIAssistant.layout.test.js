@@ -17,8 +17,7 @@ describe("assistant layout at 390px (class and rule checks; not a render)", () =
   });
 
   it("the header keeps its controls on screen on a phone", () => {
-    expect(assistant).toMatch(/min-w-0/);
-    expect(assistant).toMatch(/hidden sm:/);
+    expect(assistant).toMatch(/flex shrink-0 items-center gap-1 sm:gap-2/);
   });
 
   it("the docked window marks itself so the floating privacy badge steps aside on phones", () => {
@@ -30,25 +29,29 @@ describe("assistant layout at 390px (class and rule checks; not a render)", () =
   });
 });
 
-describe("assistant header at 1280 (class checks; not a render)", () => {
+describe("assistant header keeps its title (class checks; not a render)", () => {
   const assistant = read("src", "components", "AIAssistant.jsx");
   const header = assistant.slice(
     assistant.indexOf("function DockedHeader("),
     assistant.indexOf("function ExpandedFooter("),
   );
 
-  it("the title block takes the space left and clips, so it cannot run under the status badge", () => {
-    expect(header).toMatch(
-      /flex min-w-0 flex-1 items-center gap-3 overflow-hidden/,
+  it("the title block and avatar keep their size at every width", () => {
+    expect(header).toMatch(/flex shrink-0 items-center gap-2/);
+    expect(header).not.toMatch(/hidden sm:flex w-10/);
+    expect(header).toMatch(/whitespace-nowrap text-lg font-bold/);
+    const buttonRow = header.slice(header.indexOf('pointer-events-auto">'));
+    expect(buttonRow).not.toContain("AIStatusBadge");
+  });
+
+  it("the status sits under the title, not in the button row, and the drag hint is dropped when it is shown", () => {
+    expect(header).toContain("onOpenAISettings ? (");
+    expect(header.indexOf("dragToMove")).toBeGreaterThan(
+      header.indexOf(") : ("),
     );
   });
 
-  it("the drag hint truncates instead of overflowing", () => {
-    expect(header).toMatch(/min-w-0 truncate/);
-    expect(header).toMatch(/<span className="truncate">/);
-  });
-
-  it("the status badge and buttons keep their size", () => {
-    expect(header).toMatch(/flex shrink-0 items-center/);
+  it("the status badge collapses to its icon so it never takes the title's room", () => {
+    expect(header.slice(header.indexOf("<AIStatusBadge"))).toContain("compact");
   });
 });
