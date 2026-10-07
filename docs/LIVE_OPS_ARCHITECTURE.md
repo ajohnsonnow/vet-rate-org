@@ -377,6 +377,7 @@ vet-rate-org-official/
 ## Key Concepts
 
 ### Hard Reload vs Soft Reload
+
 ```
 Soft Reload (F5):
     Browser Cache → Cached Code
@@ -386,6 +387,7 @@ Hard Reload (Ctrl+F5 or reload(true)):
 ```
 
 ### Semantic Versioning
+
 ```
 1.2.3
 │ │ └─ PATCH: Bug fixes
@@ -394,6 +396,7 @@ Hard Reload (Ctrl+F5 or reload(true)):
 ```
 
 ### Migration Safety
+
 ```
 Old Data + Old Code = ✅ Works
 Old Data + New Code = ❌ Breaks (without migration)
