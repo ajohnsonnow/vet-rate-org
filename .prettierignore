@@ -3,3 +3,7 @@
 # committed size (and, before this exclusion, its gzipped shipped size) for
 # no benefit. See src/data/geo/README.md for provenance.
 src/data/geo/world-countries-50m.topo.json
+
+# Not valid UTF-8 (mis-encoded diagram arrows): prettier would rewrite those bytes
+# as U+FFFD. Edit this file byte-safe only.
+docs/LIVE_OPS_ARCHITECTURE.md
