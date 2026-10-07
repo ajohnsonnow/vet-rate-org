@@ -1332,6 +1332,7 @@ function MyRatingEditForm({
         }
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         placeholder={t("myPacketSection.conditionName")}
+        aria-label={t("myPacketSection.conditionName")}
       />
       <div className="flex gap-2">
         <input
@@ -1340,6 +1341,7 @@ function MyRatingEditForm({
           max="100"
           step="10"
           value={editingRating.rating}
+          aria-label={t("myPacketSection.ratingPercent")}
           onChange={(e) =>
             setEditingRating({
               ...editingRating,

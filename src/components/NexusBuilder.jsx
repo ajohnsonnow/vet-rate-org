@@ -530,7 +530,7 @@ const NexusHeaderProgress = ({ existingStatement, step, totalSteps, t }) => (
       </div>
     )}
 
-    {!existingStatement && isAnyAIAvailable() && (
+    {!existingStatement && isAnyAIAvailable() && !smallModelWouldAnswer() && (
       <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3">
         <div className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
           <span>💡</span>

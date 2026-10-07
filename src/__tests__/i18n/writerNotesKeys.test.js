@@ -32,6 +32,7 @@ export const MACHINE_WRITTEN_KEYS = [
   "witnessBench.smallModelQuestionsNote",
   "witnessBench.builtInQuestionsTitle",
   "witnessBench.builtInQuestionsDesc",
+  "myPacketSection.ratingPercent",
   "common.unsavedEditTitle",
   "common.unsavedEditStay",
   "common.unsavedEditClose",

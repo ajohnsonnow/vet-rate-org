@@ -872,9 +872,15 @@ const WitnessBenchHeader = ({
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {/* AI Status & LLM Recommendation Badges */}
-        <LLMRecommendationBadge toolId="witness-bench" />
-        <AIStatusBadge onClick={onOpenAISettings} />
+        {/* AI status and model badges. Not shown while a small on-device
+            model would answer: the interview then uses the built-in
+            questions and no model is asked. */}
+        {!smallModelAnswering(getAIStatus()) && (
+          <>
+            <LLMRecommendationBadge toolId="witness-bench" />
+            <AIStatusBadge onClick={onOpenAISettings} />
+          </>
+        )}
         <ShareButton
           targetRef={contentRef}
           filename="witness-statement"
