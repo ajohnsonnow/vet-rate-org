@@ -8,7 +8,7 @@ const ACCEPTED = [
   ["single letter", "J", "CASE-1042"],
   ["four letters", "ABCD", "CASE-1042"],
   ["letters with periods", "J.D.", "CASE-1042"],
-  ["three initials with periods", "J.D.S.", "2024-0042"],
+  ["three initials with periods", "J.D.S.", "2024-042"],
   ["lowercase initials", "jd", "A1"],
   ["accented initial", "É.L.", "A1"],
   ["decomposed accent is normalised", "É", "A1"],
@@ -17,7 +17,9 @@ const ACCEPTED = [
   ["surrounding whitespace is trimmed", "  JD  ", "  CASE 7  "],
   ["7 digits in a row", "JD", "CASE 1234567"],
   ["digit groups too short for an SSN", "JD", "12-34-567"],
-  ["year-sequence case number", "JD", "2024-0042"],
+  ["year-sequence case number", "JD", "2024-042"],
+  ["seven digits split by letters", "JD", "A1234 B567"],
+  ["digits and a hash reference", "JD", "#12-34-567"],
 ];
 
 const REJECTED = [
@@ -51,7 +53,7 @@ const REJECTED = [
   ["SSN inside other text", "JD", "CASE 000-00-0000 A", "caseRef", "ssn"],
   ["SSN-shaped value in initials", "123-45-6789", "CASE-1", "initials", "ssn"],
   ["8-digit file number", "JD", "12345678", "caseRef", "file-number"],
-  ["9-digit file number", "JD", "000000000", "caseRef", "file-number"],
+  ["9-digit number", "JD", "000000000", "caseRef", "ssn"],
   [
     "C-prefixed 8-digit file number",
     "JD",
@@ -59,13 +61,7 @@ const REJECTED = [
     "caseRef",
     "file-number",
   ],
-  [
-    "C-prefixed 9-digit file number",
-    "JD",
-    "C123456789",
-    "caseRef",
-    "file-number",
-  ],
+  ["C-prefixed 9-digit number", "JD", "C123456789", "caseRef", "ssn"],
   [
     "lowercase c-prefixed file number",
     "JD",
@@ -81,6 +77,64 @@ const REJECTED = [
     "file-number",
   ],
   ["file number in initials", "C12345678", "CASE-1", "initials", "file-number"],
+  ["SSN with hash separators", "JD", "123#45#6789", "caseRef", "ssn"],
+  ["SSN with mixed separators 2", "JD", "123-45.6789", "caseRef", "ssn"],
+  ["SSN with repeated separators", "JD", "123--45__6789", "caseRef", "ssn"],
+  ["SSN with multiple spaces", "JD", "123   45   6789", "caseRef", "ssn"],
+  ["SSN with every digit spaced", "JD", "1 2 3 4 5 6 7 8 9", "caseRef", "ssn"],
+  ["SSN with every digit dotted", "JD", "1.2.3.4.5.6.7.8.9", "caseRef", "ssn"],
+  ["SSN split by letters", "JD", "123 AB 45 CD 6789", "caseRef", "ssn"],
+  [
+    "SSN with surrounding whitespace",
+    "  JD  ",
+    "  123-45-6789  ",
+    "caseRef",
+    "ssn",
+  ],
+  ["SSN in fullwidth digits", "JD", "１２３-４５-６７８９", "caseRef", "ssn"],
+  ["SSN in Arabic-Indic digits", "JD", "١٢٣٤٥٦٧٨٩", "caseRef", "ssn"],
+  ["SSN with a zero-width space", "JD", "123​45​6789", "caseRef", "ssn"],
+  [
+    "SSN with a zero-width space (format)",
+    "JD",
+    "123​456789",
+    "caseRef",
+    "format",
+  ],
+  ["SSN with a soft hyphen", "JD", "123­45­6789", "caseRef", "ssn"],
+  ["SSN with a no-break space", "JD", "123 45 6789", "caseRef", "ssn"],
+  ["file number with separators", "JD", "1234-5678", "caseRef", "file-number"],
+  ["file number with dots", "JD", "12.34.56/78", "caseRef", "file-number"],
+  [
+    "C-prefixed file number with spaces",
+    "JD",
+    "C 1234 5678",
+    "caseRef",
+    "file-number",
+  ],
+  [
+    "lowercase c-prefixed with hyphen",
+    "JD",
+    "c-1234-5678",
+    "caseRef",
+    "file-number",
+  ],
+  [
+    "C-prefixed file number with slashes",
+    "JD",
+    "C/12/34/56/78",
+    "caseRef",
+    "file-number",
+  ],
+  ["8 digits as a date", "JD", "2024-12-31", "caseRef", "file-number"],
+  [
+    "identifier split across both fields",
+    "JD1234",
+    "5678",
+    "caseRef",
+    "file-number",
+  ],
+  ["digit lookalike in initials", "１２３４", "56789012", "initials", "format"],
 ];
 
 describe("validateLabelFields", () => {
@@ -129,7 +183,6 @@ describe("validateLabelFields", () => {
     expect(result.errors.map((e) => `${e.field}:${e.code}`)).toEqual([
       "initials:required",
       "caseRef:ssn",
-      "caseRef:file-number",
     ]);
   });
 

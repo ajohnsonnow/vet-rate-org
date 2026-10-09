@@ -1,7 +1,8 @@
 const INITIALS_PATTERN = /^(?:\p{L}\.?){1,4}$/u;
 const CASE_REF_PATTERN = /^[A-Za-z0-9 \-_/#.]{1,24}$/;
-const SSN_SHAPE = /\d{3}[-\s._/]?\d{2}[-\s._/]?\d{4}/;
-const FILE_NUMBER_SHAPE = /\d{8,9}/;
+const DIGIT = /\p{Nd}/gu;
+const SSN_DIGITS = 9;
+const FILE_NUMBER_DIGITS = 8;
 const CAPITALISED_WORD = /^[A-Z][a-z]+$/;
 
 const MESSAGES = Object.freeze({
@@ -17,18 +18,21 @@ const MESSAGES = Object.freeze({
 });
 
 function normalise(value) {
-  return typeof value === "string" ? value.normalize("NFC").trim() : "";
+  return typeof value === "string" ? value.normalize("NFKC").trim() : "";
 }
 
-function privacyErrors(field, value) {
-  const errors = [];
-  if (SSN_SHAPE.test(value)) {
-    errors.push({ field, code: "ssn", message: MESSAGES.ssn });
+function digitCount(value) {
+  return (value.match(DIGIT) ?? []).length;
+}
+
+function privacyErrors(field, digits) {
+  if (digits >= SSN_DIGITS) {
+    return [{ field, code: "ssn", message: MESSAGES.ssn }];
   }
-  if (FILE_NUMBER_SHAPE.test(value)) {
-    errors.push({ field, code: "file-number", message: MESSAGES.fileNumber });
+  if (digits >= FILE_NUMBER_DIGITS) {
+    return [{ field, code: "file-number", message: MESSAGES.fileNumber }];
   }
-  return errors;
+  return [];
 }
 
 function looksLikeName(caseRef) {
@@ -48,7 +52,7 @@ function fieldErrors(field, value, formatPattern, formatMessage) {
   if (value === "") {
     return [{ field, code: "required", message: MESSAGES.required }];
   }
-  const errors = privacyErrors(field, value);
+  const errors = privacyErrors(field, digitCount(value));
   if (!formatPattern.test(value)) {
     errors.push({ field, code: "format", message: formatMessage });
   }
@@ -77,6 +81,14 @@ export function validateLabelFields({ initials, caseRef } = {}) {
     MESSAGES.caseRefFormat,
   );
   const errors = [...initialsErrors, ...caseRefErrors];
+
+  const combinedDigits = digitCount(cleanInitials) + digitCount(cleanCaseRef);
+  const flagged = errors.some(
+    (e) => e.code === "ssn" || e.code === "file-number",
+  );
+  if (!flagged) {
+    errors.push(...privacyErrors("caseRef", combinedDigits));
+  }
 
   const warnings = [];
   if (caseRefErrors.length === 0 && looksLikeName(cleanCaseRef)) {

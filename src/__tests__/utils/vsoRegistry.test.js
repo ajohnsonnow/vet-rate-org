@@ -321,6 +321,22 @@ describe("updateSilo", () => {
     expect(readRegistry().registry.silos[0].caseRef).toBe("CASE-3");
   });
 
+  it.each(["123.45.6789", "1 2 3 4 5 6 7 8 9", "C 1234 5678", "123​456789"])(
+    "applies the identifier block on rename too: %j",
+    (caseRef) => {
+      const { id } = add();
+      expect(() => updateSilo(id, { caseRef })).toThrow(
+        expect.objectContaining({ code: "INVALID" }),
+      );
+      expect(readRegistry().registry.silos[0].caseRef).toBe("CASE-1");
+    },
+  );
+
+  it("stores the NFKC-normalised label on rename", () => {
+    const { id } = add();
+    expect(updateSilo(id, { initials: "ＡＢ" }).initials).toBe("AB");
+  });
+
   it("updates reviewBy, lastOpenedAt, deleting and enc", () => {
     const { id } = add();
     const later = "2026-05-06T07:08:09.000Z";
@@ -362,7 +378,9 @@ describe("updateSilo", () => {
     expect(() => updateSilo(id, patch)).toThrow(RegistryError);
     expect(readRegistry().registry.silos[0].enc).toBe("none");
   });
+});
 
+describe("updateSilo targeting and failures", () => {
   it("only changes the targeted veteran", () => {
     const first = add();
     const second = add({ caseRef: "CASE-2" });
