@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { awardRowText } from "./dd214AwardRowText";
+import {
+  awardNotesText,
+  awardNumberText,
+  awardRowText,
+  awardsRowText,
+} from "./dd214AwardRowText";
 
 describe("awardRowText", () => {
   it.each([
@@ -72,4 +77,86 @@ describe("awardRowText", () => {
       );
     },
   );
+});
+
+describe("the row is bounded", () => {
+  const manyDevices = Array.from({ length: 2000 }, (_, i) => `Device ${i}`);
+
+  it("shows at most five kinds of device, then how many more", () => {
+    const text = awardRowText({
+      name: "Sample Flight Medal",
+      devices: ["A", "B", "C", "D", "E", "F", "G"],
+    });
+
+    expect(text).toBe("Sample Flight Medal with A, B, C, D, E and 2 more");
+  });
+
+  it("stays short for 2000 different device strings", () => {
+    const text = awardRowText({
+      name: "Sample Flight Medal",
+      devices: manyDevices,
+    });
+
+    expect(text.length).toBeLessThanOrEqual(300);
+    expect(text).toContain("and 1995 more");
+  });
+
+  it("cuts a long device name and a long award name", () => {
+    const text = awardRowText({
+      name: "N".repeat(1000),
+      deviceCount: 2,
+      devices: ["D".repeat(500)],
+    });
+
+    expect(text).toHaveLength(300);
+    expect(text.endsWith("…")).toBe(true);
+  });
+
+  it("stays under 2000 characters for a very long list, saying how many are left out", () => {
+    const awards = Array.from({ length: 500 }, (_, i) => ({
+      name: `Sample Medal number ${i}`,
+      deviceCount: 2,
+      devices: ["M Device"],
+    }));
+
+    const text = awardsRowText(awards);
+
+    expect(text.length).toBeLessThanOrEqual(2040);
+    expect(text).toMatch(/; and \d+ more$/);
+    expect(
+      text.startsWith("Sample Medal number 0 (2nd award) with M Device; "),
+    ).toBe(true);
+  });
+
+  it("joins a short list with semicolons and skips unnamed awards", () => {
+    expect(
+      awardsRowText([{ name: "One" }, {}, { name: "Two", deviceCount: 3 }]),
+    ).toBe("One; Two (3rd award)");
+    expect(awardsRowText(undefined)).toBe("");
+  });
+});
+
+describe("the notes the save keeps use the row's words", () => {
+  it.each([
+    [{ name: "X" }, ""],
+    [{ name: "X", deviceCount: 2 }, "2nd award"],
+    [{ name: "X", devices: ["M Device"] }, "Devices: M Device"],
+    [
+      {
+        name: "X",
+        deviceCount: 3,
+        devices: [{ type: "V Device" }, "M Device"],
+      },
+      "3rd award; Devices: V Device, M Device",
+    ],
+  ])("%j is saved as %j", (award, expected) => {
+    expect(awardNotesText(award)).toBe(expected);
+  });
+
+  it("names the number exactly as the row does", () => {
+    const award = { name: "X", deviceCount: 12 };
+
+    expect(awardNumberText(award)).toBe("12th award");
+    expect(awardRowText(award)).toContain(`(${awardNumberText(award)})`);
+  });
 });

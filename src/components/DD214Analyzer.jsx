@@ -82,7 +82,7 @@ import {
 import { sanitizeParserFields } from "../utils/dd214ParserTextGuards";
 import { parseModelJsonReply } from "../utils/dd214JsonReply";
 import { loadKnownIdentifierSourcesChecked } from "../utils/dd214KnownIdentifierSources";
-import { awardRowText } from "../utils/dd214AwardRowText";
+import { awardNotesText, awardsRowText } from "../utils/dd214AwardRowText";
 import {
   applyParserValues,
   buildValueSources,
@@ -976,15 +976,11 @@ function _saveDd214Awards(awards) {
   // plain display-name string from a different extractor).
   if (!awards || !Array.isArray(awards)) return;
   awards.forEach((award) => {
-    const deviceLabels = (award.devices || [])
-      .map((d) => (typeof d === "string" ? d : d?.type || ""))
-      .filter(Boolean);
     addAward({
       name: award.name,
       abbreviation: award.abbreviation,
       dateReceived: null,
-      notes:
-        deviceLabels.length > 0 ? `Devices: ${deviceLabels.join(", ")}` : "",
+      notes: awardNotesText(award),
       devices: award.devices || [],
       isCombat: award.isCombat || false,
       sourceDD214: award.sourceDD214,
@@ -1017,7 +1013,6 @@ const _joinTexts = (items) =>
     .join("; ");
 
 export function _listImportText(result) {
-  const awardTexts = (result.awards || []).map(awardRowText);
   const combat = result.combatService;
   const combatText =
     _joinTexts([
@@ -1028,7 +1023,7 @@ export function _listImportText(result) {
     Object.entries({
       militaryEducation: _joinTexts(result.militaryEducation),
       specialQualifications: _joinTexts(result.specialQualifications),
-      awards: _joinTexts(awardTexts),
+      awards: awardsRowText(result.awards),
       combatService: combatText,
     }).filter(([, text]) => text !== ""),
   );

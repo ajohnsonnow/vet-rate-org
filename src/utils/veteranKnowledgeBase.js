@@ -36,6 +36,7 @@ import {
 import { DOCUMENT_TYPES } from "./documentClassifier";
 import { awardDisplayName } from "./combatService";
 import { redactVeteranIdentifiers } from "./piiScrubber";
+import { awardNumberOf } from "./dd214AwardRowText";
 import { getVeteranProfile } from "./veteranProfile";
 
 const VKB_STORAGE_KEY = "vetrate_knowledge_base";
@@ -1418,15 +1419,20 @@ function mergeDD214Awards(vkb, dd214Data, options) {
         );
       });
 
+      const awardNumber = awardNumberOf(award);
       if (!existingAward) {
         vkb.serviceHistory.awards.push({
           name: awardName,
           date: award.date || null,
           isCombat: award.isCombat || false,
           devices: award.devices || [],
+          ...(awardNumber && { awardNumber }),
           source: options.fileName || "DD-214",
         });
       } else if (typeof award === "object") {
+        if (awardNumber > (existingAward.awardNumber ?? 0)) {
+          existingAward.awardNumber = awardNumber;
+        }
         // Combat status is sticky across documents: whichever DD214 spells
         // out the decoration establishes it, and a later record that lists
         // the same award more tersely must not retract it.
