@@ -82,6 +82,7 @@ import {
 import { sanitizeParserFields } from "../utils/dd214ParserTextGuards";
 import { parseModelJsonReply } from "../utils/dd214JsonReply";
 import { loadKnownIdentifierSourcesChecked } from "../utils/dd214KnownIdentifierSources";
+import { awardRowText } from "../utils/dd214AwardRowText";
 import {
   applyParserValues,
   buildValueSources,
@@ -1015,8 +1016,8 @@ const _joinTexts = (items) =>
     .filter((item) => typeof item === "string" && item.trim() !== "")
     .join("; ");
 
-function _listImportText(result) {
-  const awardNames = (result.awards || []).map((award) => award?.name);
+export function _listImportText(result) {
+  const awardTexts = (result.awards || []).map(awardRowText);
   const combat = result.combatService;
   const combatText =
     _joinTexts([
@@ -1027,7 +1028,7 @@ function _listImportText(result) {
     Object.entries({
       militaryEducation: _joinTexts(result.militaryEducation),
       specialQualifications: _joinTexts(result.specialQualifications),
-      awards: _joinTexts(awardNames),
+      awards: _joinTexts(awardTexts),
       combatService: combatText,
     }).filter(([, text]) => text !== ""),
   );
