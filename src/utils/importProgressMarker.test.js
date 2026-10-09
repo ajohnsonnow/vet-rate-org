@@ -623,7 +623,7 @@ describe("the saved count is what is stored when the notice is drawn", () => {
     const restarted = await loadPage();
 
     expect(await restarted.findInterruptedImport()).toMatchObject({
-      saved: 5,
+      saved: 7,
       total: 8,
     });
     expect(markerKeys()).toHaveLength(1);
@@ -642,6 +642,66 @@ describe("the saved count is what is stored when the notice is drawn", () => {
 
     expect(await restarted.findInterruptedImport()).toBeNull();
     expect(markerKeys()).toHaveLength(0);
+    stopped.clearAllImportMarkers();
+  });
+});
+
+describe("a marker on disk that lags the store by many writes", () => {
+  const LABELS_20 = Array.from(
+    { length: 20 },
+    (_, i) => `document ${i + 1} (DBQ)`,
+  );
+  const storedAt = (minutesAgo) =>
+    new Date(Date.now() - minutesAgo * 60 * 1000).toISOString();
+  const filed = (recent, older = 1) => ({
+    documentation: {
+      dd214s: Array.from({ length: older }, () => ({
+        uploadDate: storedAt(60 * 24),
+      })),
+      otherEvidence: Array.from({ length: recent }, () => ({
+        uploadDate: storedAt(1),
+      })),
+    },
+  });
+
+  async function killedAfterMarkerWrites(markerWrites) {
+    const { killEveryPage } = installFakeLocks();
+    const stopped = await loadPage();
+    stopped.startImportMarker(LABELS_20);
+    for (let i = 0; i < markerWrites; i += 1) stopped.recordDocumentSaved();
+    backdate(onlyMarkerId());
+    killEveryPage();
+    return stopped;
+  }
+
+  it.each([
+    ["every stored document, not the marker's figure plus one", 15, 1, 15],
+    ["one under the total when every document is stored", 20, 1, 19],
+    ["only documents filed since the import began", 9, 12, 9],
+    ["no fewer than the marker's own count", 2, 1, 6],
+  ])("reports %s", async (_name, recent, older, expected) => {
+    const stopped = await killedAfterMarkerWrites(6);
+    loadVkb.mockResolvedValue(filed(recent, older));
+
+    const restarted = await loadPage();
+
+    expect(await restarted.findInterruptedImport()).toMatchObject({
+      saved: expected,
+      total: 20,
+    });
+    stopped.clearAllImportMarkers();
+  });
+
+  it("says the stored count in the notice", async () => {
+    const stopped = await killedAfterMarkerWrites(6);
+    loadVkb.mockResolvedValue(filed(15));
+
+    const restarted = await loadPage();
+    const found = await restarted.findInterruptedImport();
+
+    expect(restarted.describeInterruptedImport(found)).toContain(
+      "15 of 20 documents were saved.",
+    );
     stopped.clearAllImportMarkers();
   });
 });

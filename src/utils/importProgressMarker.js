@@ -396,18 +396,16 @@ async function storedSince(started) {
 async function interruptedFrom(marker) {
   const stored =
     marker.started === undefined ? null : await storedSince(marker.started);
-  // Stored documents cannot be told apart by import, so anything else filed
-  // since (another tab, a single-document save) is counted too. The stored
-  // figure therefore only covers the one document that may have been filed
-  // just before the tab died, and never reaches the total: an import whose
-  // marker is not complete is not reported as finished.
+  // The marker lives in local storage, and after a kill the copy on disk can
+  // be many writes behind the store, so the stored figure is the truth and the
+  // marker's own count only the floor. Stored documents cannot be told apart
+  // by import, so anything else filed since (another tab, a single-document
+  // save) is counted too; the figure is capped one under the total so an
+  // import whose marker is not complete is never reported as finished.
   const saved =
     stored === null
       ? marker.saved
-      : Math.max(
-          marker.saved,
-          Math.min(stored, marker.saved + 1, marker.total - 1),
-        );
+      : Math.max(marker.saved, Math.min(stored, marker.total - 1));
   return { saved, total: marker.total, id: marker.id };
 }
 
