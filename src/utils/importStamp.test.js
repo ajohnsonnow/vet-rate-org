@@ -14,7 +14,7 @@ globalThis.ImageData ??= class ImageData {};
 vi.stubGlobal("indexedDB", createFakeIndexedDB().indexedDB);
 
 const { persistFormationDocument } = await import("./musterCallProcessor");
-const { addDocumentToVKB, clearVKB, loadVKB, withoutImportStamps } =
+const { addDocumentToVKB, clearVKB, exportVKB, loadVKB, withoutImportStamps } =
   await import("./veteranKnowledgeBase");
 
 const file = (name, size = 2048) => ({ name, size });
@@ -148,5 +148,31 @@ describe("the import stamp is read back and kept out of exports", () => {
     expect(JSON.stringify(vkb)).toContain("importId");
     expect(exported).not.toContain("importId");
     expect(exported).toContain("exported.pdf");
+  });
+
+  it("is absent from the file the export downloads", async () => {
+    await persistFormationDocument(
+      file("downloaded.pdf"),
+      result("dd214", "x"),
+    );
+    const blobs = [];
+    vi.spyOn(URL, "createObjectURL").mockImplementation((blob) => {
+      blobs.push(blob);
+      return "blob:invented";
+    });
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    await exportVKB();
+
+    const downloaded = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsText(blobs[0]);
+    });
+    vi.restoreAllMocks();
+    expect(blobs).toHaveLength(1);
+    expect(downloaded).toContain("downloaded.pdf");
+    expect(downloaded).not.toContain("importId");
   });
 });
