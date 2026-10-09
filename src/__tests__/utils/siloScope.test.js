@@ -37,6 +37,9 @@ const SPEC_DEVICE_KEYS = [
   "pwa_install_dismissed",
   "vetrate_system_status",
   "vetrate-mobile-notice-dismissed",
+  // cross-tab panic-wipe signals
+  "vetrate_data_wipe_broadcast",
+  "vetrate_data_wipe_pending_broadcast",
   // silo bookkeeping (spec 3.1)
   "vetrate_vso_registry",
   "vetrate_active_silo",

@@ -16657,7 +16657,7 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
     },
     deleteTitle: { en: "Deleting a profile deletes that veteran's data" },
     deleteBody: {
-      en: "When you finish with a veteran, removing their browser profile removes the data this app saved in it. Export anything the veteran needs first, and keep exported files somewhere safe, because exported files are not encrypted.",
+      en: "When you finish with a veteran, removing their browser profile removes the data this app saved in it. If the browser asks, choose to delete the profile's files too. This does not erase backups of the device, or copies that were already synced or exported. Export anything the veteran needs first, and keep exported files somewhere safe, because exported files are not encrypted.",
     },
     authTitle: { en: "Confirm you are authorized to act" },
     authBody: {

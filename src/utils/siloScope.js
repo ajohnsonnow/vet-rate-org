@@ -31,6 +31,11 @@ const DEVICE_KEY_NAMES = new Set([
   "vetrate_system_status",
   "vetrate-mobile-notice-dismissed",
 
+  // Cross-tab panic-wipe signals (a timestamp only). The write guard drops
+  // veteran keys during a switch, and a wipe must never be droppable.
+  "vetrate_data_wipe_broadcast",
+  "vetrate_data_wipe_pending_broadcast",
+
   VSO_REGISTRY_KEY,
   ACTIVE_SILO_KEY,
   SILO_SWITCH_JOURNAL_KEY,
