@@ -48,6 +48,7 @@ already have the app running.
 | [WEBGPU_EXPERIMENTAL_SETUP.md](./WEBGPU_EXPERIMENTAL_SETUP.md)     | Enable WebGPU for local-LLM acceleration                          |
 | [PREFLIGHT_EXTRAS.md](./PREFLIGHT_EXTRAS.md)                       | Run the opt-in preflight (markdownlint / knip / license-checker)  |
 | [POST_MORTEM_TEMPLATE.md](./POST_MORTEM_TEMPLATE.md)               | Write a post-mortem after an incident (template, fill-the-blanks) |
+| [SELF_HOSTED_RUNNER.md](./SELF_HOSTED_RUNNER.md)                   | Enable/disable the opt-in self-hosted Actions runner              |
 
 ## 3. Reference — facts you look up
 
@@ -76,6 +77,7 @@ matrices. Read by skimming, not by following start-to-end.
 | [CHANGELOG_SYSTEM.md](./CHANGELOG_SYSTEM.md)                                           | How the changelog feed is generated + consumed                                                                                                                        |
 | [DYNAMIC_STATS_INDEX.md](./DYNAMIC_STATS_INDEX.md)                                     | All dynamic stats with their data sources                                                                                                                             |
 | [LEGAL_PAGES_README.md](./LEGAL_PAGES_README.md)                                       | Which CFR Parts + Subparts are mirrored locally                                                                                                                       |
+| [CI_MINUTES.md](./CI_MINUTES.md)                                                       | Which workflow tier runs when, and measured minutes saved per PR/push after the RT13-2 dedupe                                                                         |
 
 ## 4. Explanation — why things are this way
 
