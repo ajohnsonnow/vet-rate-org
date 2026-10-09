@@ -3,13 +3,24 @@
 # personal data; a branch cut from the old history would republish it.
 CLEAN_ROOT="c39b026d372906705b3d96c95d932bf9c5febc18"
 ZERO="0000000000000000000000000000000000000000"
+refuse() {
+  echo "❌ [pre-push] $1" >&2
+  echo "   Pushing it would republish removed history. Rebuild the work on top of main first." >&2
+  exit 1
+}
+# Grafts and shallow clones change what git reports as history without
+# changing what a push sends, so the root check below cannot be trusted.
+GIT_COMMON=$(git rev-parse --git-common-dir) || refuse "cannot locate the git directory."
+[ -s "$GIT_COMMON/info/grafts" ] && refuse "this repository has a grafts file."
+[ "$(git rev-parse --is-shallow-repository)" = "false" ] || refuse "this repository is shallow."
 while read -r local_ref local_sha remote_ref remote_sha; do
   [ -z "$local_sha" ] && continue
   [ "$local_sha" = "$ZERO" ] && continue
-  if ! git merge-base --is-ancestor "$CLEAN_ROOT" "$local_sha" 2>/dev/null; then
-    echo "❌ [pre-push] $local_ref is not built on the clean root ${CLEAN_ROOT%????????????????????????????????}." >&2
-    echo "   Pushing it would republish removed history. Rebuild the work on top of main first." >&2
-    exit 1
+  # Every root reachable from the pushed commit must be the clean root. An
+  # ancestor test alone would pass a merge that also brings in old history.
+  ROOTS=$(git --no-replace-objects rev-list --max-parents=0 "$local_sha" 2>/dev/null) || ROOTS=""
+  if [ "$ROOTS" != "$CLEAN_ROOT" ]; then
+    refuse "$local_ref is not built only on the clean root ${CLEAN_ROOT%????????????????????????????????}."
   fi
 done
 
