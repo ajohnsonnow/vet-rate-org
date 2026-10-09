@@ -9,17 +9,16 @@
 #                  markdown-lint
 # Informational:   link-check, perf-budget
 #
-# lint-and-quality, build and test were removed here (RT13-2 dedupe,
-# docs/RED_TEAM_AUDIT_2026-06.md:274; see docs/CI_MINUTES.md) — ci.yml is the
+# lint-and-quality, build and test were removed here (RT13-2 dedupe; see
+# docs/CI_MINUTES.md) — ci.yml is the
 # canonical gate for lint/type/test/build/e2e/lighthouse on the same
 # push+pull_request/main events, and was already running them a second time
 # on every commit. The Codecov upload and bundle-budget check those two jobs
 # also carried were relocated into ci.yml's test/build jobs rather than
 # dropped. visual-regression and ux-perf-check were removed too: the former
-# is dead (references a nonexistent playwright-visual.config.ts and has never
-# once run for real — the `code` filter has never been true on an actual PR
-# in this repo's history), the latter is an informational, non-required
-# duplicate of ci.yml's required `lighthouse` job.
+# is dead (references a nonexistent playwright-visual.config.ts and failed at
+# its preview-server step on every code-touching PR), the latter is an
+# informational, non-required duplicate of ci.yml's required `lighthouse` job.
 #
 # e2e-user-journeys is KEPT: it runs an explicit list of seven specs, chromium
 # only, against Playwright's own dev server. They are tests/e2e/{ask-the-regs,
@@ -28,7 +27,8 @@
 # per-gate spec lists never reference. Removing this job would silently drop
 # that coverage. It was repaired on this branch: the old step had no build, ran
 # every project (firefox is not installed here) and used an unreachable preview
-# server. It has still never run on a real PR, so treat its first run as a trial.
+# server. The old step failed on every code-touching PR, so these specs have
+# never run in CI; treat the first run of the repaired step as a trial.
 #
 # PINNING: tags marked "pinact" should be pinned to commit SHAs before
 # production use — run `pinact run` (github.com/suzuki-shunsuke/pinact).

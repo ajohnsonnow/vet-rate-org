@@ -7,12 +7,14 @@ changes until you set one repository variable.
 ## Should you use it?
 
 Probably not yet. After the trigger/job dedupe in this branch (see
-[CI_MINUTES.md](./CI_MINUTES.md)), a push to main is on the order of 40-55
-billable minutes (the last measured `ci.yml` push run was 44 minutes). A PR
-that touches code has never been measured: the code-gated jobs have never run
-on a real PR, so treat any per-PR figure as an estimate. The Free plan's
-2,000 monthly minutes covers a few dozen runs a month before you'd need to
-buy more at the Linux rate ($0.008/min).
+[CI_MINUTES.md](./CI_MINUTES.md)), a push to main is on the order of 75
+runner minutes (measured 2026-10-07: 65 `ci.yml` + 10 `release-gates.yml` +
+1 `scorecard.yml`). A PR that touches code used 97 before this branch; its
+"after" figure has not been measured. While this repository is public,
+GitHub reports zero billable time for these runs, so hosted minutes cost
+nothing today. On a private repository the Free plan's 2,000 monthly minutes
+would cover a couple of dozen such runs before you'd need to buy more (the
+per-minute rate was not re-checked for this document).
 
 Reach for this when one of these is true:
 
@@ -99,8 +101,9 @@ repository variables are visible to fork PR runs, so the expression
 (`github.event.pull_request.head.repo.full_name == github.repository`)
 keeps unmodified workflows on `ubuntu-latest`. This does not stop a fork PR
 that rewrites the workflow file itself (see **Security**). `scorecard.yml`
-is the one workflow that always uses a literal `ubuntu-latest`, because the
-OpenSSF publish verifier rejects any other `runs-on`. Do not weaken that
+always uses a literal `ubuntu-latest`, because the OpenSSF publish verifier
+rejects any other `runs-on`; `model-watch.yml` also has a literal
+`ubuntu-latest` and stays on a hosted runner. Do not weaken that
 guard, and do not add
 `pull_request_target` or `workflow_run` triggers that check out PR code.
 
