@@ -96,6 +96,18 @@ describe("the import marker follows the import", () => {
     expect(stored).not.toMatch(/private-name|other\.pdf/);
   });
 
+  it("hands the import's id to the processor, so every document it files carries it", async () => {
+    const result = setup();
+
+    await act(async () => result.current.startSequentialProcessing());
+
+    expect(processFormationDocument).toHaveBeenCalledWith(
+      entries[0].file,
+      expect.any(Function),
+      expect.objectContaining({ importId: readActiveImportMarker().id }),
+    );
+  });
+
   it("counts a document once it is saved, and is cleared when the import completes", async () => {
     const result = setup();
     await act(async () => result.current.startSequentialProcessing());

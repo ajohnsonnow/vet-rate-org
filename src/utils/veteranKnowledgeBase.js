@@ -714,12 +714,35 @@ function routeDocumentToVKB(vkb, classification, docEntry) {
   vkb.documentation[category].push(docEntry);
 }
 
+const importIdOf = (info) =>
+  typeof info.importId === "string" && info.importId !== ""
+    ? info.importId
+    : undefined;
+
+// A file imported again updates its one entry in place.
+function refreshDuplicateDocument(existingDocs, duplicate, info, importId) {
+  if (importId) duplicate.importId = importId;
+  duplicate.uploadDate = new Date().toISOString();
+  duplicate.pageCount = info.pageCount || duplicate.pageCount || 1;
+  duplicate.classification = info.classification || duplicate.classification;
+  duplicate.extractedText = info.extractedText || duplicate.extractedText;
+  duplicate.extractedData = info.extractedData || duplicate.extractedData;
+  duplicate.ocrUsed = info.ocrUsed ?? duplicate.ocrUsed;
+  duplicate.method = info.method || duplicate.method;
+  existingDocs.forEach((doc) => {
+    doc.mostRecent = doc.id === duplicate.id;
+  });
+}
+
 /**
  * Add a document to VKB with full metadata and version tracking
  * Keeps each document's data separate - NEVER overwrites existing documents
  */
 export const addDocumentToVKB = async (documentInfo) => {
   const vkb = await loadVKB();
+  // Which import filed this document, so an interrupted import can say how
+  // many documents it stored. Never shown, exported or sent to an AI.
+  const importId = importIdOf(documentInfo);
 
   // Determine document category
   const category = categorizeDocument(documentInfo.classification);
@@ -736,19 +759,7 @@ export const addDocumentToVKB = async (documentInfo) => {
   );
 
   if (duplicate) {
-    duplicate.uploadDate = new Date().toISOString();
-    duplicate.pageCount = documentInfo.pageCount || duplicate.pageCount || 1;
-    duplicate.classification =
-      documentInfo.classification || duplicate.classification;
-    duplicate.extractedText =
-      documentInfo.extractedText || duplicate.extractedText;
-    duplicate.extractedData =
-      documentInfo.extractedData || duplicate.extractedData;
-    duplicate.ocrUsed = documentInfo.ocrUsed ?? duplicate.ocrUsed;
-    duplicate.method = documentInfo.method || duplicate.method;
-    existingDocs.forEach((doc) => {
-      doc.mostRecent = doc.id === duplicate.id;
-    });
+    refreshDuplicateDocument(existingDocs, duplicate, documentInfo, importId);
 
     const saveResult = await saveVKB(vkb);
     return {
@@ -783,6 +794,7 @@ export const addDocumentToVKB = async (documentInfo) => {
     version: versionNumber,
     mostRecent: true,
     category: category,
+    ...(importId && { importId }),
   };
 
   // Route to appropriate documentation category
@@ -3160,9 +3172,21 @@ export const generateLLMContext = (vkb) => {
 /**
  * Export VKB for backup
  */
+export const withoutImportStamps = (vkb) => ({
+  ...vkb,
+  documentation: Object.fromEntries(
+    Object.entries(vkb.documentation ?? {}).map(([category, docs]) => [
+      category,
+      Array.isArray(docs)
+        ? docs.map(({ importId: _importId, ...doc }) => doc)
+        : docs,
+    ]),
+  ),
+});
+
 export const exportVKB = async () => {
   const vkb = await loadVKB();
-  const blob = new Blob([JSON.stringify(vkb, null, 2)], {
+  const blob = new Blob([JSON.stringify(withoutImportStamps(vkb), null, 2)], {
     type: "application/json",
   });
   const url = URL.createObjectURL(blob);

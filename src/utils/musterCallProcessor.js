@@ -791,6 +791,7 @@ const storeDocumentInVKB = async (file, result) => {
     extractedData: withStoredReadingNotes(result),
     ocrUsed: result.ocrUsed || false,
     method: result.method || "text",
+    ...(result.importId && { importId: result.importId }),
   });
   requireSaved(vkbResult);
 
@@ -2117,6 +2118,7 @@ const _markDocumentFailed = (result, error, onProgress) => {
 
 const processSingleDocument = async (file, onProgress, options = {}) => {
   const result = {
+    ...(typeof options.importId === "string" && { importId: options.importId }),
     filename: file.name,
     size: file.size,
     status: "processing",
