@@ -1,3 +1,18 @@
+# Refuse to publish anything that is not built on the clean root commit.
+# Public history was reset at that commit because older commits carried
+# personal data; a branch cut from the old history would republish it.
+CLEAN_ROOT="c39b026d372906705b3d96c95d932bf9c5febc18"
+ZERO="0000000000000000000000000000000000000000"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "$local_sha" ] && continue
+  [ "$local_sha" = "$ZERO" ] && continue
+  if ! git merge-base --is-ancestor "$CLEAN_ROOT" "$local_sha" 2>/dev/null; then
+    echo "❌ [pre-push] $local_ref is not built on the clean root ${CLEAN_ROOT%????????????????????????????????}." >&2
+    echo "   Pushing it would republish removed history. Rebuild the work on top of main first." >&2
+    exit 1
+  fi
+done
+
 # Auto-update docs, stats, and changelog before every push.
 # Skips if the last commit was already a pre-push doc update (breaks feedback loop).
 
