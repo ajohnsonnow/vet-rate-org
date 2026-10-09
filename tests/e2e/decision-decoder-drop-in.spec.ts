@@ -230,9 +230,25 @@ const IMAGE_DENIAL_LINES = [
 const IMAGE_ROUTING_CLOUD_KEY = "AIzaSyE2EIMGFAKEKEY0000000000000000000";
 const GEMINI_PATTERN = "https://generativelanguage.googleapis.com/**";
 
-async function shimFakeGpuAdapter(page: Page): Promise<void> {
-  await page.addInitScript(() => {
+// ADR-010: the device tier picks the on-device model from the adapter's
+// maxBufferSize and navigator.deviceMemory. The default here is a
+// desktop-class device (loads the 4B, not held). A "laptop" device loads the
+// 2B, which is small-class: the Decision Decoder holds the letter back from it.
+type FakeDeviceClass = "desktop" | "laptop";
+
+async function shimFakeGpuAdapter(
+  page: Page,
+  deviceClass: FakeDeviceClass = "desktop",
+): Promise<void> {
+  await page.addInitScript((cls) => {
     if (!navigator.gpu) return;
+    const maxBufferSize = cls === "desktop" ? 2 ** 31 : 1 << 30;
+    if (cls === "desktop") {
+      Object.defineProperty(navigator, "deviceMemory", {
+        value: 8,
+        configurable: true,
+      });
+    }
     navigator.gpu.requestAdapter = async () => ({
       info: {
         vendor: "e2e-fake",
@@ -243,7 +259,7 @@ async function shimFakeGpuAdapter(page: Page): Promise<void> {
       limits: {
         maxComputeInvocationsPerWorkgroup: 1024,
         maxStorageBufferBindingSize: 1 << 30,
-        maxBufferSize: 1 << 30,
+        maxBufferSize,
         maxComputeWorkgroupSizeX: 1024,
         maxComputeWorkgroupSizeY: 1024,
         maxComputeWorkgroupSizeZ: 64,
@@ -256,7 +272,7 @@ async function shimFakeGpuAdapter(page: Page): Promise<void> {
       features: new Set(),
       requestDevice: async () => ({}),
     });
-  });
+  }, deviceClass);
 }
 
 async function loadFakeOnDeviceAI(page: Page): Promise<void> {
@@ -447,6 +463,27 @@ test.describe("D19-1: Decision Decoder image drop-in document routing", () => {
 
     const calls = await readFakeEngineCalls(page);
     expect(calls.some((c) => c.user.includes("tinnitus is denied"))).toBe(true);
+  });
+
+  test("small-class on-device model (laptop tier): the letter is held back and the rule-based reading shows (ADR-010 section 9)", async ({
+    page,
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
+    test.setTimeout(60000);
+    await shimFakeGpuAdapter(page, "laptop");
+    await bootAppForImageRouting(page, { withCloudKey: false });
+
+    const dialog = await openDecisionDecoderForRouting(page);
+    await dropDenialImageAndWaitForText(page, dialog);
+    await loadFakeOnDeviceAI(page);
+    await dialog.getByRole("button", { name: /Decode This Decision/i }).click();
+
+    await expect(
+      dialog.getByText(/too small to read a decision letter reliably/i),
+    ).toBeVisible({ timeout: 20000 });
+
+    const calls = await readFakeEngineCalls(page);
+    expect(calls.some((c) => c.user.includes(IMAGE_OCR_MARKER))).toBe(false);
   });
 });
 
