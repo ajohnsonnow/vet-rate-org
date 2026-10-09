@@ -12,8 +12,9 @@ refuse() {
 # changing what a push sends, so the root check below cannot be trusted.
 GIT_COMMON=$(git rev-parse --git-common-dir) || refuse "cannot locate the git directory."
 [ -s "$GIT_COMMON/info/grafts" ] && refuse "this repository has a grafts file."
+[ -n "${GIT_GRAFT_FILE:-}" ] && refuse "GIT_GRAFT_FILE is set."
 [ "$(git rev-parse --is-shallow-repository)" = "false" ] || refuse "this repository is shallow."
-while read -r local_ref local_sha remote_ref remote_sha; do
+while read -r local_ref local_sha remote_ref remote_sha || [ -n "$local_sha" ]; do
   [ -z "$local_sha" ] && continue
   [ "$local_sha" = "$ZERO" ] && continue
   # Every root reachable from the pushed commit must be the clean root. An
