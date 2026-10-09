@@ -151,6 +151,13 @@ function FooterLinksSecondary() {
       </button>
       <span className="text-gray-600">|</span>
       <button
+        onClick={() => window.dispatchEvent(new CustomEvent("openVsoHelp"))}
+        className="text-gray-400 hover:text-va-gold text-sm transition-colors"
+      >
+        Helping several veterans
+      </button>
+      <span className="text-gray-600">|</span>
+      <button
         onClick={() =>
           window.dispatchEvent(new CustomEvent("openPublicationsLibrary"))
         }

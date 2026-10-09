@@ -9187,6 +9187,9 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
   // VSO Finder Component
   vsoFinder: {
+    helpSeveralVeterans: {
+      en: "Helping several veterans on one computer?",
+    },
     // Header
     title: {
       en: "VSO Finder",
@@ -16626,6 +16629,46 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       tl: "Ang Vet-Rate.org ay binuo na ang veteran privacy ang top priority. Ang site na ito ay hindi nangongolekta, nag-store, o nag-transmit ng personal information mo. Gumagamit lang kami ng GoatCounter para sa minimal, cookie-free analytics. Walang advertising networks o invasive trackers na ginagamit. Ang searches mo at disability research ay nananatiling completely private.",
       vi: "Vet-Rate.org được xây dựng với quyền riêng tư của cựu chiến binh là ưu tiên hàng đầu. Trang web này không thu thập, lưu trữ hoặc truyền thông tin cá nhân của bạn. Chúng tôi chỉ sử dụng GoatCounter cho phân tích tối thiểu, không có cookie. Không sử dụng mạng quảng cáo hoặc trình theo dõi xâm phạm. Các tìm kiếm và nghiên cứu về khuyết tật của bạn vẫn hoàn toàn riêng tư.",
       ko: "Vet-Rate.org는 재향군인의 개인정보 보호를 최우선으로 하여 구축되었습니다. 이 사이트는 개인 정보를 수집, 저장 또는 전송하지 않습니다. 최소한의 쿠키 없는 분석을 위해 GoatCounter만 사용합니다. 광고 네트워크나 침해적인 추적기는 사용되지 않습니다. 귀하의 검색 및 장애 연구는 완전히 비공개로 유지됩니다.",
+    },
+  },
+
+  // VSO help page (zero-code guidance for helping several veterans on one
+  // device). English only: other languages fall back to English.
+  vsoHelp: {
+    title: { en: "Helping more than one veteran on one computer" },
+    close: { en: "Close" },
+    intro: {
+      en: "This app keeps its data inside your web browser, on this device. If you are a Veterans Service Officer or another representative who helps several veterans, the safest way to keep their information apart today is to give each veteran their own browser profile.",
+    },
+    stepsHeading: { en: "How to keep each veteran separate" },
+    profileTitle: { en: "Use one browser profile per veteran" },
+    profileBody: {
+      en: "Look for the add-profile feature in your browser (your browser's help explains where to find it). Create a new profile for each veteran, and open this app only inside that veteran's profile. Data saved in one profile is not visible from another.",
+    },
+    extensionsTitle: {
+      en: "Keep extensions and sign-in out of these profiles",
+    },
+    extensionsBody: {
+      en: "Do not install extensions in a veteran's profile, and do not sign in to the browser or turn on browser sync there. Extensions can read page content, and sync can copy a profile's data to other devices and accounts.",
+    },
+    deviceTitle: { en: "Protect the device itself" },
+    deviceBody: {
+      en: "Turn on your operating system's full-disk encryption and set a screen lock that engages when you step away. Browser profiles separate veterans from each other, but they do not protect the files if the device is lost or left unlocked.",
+    },
+    deleteTitle: { en: "Deleting a profile deletes that veteran's data" },
+    deleteBody: {
+      en: "When you finish with a veteran, removing their browser profile removes the data this app saved in it. Export anything the veteran needs first, and keep exported files somewhere safe, because exported files are not encrypted.",
+    },
+    authTitle: { en: "Confirm you are authorized to act" },
+    authBody: {
+      en: "Only enter information for a veteran you are authorized to represent, for example when VA Form 21-22 or 21-22a is on file.",
+    },
+    namingTitle: { en: "Name profiles carefully" },
+    namingBody: {
+      en: "Do not put a Social Security number, VA file number, or a veteran's full name in a profile name. Use initials and your organization's case number instead.",
+    },
+    footnote: {
+      en: "Opening this page sends nothing anywhere.",
     },
   },
 };
