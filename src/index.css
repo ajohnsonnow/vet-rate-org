@@ -2353,6 +2353,15 @@ body {
   .grid-cols-4 {
     grid-template-columns: minmax(0, 1fr) !important;
   }
+
+  /* With one forced track, an item that spans 2+ would add an implicit
+     content-sized column and squeeze every other card to a sliver (the
+     DD-214 identifier cards were 35px wide at 393px). */
+  .grid:not(.grid-cols-4) > .col-span-2,
+  .grid:not(.grid-cols-4) > .col-span-3,
+  .grid:not(.grid-cols-4) > .col-span-4 {
+    grid-column: auto !important;
+  }
 }
 
 /* Mobile Typography Enhancements */

@@ -35,7 +35,25 @@ async function seedFirstRunFlags(page: Page): Promise<void> {
   }, APP_VERSION);
 }
 
+// The notice counts the documents this import stored, read from the real
+// knowledge base: each carries the import's id.
+async function storeThreeDocumentsOfTheImport(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const { addDocumentToVKB } =
+      await import("/src/utils/veteranKnowledgeBase.js");
+    for (let i = 1; i <= 3; i += 1) {
+      await addDocumentToVKB({
+        fileName: `invented-${i}.pdf`,
+        fileSize: i,
+        classification: "other",
+        importId: "e2e-interrupted-import",
+      });
+    }
+  });
+}
+
 async function seedMarker(page: Page, ageMs: number): Promise<void> {
+  await storeThreeDocumentsOfTheImport(page);
   await page.evaluate(
     ({ prefix, age }) => {
       localStorage.setItem(

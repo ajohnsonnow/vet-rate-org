@@ -313,6 +313,12 @@ export function recordDocumentSaved() {
   });
 }
 
+// The id of the import this tab is running, or null. Documents it files carry
+// it, so a later notice can count what this import stored.
+export function activeImportId() {
+  return currentImportId;
+}
+
 // The marker of the import this tab is running, or null.
 export function readActiveImportMarker() {
   const marker = currentImportId && readMarker(currentImportId);
@@ -374,9 +380,12 @@ export async function dismissInterruptedImport(id) {
   return true;
 }
 
-// Documents filed since the import began, read from the knowledge base itself,
-// or null when it cannot be read in time (the marker's own count is then used).
-async function storedSince(started) {
+// Documents this import filed, read from the knowledge base itself: each one
+// carries the import's id (addDocumentToVKB). Null when the store cannot be
+// read in time. A document filed before the id existed, or by anything outside
+// the import, is not counted; a file imported again updates its one entry in
+// place, so it counts once.
+async function storedByImport(importId) {
   try {
     const { loadVKB, raceVkb } = await import("./veteranKnowledgeBase");
     const vkb = await raceVkb(
@@ -384,31 +393,28 @@ async function storedSince(started) {
       STORE_READ_TIMEOUT_MS,
     );
     if (!vkb?.documentation) return null;
-    return Object.values(vkb.documentation)
+    const ids = new Set();
+    for (const doc of Object.values(vkb.documentation)
       .filter(Array.isArray)
-      .flat()
-      .filter((doc) => Date.parse(doc?.uploadDate) >= started).length;
+      .flat()) {
+      if (doc?.importId === importId) ids.add(doc.id);
+    }
+    return ids.size;
   } catch {
     return null;
   }
 }
 
+// What is stored is the truth: the marker lives in local storage and, after a
+// kill, the copy on disk can be many writes behind. Only when the store cannot
+// be read is the marker's own figure used.
 async function interruptedFrom(marker) {
-  const stored =
-    marker.started === undefined ? null : await storedSince(marker.started);
-  // Stored documents cannot be told apart by import, so anything else filed
-  // since (another tab, a single-document save) is counted too. The stored
-  // figure therefore only covers the one document that may have been filed
-  // just before the tab died, and never reaches the total: an import whose
-  // marker is not complete is not reported as finished.
-  const saved =
-    stored === null
-      ? marker.saved
-      : Math.max(
-          marker.saved,
-          Math.min(stored, marker.saved + 1, marker.total - 1),
-        );
-  return { saved, total: marker.total, id: marker.id };
+  const stored = await storedByImport(marker.id);
+  return {
+    saved: stored ?? marker.saved,
+    total: marker.total,
+    id: marker.id,
+  };
 }
 
 // The most recently active abandoned import, or null. Asks each owner whether
@@ -429,12 +435,12 @@ export async function findInterruptedImport() {
     if (await importIsLive(candidate)) continue;
     const marker = readMarker(candidate.id);
     if (!marker) continue;
-    if (marker.saved >= marker.total) {
+    const found = await interruptedFrom(marker);
+    if (!readMarker(marker.id)) continue;
+    if (found.saved >= found.total) {
       removeKey(markerKey(marker.id));
       continue;
     }
-    const found = await interruptedFrom(marker);
-    if (!readMarker(marker.id)) continue;
     return found;
   }
   return null;

@@ -141,7 +141,7 @@ describe("InterruptedImportNotice in two tabs", () => {
 });
 
 describe("InterruptedImportNotice count", () => {
-  it("shows the document stored just before the tab died, not only the marker's last write", async () => {
+  it("shows the documents this import stored, not only the marker's last write and not other saves", async () => {
     const started = Date.now() - 600000;
     localStorage.setItem(
       `${IMPORT_MARKER_KEY_PREFIX}killed`,
@@ -157,9 +157,13 @@ describe("InterruptedImportNotice count", () => {
     );
     loadVkb.mockResolvedValue({
       documentation: {
-        otherEvidence: Array.from({ length: 5 }, () => ({
-          uploadDate: new Date().toISOString(),
-        })),
+        otherEvidence: [
+          ...Array.from({ length: 5 }, (_, i) => ({
+            id: `doc_${i}`,
+            importId: "killed",
+          })),
+          { id: "filed_elsewhere" },
+        ],
       },
     });
 
