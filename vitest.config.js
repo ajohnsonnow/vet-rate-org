@@ -81,6 +81,38 @@ export default defineConfig({
           functions: 55,
           lines: 50,
         },
+        // VSO multi-veteran silos (docs/VSO_SILOS_SPEC.md AC18): the spec's minimum is
+        // 80% statements/lines/functions and 75% branches; these hold at 100% today.
+        "src/utils/siloScope.js": {
+          statements: 95,
+          branches: 90,
+          functions: 95,
+          lines: 95,
+        },
+        "src/utils/siloDb.js": {
+          statements: 95,
+          branches: 90,
+          functions: 95,
+          lines: 95,
+        },
+        "src/utils/vsoRegistry.js": {
+          statements: 95,
+          branches: 90,
+          functions: 95,
+          lines: 95,
+        },
+        "src/utils/vsoLabel.js": {
+          statements: 95,
+          branches: 90,
+          functions: 95,
+          lines: 95,
+        },
+        "src/config/vsoMode.js": {
+          statements: 95,
+          branches: 90,
+          functions: 95,
+          lines: 95,
+        },
       },
       exclude: [
         "src/_deprecated/**",
