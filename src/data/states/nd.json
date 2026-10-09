@@ -1,0 +1,200 @@
+{
+  "state": "North Dakota",
+  "stateCode": "ND",
+  "officialSource": "https://www.veterans.nd.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "nd-property_tax_exemption-disabled-veteran-s-property-tax-credit",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran's Property Tax Credit",
+      "description": "North Dakota reduces the taxable value of a qualifying disabled veteran's homestead on a sliding scale tied to VA disability percentage. Veterans must have a service-connected disability rating of 50% or greater, or an extra-schedular rating (including individual unemployability) that results in being paid at the 100% rate by the VA, and must be honorably discharged or retired from the armed forces and reside on the property. Married veterans' combined credit is capped at 100% ($9,000 of taxable value). Unremarried surviving spouses remain eligible after the veteran's death, and those receiving DIC receive the full credit. Credit is automatically applied once qualification is on file.",
+      "value": "Reduces homestead taxable value by $4,500 (50% disability) up to $9,000 (100% disability), on a linear scale by disability percentage",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge or retirement from U.S. Armed Forces",
+          "Must reside on the property and hold ownership interest",
+          "Married veterans' combined credit capped at $9,000 of taxable value",
+          "Unremarried surviving spouses remain eligible"
+        ]
+      },
+      "application": {
+        "agency": "North Dakota Office of State Tax Commissioner / County Assessor",
+        "form": "Application for Disabled Veterans Property Tax Credit",
+        "url": "https://www.tax.nd.gov/property-tax-exemptions-credits/property-tax-credits/disabled-veterans-property-tax-credit",
+        "documentation": [
+          "VA disability rating documentation",
+          "Proof of honorable discharge or retirement"
+        ]
+      },
+      "legalCitation": "N.D.C.C. §57-02-08.8",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.tax.nd.gov/property-tax-exemptions-credits/property-tax-credits/disabled-veterans-property-tax-credit",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nd-license_plate-disabled-american-veteran-dav-license-plates",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled American Veteran (DAV) License Plates",
+      "description": "North Dakota veterans certified 100 percent service-connected disabled by the VA (or who qualify under Public Law 663 of the 79th Congress, 38 U.S.C. §3901, including extra-schedular ratings that bring total disability to 100%) may register up to two excise-tax-exempt vehicles with DAV plates. Registration fees are fully exempt, and the vehicles are exempt from state sales/use tax. Unremarried surviving spouses may retain one plate for personal use. DAV plate holders may park in designated handicap spaces.",
+      "value": "Registration fees fully waived; vehicles exempt from state sales/use tax; up to two vehicles per veteran",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Certification letter from the U.S. Department of Veterans Affairs required",
+          "Vehicle gross weight cannot exceed 26,000 lbs",
+          "Unremarried surviving spouse may retain one plate"
+        ]
+      },
+      "application": {
+        "agency": "North Dakota Department of Transportation, Motor Vehicle Division",
+        "form": "SFN 2872",
+        "url": "https://www.veterans.nd.gov/dav-plates",
+        "documentation": [
+          "Certification letter from the U.S. Department of Veterans Affairs documenting 100% service-connected disability"
+        ]
+      },
+      "legalCitation": "N.D.C.C. §39-04-18(2)(j); N.D.C.C. §39-04-19(3)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.veterans.nd.gov/dav-plates",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nd-recreation-disabled-veteran-hunting-and-fishing-licenses",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Hunting and Fishing Licenses",
+      "description": "North Dakota residents with a service-connected disability of 50% or more may obtain a fishing license for $10 (plus the $2 Fishing, Hunting, Furbearer Certificate). Residents with a 100% service-related disability (or an extra-schedular rating including individual unemployability bringing the rating to 100%) may obtain a Veteran Combined Hunting license for $10, which includes general game and habitat, small game, and fur-bearer licenses (plus the $2 certificate, and the $5 waterfowl restoration stamp if hunting waterfowl).",
+      "value": "$10 fishing license (50%+ disability); $10 combined hunting license including general game/habitat/small game/fur-bearer (100% disability), plus $2 certificate fee",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "North Dakota residency required",
+          "100% disability required for the combined hunting license tier"
+        ]
+      },
+      "application": {
+        "agency": "North Dakota Game and Fish Department",
+        "form": null,
+        "url": "https://gf.nd.gov/licensing/resident",
+        "documentation": [
+          "VA documentation of service-connected disability percentage"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://gf.nd.gov/licensing/resident",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nd-education_tuition-nd-dependent-tuition-waiver",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "ND Dependent Tuition Waiver",
+      "description": "Dependents (child, stepchild, spouse, widow, or widower) of a North Dakota resident veteran who was killed in action, died of service-connected causes, has a 100% service-connected disability (including an extra-schedular rating resulting in 100% total disability), was a prisoner of war, or was declared missing in action, may attend a North Dakota University System institution free of tuition and fee charges toward a bachelor's degree or certificate of completion for as long as the dependent remains eligible. The benefit is not revoked by a POW's return, an MIA status change, or the veteran's disability status at death. Dependents must be accepted for enrollment by a University System campus.",
+      "value": "Free tuition and fees toward a bachelor's degree or certificate of completion at a North Dakota University System institution",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Dependent must be accepted for enrollment by a University System campus",
+          "Residency options: dependent of a resident veteran, one parent with state residency, or a parent who established and maintained residency for five years before enrollment"
+        ]
+      },
+      "application": {
+        "agency": "North Dakota Department of Veterans Affairs / North Dakota University System",
+        "form": null,
+        "url": "https://www.veterans.nd.gov/nd-dependent-tuition-waiver",
+        "documentation": [
+          "Proof of veteran's qualifying status (KIA, service-connected death, 100% disability, POW, or MIA)",
+          "Proof of dependent relationship"
+        ]
+      },
+      "legalCitation": "NDCC 15-10-18.2 & 15-10-18.3",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.veterans.nd.gov/nd-dependent-tuition-waiver",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nd-state_veterans_home-north-dakota-veterans-home",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "North Dakota Veterans Home",
+      "description": "North Dakota operates the North Dakota Veterans Home in Lisbon, serving veterans and their spouses since 1893. The home offers Basic Care (for residents who are independent and self-sufficient with personal care needs) and Skilled Nursing (ongoing nursing supervision and assistance with activities of daily living, ranging from total assistance to supervision of limited care needs), along with social activities, recreational programs, and medical/nursing services.",
+      "value": "Basic Care and Skilled Nursing levels of care for veterans and their spouses",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": ["Serves veterans and their spouses"]
+      },
+      "application": {
+        "agency": "North Dakota Veterans Home",
+        "form": null,
+        "url": "https://www.ndvh.nd.gov/",
+        "documentation": ["DD-214 or other proof of military service"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.ndvh.nd.gov/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nd-hiring_preference-state-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veterans' Preference",
+      "description": "North Dakota law grants veterans preference over all other applicants in state government recruitment and selection processes. To qualify, an applicant must be a U.S. citizen at the time of application and be honorably discharged from military service (or, if currently serving, be scheduled for discharge under other than dishonorable conditions within 120 days of application); National Guard and reserve unit members are included. Veterans qualified for preference may not be disqualified from a position due to physical or mental disability unless the disability renders them unable to properly perform the position's duties. This session could not confirm a specific point value for the preference against a directly-read official source.",
+      "value": "Preference over all other applicants in state government recruitment and selection processes",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "U.S. citizen at time of application",
+          "Honorably discharged, or scheduled for discharge under other than dishonorable conditions within 120 days",
+          "Includes National Guard and reserve unit members"
+        ]
+      },
+      "application": {
+        "agency": "State of North Dakota / ND Department of Veterans Affairs",
+        "form": null,
+        "url": "https://www.veterans.nd.gov/benefits-and-services/veterans-preference-nd",
+        "documentation": ["DD-214 or proof of honorable discharge"]
+      },
+      "legalCitation": "NDCC 37-19.1-02; NDCC 37-19.1-01; NDCC 37-01-40",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.veterans.nd.gov/benefits-and-services/veterans-preference-nd",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

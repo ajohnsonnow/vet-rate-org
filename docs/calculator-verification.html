@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VA Combined Rating Calculator - Test Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #1e3a8a;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-case {
+            border-left: 4px solid #3b82f6;
+            padding: 10px 15px;
+            margin: 10px 0;
+            background: #f8fafc;
+        }
+        .pass {
+            border-left-color: #10b981;
+        }
+        .fail {
+            border-left-color: #ef4444;
+        }
+        .result {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #1e3a8a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+        .status-pass {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .status-fail {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 VA Combined Rating Calculator - Verification Test</h1>
+    <p>This page tests the Vet-Rate.org calculator against official VA examples from 38 CFR § 4.25 and § 4.26.</p>
+
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <table id="results-table">
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Input Ratings</th>
+                    <th>Expected</th>
+                    <th>Calculated</th>
+                    <th>Raw Score</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="results-body">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>🔬 Calculation Details</h2>
+        <div id="calculation-details"></div>
+    </div>
+
+    <script>
+        // VA Combined Rating Calculator (from Vet-Rate.org)
+        function combineTwoRatings(rating1, rating2) {
+            const a = rating1 / 100;
+            const b = rating2 / 100;
+            return Math.round((a + b * (1 - a)) * 100 * 10) / 10;
+        }
+
+        function combineMultipleRatings(ratings) {
+            if (ratings.length === 0) return 0;
+            if (ratings.length === 1) return ratings[0];
+            
+            const sorted = [...ratings].sort((a, b) => b - a);
+            let combined = sorted[0];
+            
+            for (let i = 1; i < sorted.length; i++) {
+                combined = combineTwoRatings(combined, sorted[i]);
+            }
+            
+            return combined;
+        }
+
+        function roundToNearest10(value) {
+            return Math.round(value / 10) * 10;
+        }
+
+        function calculateVARating(ratings) {
+            const raw = combineMultipleRatings(ratings);
+            const final = roundToNearest10(raw);
+            return { raw, final };
+        }
+
+        // Test cases from official VA sources
+        const testCases = [
+            {
+                name: "VA Example 1 (38 CFR § 4.25)",
+                ratings: [50, 30],
+                expected: 70,
+                source: "Official VA example: 50% + 30% = 65 raw → 70%"
+            },
+            {
+                name: "VA Example 2 (38 CFR § 4.25)",
+                ratings: [60, 40, 20],
+                expected: 80,
+                source: "Official VA example: Three ratings"
+            },
+            {
+                name: "VA Example 3 (38 CFR § 4.25)",
+                ratings: [10, 10],
+                expected: 20,
+                source: "Official VA page: Two 10% ratings = 19 → 20%"
+            },
+            {
+                name: "VA Example 4 (38 CFR § 4.25)",
+                ratings: [30, 20],
+                expected: 40,
+                source: "Official VA example: 30% + 20% = 44 → 40%"
+            },
+            {
+                name: "VA Example 5 (38 CFR § 4.25)",
+                ratings: [70, 50, 30],
+                expected: 90,
+                source: "Official VA example: Complex three ratings"
+            },
+            {
+                name: "Hill & Ponton Example",
+                ratings: [50, 50, 20, 20],
+                expected: 80,
+                source: "From H&P website: PTSD 50%, Sleep Apnea 50%, Diabetes 20%, Back 20%"
+            },
+            {
+                name: "CFR § 4.26 Bilateral Example",
+                ratings: [60, 21, 20],
+                expected: 70,
+                source: "From regulation: 60% + bilateral group (10%+10%+factor=21%) + 20% = 74 → 70%"
+            },
+            {
+                name: "VA.gov Calculator Test",
+                ratings: [60, 40],
+                expected: 80,
+                source: "Common test case on VA.gov"
+            },
+            {
+                name: "Four Ratings Test",
+                ratings: [40, 30, 20, 10],
+                expected: 70,
+                source: "Multiple ratings combination"
+            }
+        ];
+
+        // Run tests
+        const resultsBody = document.getElementById('results-body');
+        const detailsDiv = document.getElementById('calculation-details');
+        let passCount = 0;
+        let failCount = 0;
+
+        testCases.forEach((test, index) => {
+            const result = calculateVARating(test.ratings);
+            const passed = result.final === test.expected;
+            
+            if (passed) passCount++;
+            else failCount++;
+
+            // Add to table
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${test.name}</td>
+                <td>${test.ratings.join('% + ')}%</td>
+                <td>${test.expected}%</td>
+                <td><strong>${result.final}%</strong></td>
+                <td>${result.raw.toFixed(2)}</td>
+                <td class="${passed ? 'status-pass' : 'status-fail'}">${passed ? '✅ PASS' : '❌ FAIL'}</td>
+            `;
+            resultsBody.appendChild(row);
+
+            // Add details
+            const detail = document.createElement('div');
+            detail.className = `test-case ${passed ? 'pass' : 'fail'}`;
+            detail.innerHTML = `
+                <h3>${test.name}</h3>
+                <p><strong>Source:</strong> ${test.source}</p>
+                <p><strong>Calculation:</strong></p>
+                <ul>
+                    <li>Input: ${test.ratings.join('%, ')}%</li>
+                    <li>Sorted (highest first): ${[...test.ratings].sort((a,b) => b-a).join('%, ')}%</li>
+                    <li>Raw combined: ${result.raw.toFixed(4)}</li>
+                    <li>Rounded to nearest 10: ${result.final}%</li>
+                    <li>Expected: ${test.expected}%</li>
+                    <li class="result">${passed ? '✅ Result matches!' : '❌ Mismatch detected'}</li>
+                </ul>
+            `;
+            detailsDiv.appendChild(detail);
+        });
+
+        // Add summary
+        const summary = document.createElement('div');
+        summary.className = 'test-section';
+        summary.style.background = passCount === testCases.length ? '#d1fae5' : '#fee2e2';
+        summary.innerHTML = `
+            <h2>📈 Summary</h2>
+            <p><strong>Total Tests:</strong> ${testCases.length}</p>
+            <p><strong>Passed:</strong> <span class="status-pass">${passCount}</span></p>
+            <p><strong>Failed:</strong> <span class="status-fail">${failCount}</span></p>
+            <p><strong>Success Rate:</strong> ${((passCount/testCases.length)*100).toFixed(1)}%</p>
+            ${passCount === testCases.length ? 
+                '<p style="color: #059669; font-weight: bold; font-size: 1.2em;">🎉 All tests passed! Calculator is working correctly.</p>' :
+                '<p style="color: #dc2626; font-weight: bold; font-size: 1.2em;">⚠️ Some tests failed. Please review the details above.</p>'
+            }
+        `;
+        document.body.insertBefore(summary, document.body.firstChild.nextSibling);
+
+        // Add methodology section
+        const methodology = document.createElement('div');
+        methodology.className = 'test-section';
+        methodology.innerHTML = `
+            <h2>🧮 Calculation Methodology</h2>
+            <p>The VA uses the "whole person theory" per 38 CFR § 4.25:</p>
+            <pre><code>
+Combined = A + B × (1 - A/100)
+
+Example: 50% + 30%
+= 50 + 30 × (1 - 50/100)
+= 50 + 30 × 0.5
+= 50 + 15
+= 65
+Round to nearest 10: 70%
+            </code></pre>
+            <h3>Key Rules:</h3>
+            <ul>
+                <li><strong>Sort Descending:</strong> Always combine highest to lowest</li>
+                <li><strong>No Simple Addition:</strong> Use efficiency math, not simple addition</li>
+                <li><strong>Round Once:</strong> Only round to nearest 10 at the very end</li>
+                <li><strong>Round 0.5 Up:</strong> Values ending in 5-9 round up, 1-4 round down</li>
+                <li><strong>Bilateral Factor:</strong> Add 10% of combined bilateral value (not multiply by 1.1)</li>
+            </ul>
+        `;
+        document.body.appendChild(methodology);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1322 @@
+/**
+ * Vet-Rate.org - Retroactive Pay Hunter
+ * "The Time Machine: Found Money Edition"
+ *
+ * This tool analyzes a veteran's rating history to find potential underpayments.
+ * Nothing is more exciting than "The VA owes you money."
+ *
+ * Features:
+ * - Compare historical ratings against correct pay tables
+ * - Say whether the bilateral factor (38 CFR 4.26) applies to the saved
+ *   ratings, so the veteran can check the decision; the tool does not read
+ *   the decision and cannot tell whether the factor was applied
+ * - List common Clear and Unmistakable Error (CUE) patterns for reference
+ * - Calculate total missed compensation
+ * - AI-powered analysis for action recommendations
+ */
+
+import { useState, useEffect, useCallback } from "react";
+import ReportBugLink from "./ReportBugLink";
+import BuyMeCoffee from "./BuyMeCoffee";
+import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import ToolCardButton from "./ToolCardButton";
+import { getMyRatings } from "../utils/veteranProfile";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
+import { isAIAvailable } from "../utils/aiStatementHelper";
+import { AIStatusBadge } from "./AIModeSelector";
+import { LLMRecommendationBadge } from "./LLMRecommendation";
+import {
+  getVeteranAIContext,
+  saveAnalysisResults,
+  PACKET_DOC_TYPES,
+} from "../utils/veteranContextProvider";
+import {
+  analyzeRetroactivePay,
+  CUE_PATTERNS,
+} from "../data/vaPayRatesHistorical";
+import { checkBilateralFactorCompliance } from "../utils/vaCalculator";
+import { formatLocalDate } from "../utils/dateUtils";
+
+const STORAGE_KEY = "vet_rate_retro_pay_history";
+
+const formatRatingHistoryLine = (p) => {
+  const spouseNote = p.dependents?.married ? "with spouse" : "";
+  const childrenNote = p.dependents?.childrenUnder18
+    ? `${p.dependents.childrenUnder18} children`
+    : "";
+  return `• ${formatLocalDate(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${spouseNote} ${childrenNote}`;
+};
+
+// This tool reads rating periods the veteran types in and nothing else. It
+// never sees a rating decision, so it cannot establish that the bilateral
+// factor was left out or that any error was made, and it raises no alert. The
+// bilateral check is information: the factor applies to these ratings, and
+// the veteran should check the decision.
+export const formatBilateralPromptBlock = (bilateralCheck) =>
+  bilateralCheck?.applicable
+    ? `\n**Bilateral factor (38 CFR § 4.26):**\nIt applies to: ${bilateralCheck.pairedParts.join(", ")}\nWhether the rating decision applied it has not been checked; tell the veteran to verify it.`
+    : "";
+
+export const bilateralSaveFields = (bilateralCheck) => ({
+  bilateralFactorApplies: bilateralCheck?.applicable || false,
+});
+
+export const RETRO_PAY_ACTION_STEPS =
+  "2. **Action Steps**: What should the veteran do NEXT? (Request a payment review, ask a Veterans Service Officer to check the decision, etc.)";
+
+export const formatRetroPayFindings = (totalMonths, total) =>
+  `Analyzed ${totalMonths || 0} months, est. $${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+
+const getRatingDotClasses = (rating) => {
+  if (rating >= 70) return "bg-green-500 border-green-400";
+  if (rating >= 50) return "bg-yellow-500 border-yellow-400";
+  if (rating >= 30) return "bg-orange-500 border-orange-400";
+  return "bg-gray-500 border-gray-400";
+};
+
+const getRatingTextClasses = (rating) => {
+  if (rating >= 70) return "text-green-400";
+  if (rating >= 50) return "text-yellow-400";
+  if (rating >= 30) return "text-orange-400";
+  return "text-gray-400";
+};
+
+function computeTotals(analysis) {
+  if (!analysis) return { total: 0, yearlyBreakdown: [] };
+
+  const yearlyBreakdown = analysis.summary || [];
+  const total = yearlyBreakdown.reduce(
+    (sum, year) => sum + year.totalShouldPaid,
+    0,
+  );
+  const yearsWithActualData = yearlyBreakdown.filter(
+    (year) => year.totalActuallyReceived !== null,
+  );
+  const hasActualData = yearsWithActualData.length > 0;
+  const totalActuallyReceived = hasActualData
+    ? yearsWithActualData.reduce(
+        (sum, year) => sum + year.totalActuallyReceived,
+        0,
+      )
+    : null;
+  const totalDelta = hasActualData
+    ? yearsWithActualData.reduce((sum, year) => sum + year.totalDelta, 0)
+    : null;
+
+  return {
+    total,
+    yearlyBreakdown,
+    hasActualData,
+    totalActuallyReceived,
+    totalDelta,
+  };
+}
+
+function useAIStatusPolling() {
+  const [aiStatus, setAIStatus] = useState(getAIStatus());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAIStatus(getAIStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return aiStatus;
+}
+
+function useLoadSavedHistory(setRatingHistory, setConditions) {
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        setRatingHistory(data.history || []);
+        setConditions(data.conditions || []);
+      } catch (e) {
+        console.error("Failed to load retro pay history:", e);
+      }
+    }
+
+    // Load conditions from My Ratings
+    try {
+      const myRatings = getMyRatings();
+      if (myRatings && myRatings.length > 0) {
+        const conditionsList = myRatings.map((r) => ({
+          name: r.name,
+          bodyPart: r.bodyPart || "other",
+          side: r.side || "none",
+          rating: r.rating || 0,
+          effectiveDate: r.effectiveDate,
+        }));
+        setConditions(conditionsList);
+      }
+    } catch (e) {
+      console.error("Failed to load My Ratings:", e);
+    }
+  }, [setRatingHistory, setConditions]);
+}
+
+function useSaveHistory(ratingHistory, conditions) {
+  return useCallback(
+    (history, conds) => {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          history: history || ratingHistory,
+          conditions: conds || conditions,
+        }),
+      );
+    },
+    [ratingHistory, conditions],
+  );
+}
+
+function createPeriodHandlers({
+  newEntry,
+  setNewEntry,
+  ratingHistory,
+  setRatingHistory,
+  conditions,
+  saveHistory,
+}) {
+  const handleAddPeriod = () => {
+    if (!newEntry.effectiveDate) {
+      alert("Please enter an effective date");
+      return;
+    }
+
+    const entry = {
+      id: Date.now(),
+      ...newEntry,
+      actualMonthlyReceived:
+        newEntry.actualMonthlyReceived !== "" &&
+        newEntry.actualMonthlyReceived !== undefined &&
+        !Number.isNaN(Number.parseFloat(newEntry.actualMonthlyReceived))
+          ? Number.parseFloat(newEntry.actualMonthlyReceived)
+          : null,
+      dependents: {
+        married: newEntry.married,
+        childrenUnder18: Number.parseInt(newEntry.childrenUnder18) || 0,
+        childrenSchool: Number.parseInt(newEntry.childrenSchool) || 0,
+        dependentParents: Number.parseInt(newEntry.dependentParents) || 0,
+      },
+    };
+
+    const updated = [...ratingHistory, entry].sort(
+      (a, b) => new Date(a.effectiveDate) - new Date(b.effectiveDate),
+    );
+
+    setRatingHistory(updated);
+    saveHistory(updated, conditions);
+
+    // Reset form but keep dependents
+    setNewEntry({
+      effectiveDate: "",
+      rating: 30,
+      married: newEntry.married,
+      childrenUnder18: newEntry.childrenUnder18,
+      childrenSchool: newEntry.childrenSchool,
+      dependentParents: newEntry.dependentParents,
+      actualMonthlyReceived: "",
+    });
+  };
+
+  const handleRemovePeriod = (id) => {
+    const updated = ratingHistory.filter((p) => p.id !== id);
+    setRatingHistory(updated);
+    saveHistory(updated, conditions);
+  };
+
+  return { handleAddPeriod, handleRemovePeriod };
+}
+
+function useRunAnalysisCallback({
+  ratingHistory,
+  conditions,
+  setAnalysis,
+  setBilateralCheck,
+  setIsAnalyzing,
+}) {
+  return useCallback(() => {
+    if (ratingHistory.length === 0) {
+      alert("Add at least one rating period to analyze");
+      return;
+    }
+
+    setIsAnalyzing(true);
+
+    // Simulate analysis time for effect
+    setTimeout(() => {
+      // Run retroactive pay analysis
+      const result = analyzeRetroactivePay(ratingHistory);
+      setAnalysis(result);
+
+      const bilateral =
+        conditions.length > 0
+          ? checkBilateralFactorCompliance(conditions)
+          : null;
+      if (bilateral) setBilateralCheck(bilateral);
+
+      setIsAnalyzing(false);
+    }, 1500);
+  }, [
+    ratingHistory,
+    conditions,
+    setAnalysis,
+    setBilateralCheck,
+    setIsAnalyzing,
+  ]);
+}
+
+function createAIAnalysisHandler({
+  analysis,
+  ratingHistory,
+  bilateralCheck,
+  setIsAIThinking,
+  setAIAnalysis,
+  setShowAIAnalysis,
+}) {
+  return async () => {
+    if (!analysis || !isAIAvailable()) return;
+
+    setIsAIThinking(true);
+    setAIAnalysis("");
+
+    try {
+      // Load veteran context so AI can correlate with known conditions
+      const veteranContext = await getVeteranAIContext({
+        maxPacketTokens: 400,
+      });
+      const contextBlock = veteranContext
+        ? `\nVETERAN CASE DATA:\n${veteranContext}\n`
+        : "";
+
+      const prompt = `You are a VA benefits expert analyzing retroactive payment findings for a veteran.
+${contextBlock}
+
+**Analysis Summary:**
+- Total Months Analyzed: ${analysis.totalMonths}
+- Total Should Have Been Paid: $${computeTotals(analysis).total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+- Number of Rating Periods: ${ratingHistory.length}
+${analysis.hasCoverageGap ? `- NOTE: ${analysis.uncoveredMonths} month(s) before ${analysis.earliestAvailableYear} are NOT included above (no rate table data that far back) - the real total may be higher.` : ""}
+
+**Rating History:**
+${ratingHistory.map(formatRatingHistoryLine).join("\n")}
+
+${formatBilateralPromptBlock(bilateralCheck)}
+
+Provide a veteran-focused analysis covering:
+
+1. **What This Means**: Explain the findings in plain language - no VA jargon
+${RETRO_PAY_ACTION_STEPS}
+3. **Timeline**: How long does the process typically take?
+4. **Documentation Needed**: What evidence should they gather?
+5. **Cautions**: Common mistakes to avoid when filing for retroactive pay
+
+Be direct, practical, and emphasize that retroactive pay claims have specific time limits and procedures.`;
+
+      // ADR-009: "context" - structured rating history + the allow-listed
+      // veteran context, never a document upload.
+      const response = await generateAI(prompt, {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
+      // generateAI returns { text, mode } object - extract the text content
+      const aiText = response?.text || response;
+      setAIAnalysis(
+        typeof aiText === "string" ? aiText : JSON.stringify(aiText),
+      );
+      setShowAIAnalysis(true);
+
+      // Save retro pay findings to VKB + My Packet
+      saveAnalysisResults({
+        toolName: "Retro Pay Hunter",
+        classification: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+        rawText: typeof aiText === "string" ? aiText : JSON.stringify(aiText),
+        extractedData: {
+          totalMonths: analysis?.totalMonths,
+          ...bilateralSaveFields(bilateralCheck),
+          ratingPeriods: ratingHistory?.length || 0,
+        },
+        vkbMergeData: {
+          aiInsights: {
+            retroPayFindings: formatRetroPayFindings(
+              analysis?.totalMonths,
+              computeTotals(analysis).total,
+            ),
+            ...bilateralSaveFields(bilateralCheck),
+          },
+        },
+      }).catch((err) => console.warn("Failed to save retro pay results:", err));
+    } catch (error) {
+      console.error("AI analysis error:", error);
+      setAIAnalysis(
+        "Unable to generate AI analysis. The calculations above show what you should have been paid.",
+      );
+    } finally {
+      setIsAIThinking(false);
+    }
+  };
+}
+
+function RetroPayHunterHeader({ onClose, onReportBug }) {
+  return (
+    <div className="bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 text-white px-6 py-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
+      <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full" />
+
+      <HeaderCloseSlot
+        className="relative"
+        close={
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="w-16 h-16 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+            <span className="text-4xl">💸</span>
+          </div>
+          <div className="min-w-0">
+            <h2
+              id="retro-pay-hunter-title"
+              className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
+            >
+              Retroactive Pay Hunter{" "}
+              <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
+                AI
+              </span>
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                BETA
+              </span>
+            </h2>
+            <p className="text-yellow-100 mt-1">
+              &quot;You Owe Me Money&quot; - Find Missed Payments
+            </p>
+          </div>
+        </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Retroactive Pay Hunter"
+          />
+        )}
+      </HeaderCloseSlot>
+    </div>
+  );
+}
+
+function AIModeStatusBar({ aiStatus, onAISettingsClick }) {
+  return (
+    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <LLMRecommendationBadge toolId="retro-pay-hunter" />
+          <AIStatusBadge showLabel={true} onClick={onAISettingsClick} />
+          <span className="text-sm text-gray-400">
+            {aiStatus.isPrivate
+              ? "🔒 100% Private - runs on your device"
+              : "☁️ Cloud AI - fast & powerful"}
+          </span>
+        </div>
+        <span className="text-xs text-gray-500">Click badge to configure</span>
+      </div>
+    </div>
+  );
+}
+
+function DateTerminologyInfo() {
+  return (
+    <div className="bg-blue-900/30 border-2 border-blue-500 rounded-xl p-4">
+      <h4 className="font-bold text-blue-300 mb-2 flex items-center gap-2">
+        <span>📅</span> Understanding VA Payment Dates
+      </h4>
+      <div className="text-sm text-blue-200 space-y-1">
+        <p>
+          <strong>Effective Date:</strong> When your entitlement began (the
+          decision date on your VA letter)
+        </p>
+        <p>
+          <strong>Payment Effective Date:</strong> When payments actually start
+          = <strong>first day of month FOLLOWING</strong> effective date
+        </p>
+        <p className="text-xs text-blue-400 mt-2 italic">
+          Per 38 CFR § 3.400: &quot;Payment shall commence on the first day of
+          the month following the month in which the effective date falls.&quot;
+        </p>
+        <p className="text-xs text-amber-300 mt-2">
+          💡 Example: Decision effective Jan 15, 2024 → Payments start Feb 1,
+          2024 (not Jan 15)
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function EffectiveDateField({ newEntry, setNewEntry }) {
+  return (
+    <div>
+      <label
+        htmlFor="retro-pay-effective-date"
+        className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2"
+      >
+        Effective Date *{" "}
+        <span className="group relative">
+          <span className="text-blue-400 cursor-help text-xs">ℹ️</span>
+          <span className="invisible group-hover:visible absolute z-10 w-72 p-3 text-xs bg-gray-900 border border-gray-700 rounded-lg shadow-xl -left-16 top-6">
+            <strong className="text-amber-400">
+              Effective Date vs Payment Date:
+            </strong>
+            <br />• <strong>Effective Date:</strong> When entitlement began
+            (decision date)
+            <br />• <strong>Payment Start:</strong> First of FOLLOWING month (38
+            CFR § 3.400)
+            <br />
+            <br />
+            <em className="text-gray-400">
+              Example: Effective date Feb 15, 2024 → Payments start Mar 1, 2024
+            </em>
+          </span>
+        </span>
+      </label>
+      <input
+        id="retro-pay-effective-date"
+        type="date"
+        value={newEntry.effectiveDate}
+        onChange={(e) =>
+          setNewEntry({
+            ...newEntry,
+            effectiveDate: e.target.value,
+          })
+        }
+        max={new Date().toISOString().split("T")[0]}
+        className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+      />
+      <p className="text-xs text-gray-500 mt-1">
+        This is the decision effective date (when entitlement began)
+      </p>
+    </div>
+  );
+}
+
+function RatingSelectField({ newEntry, setNewEntry }) {
+  return (
+    <div>
+      <label
+        htmlFor="retro-pay-rating"
+        className="block text-sm font-semibold text-gray-300 mb-2"
+      >
+        Combined Rating *
+      </label>
+      <select
+        id="retro-pay-rating"
+        value={newEntry.rating}
+        onChange={(e) =>
+          setNewEntry({
+            ...newEntry,
+            rating: Number.parseInt(e.target.value),
+          })
+        }
+        className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+      >
+        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((r) => (
+          <option key={r} value={r}>
+            {r}%
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function DependentsFields({ newEntry, setNewEntry }) {
+  return (
+    <div className="mt-4 p-4 bg-gray-900/50 rounded-lg">
+      <p className="text-sm text-gray-400 mb-3">
+        Dependents (for pay calculation)
+      </p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={newEntry.married}
+            onChange={(e) =>
+              setNewEntry({ ...newEntry, married: e.target.checked })
+            }
+            className="w-4 h-4 text-amber-500 rounded bg-gray-700 border-gray-600"
+          />{" "}
+          Married
+        </label>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min="0"
+            max="10"
+            aria-label="Children under 18"
+            value={newEntry.childrenUnder18}
+            onChange={(e) =>
+              setNewEntry({
+                ...newEntry,
+                childrenUnder18: e.target.value,
+              })
+            }
+            className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+          />
+          <span className="text-sm text-gray-400">Children &lt;18</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min="0"
+            max="10"
+            aria-label="Children in school, 18 or older"
+            value={newEntry.childrenSchool}
+            onChange={(e) =>
+              setNewEntry({
+                ...newEntry,
+                childrenSchool: e.target.value,
+              })
+            }
+            className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+          />
+          <span className="text-sm text-gray-400">In School 18+</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min="0"
+            max="2"
+            aria-label="Dependent parents"
+            value={newEntry.dependentParents}
+            onChange={(e) =>
+              setNewEntry({
+                ...newEntry,
+                dependentParents: e.target.value,
+              })
+            }
+            className="w-16 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+          />
+          <span className="text-sm text-gray-400">Parents</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActualReceivedField({ newEntry, setNewEntry }) {
+  return (
+    <div className="mt-4">
+      <label
+        htmlFor="retro-pay-actual-received"
+        className="block text-sm font-semibold text-gray-300 mb-2"
+      >
+        What you actually received per month (optional)
+      </label>
+      <input
+        id="retro-pay-actual-received"
+        type="number"
+        min="0"
+        step="0.01"
+        value={newEntry.actualMonthlyReceived}
+        onChange={(e) =>
+          setNewEntry({
+            ...newEntry,
+            actualMonthlyReceived: e.target.value,
+          })
+        }
+        placeholder="e.g. 2106.01 (from your award letter)"
+        className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+      />
+      <p className="text-xs text-gray-500 mt-1">
+        Leave blank for a theoretical-entitlement estimate only. Fill this in to
+        see the actual missed-payment delta.
+      </p>
+    </div>
+  );
+}
+
+export function LoadedConditionsNotice({ conditions }) {
+  return (
+    <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700 rounded-lg">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-lg">📋</span>
+        <p className="text-purple-200 font-semibold">Loaded from My Packet</p>
+      </div>
+      <p className="text-purple-300 text-sm">
+        {conditions.length} condition
+        {conditions.length !== 1 ? "s" : ""} loaded for the bilateral factor
+        check.
+        {checkBilateralFactorCompliance(conditions).applicable && (
+          <span className="block mt-1 text-purple-400">
+            The bilateral factor applies to some of these ratings.
+          </span>
+        )}
+      </p>
+    </div>
+  );
+}
+
+function AddRatingPeriodForm({
+  newEntry,
+  setNewEntry,
+  handleAddPeriod,
+  conditions,
+}) {
+  return (
+    <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <span>➕</span> Add Rating Period
+      </h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <EffectiveDateField newEntry={newEntry} setNewEntry={setNewEntry} />
+        <RatingSelectField newEntry={newEntry} setNewEntry={setNewEntry} />
+      </div>
+
+      <DependentsFields newEntry={newEntry} setNewEntry={setNewEntry} />
+      <ActualReceivedField newEntry={newEntry} setNewEntry={setNewEntry} />
+
+      <button
+        type="button"
+        onClick={handleAddPeriod}
+        className="mt-4 w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Add Rating Period
+      </button>
+
+      {conditions.length > 0 && (
+        <LoadedConditionsNotice conditions={conditions} />
+      )}
+    </div>
+  );
+}
+
+function RatingTimelineEntry({ period, onRemove }) {
+  return (
+    <div className="relative flex items-start gap-4 pl-16">
+      {/* Timeline dot */}
+      <div
+        className={`absolute left-4 w-5 h-5 rounded-full border-2 ${getRatingDotClasses(period.rating)}`}
+      />
+
+      {/* Content */}
+      <div className="flex-1 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-gray-400 text-sm">
+            {formatLocalDate(period.effectiveDate).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+          <button
+            type="button"
+            onClick={() => onRemove(period.id)}
+            aria-label="Remove rating period"
+            className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div
+            className={`text-3xl font-bold ${getRatingTextClasses(period.rating)}`}
+          >
+            {period.rating}%
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-xs">
+            {period.dependents?.married && (
+              <span className="px-2 py-1 bg-pink-500/20 text-pink-300 rounded">
+                👫 Spouse
+              </span>
+            )}
+            {period.dependents?.childrenUnder18 > 0 && (
+              <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded">
+                👶 {period.dependents.childrenUnder18} child
+                {period.dependents.childrenUnder18 > 1 ? "ren" : ""}
+              </span>
+            )}
+            {period.dependents?.childrenSchool > 0 && (
+              <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded">
+                🎓 {period.dependents.childrenSchool} in school
+              </span>
+            )}
+            {period.dependents?.dependentParents > 0 && (
+              <span className="px-2 py-1 bg-green-500/20 text-green-300 rounded">
+                👴 {period.dependents.dependentParents} parent
+                {period.dependents.dependentParents > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RatingTimeline({ ratingHistory, onRemove }) {
+  if (ratingHistory.length === 0) return null;
+
+  return (
+    <div className="bg-gray-800/30 rounded-xl p-6 mb-6">
+      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <span>📊</span> Your Rating Timeline
+      </h3>
+
+      <div className="relative">
+        {/* Timeline line */}
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-700" />
+
+        {/* Timeline entries */}
+        <div className="space-y-6">
+          {ratingHistory.map((period) => (
+            <RatingTimelineEntry
+              key={period.id}
+              period={period}
+              onRemove={onRemove}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FoundMoneyBanner({ analysis, totals }) {
+  return (
+    <div className="bg-gradient-to-r from-amber-900/50 to-yellow-900/50 border-2 border-amber-500 rounded-xl p-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 rounded-full -translate-y-20 translate-x-20" />
+
+      <div className="relative">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-4xl">💰</span>
+          <h3 className="text-2xl font-bold text-green-400">
+            Payment Analysis Complete
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="bg-gray-900/50 rounded-lg p-4">
+            <p className="text-gray-400 text-sm">Total Months Analyzed</p>
+            <p className="text-3xl font-bold text-white">
+              {analysis.totalMonths}
+            </p>
+          </div>
+          <div className="bg-gray-900/50 rounded-lg p-4">
+            <p className="text-gray-400 text-sm">
+              {totals.hasActualData
+                ? "Total You Should Have Received"
+                : "Total Should Have Received"}
+            </p>
+            <p className="text-3xl font-bold text-green-400">
+              $
+              {totals.total.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+              })}
+            </p>
+          </div>
+        </div>
+
+        {totals.hasActualData ? (
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="bg-gray-900/50 rounded-lg p-4">
+              <p className="text-gray-400 text-sm">Total Actually Received</p>
+              <p className="text-2xl font-bold text-white">
+                $
+                {totals.totalActuallyReceived.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+            <div className="bg-gray-900/50 rounded-lg p-4">
+              <p className="text-gray-400 text-sm">
+                {totals.totalDelta > 0
+                  ? "Potential Missed Payments"
+                  : "Difference"}
+              </p>
+              <p
+                className={`text-2xl font-bold ${totals.totalDelta > 0 ? "text-amber-400" : "text-gray-300"}`}
+              >
+                $
+                {totals.totalDelta.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-amber-300/70 text-xs mt-3">
+            This is theoretical entitlement based on your rating history - enter
+            what you actually received per period below to see a real
+            missed-payment delta.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function YearlyBreakdown({ totals }) {
+  return (
+    <div className="bg-gray-800/30 rounded-xl p-6">
+      <h3 className="text-lg font-bold text-white mb-4">📈 Yearly Breakdown</h3>
+
+      <div className="space-y-3">
+        {totals.yearlyBreakdown.map((year) => (
+          <div
+            key={year.year}
+            className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-gray-400">{year.year}</span>
+              <span className="text-sm text-gray-500">
+                ({year.months} months)
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-green-400 font-bold">
+                $
+                {year.totalShouldPaid.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </span>
+              {year.totalDelta !== null && (
+                <p
+                  className={`text-xs ${year.totalDelta > 0 ? "text-amber-400" : "text-gray-500"}`}
+                >
+                  {year.totalDelta > 0
+                    ? `Missing ~$${year.totalDelta.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                    : "No shortfall vs. entered actual pay"}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CoverageGapNotice({ analysis }) {
+  if (!analysis?.hasCoverageGap) return null;
+
+  return (
+    <div className="bg-blue-900/20 border border-blue-500/40 rounded-xl p-4">
+      <p className="text-blue-300 text-sm">
+        ℹ️ <strong>Analysis window is limited:</strong> we only have official VA
+        rate tables from {analysis.earliestAvailableYear} forward. Your earliest
+        entered effective date ({analysis.earliestRequestedDate}) is before
+        that, so {analysis.uncoveredMonths} month
+        {analysis.uncoveredMonths !== 1 ? "s" : ""} before{" "}
+        {analysis.earliestAvailableYear} are <strong>NOT included</strong> in
+        the totals below. The real total (if any underpayment exists) is likely
+        higher than shown.
+      </p>
+    </div>
+  );
+}
+
+function EffectiveDateInfoNote() {
+  return (
+    <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-4">
+      <p className="text-gray-400 text-sm">
+        ℹ️ Effective dates are rarely the 1st of the month - that's normal.
+        Payment simply starts the 1st of the month <em>following</em> the
+        effective date (38 CFR § 3.400). This alone is not evidence of an error.
+      </p>
+    </div>
+  );
+}
+
+export function BilateralCheckCard({ bilateralCheck }) {
+  if (!bilateralCheck) return null;
+
+  return (
+    <div
+      className={`rounded-xl p-6 ${
+        bilateralCheck.applicable
+          ? "bg-blue-900/30 border-2 border-blue-500/50"
+          : "bg-gray-800/30 border border-gray-700"
+      }`}
+    >
+      <div className="flex items-center gap-3 mb-2">
+        <span className="text-xl">🦾</span>
+        <h3 className="text-lg font-bold text-blue-400">
+          {bilateralCheck.applicable
+            ? "Check that the bilateral factor was applied"
+            : "Bilateral factor"}
+        </h3>
+      </div>
+      <p className="text-gray-300">{bilateralCheck.message}</p>
+      {bilateralCheck.applicable && (
+        <p className="text-blue-300/80 text-sm mt-2">
+          💡 {bilateralCheck.potentialBonus}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function AnalysisResults({ analysis, totals, bilateralCheck }) {
+  if (!analysis) return null;
+
+  return (
+    <div className="space-y-6">
+      <FoundMoneyBanner analysis={analysis} totals={totals} />
+      <CoverageGapNotice analysis={analysis} />
+      <YearlyBreakdown totals={totals} />
+      <EffectiveDateInfoNote />
+      <BilateralCheckCard bilateralCheck={bilateralCheck} />
+    </div>
+  );
+}
+
+function AIAnalysisSection({
+  showAIAnalysis,
+  handleAIAnalysis,
+  isAIThinking,
+  aiAnalysis,
+}) {
+  return (
+    <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 rounded-xl p-6 border border-purple-700">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🤖</span>
+          <h3 className="text-lg font-bold text-purple-100">
+            AI Expert Analysis
+          </h3>
+        </div>
+        {!showAIAnalysis && (
+          <button
+            type="button"
+            onClick={handleAIAnalysis}
+            disabled={isAIThinking}
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isAIThinking ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                Analyzing...
+              </>
+            ) : (
+              <>🔍 Get AI Analysis</>
+            )}
+          </button>
+        )}
+      </div>
+
+      {showAIAnalysis && aiAnalysis && (
+        <div className="mt-4 p-4 bg-gray-900/50 rounded-lg border border-purple-600/30">
+          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-purple-100 prose-p:text-gray-300">
+            <div className="whitespace-pre-wrap">{aiAnalysis}</div>
+          </div>
+        </div>
+      )}
+
+      {!showAIAnalysis && (
+        <p className="text-purple-300 text-sm">
+          Get an AI-powered analysis that explains your findings in plain
+          language, recommends next steps, and warns you about common mistakes
+          when filing retroactive pay claims.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CuePatternItem({ pattern }) {
+  return (
+    <div
+      className={`p-4 rounded-lg ${
+        pattern.severity === "high"
+          ? "bg-red-900/20 border border-red-500/30"
+          : "bg-yellow-900/20 border border-yellow-500/30"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={`${
+            pattern.severity === "high" ? "text-red-500" : "text-yellow-500"
+          }`}
+        >
+          {pattern.severity === "high" ? "🔴" : "🟡"}
+        </span>
+        <div>
+          <p className="font-semibold text-white">{pattern.name}</p>
+          <p className="text-gray-400 text-sm mt-1">{pattern.description}</p>
+          <p className="text-gray-500 text-xs mt-2">
+            💡 Detection: {pattern.detection}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CuePatternsReference({ showCuePatterns, setShowCuePatterns }) {
+  return (
+    <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700">
+      <button
+        type="button"
+        onClick={() => setShowCuePatterns(!showCuePatterns)}
+        className="flex items-center justify-between w-full"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-xl">📚</span>
+          <h3 className="text-lg font-bold text-white">Common CUE Patterns</h3>
+        </div>
+        <span className="text-gray-400">{showCuePatterns ? "−" : "+"}</span>
+      </button>
+
+      {showCuePatterns && (
+        <div className="mt-4 space-y-3">
+          {CUE_PATTERNS.map((pattern) => (
+            <CuePatternItem key={pattern.id} pattern={pattern} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RetroPayFooter() {
+  return (
+    <div className="rounded-lg bg-gray-800/50 border border-gray-700 px-6 py-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="text-xs text-gray-500 text-center sm:text-left">
+          ⚠️ This tool provides estimates only. Consult with a VSO or attorney
+          for official payment disputes.
+        </p>
+        <BuyMeCoffee variant="compact" />
+      </div>
+    </div>
+  );
+}
+
+function RetroPayHunterBody({
+  aiStatus,
+  onAISettingsClick,
+  newEntry,
+  setNewEntry,
+  handleAddPeriod,
+  conditions,
+  ratingHistory,
+  handleRemovePeriod,
+  isAnalyzing,
+  runAnalysis,
+  analysis,
+  totals,
+  bilateralCheck,
+  showAIAnalysis,
+  handleAIAnalysis,
+  isAIThinking,
+  aiAnalysis,
+  showCuePatterns,
+  setShowCuePatterns,
+}) {
+  return (
+    <div className="space-y-6">
+      <AIModeStatusBar
+        aiStatus={aiStatus}
+        onAISettingsClick={onAISettingsClick}
+      />
+      <DateTerminologyInfo />
+      <AddRatingPeriodForm
+        newEntry={newEntry}
+        setNewEntry={setNewEntry}
+        handleAddPeriod={handleAddPeriod}
+        conditions={conditions}
+      />
+      <RatingTimeline
+        ratingHistory={ratingHistory}
+        onRemove={handleRemovePeriod}
+      />
+
+      {ratingHistory.length > 0 && !analysis && (
+        <ToolCardButton
+          className="w-full"
+          type="button"
+          onClick={runAnalysis}
+          disabled={isAnalyzing}
+        >
+          {isAnalyzing ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span> Analyzing Pay
+              Records...
+            </>
+          ) : (
+            <>Analyze Pay Records</>
+          )}
+        </ToolCardButton>
+      )}
+
+      <AnalysisResults
+        analysis={analysis}
+        totals={totals}
+        bilateralCheck={bilateralCheck}
+      />
+
+      {analysis && isAIAvailable() && (
+        <AIAnalysisSection
+          showAIAnalysis={showAIAnalysis}
+          handleAIAnalysis={handleAIAnalysis}
+          isAIThinking={isAIThinking}
+          aiAnalysis={aiAnalysis}
+        />
+      )}
+
+      <CuePatternsReference
+        showCuePatterns={showCuePatterns}
+        setShowCuePatterns={setShowCuePatterns}
+      />
+      <RetroPayFooter />
+    </div>
+  );
+}
+
+function useRetroPayHunterState({ onAISettingsClick }) {
+  const [ratingHistory, setRatingHistory] = useState([]);
+  const [newEntry, setNewEntry] = useState({
+    effectiveDate: "",
+    rating: 30,
+    married: false,
+    childrenUnder18: 0,
+    childrenSchool: 0,
+    dependentParents: 0,
+    actualMonthlyReceived: "",
+  });
+
+  const [analysis, setAnalysis] = useState(null);
+  const [showCuePatterns, setShowCuePatterns] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [conditions, setConditions] = useState([]);
+  const [bilateralCheck, setBilateralCheck] = useState(null);
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
+  const [aiAnalysis, setAIAnalysis] = useState("");
+  const [isAIThinking, setIsAIThinking] = useState(false);
+
+  const aiStatus = useAIStatusPolling();
+  useLoadSavedHistory(setRatingHistory, setConditions);
+  const saveHistory = useSaveHistory(ratingHistory, conditions);
+
+  const { handleAddPeriod, handleRemovePeriod } = createPeriodHandlers({
+    newEntry,
+    setNewEntry,
+    ratingHistory,
+    setRatingHistory,
+    conditions,
+    saveHistory,
+  });
+
+  const runAnalysis = useRunAnalysisCallback({
+    ratingHistory,
+    conditions,
+    setAnalysis,
+    setBilateralCheck,
+    setIsAnalyzing,
+  });
+
+  const totals = computeTotals(analysis);
+
+  const handleAIAnalysis = createAIAnalysisHandler({
+    analysis,
+    ratingHistory,
+    bilateralCheck,
+    setIsAIThinking,
+    setAIAnalysis,
+    setShowAIAnalysis,
+  });
+
+  return {
+    aiStatus,
+    onAISettingsClick,
+    newEntry,
+    setNewEntry,
+    handleAddPeriod,
+    conditions,
+    ratingHistory,
+    handleRemovePeriod,
+    isAnalyzing,
+    runAnalysis,
+    analysis,
+    totals,
+    bilateralCheck,
+    showAIAnalysis,
+    handleAIAnalysis,
+    isAIThinking,
+    aiAnalysis,
+    showCuePatterns,
+    setShowCuePatterns,
+  };
+}
+
+const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
+  const bodyProps = useRetroPayHunterState({ onAISettingsClick });
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="xl"
+      labelledBy="retro-pay-hunter-title"
+      className="bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-700"
+      header={
+        <RetroPayHunterHeader onClose={onClose} onReportBug={onReportBug} />
+      }
+    >
+      <RetroPayHunterBody {...bodyProps} />
+    </ResponsiveModal>
+  );
+};
+
+export default RetroPayHunter;

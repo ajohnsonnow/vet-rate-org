@@ -1,0 +1,1190 @@
+{
+  "migraines": {
+    "diagnostic_code": "8100",
+    "condition_name": "Migraine Headaches",
+    "cfr_reference": "38 CFR § 4.124a",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "When you have a migraine, do you have to stop what you are doing and lie down?",
+        "intent": "Determine if attacks are 'prostrating' (completely incapacitating, requiring bed rest in dark/quiet room).",
+        "definition": "Prostrating: So severe that physical activity must stop and the person must lie down, usually in a dark, quiet room. The CFR requires attacks to be 'completely prostrating' for 30% or higher ratings.",
+        "options": [
+          {
+            "value": "yes_always",
+            "label": "Yes, I always have to stop everything and lie down in a dark/quiet room",
+            "weight": 3
+          },
+          {
+            "value": "yes_sometimes",
+            "label": "Sometimes I have to lie down, but not always",
+            "weight": 2
+          },
+          {
+            "value": "no",
+            "label": "No, I can usually power through the pain",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2",
+        "question": "How often do these PROSTRATING attacks happen?",
+        "intent": "Determine frequency. 10% = avg 1 in 2 months. 30% = avg once a month. 50% = very frequent.",
+        "definition": "Frequency is measured over 'the last several months' according to 38 CFR § 4.124a. Count only attacks that are completely prostrating.",
+        "options": [
+          {
+            "value": "very_frequent",
+            "label": "More than once per month (2+ per month)",
+            "weight": 3
+          },
+          {
+            "value": "monthly",
+            "label": "About once per month",
+            "weight": 2
+          },
+          {
+            "value": "bi_monthly",
+            "label": "About once every 2 months",
+            "weight": 1
+          },
+          {
+            "value": "less_frequent",
+            "label": "Less than once every 2 months",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q3",
+        "question": "Do these attacks cause you to miss work, lose income, or significantly affect your ability to work?",
+        "intent": "Determine 'economic inadaptability' (required for 50% rating). This means attacks are so severe and frequent they prevent you from maintaining employment.",
+        "definition": "Economic Inadaptability: The attacks are productive of severe economic consequences - missing work, losing jobs, or inability to maintain steady employment due to the frequency and severity of attacks.",
+        "options": [
+          {
+            "value": "yes_severe",
+            "label": "Yes, I frequently miss work or have lost job opportunities because of migraines",
+            "weight": 3
+          },
+          {
+            "value": "yes_moderate",
+            "label": "Yes, I occasionally miss work or have reduced productivity",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No, I manage to work despite the migraines",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q4",
+        "question": "How long do these prostrating attacks typically last?",
+        "intent": "Determine if attacks are 'prolonged' (lasting hours to days). This is required for 50% rating.",
+        "definition": "Prolonged: Attacks lasting many hours or days. The 50% rating criteria specifically mentions 'prolonged' attacks.",
+        "options": [
+          {
+            "value": "days",
+            "label": "24+ hours (days)",
+            "weight": 3
+          },
+          {
+            "value": "many_hours",
+            "label": "4-24 hours",
+            "weight": 2
+          },
+          {
+            "value": "few_hours",
+            "label": "1-4 hours",
+            "weight": 1
+          },
+          {
+            "value": "under_hour",
+            "label": "Less than 1 hour",
+            "weight": 0
+          }
+        ],
+        "required": true
+      }
+    ],
+    "rating_calculator": "calculateMigraineRating",
+    "exam_tips": [
+      "Bring a headache diary showing frequency over the last 6-12 months",
+      "Bring sick leave records or employer letters documenting missed work",
+      "Do NOT downplay symptoms - describe the worst attacks, not the best days",
+      "Use the word 'prostrating' if your attacks require you to stop and lie down",
+      "Mention associated symptoms: nausea, vomiting, photophobia (light sensitivity), phonophobia (sound sensitivity)"
+    ]
+  },
+  "ptsd": {
+    "diagnostic_code": "9411",
+    "condition_name": "Post-Traumatic Stress Disorder",
+    "cfr_reference": "38 CFR § 4.130",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "How often do you experience symptoms like panic attacks, severe anxiety, or flashbacks?",
+        "intent": "Differentiate 30% (Occasional decrease in work efficiency) vs 50% (Reduced reliability/productivity) vs 70% (Deficiencies in most areas).",
+        "definition": "Frequency and severity of symptoms determine the level of occupational and social impairment according to 38 CFR § 4.130.",
+        "options": [
+          {
+            "value": "near_continuous",
+            "label": "Near-continuous symptoms that affect me daily",
+            "weight": 3
+          },
+          {
+            "value": "weekly",
+            "label": "Multiple times per week",
+            "weight": 2
+          },
+          {
+            "value": "occasional",
+            "label": "Occasionally (few times per month)",
+            "weight": 1
+          },
+          {
+            "value": "rarely",
+            "label": "Rarely (less than monthly)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2",
+        "question": "How do your symptoms affect your ability to work or maintain employment?",
+        "intent": "Determine occupational impairment level. 30% = intermittent inability. 50% = reduced reliability. 70% = deficiencies in most areas.",
+        "definition": "Occupational impairment ranges from occasional decrease in work efficiency (30%) to near-inability to function (100%).",
+        "options": [
+          {
+            "value": "severe",
+            "label": "I cannot work or have extreme difficulty maintaining any job",
+            "weight": 3
+          },
+          {
+            "value": "reduced_reliability",
+            "label": "I work but with reduced reliability and productivity (miss days, poor performance)",
+            "weight": 2
+          },
+          {
+            "value": "intermittent",
+            "label": "I have intermittent periods where I cannot perform work tasks",
+            "weight": 1
+          },
+          {
+            "value": "occasional",
+            "label": "I have occasional decreases in work efficiency",
+            "weight": 0.5
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q3",
+        "question": "How do your symptoms affect your relationships with family, friends, or coworkers?",
+        "intent": "Determine social impairment. This is a key factor in mental health ratings.",
+        "definition": "Social impairment includes difficulty maintaining relationships, avoiding social situations, and inability to function in social settings.",
+        "options": [
+          {
+            "value": "total",
+            "label": "I avoid almost all social contact and have no close relationships",
+            "weight": 3
+          },
+          {
+            "value": "severe",
+            "label": "I have very few relationships and frequently have conflicts or avoid social situations",
+            "weight": 2
+          },
+          {
+            "value": "moderate",
+            "label": "I struggle with relationships and social situations but maintain some connections",
+            "weight": 1
+          },
+          {
+            "value": "mild",
+            "label": "I have occasional social difficulties but maintain relationships",
+            "weight": 0.5
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q4",
+        "question": "Do you experience suicidal thoughts, severe depression, or inability to care for yourself?",
+        "intent": "Identify high-level symptoms that indicate 70% or 100% ratings.",
+        "definition": "Suicidal ideation, severe depression, and inability to perform activities of daily living are indicators of severe impairment.",
+        "options": [
+          {
+            "value": "yes_frequent",
+            "label": "Yes, frequently",
+            "weight": 3
+          },
+          {
+            "value": "yes_occasional",
+            "label": "Yes, occasionally",
+            "weight": 2
+          },
+          {
+            "value": "past_not_current",
+            "label": "I have in the past, but not currently",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No",
+            "weight": 0
+          }
+        ],
+        "required": true
+      }
+    ],
+    "rating_calculator": "calculatePTSDRating",
+    "exam_tips": [
+      "Be completely honest - this is not the time to appear 'strong' or 'recovered'",
+      "Describe your worst days, not your best days",
+      "Mention sleep problems, nightmares, hypervigilance, avoidance behaviors",
+      "If you've lost jobs, relationships, or housing due to PTSD, mention it",
+      "Bring buddy statements from family/friends who witness your symptoms",
+      "If you have suicidal thoughts, ALWAYS mention this to the examiner"
+    ]
+  },
+  "back_pain": {
+    "diagnostic_code": "5237",
+    "condition_name": "General Rating Formula for Diseases of the Spine",
+    "cfr_reference": "38 CFR § 4.71a",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "When you bend forward (flexion), how far can you go before pain stops you?",
+        "intent": "Range of Motion (ROM) is THE primary rating factor for spine conditions. Forward flexion is measured from standing to the angle you can bend.",
+        "definition": "Normal forward flexion: 90 degrees (fingertips to toes). 40% rating: 30 degrees or less. 20% rating: 30-60 degrees. ROM is measured to the point where pain STOPS you, not where you can push through.",
+        "options": [
+          {
+            "value": "30_or_less",
+            "label": "30 degrees or less (barely past my hips)",
+            "weight": 3
+          },
+          {
+            "value": "30_to_60",
+            "label": "Between 30-60 degrees (somewhere between hips and knees)",
+            "weight": 2
+          },
+          {
+            "value": "60_to_90",
+            "label": "60-90 degrees (past my knees but can't touch toes)",
+            "weight": 1
+          },
+          {
+            "value": "normal",
+            "label": "I can touch my toes (90 degrees)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2",
+        "question": "Is the pain always present, even without movement?",
+        "intent": "Determine if condition meets 'Intervertebral Disc Syndrome' (IVDS) criteria which can add to rating or qualify for separate rating.",
+        "definition": "Incapacitating episodes: Pain so severe you cannot work or perform daily activities, requiring bed rest.",
+        "options": [
+          {
+            "value": "yes_frequent_episodes",
+            "label": "Yes, with frequent incapacitating episodes requiring bed rest (6+ weeks/year total)",
+            "weight": 3
+          },
+          {
+            "value": "yes_some_episodes",
+            "label": "Yes, with some incapacitating episodes (2-4 weeks/year total)",
+            "weight": 2
+          },
+          {
+            "value": "yes_no_episodes",
+            "label": "Yes, constant pain but no incapacitating episodes",
+            "weight": 1
+          },
+          {
+            "value": "only_with_movement",
+            "label": "Only with movement (painful motion)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q3",
+        "question": "Do you have radiating pain, numbness, or weakness in your legs?",
+        "intent": "Identify radiculopathy (nerve involvement) which can add separate ratings or increase the spine rating.",
+        "definition": "Radiculopathy: Nerve damage causing pain, numbness, tingling, or weakness along a nerve path (e.g., down the leg in sciatica).",
+        "options": [
+          {
+            "value": "yes_severe",
+            "label": "Yes, severe symptoms with weakness/loss of reflexes",
+            "weight": 3
+          },
+          {
+            "value": "yes_moderate",
+            "label": "Yes, moderate pain/numbness radiating down leg(s)",
+            "weight": 2
+          },
+          {
+            "value": "yes_mild",
+            "label": "Yes, mild occasional symptoms",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No nerve symptoms",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q4",
+        "question": "Does the pain affect your gait or require you to use assistive devices?",
+        "intent": "Determine functional impact. Abnormal gait or need for assistive devices indicates higher level of impairment.",
+        "definition": "Assistive devices: Cane, walker, wheelchair. Abnormal gait: Limping, inability to walk normally.",
+        "options": [
+          {
+            "value": "wheelchair",
+            "label": "I use a wheelchair due to back pain",
+            "weight": 3
+          },
+          {
+            "value": "cane_walker",
+            "label": "I use a cane or walker",
+            "weight": 2
+          },
+          {
+            "value": "abnormal_gait",
+            "label": "I limp or have abnormal gait but no assistive devices",
+            "weight": 1
+          },
+          {
+            "value": "normal",
+            "label": "I can walk normally",
+            "weight": 0
+          }
+        ],
+        "required": false
+      }
+    ],
+    "rating_calculator": "calculateBackPainRating",
+    "exam_tips": [
+      "CRITICAL: Stop at the point of pain during ROM testing - do NOT push through",
+      "The examiner will measure your ROM with a goniometer or inclinometer",
+      "ROM is measured on your worst day - tell the examiner if today is a 'good day'",
+      "Mention morning stiffness (how long until you can move normally)",
+      "Bring MRI/X-ray reports showing disc issues, stenosis, or other findings",
+      "If you have flare-ups, describe frequency and what triggers them",
+      "If you've modified your work duties or home life due to back pain, mention it"
+    ]
+  },
+  "tinnitus": {
+    "diagnostic_code": "6260",
+    "condition_name": "Tinnitus",
+    "cfr_reference": "38 CFR § 4.87a",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "Do you experience ringing, buzzing, or other sounds in your ears that are not from an external source?",
+        "intent": "Confirm tinnitus diagnosis. Tinnitus is rated at 10% only if recurrent.",
+        "definition": "Tinnitus: Perception of sound (ringing, buzzing, hissing, roaring) when no external sound is present. Must be recurrent (not constant or never present).",
+        "options": [
+          {
+            "value": "yes_constant",
+            "label": "Yes, it is constant (24/7)",
+            "weight": 1
+          },
+          {
+            "value": "yes_frequent",
+            "label": "Yes, it is frequent (daily or near-daily)",
+            "weight": 1
+          },
+          {
+            "value": "yes_recurrent",
+            "label": "Yes, it is recurrent (several times per week)",
+            "weight": 1
+          },
+          {
+            "value": "occasional",
+            "label": "Occasionally (less than weekly)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      }
+    ],
+    "rating_calculator": "calculateTinnitusRating",
+    "exam_tips": [
+      "Tinnitus is rated at a flat 10% if recurrent - there is no higher or lower rating",
+      "The VA does not require objective evidence of tinnitus (it's subjective)",
+      "Mention if it affects your sleep, concentration, or daily activities",
+      "Mention if you use white noise machines, fans, or other coping mechanisms",
+      "If you have hearing loss separately, that is rated under different diagnostic codes"
+    ]
+  },
+  "knee_pain": {
+    "diagnostic_code": "5260",
+    "condition_name": "Limitation of Flexion of the Knee",
+    "cfr_reference": "38 CFR § 4.71a",
+    "tipping_points": [
+      {
+        "id": "q1",
+        "question": "When you bend your knee, how far can you bend it before pain or stiffness stops you?",
+        "intent": "Knee flexion ROM is the primary rating factor. Normal flexion is 140 degrees (heel to buttock).",
+        "definition": "Normal knee flexion: 140 degrees. Ratings based on limitation: 30% = 45 degrees. 20% = 45-90 degrees. 10% = 90-110 degrees.",
+        "options": [
+          {
+            "value": "45_or_less",
+            "label": "45 degrees or less (very limited)",
+            "weight": 3
+          },
+          {
+            "value": "45_to_90",
+            "label": "Between 45-90 degrees",
+            "weight": 2
+          },
+          {
+            "value": "90_to_110",
+            "label": "Between 90-110 degrees",
+            "weight": 1
+          },
+          {
+            "value": "normal",
+            "label": "Normal or near-normal (110+ degrees)",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2",
+        "question": "Is your knee unstable (gives way, buckles, or feels like it might give out)?",
+        "intent": "Instability can qualify for a separate rating under DC 5257 (recurrent subluxation or lateral instability).",
+        "definition": "Instability: Knee gives way, buckles, shifts, or feels unstable during walking or activities. May indicate ligament damage (ACL, MCL, PCL, LCL).",
+        "options": [
+          {
+            "value": "severe_recurrent",
+            "label": "Yes, severe and recurrent instability requiring a brace",
+            "weight": 3
+          },
+          {
+            "value": "moderate",
+            "label": "Yes, moderate instability with frequent episodes",
+            "weight": 2
+          },
+          {
+            "value": "mild",
+            "label": "Yes, mild occasional instability",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No instability",
+            "weight": 0
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q3",
+        "question": "Do you experience swelling (effusion) in your knee?",
+        "intent": "Chronic effusion can add additional percentage under DC 5260.",
+        "definition": "Effusion: Fluid buildup in the knee joint causing visible swelling.",
+        "options": [
+          {
+            "value": "persistent",
+            "label": "Yes, persistent swelling (always present)",
+            "weight": 2
+          },
+          {
+            "value": "recurrent",
+            "label": "Yes, recurrent swelling (comes and goes)",
+            "weight": 1
+          },
+          {
+            "value": "no",
+            "label": "No swelling",
+            "weight": 0
+          }
+        ],
+        "required": true
+      }
+    ],
+    "rating_calculator": "calculateKneePainRating",
+    "exam_tips": [
+      "The examiner will measure knee flexion with a goniometer",
+      "If you wear a knee brace, mention why (instability, pain control, etc.)",
+      "Bring imaging reports (MRI showing meniscus tears, ligament damage, arthritis)",
+      "Mention if you've had surgery (meniscectomy, ACL repair, etc.)",
+      "If the knee gives out, describe specific incidents",
+      "You may qualify for multiple separate ratings (flexion limitation + instability + arthritis)"
+    ]
+  },
+  "mental_disorders_other": {
+    "diagnostic_code": "9434",
+    "condition_name": "Major Depressive Disorder",
+    "cfr_reference": "38 CFR § 4.130",
+    "dbq_form_id": "Mental-Disorders",
+    "dbq_form_path": "/forms/Mental-Disorders.pdf",
+    "category": "Mental Health",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "eating_disorders": {
+    "diagnostic_code": "9520",
+    "condition_name": "Anorexia nervosa",
+    "cfr_reference": "38 CFR § 4.130",
+    "dbq_form_id": "Eating-Disorders",
+    "dbq_form_path": "/forms/Eating-Disorders.pdf",
+    "category": "Mental Health",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hip_thigh": {
+    "diagnostic_code": "5252",
+    "condition_name": "Thigh, limitation of flexion",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Hip-Thigh",
+    "dbq_form_path": "/forms/Hip-Thigh.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "shoulder_arm": {
+    "diagnostic_code": "5201",
+    "condition_name": "Arm, limitation of motion",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Shoulder-Arm",
+    "dbq_form_path": "/forms/Shoulder-Arm.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "neck_cervical": {
+    "diagnostic_code": "5242",
+    "condition_name": "Degenerative arthritis, degenerative disc disease other than intervertebral disc syndrome",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Neck-Cervical",
+    "dbq_form_path": "/forms/Neck-Cervical.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "ankle_conditions": {
+    "diagnostic_code": "5271",
+    "condition_name": "Ankle, limited motion",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Ankle",
+    "dbq_form_path": "/forms/Ankle.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "elbow_forearm": {
+    "diagnostic_code": "5205",
+    "condition_name": "Elbow, ankylosis",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Elbow-Forearm",
+    "dbq_form_path": "/forms/Elbow-Forearm.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "foot_conditions": {
+    "diagnostic_code": "5276",
+    "condition_name": "Flatfoot, acquired",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Foot-Conditions",
+    "dbq_form_path": "/forms/Foot-Conditions.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "wrist_conditions": {
+    "diagnostic_code": "5215",
+    "condition_name": "Wrist, limitation of motion",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Wrist",
+    "dbq_form_path": "/forms/Wrist.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hand_finger": {
+    "diagnostic_code": "5225",
+    "condition_name": "Index finger, ankylosis",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Hand-Finger",
+    "dbq_form_path": "/forms/Hand-Finger.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "muscle_injuries": {
+    "diagnostic_code": "5301",
+    "condition_name": "Group I: Upward rotation of scapula",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Muscle-Injuries",
+    "dbq_form_path": "/forms/Muscle-Injuries.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "tmj_disorder": {
+    "diagnostic_code": "9905",
+    "condition_name": "Temporomandibular Joint (TMJ) Disorder",
+    "cfr_reference": "38 CFR § 4.150",
+    "dbq_form_id": "TMJ",
+    "dbq_form_path": "/forms/TMJ.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "amputations": {
+    "diagnostic_code": "5120",
+    "condition_name": "Complete amputation, upper extremity",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Amputations",
+    "dbq_form_path": "/forms/Amputations.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "bones_skeletal": {
+    "diagnostic_code": "5015",
+    "condition_name": "Bones, neoplasm, benign",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Bones-Skeletal",
+    "dbq_form_path": "/forms/Bones-Skeletal.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "osteomyelitis": {
+    "diagnostic_code": "5000",
+    "condition_name": "Osteomyelitis (Acute, Subacute, or Chronic)",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Osteomyelitis",
+    "dbq_form_path": "/forms/Osteomyelitis.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "fibromyalgia": {
+    "diagnostic_code": "5025",
+    "condition_name": "Fibromyalgia",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Fibromyalgia",
+    "dbq_form_path": "/forms/Fibromyalgia.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "arthritis_general": {
+    "diagnostic_code": "5003",
+    "condition_name": "Degenerative Joint Disease (Osteoarthritis)",
+    "cfr_reference": "38 CFR § 4.71a",
+    "dbq_form_id": "Arthritis",
+    "dbq_form_path": "/forms/Arthritis.pdf",
+    "category": "Musculoskeletal",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "cns_neuromuscular": {
+    "diagnostic_code": "8025",
+    "condition_name": "Myasthenia Gravis",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "CNS-Neuromuscular",
+    "dbq_form_path": "/forms/CNS-Neuromuscular.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "cranial_nerves": {
+    "diagnostic_code": "8207",
+    "condition_name": "Seventh (facial) nerve, paralysis of",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Cranial-Nerves",
+    "dbq_form_path": "/forms/Cranial-Nerves.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "diabetic_neuropathy": {
+    "diagnostic_code": "8510-8540",
+    "condition_name": "Peripheral Neuropathy",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Diabetic-Neuropathy",
+    "dbq_form_path": "/forms/Diabetic-Neuropathy.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "narcolepsy": {
+    "diagnostic_code": "8108",
+    "condition_name": "Narcolepsy",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Narcolepsy",
+    "dbq_form_path": "/forms/Narcolepsy.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "peripheral_nerves": {
+    "diagnostic_code": "8520",
+    "condition_name": "Radiculopathy (Sciatic Nerve)",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Peripheral-Nerves",
+    "dbq_form_path": "/forms/Peripheral-Nerves.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "seizure_epilepsy": {
+    "diagnostic_code": "8910",
+    "condition_name": "Epilepsy (Major Seizures)",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Seizure-Epilepsy",
+    "dbq_form_path": "/forms/Seizure-Epilepsy.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "als": {
+    "diagnostic_code": "8017",
+    "condition_name": "Amyotrophic lateral sclerosis",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "ALS",
+    "dbq_form_path": "/forms/ALS.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "multiple_sclerosis": {
+    "diagnostic_code": "8018",
+    "condition_name": "Multiple Sclerosis",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Multiple-Sclerosis",
+    "dbq_form_path": "/forms/Multiple-Sclerosis.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "parkinsons_disease": {
+    "diagnostic_code": "8004",
+    "condition_name": "Paralysis agitans",
+    "cfr_reference": "38 CFR § 4.124a",
+    "dbq_form_id": "Parkinsons",
+    "dbq_form_path": "/forms/Parkinsons.pdf",
+    "category": "Neurological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "respiratory_conditions": {
+    "diagnostic_code": "6604",
+    "condition_name": "Chronic Obstructive Pulmonary Disease (COPD)",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Respiratory",
+    "dbq_form_path": "/forms/Respiratory.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "sleep_apnea": {
+    "diagnostic_code": "6847",
+    "condition_name": "Sleep Apnea Syndrome",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Sleep-Apnea",
+    "dbq_form_path": "/forms/Sleep-Apnea.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "tuberculosis": {
+    "diagnostic_code": "6730",
+    "condition_name": "Pulmonary TB, chronic, active",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Tuberculosis",
+    "dbq_form_path": "/forms/Tuberculosis.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "sinusitis": {
+    "diagnostic_code": "6510",
+    "condition_name": "Sinusitis (Chronic)",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Sinusitis-Rhinitis",
+    "dbq_form_path": "/forms/Sinusitis-Rhinitis.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "allergic_rhinitis": {
+    "diagnostic_code": "6522",
+    "condition_name": "Allergic Rhinitis",
+    "cfr_reference": "38 CFR § 4.97",
+    "dbq_form_id": "Sinusitis-Rhinitis",
+    "dbq_form_path": "/forms/Sinusitis-Rhinitis.pdf",
+    "category": "Respiratory",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "heart_conditions": {
+    "diagnostic_code": "7005",
+    "condition_name": "Arteriosclerotic Heart Disease (Coronary Artery Disease)",
+    "cfr_reference": "38 CFR § 4.104",
+    "dbq_form_id": "Heart",
+    "dbq_form_path": "/forms/Heart.pdf",
+    "category": "Cardiovascular",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hypertension": {
+    "diagnostic_code": "7101",
+    "condition_name": "Hypertensive Vascular Disease (Hypertension)",
+    "cfr_reference": "38 CFR § 4.104",
+    "dbq_form_id": "Hypertension",
+    "dbq_form_path": "/forms/Hypertension.pdf",
+    "category": "Cardiovascular",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "artery_vein": {
+    "diagnostic_code": "7120",
+    "condition_name": "Varicose veins",
+    "cfr_reference": "38 CFR § 4.104",
+    "dbq_form_id": "Artery-Vein",
+    "dbq_form_path": "/forms/Artery-Vein.pdf",
+    "category": "Cardiovascular",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "esophageal_conditions": {
+    "diagnostic_code": "7206",
+    "condition_name": "Gastroesophageal reflux disease (GERD)",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Esophageal",
+    "dbq_form_path": "/forms/Esophageal.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "stomach_duodenum": {
+    "diagnostic_code": "7304",
+    "condition_name": "Peptic Ulcer Disease",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Stomach-Duodenum",
+    "dbq_form_path": "/forms/Stomach-Duodenum.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "intestinal_conditions": {
+    "diagnostic_code": "7323",
+    "condition_name": "Ulcerative Colitis",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Intestines",
+    "dbq_form_path": "/forms/Intestines.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "liver_conditions": {
+    "diagnostic_code": "7345",
+    "condition_name": "Chronic liver disease without cirrhosis",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Liver",
+    "dbq_form_path": "/forms/Liver.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "gallbladder_conditions": {
+    "diagnostic_code": "7317",
+    "condition_name": "Gallbladder, injury of",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Gallbladder",
+    "dbq_form_path": "/forms/Gallbladder.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "pancreas_conditions": {
+    "diagnostic_code": "7347",
+    "condition_name": "Pancreatitis, chronic",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Pancreas",
+    "dbq_form_path": "/forms/Pancreas.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "peritoneal_adhesions": {
+    "diagnostic_code": "7301",
+    "condition_name": "Peritoneum, adhesions of",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Peritoneal-Adhesions",
+    "dbq_form_path": "/forms/Peritoneal-Adhesions.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "rectum_anus": {
+    "diagnostic_code": "7332",
+    "condition_name": "Rectum and anus, impairment of sphincter control",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Rectum-Anus",
+    "dbq_form_path": "/forms/Rectum-Anus.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hernias": {
+    "diagnostic_code": "7338",
+    "condition_name": "Hernia (femoral, inguinal, umbilical, ventral, incisional)",
+    "cfr_reference": "38 CFR § 4.114",
+    "dbq_form_id": "Hernias",
+    "dbq_form_path": "/forms/Hernias.pdf",
+    "category": "Digestive",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "ear_vestibular": {
+    "diagnostic_code": "6205",
+    "condition_name": "Meniere's syndrome",
+    "cfr_reference": "38 CFR § 4.87 or § 4.87a",
+    "dbq_form_id": "Ear-Vestibular",
+    "dbq_form_path": "/forms/Ear-Vestibular.pdf",
+    "category": "Hearing/Vision",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "eye_conditions": {
+    "diagnostic_code": "6027",
+    "condition_name": "Cataract",
+    "cfr_reference": "38 CFR § 4.75-4.84",
+    "dbq_form_id": "Eye-Conditions",
+    "dbq_form_path": "/forms/Eye-Conditions.pdf",
+    "category": "Hearing/Vision",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "smell_taste_loss": {
+    "diagnostic_code": "6276",
+    "condition_name": "Sense of taste, complete loss",
+    "cfr_reference": "38 CFR § 4.87 or § 4.87a",
+    "dbq_form_id": "Smell-Taste",
+    "dbq_form_path": "/forms/Smell-Taste.pdf",
+    "category": "Hearing/Vision",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "skin_diseases": {
+    "diagnostic_code": "7806",
+    "condition_name": "Eczema (Atopic Dermatitis)",
+    "cfr_reference": "38 CFR § 4.118",
+    "dbq_form_id": "Skin-Diseases",
+    "dbq_form_path": "/forms/Skin-Diseases.pdf",
+    "category": "Skin",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "scars": {
+    "diagnostic_code": "7804",
+    "condition_name": "Scars, unstable or painful",
+    "cfr_reference": "38 CFR § 4.118",
+    "dbq_form_id": "Scars",
+    "dbq_form_path": "/forms/Scars.pdf",
+    "category": "Skin",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "diabetes_mellitus": {
+    "diagnostic_code": "7913",
+    "condition_name": "Diabetes mellitus",
+    "cfr_reference": "38 CFR § 4.119",
+    "dbq_form_id": "Diabetes",
+    "dbq_form_path": "/forms/Diabetes.pdf",
+    "category": "Endocrine",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "endocrine_other": {
+    "diagnostic_code": "7911",
+    "condition_name": "Addison's disease (adrenocortical insufficiency)",
+    "cfr_reference": "38 CFR § 4.119",
+    "dbq_form_id": "Endocrine-Other",
+    "dbq_form_path": "/forms/Endocrine-Other.pdf",
+    "category": "Endocrine",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "thyroid_conditions": {
+    "diagnostic_code": "7903",
+    "condition_name": "Hypothyroidism",
+    "cfr_reference": "38 CFR § 4.119",
+    "dbq_form_id": "Thyroid-Parathyroid",
+    "dbq_form_path": "/forms/Thyroid-Parathyroid.pdf",
+    "category": "Endocrine",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "parathyroid_conditions": {
+    "diagnostic_code": "7904",
+    "condition_name": "Hyperparathyroidism",
+    "cfr_reference": "38 CFR § 4.119",
+    "dbq_form_id": "Thyroid-Parathyroid",
+    "dbq_form_path": "/forms/Thyroid-Parathyroid.pdf",
+    "category": "Endocrine",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "kidney_conditions": {
+    "diagnostic_code": "7502",
+    "condition_name": "Nephritis, chronic",
+    "cfr_reference": "38 CFR § 4.115a or § 4.115b",
+    "dbq_form_id": "Kidney",
+    "dbq_form_path": "/forms/Kidney.pdf",
+    "category": "Genitourinary",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "male_reproductive": {
+    "diagnostic_code": "7528",
+    "condition_name": "Malignant neoplasms of the genitourinary system",
+    "cfr_reference": "38 CFR § 4.115b",
+    "dbq_form_id": "Male-Reproductive",
+    "dbq_form_path": "/forms/Male-Reproductive.pdf",
+    "category": "Genitourinary",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "urinary_tract": {
+    "diagnostic_code": "7512",
+    "condition_name": "Cystitis, chronic",
+    "cfr_reference": "38 CFR § 4.115a or § 4.115b",
+    "dbq_form_id": "Urinary-Tract",
+    "dbq_form_path": "/forms/Urinary-Tract.pdf",
+    "category": "Genitourinary",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "gynecological_conditions": {
+    "diagnostic_code": "7629",
+    "condition_name": "Endometriosis",
+    "cfr_reference": "38 CFR § 4.116",
+    "dbq_form_id": "Gynecological",
+    "dbq_form_path": "/forms/Gynecological.pdf",
+    "category": "Gynecological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "breast_conditions": {
+    "diagnostic_code": "7630",
+    "condition_name": "Malignant Neoplasms of the Breast",
+    "cfr_reference": "38 CFR § 4.116",
+    "dbq_form_id": "Breast",
+    "dbq_form_path": "/forms/Breast.pdf",
+    "category": "Gynecological",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hematologic_leukemia": {
+    "diagnostic_code": "7703",
+    "condition_name": "Leukemia",
+    "cfr_reference": "38 CFR § 4.117",
+    "dbq_form_id": "Hematologic-Lymphatic",
+    "dbq_form_path": "/forms/Hematologic-Lymphatic.pdf",
+    "category": "Hematologic",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "lymphatic_conditions": {
+    "diagnostic_code": "7709",
+    "condition_name": "Hodgkin's lymphoma",
+    "cfr_reference": "38 CFR § 4.117",
+    "dbq_form_id": "Hematologic-Lymphatic",
+    "dbq_form_path": "/forms/Hematologic-Lymphatic.pdf",
+    "category": "Hematologic",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "hiv_related_illness": {
+    "diagnostic_code": "6351",
+    "condition_name": "HIV-Related Illness",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "HIV",
+    "dbq_form_path": "/forms/HIV.pdf",
+    "category": "Infectious Disease",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "infectious_disease_other": {
+    "diagnostic_code": "6320",
+    "condition_name": "Parasitic diseases",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Infectious-Other",
+    "dbq_form_path": "/forms/Infectious-Other.pdf",
+    "category": "Infectious Disease",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "persian_gulf_infectious": {
+    "diagnostic_code": "6301",
+    "condition_name": "Visceral Leishmaniasis",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Persian-Gulf-Infectious",
+    "dbq_form_path": "/forms/Persian-Gulf-Infectious.pdf",
+    "category": "Infectious Disease",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "oral_dental": {
+    "diagnostic_code": "9913",
+    "condition_name": "Teeth, loss of",
+    "cfr_reference": "38 CFR § 4.150",
+    "dbq_form_id": "Oral-Dental",
+    "dbq_form_path": "/forms/Oral-Dental.pdf",
+    "category": "Dental/Oral",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "chronic_fatigue_syndrome": {
+    "diagnostic_code": "6354",
+    "condition_name": "Chronic Fatigue Syndrome",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Chronic-Fatigue",
+    "dbq_form_path": "/forms/Chronic-Fatigue.pdf",
+    "category": "General",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "nutritional_deficiencies": {
+    "diagnostic_code": "6313",
+    "condition_name": "Avitaminosis",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Nutritional",
+    "dbq_form_path": "/forms/Nutritional.pdf",
+    "category": "General",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  },
+  "lupus_autoimmune": {
+    "diagnostic_code": "6350",
+    "condition_name": "Systemic Lupus Erythematosus",
+    "cfr_reference": "38 CFR § 4.88b",
+    "dbq_form_id": "Lupus-Autoimmune",
+    "dbq_form_path": "/forms/Lupus-Autoimmune.pdf",
+    "category": "General",
+    "has_interactive_logic": false,
+    "source": "dbq-index.json + disabilityData.json (S35)"
+  }
+}

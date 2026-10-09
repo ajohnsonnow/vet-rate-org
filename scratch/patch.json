@@ -1,0 +1,1164 @@
+{
+ "5104": {
+  "type": "direct",
+  "ratings": {
+   "100": "Anatomical loss of one hand and loss of use of one foot (non-dominant)"
+  }
+ },
+ "5105": {
+  "type": "direct",
+  "ratings": {
+   "100": "Anatomical loss of one foot and loss of use of one hand (non-dominant)"
+  }
+ },
+ "5121": {
+  "type": "direct",
+  "ratings": {
+   "80": "Above insertion of deltoid (non-dominant)",
+   "90": "Above insertion of deltoid (dominant)"
+  }
+ },
+ "5122": {
+  "type": "direct",
+  "ratings": {
+   "70": "Below insertion of deltoid (non-dominant)",
+   "80": "Below insertion of deltoid (dominant)"
+  }
+ },
+ "5123": {
+  "type": "direct",
+  "ratings": {
+   "70": "Above insertion of pronator teres (non-dominant)",
+   "80": "Above insertion of pronator teres (dominant)"
+  }
+ },
+ "5124": {
+  "type": "direct",
+  "ratings": {
+   "60": "Below insertion of pronator teres (non-dominant)",
+   "70": "Below insertion of pronator teres (dominant)"
+  }
+ },
+ "5126": {
+  "type": "direct",
+  "ratings": {
+   "60": "Five digits of one hand, amputation of (non-dominant)",
+   "70": "Five digits of one hand, amputation of (dominant)"
+  }
+ },
+ "5127": {
+  "type": "direct",
+  "ratings": {
+   "60": "Thumb, index, long and ring (non-dominant)",
+   "70": "Thumb, index, long and ring (dominant)"
+  }
+ },
+ "5128": {
+  "type": "direct",
+  "ratings": {
+   "60": "Thumb, index, long and little (non-dominant)",
+   "70": "Thumb, index, long and little (dominant)"
+  }
+ },
+ "5129": {
+  "type": "direct",
+  "ratings": {
+   "60": "Thumb, index, ring and little (non-dominant)",
+   "70": "Thumb, index, ring and little (dominant)"
+  }
+ },
+ "5130": {
+  "type": "direct",
+  "ratings": {
+   "60": "Thumb, long, ring and little (non-dominant)",
+   "70": "Thumb, long, ring and little (dominant)"
+  }
+ },
+ "5131": {
+  "type": "direct",
+  "ratings": {
+   "50": "Index, long, ring and little (non-dominant)",
+   "60": "Index, long, ring and little (dominant)"
+  }
+ },
+ "5132": {
+  "type": "direct",
+  "ratings": {
+   "50": "Thumb, index and long (non-dominant)",
+   "60": "Thumb, index and long (dominant)"
+  }
+ },
+ "5133": {
+  "type": "direct",
+  "ratings": {
+   "50": "Thumb, index and ring (non-dominant)",
+   "60": "Thumb, index and ring (dominant)"
+  }
+ },
+ "5134": {
+  "type": "direct",
+  "ratings": {
+   "50": "Thumb, index and little (non-dominant)",
+   "60": "Thumb, index and little (dominant)"
+  }
+ },
+ "5135": {
+  "type": "direct",
+  "ratings": {
+   "50": "Thumb, long and ring (non-dominant)",
+   "60": "Thumb, long and ring (dominant)"
+  }
+ },
+ "5136": {
+  "type": "direct",
+  "ratings": {
+   "50": "Thumb, long and little (non-dominant)",
+   "60": "Thumb, long and little (dominant)"
+  }
+ },
+ "5137": {
+  "type": "direct",
+  "ratings": {
+   "50": "Thumb, ring and little (non-dominant)",
+   "60": "Thumb, ring and little (dominant)"
+  }
+ },
+ "5138": {
+  "type": "direct",
+  "ratings": {
+   "40": "Index, long and ring (non-dominant)",
+   "50": "Index, long and ring (dominant)"
+  }
+ },
+ "5139": {
+  "type": "direct",
+  "ratings": {
+   "40": "Index, long and little (non-dominant)",
+   "50": "Index, long and little (dominant)"
+  }
+ },
+ "5140": {
+  "type": "direct",
+  "ratings": {
+   "40": "Index, ring and little (non-dominant)",
+   "50": "Index, ring and little (dominant)"
+  }
+ },
+ "5141": {
+  "type": "direct",
+  "ratings": {
+   "30": "Long, ring and little (non-dominant)",
+   "40": "Long, ring and little (dominant)"
+  }
+ },
+ "5142": {
+  "type": "direct",
+  "ratings": {
+   "40": "Thumb and index (non-dominant)",
+   "50": "Thumb and index (dominant)"
+  }
+ },
+ "5143": {
+  "type": "direct",
+  "ratings": {
+   "40": "Thumb and long (non-dominant)",
+   "50": "Thumb and long (dominant)"
+  }
+ },
+ "5144": {
+  "type": "direct",
+  "ratings": {
+   "40": "Thumb and ring (non-dominant)",
+   "50": "Thumb and ring (dominant)"
+  }
+ },
+ "5145": {
+  "type": "direct",
+  "ratings": {
+   "40": "Thumb and little (non-dominant)",
+   "50": "Thumb and little (dominant)"
+  }
+ },
+ "5146": {
+  "type": "direct",
+  "ratings": {
+   "30": "Index and long (non-dominant)",
+   "40": "Index and long (dominant)"
+  }
+ },
+ "5147": {
+  "type": "direct",
+  "ratings": {
+   "30": "Index and ring (non-dominant)",
+   "40": "Index and ring (dominant)"
+  }
+ },
+ "5148": {
+  "type": "direct",
+  "ratings": {
+   "30": "Index and little (non-dominant)",
+   "40": "Index and little (dominant)"
+  }
+ },
+ "5149": {
+  "type": "direct",
+  "ratings": {
+   "20": "Long and ring (non-dominant)",
+   "30": "Long and ring (dominant)"
+  }
+ },
+ "5150": {
+  "type": "direct",
+  "ratings": {
+   "20": "Long and little (non-dominant)",
+   "30": "Long and little (dominant)"
+  }
+ },
+ "5151": {
+  "type": "direct",
+  "ratings": {
+   "20": "Ring and little (non-dominant)",
+   "30": "Ring and little (dominant)"
+  }
+ },
+ "5152": {
+  "type": "direct",
+  "ratings": {
+   "20": "At metacarpophalangeal joint or through proximal phalanx (non-dominant) / At distal joint or through distal phalanx (dominant/non-dominant)",
+   "30": "With metacarpal resection (non-dominant) / At metacarpophalangeal joint or through proximal phalanx (dominant)",
+   "40": "With metacarpal resection (dominant)"
+  }
+ },
+ "5153": {
+  "type": "direct",
+  "ratings": {
+   "10": "Through middle phalanx or at distal joint (dominant/non-dominant)",
+   "20": "With metacarpal resection (more than one-half the bone lost) (non-dominant) / Without metacarpal resection, at proximal interphalangeal joint or proximal thereto (dominant/non-dominant)",
+   "30": "With metacarpal resection (more than one-half the bone lost) (dominant)"
+  }
+ },
+ "5154": {
+  "type": "direct",
+  "ratings": {
+   "10": "Without metacarpal resection, at proximal interphalangeal joint or proximal thereto (dominant/non-dominant)",
+   "20": "With metacarpal resection (more than one-half the bone lost) (dominant/non-dominant)"
+  }
+ },
+ "5155": {
+  "type": "direct",
+  "ratings": {
+   "10": "Without metacarpal resection, at proximal interphalangeal joint or proximal thereto (dominant/non-dominant)",
+   "20": "With metacarpal resection (more than one-half the bone lost) (dominant/non-dominant)"
+  }
+ },
+ "5156": {
+  "type": "direct",
+  "ratings": {
+   "10": "Without metacarpal resection, at proximal interphalangeal joint or proximal thereto (dominant/non-dominant)",
+   "20": "With metacarpal resection (more than one-half the bone lost) (dominant/non-dominant)"
+  }
+ },
+ "5161": {
+  "type": "direct",
+  "ratings": {
+   "80": "Upper third, one-third of the distance from perineum to knee joint measured from perineum"
+  }
+ },
+ "5162": {
+  "type": "direct",
+  "ratings": {
+   "60": "Middle or lower thirds"
+  }
+ },
+ "5163": {
+  "type": "direct",
+  "ratings": {
+   "60": "With defective stump, thigh amputation recommended"
+  }
+ },
+ "5164": {
+  "type": "direct",
+  "ratings": {
+   "60": "Amputation not improvable by prosthesis controlled by natural knee action"
+  }
+ },
+ "5166": {
+  "type": "direct",
+  "ratings": {
+   "40": "Forefoot, amputation proximal to metatarsal bones (more than one-half of metatarsal loss)"
+  }
+ },
+ "5170": {
+  "type": "direct",
+  "ratings": {
+   "30": "Toes, all, amputation of, without metatarsal loss or transmetatarsal, amputation of, with up to half of metatarsal loss"
+  }
+ },
+ "5172": {
+  "type": "direct",
+  "ratings": {
+   "0": "Without metatarsal involvement",
+   "20": "One or two"
+  }
+ },
+ "5173": {
+  "type": "direct",
+  "ratings": {
+   "10": "Not including great toe",
+   "20": "Including great toe"
+  }
+ },
+ "5202": {
+  "type": "direct",
+  "ratings": {
+   "20": "Recurrent dislocation of at scapulohumeral joint — With frequent episodes and guarding of all arm movements (non-dominant) / Recurrent dislocation of at scapulohumeral joint — With infrequent episodes and guarding of movement only at shoulder level (flexion and/or abduction at 90 °) (dominant/non-dominant) / Malunion of — Marked deformity (non-dominant) / Malunion of — Moderate deformity (dominant/non-dominant)",
+   "30": "Recurrent dislocation of at scapulohumeral joint — With frequent episodes and guarding of all arm movements (dominant) / Malunion of — Marked deformity (dominant)",
+   "40": "Fibrous union of (non-dominant)",
+   "50": "Nonunion of (false flail joint) (non-dominant) / Fibrous union of (dominant)",
+   "60": "Nonunion of (false flail joint) (dominant)",
+   "70": "Loss of head of (flail shoulder) (non-dominant)",
+   "80": "Loss of head of (flail shoulder) (dominant)"
+  }
+ },
+ "5205": {
+  "type": "direct",
+  "ratings": {
+   "30": "Favorable, at an angle between 90° and 70° (non-dominant)",
+   "40": "Intermediate, at an angle of more than 90°, or between 70° and 50° (non-dominant) / Favorable, at an angle between 90° and 70° (dominant)",
+   "50": "Unfavorable, at an angle of less than 50° or with complete loss of supination or pronation (non-dominant) / Intermediate, at an angle of more than 90°, or between 70° and 50° (dominant)",
+   "60": "Unfavorable, at an angle of less than 50° or with complete loss of supination or pronation (dominant)"
+  }
+ },
+ "5206": {
+  "type": "direct",
+  "ratings": {
+   "0": "Flexion limited to 110° (dominant/non-dominant)",
+   "10": "Flexion limited to 100° (dominant/non-dominant)",
+   "20": "Flexion limited to 70° (non-dominant) / Flexion limited to 90° (dominant/non-dominant)",
+   "30": "Flexion limited to 55° (non-dominant) / Flexion limited to 70° (dominant)",
+   "40": "Flexion limited to 45° (non-dominant) / Flexion limited to 55° (dominant)",
+   "50": "Flexion limited to 45° (dominant)"
+  }
+ },
+ "5207": {
+  "type": "direct",
+  "ratings": {
+   "10": "Extension limited to 60° (dominant/non-dominant) / Extension limited to 45° (dominant/non-dominant)",
+   "20": "Extension limited to 90° (non-dominant) / Extension limited to 75° (dominant/non-dominant)",
+   "30": "Extension limited to 100° (non-dominant) / Extension limited to 90° (dominant)",
+   "40": "Extension limited to 110° (non-dominant) / Extension limited to 100° (dominant)",
+   "50": "Extension limited to 110° (dominant)"
+  }
+ },
+ "5208": {
+  "type": "direct",
+  "ratings": {
+   "20": "Forearm, flexion limited to 100° and extension to 45° (dominant/non-dominant)"
+  }
+ },
+ "5209": {
+  "type": "direct",
+  "ratings": {
+   "20": "Joint fracture, with marked cubitus varus or cubitus valgus deformity or with ununited fracture of head of radius (dominant/non-dominant)",
+   "50": "Elbow, other impairment of Flail joint (non-dominant)",
+   "60": "Elbow, other impairment of Flail joint (dominant)"
+  }
+ },
+ "5210": {
+  "type": "direct",
+  "ratings": {
+   "40": "Radius and ulna, nonunion of, with flail false joint (non-dominant)",
+   "50": "Radius and ulna, nonunion of, with flail false joint (dominant)"
+  }
+ },
+ "5211": {
+  "type": "direct",
+  "ratings": {
+   "10": "Nonunion in upper half, with false movement — Malunion of, with bad alignment (dominant/non-dominant)",
+   "20": "Nonunion in upper half, with false movement — Without loss of bone substance or deformity (non-dominant) / Nonunion in upper half, with false movement — Nonunion in lower half (dominant/non-dominant)",
+   "30": "Nonunion in upper half, with false movement — With loss of bone substance (1 inch (2.5 cms.) or more) and marked deformity (non-dominant) / Nonunion in upper half, with false movement — Without loss of bone substance or deformity (dominant)",
+   "40": "Nonunion in upper half, with false movement — With loss of bone substance (1 inch (2.5 cms.) or more) and marked deformity (dominant)"
+  }
+ },
+ "5212": {
+  "type": "direct",
+  "ratings": {
+   "10": "Nonunion in lower half, with false movement — Malunion of, with bad alignment (dominant/non-dominant)",
+   "20": "Nonunion in lower half, with false movement — Without loss of bone substance or deformity (non-dominant) / Nonunion in lower half, with false movement — Nonunion in upper half (dominant/non-dominant)",
+   "30": "Nonunion in lower half, with false movement — With loss of bone substance (1 inch (2.5 cms.) or more) and marked deformity (non-dominant) / Nonunion in lower half, with false movement — Without loss of bone substance or deformity (dominant)",
+   "40": "Nonunion in lower half, with false movement — With loss of bone substance (1 inch (2.5 cms.) or more) and marked deformity (dominant)"
+  }
+ },
+ "5213": {
+  "type": "direct",
+  "ratings": {
+   "10": "Limitation of supination — To 30° or less (dominant/non-dominant)",
+   "20": "Loss of (bone fusion) — The hand fixed in full pronation (non-dominant) / Loss of (bone fusion) — The hand fixed near the middle of the arc or moderate pronation (dominant/non-dominant) / Limitation of pronation — Motion lost beyond middle of arc (non-dominant) / Limitation of pronation — Motion lost beyond last quarter of arc, the hand does not approach full pronation (dominant/non-dominant)",
+   "30": "Loss of (bone fusion) — The hand fixed in supination or hyperpronation (non-dominant) / Loss of (bone fusion) — The hand fixed in full pronation (dominant) / Limitation of pronation — Motion lost beyond middle of arc (dominant)",
+   "40": "Loss of (bone fusion) — The hand fixed in supination or hyperpronation (dominant)"
+  }
+ },
+ "5216": {
+  "type": "direct",
+  "ratings": {
+   "50": "Five digits of one hand, unfavorable ankylosis of (non-dominant)",
+   "60": "Five digits of one hand, unfavorable ankylosis of (dominant)"
+  }
+ },
+ "5217": {
+  "type": "direct",
+  "ratings": {
+   "40": "Index, long, ring, and little fingers (non-dominant)",
+   "50": "Thumb and any three fingers (non-dominant) / Index, long, ring, and little fingers (dominant)",
+   "60": "Thumb and any three fingers (dominant)"
+  }
+ },
+ "5218": {
+  "type": "direct",
+  "ratings": {
+   "20": "Long, ring, and little fingers (non-dominant)",
+   "30": "Index, long, and ring; index, long, and little; or index, ring, and little fingers (non-dominant) / Long, ring, and little fingers (dominant)",
+   "40": "Thumb and any two fingers (non-dominant) / Index, long, and ring; index, long, and little; or index, ring, and little fingers (dominant)",
+   "50": "Thumb and any two fingers (dominant)"
+  }
+ },
+ "5219": {
+  "type": "direct",
+  "ratings": {
+   "20": "Index and long; index and ring; or index and little fingers (non-dominant) / Long and ring; long and little; or ring and little fingers (dominant/non-dominant)",
+   "30": "Thumb and any finger (non-dominant) / Index and long; index and ring; or index and little fingers (dominant)",
+   "40": "Thumb and any finger (dominant)"
+  }
+ },
+ "5220": {
+  "type": "direct",
+  "ratings": {
+   "40": "Five digits of one hand, favorable ankylosis of (non-dominant)",
+   "50": "Five digits of one hand, favorable ankylosis of (dominant)"
+  }
+ },
+ "5221": {
+  "type": "direct",
+  "ratings": {
+   "30": "Index, long, ring, and little fingers (non-dominant)",
+   "40": "Thumb and any three fingers (non-dominant) / Index, long, ring, and little fingers (dominant)",
+   "50": "Thumb and any three fingers (dominant)"
+  }
+ },
+ "5222": {
+  "type": "direct",
+  "ratings": {
+   "20": "Index, long, and ring; index, long, and little; or index, ring, and little fingers (non-dominant) / Long, ring and little fingers (dominant/non-dominant)",
+   "30": "Thumb and any two fingers (non-dominant) / Index, long, and ring; index, long, and little; or index, ring, and little fingers (dominant)",
+   "40": "Thumb and any two fingers (dominant)"
+  }
+ },
+ "5223": {
+  "type": "direct",
+  "ratings": {
+   "10": "Long and ring; long and little; or ring and little fingers (dominant/non-dominant)",
+   "20": "Thumb and any finger (non-dominant) / Index and long; index and ring; or index and little fingers (dominant/non-dominant)",
+   "30": "Thumb and any finger (dominant)"
+  }
+ },
+ "5225": {
+  "type": "direct",
+  "ratings": {
+   "10": "Unfavorable or favorable (dominant/non-dominant)"
+  }
+ },
+ "5226": {
+  "type": "direct",
+  "ratings": {
+   "10": "Unfavorable or favorable (dominant/non-dominant)"
+  }
+ },
+ "5227": {
+  "type": "direct",
+  "ratings": {
+   "0": "Unfavorable or favorable (dominant/non-dominant)"
+  }
+ },
+ "5229": {
+  "type": "direct",
+  "ratings": {
+   "0": "With a gap of less than one inch (2.5 cm.) between the fingertip and the proximal transverse crease of the palm, with the finger flexed to the extent possible, and; extension is limited by no more than 30 degrees (dominant/non-dominant)",
+   "10": "With a gap of one inch (2.5 cm.) or more between the fingertip and the proximal transverse crease of the palm, with the finger flexed to the extent possible, or; with extension limited by more than 30 degrees (dominant/non-dominant)"
+  }
+ },
+ "5230": {
+  "type": "direct",
+  "ratings": {
+   "0": "Any limitation of motion (dominant/non-dominant)",
+   "10": "(For diagnostic codes 5235 to 5243 unless 5243 is evaluated under the Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes) — Forward flexion of the thoracolumbar spine greater than 60 degrees but not greater than 85 degrees; or, forward flexion of the cervical spine greater than 30 degrees but not greater than 40 degrees; or, combined range of motion of the thoracolumbar spine greater than 120 degrees but not greater than 235 degrees; or, combined range of motion of the cervical spine greater than 170 degrees but not greater than 335 degrees; or, muscle spasm, guarding, or localized tenderness not resulting in abnormal gait or abnormal spinal contour; or, vertebral body fracture with loss of 50 percent or more of the height (dominant)",
+   "20": "(For diagnostic codes 5235 to 5243 unless 5243 is evaluated under the Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes) — Forward flexion of the thoracolumbar spine greater than 30 degrees but not greater than 60 degrees; or, forward flexion of the cervical spine greater than 15 degrees but not greater than 30 degrees; or, the combined range of motion of the thoracolumbar spine not greater than 120 degrees; or, the combined range of motion of the cervical spine not greater than 170 degrees; or, muscle spasm or guarding severe enough to result in an abnormal gait or abnormal spinal contour such as scoliosis, reversed lordosis, or abnormal kyphosis (dominant)",
+   "30": "(For diagnostic codes 5235 to 5243 unless 5243 is evaluated under the Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes) — Forward flexion of the cervical spine 15 degrees or less; or, favorable ankylosis of the entire cervical spine (dominant)",
+   "40": "(For diagnostic codes 5235 to 5243 unless 5243 is evaluated under the Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes) — Unfavorable ankylosis of the entire cervical spine; or, forward flexion of the thoracolumbar spine 30 degrees or less; or, favorable ankylosis of the entire thoracolumbar spine (dominant)",
+   "50": "(For diagnostic codes 5235 to 5243 unless 5243 is evaluated under the Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes) — Unfavorable ankylosis of the entire thoracolumbar spine (dominant)",
+   "100": "(For diagnostic codes 5235 to 5243 unless 5243 is evaluated under the Formula for Rating Intervertebral Disc Syndrome Based on Incapacitating Episodes) — Unfavorable ankylosis of the entire spine (dominant)"
+  }
+ },
+ "5244": {
+  "type": "direct",
+  "ratings": {
+   "10": "Quadriplegia: Rate separately under diagnostic codes 5109 and 5110 and combine evaluations in accordance with § 4.25 . — With incapacitating episodes having a total duration of at least one week but less than 2 weeks during the past 12 months",
+   "20": "Quadriplegia: Rate separately under diagnostic codes 5109 and 5110 and combine evaluations in accordance with § 4.25 . — With incapacitating episodes having a total duration of at least 2 weeks but less than 4 weeks during the past 12 months",
+   "40": "Quadriplegia: Rate separately under diagnostic codes 5109 and 5110 and combine evaluations in accordance with § 4.25 . — With incapacitating episodes having a total duration of at least 4 weeks but less than 6 weeks during the past 12 months",
+   "60": "Quadriplegia: Rate separately under diagnostic codes 5109 and 5110 and combine evaluations in accordance with § 4.25 . — With incapacitating episodes having a total duration of at least 6 weeks during the past 12 months"
+  }
+ },
+ "5255": {
+  "type": "direct",
+  "ratings": {
+   "60": "Fracture of shaft or anatomical neck of — With nonunion, without loose motion, weight bearing preserved with aid of brace / Fracture of shaft or anatomical neck of — Fracture of surgical neck of, with false joint",
+   "80": "Fracture of shaft or anatomical neck of — With nonunion, with loose motion (spiral or oblique fracture)"
+  }
+ },
+ "5272": {
+  "type": "direct",
+  "ratings": {
+   "10": "In good weight-bearing position",
+   "20": "In poor weight-bearing position"
+  }
+ },
+ "5273": {
+  "type": "direct",
+  "ratings": {
+   "10": "Moderate deformity",
+   "20": "Marked deformity"
+  }
+ },
+ "5274": {
+  "type": "direct",
+  "ratings": {
+   "20": "Astragalectomy"
+  }
+ },
+ "5275": {
+  "type": "direct",
+  "ratings": {
+   "10": "1 1 ⁄ 4 to 2 inches (3.2 cms. to 5.1 cms.)",
+   "20": "2 to 2 1 ⁄ 2 inches (5.1 cms. to 6.4 cms.)",
+   "30": "2 1 ⁄ 2 to 3 inches (6.4 cms. to 7.6 cms.)",
+   "40": "3 to 3 1 ⁄ 2 inches (7.6 cms. to 8.9 cms.)",
+   "50": "3 1 ⁄ 2 to 4 inches (8.9 cms. to 10.2 cms.)",
+   "60": "Over 4 inches (10.2 cms.)"
+  }
+ },
+ "5277": {
+  "type": "direct",
+  "ratings": {
+   "10": "A symptomatic condition secondary to many constitutional conditions, characterized by atrophy of the musculature, disturbed circulation, and weakness — Rate the underlying condition, minimum rating"
+  }
+ },
+ "5278": {
+  "type": "direct",
+  "ratings": {
+   "0": "Great toe dorsiflexed, some limitation of dorsiflexion at ankle, definite tenderness under metatarsal heads — Slight",
+   "10": "Great toe dorsiflexed, some limitation of dorsiflexion at ankle, definite tenderness under metatarsal heads — Bilateral / Great toe dorsiflexed, some limitation of dorsiflexion at ankle, definite tenderness under metatarsal heads — Unilateral",
+   "20": "All toes tending to dorsiflexion, limitation of dorsiflexion at ankle to right angle, shortened plantar fascia, and marked tenderness under metatarsal heads — Unilateral",
+   "30": "Marked contraction of plantar fascia with dropped forefoot, all toes hammer toes, very painful callosities, marked varus deformity — Unilateral / All toes tending to dorsiflexion, limitation of dorsiflexion at ankle to right angle, shortened plantar fascia, and marked tenderness under metatarsal heads — Bilateral",
+   "50": "Marked contraction of plantar fascia with dropped forefoot, all toes hammer toes, very painful callosities, marked varus deformity — Bilateral"
+  }
+ },
+ "5279": {
+  "type": "direct",
+  "ratings": {
+   "10": "Metatarsalgia, anterior (Morton's disease), unilateral, or bilateral"
+  }
+ },
+ "5280": {
+  "type": "direct",
+  "ratings": {
+   "10": "Operated with resection of metatarsal head / Severe, if equivalent to amputation of great toe"
+  }
+ },
+ "5281": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as hallux valgus, severe (diagnostic code 5280). Note: Not to be combined with claw foot ratings."
+ },
+ "5282": {
+  "type": "direct",
+  "ratings": {
+   "0": "Single toes",
+   "10": "All toes, unilateral without claw foot"
+  }
+ },
+ "5283": {
+  "type": "direct",
+  "ratings": {
+   "10": "Moderate",
+   "20": "Moderately severe",
+   "30": "Severe"
+  }
+ },
+ "5284": {
+  "type": "direct",
+  "ratings": {
+   "10": "Moderate",
+   "20": "Moderately severe",
+   "30": "Severe"
+  }
+ },
+ "5309": {
+  "type": "rated-as",
+  "ratings": {
+   "10": "Intrinsic muscles of the hand — rate on limitation of motion, minimum 10 percent"
+  },
+  "ratedUnder": "The hand is so compact that isolated muscle injuries are rare; rate on limitation of motion, minimum 10 percent."
+ },
+ "5310": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight / Dorsal: (1) Extensor hallucis brevis; (2) extensor digitorum brevis. Other important dorsal structures: cruciate, crural, deltoid, and other ligaments; tendons of long extensors of toes and peronei muscles — Slight",
+   "10": "Moderate / Dorsal: (1) Extensor hallucis brevis; (2) extensor digitorum brevis. Other important dorsal structures: cruciate, crural, deltoid, and other ligaments; tendons of long extensors of toes and peronei muscles — Moderately Severe / Dorsal: (1) Extensor hallucis brevis; (2) extensor digitorum brevis. Other important dorsal structures: cruciate, crural, deltoid, and other ligaments; tendons of long extensors of toes and peronei muscles — Moderate",
+   "20": "Moderately Severe / Dorsal: (1) Extensor hallucis brevis; (2) extensor digitorum brevis. Other important dorsal structures: cruciate, crural, deltoid, and other ligaments; tendons of long extensors of toes and peronei muscles — Severe",
+   "30": "Severe"
+  }
+ },
+ "5311": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "20": "Moderately Severe",
+   "30": "Severe"
+  }
+ },
+ "5312": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "20": "Moderately Severe",
+   "30": "Severe"
+  }
+ },
+ "5313": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "30": "Moderately Severe",
+   "40": "Severe"
+  }
+ },
+ "5314": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "30": "Moderately Severe",
+   "40": "Severe"
+  }
+ },
+ "5315": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "20": "Moderately Severe",
+   "30": "Severe"
+  }
+ },
+ "5316": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "30": "Moderately Severe",
+   "40": "Severe"
+  }
+ },
+ "5318": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "20": "Moderately Severe",
+   "30": "Severe"
+  }
+ },
+ "5319": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "30": "Moderately Severe",
+   "50": "Severe"
+  }
+ },
+ "5320": {
+  "type": "direct",
+  "ratings": {
+   "0": "Cervical and thoracic region — Slight / Lumbar region — Slight",
+   "10": "Cervical and thoracic region — Moderate",
+   "20": "Cervical and thoracic region — Moderately Severe / Lumbar region — Moderate",
+   "40": "Cervical and thoracic region — Severe / Lumbar region — Moderately Severe",
+   "60": "Lumbar region — Severe"
+  }
+ },
+ "5321": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "20": "Severe or Moderately Severe"
+  }
+ },
+ "5322": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "20": "Moderately Severe",
+   "30": "Severe"
+  }
+ },
+ "5323": {
+  "type": "direct",
+  "ratings": {
+   "0": "Slight",
+   "10": "Moderate",
+   "20": "Moderately Severe",
+   "30": "Severe"
+  }
+ },
+ "5325": {
+  "type": "rated-as",
+  "ratings": {
+   "10": "Minimum, if interfering to any extent with mastication"
+  },
+  "ratedUnder": "Evaluate functional impairment as seventh (facial) cranial nerve neuropathy (diagnostic code 8207), disfiguring scar (diagnostic code 7800), etc."
+ },
+ "5326": {
+  "type": "direct",
+  "ratings": {
+   "10": "Muscle hernia, extensive, without other injury to the muscle"
+  }
+ },
+ "5327": {
+  "type": "direct",
+  "ratings": {
+   "100": "Muscle, neoplasm of, malignant (excluding soft tissue sarcoma)"
+  },
+  "notes": [
+   "A rating of 100 percent continues beyond cessation of treatment; six months after discontinuance a mandatory VA examination determines the appropriate rating (§ 3.105(e)). If no local recurrence or metastasis, rate on residual impairment of function."
+  ]
+ },
+ "5328": {
+  "type": "rated-as",
+  "ratedUnder": "Muscle, neoplasm of, benign, postoperative. Rate on impairment of function, i.e., limitation of motion, or scars (diagnostic code 7805), etc."
+ },
+ "5329": {
+  "type": "direct",
+  "ratings": {
+   "100": "Sarcoma, soft tissue (of muscle, fat, or fibrous connective tissue)"
+  },
+  "notes": [
+   "A rating of 100 percent continues beyond cessation of treatment; six months after discontinuance a mandatory VA examination determines the appropriate rating (§ 3.105(e)). If no local recurrence or metastasis, rate on residual impairment of function."
+  ]
+ },
+ "5330": {
+  "type": "rated-as",
+  "ratedUnder": "Rate each affected muscle group separately and combine in accordance with § 4.25. Separately evaluate any chronic renal complications within the appropriate body system."
+ },
+ "5331": {
+  "type": "rated-as",
+  "ratedUnder": "Rate each affected muscle group separately and combine in accordance with § 4.25."
+ },
+ "6723": {
+  "type": "rated-as",
+  "ratedUnder": "Pulmonary tuberculosis, chronic, minimal, inactive — rate under the graduated ratings for inactive pulmonary tuberculosis (38 CFR § 4.97, and §§ 4.88b/4.89 for cases entitled to the pre-1968 graduated schedule)."
+ },
+ "6724": {
+  "type": "direct",
+  "ratings": {
+   "0": "Otherwise",
+   "20": "Following moderately advanced lesions, provided there is continued disability, emphysema, dyspnea on exertion, impairment of health, etc",
+   "30": "Thereafter, for five years, or to eleven years after date of inactivity / Following far advanced lesions diagnosed at any time while the disease process was active, minimum",
+   "50": "Thereafter for four years, or in any event, to six years after date of inactivity",
+   "100": "General Rating Formula for Inactive Pulmonary Tuberculosis: For two years after date of inactivity, following active tuberculosis, which was clinically identified during service or subsequently"
+  }
+ },
+ "7124": {
+  "type": "direct",
+  "ratings": {
+   "0": "Characteristic attacks without trophic change(s)",
+   "10": "Characteristic attacks associated with trophic change(s), such as tight, shiny skin"
+  }
+ },
+ "7352": {
+  "type": "direct",
+  "ratings": {
+   "30": "Minimum rating",
+   "100": "For an indefinite period from the date of hospital admission for transplant surgery"
+  }
+ },
+ "7354": {
+  "type": "rated-as",
+  "ratedUnder": "Rate under diagnostic code 7345 (chronic liver disease without cirrhosis)."
+ },
+ "7355": {
+  "type": "direct",
+  "ratings": {
+   "30": "Malabsorption syndrome with chronic diarrhea managed by medically-prescribed dietary intervention such as prescribed gluten-free diet; and without nutritional deficiencies",
+   "50": "Malabsorption syndrome with chronic diarrhea managed by medically-prescribed dietary intervention such as prescribed gluten-free diet, with nutritional deficiencies due to lactase and pancreatic insufficiency; and with systemic manifestations including, but not limited to, weakness and fatigue, dermatitis, lymph node enlargement, hypocalcemia, low vitamin levels, or atrophy of the inner intestinal lining shown on biopsy",
+   "80": "Malabsorption syndrome with weakness which interferes with activities of daily living; and weight loss resulting in wasting and nutritional deficiencies; and with systemic manifestations including but not limited to, weakness and fatigue, dermatitis, lymph node enlargement, hypocalcemia, low vitamin levels; and anemia related to malabsorption; and episodes of abdominal pain and diarrhea due to lactase deficiency or pancreatic insufficiency"
+  }
+ },
+ "7356": {
+  "type": "direct",
+  "ratings": {
+   "10": "Intermittent abdominal pain with epigastric fullness associated with bloating; and without evidence of a structural gastrointestinal disease",
+   "30": "With symptoms of chronic intestinal pseudo-obstruction (CIPO) or symptoms of intestinal motility disorder, including but not limited to, abdominal pain, bloating, feeling of epigastric fullness, dyspepsia, nausea and vomiting, regurgitation, constipation, and diarrhea, managed by ambulatory care; and requiring prescribed dietary management or manipulation",
+   "50": "Requiring intermittent tube feeding for nutritional support; with recurrent emergency treatment for episodes of intestinal obstruction or regurgitation due to poor gastric emptying, abdominal pain, recurrent nausea, or recurrent vomiting",
+   "80": "Requiring complete dependence on total parenteral nutrition (TPN) or continuous tube feeding for nutritional support"
+  }
+ },
+ "7357": {
+  "type": "direct",
+  "ratings": {
+   "30": "Minimum"
+  }
+ },
+ "7533": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as renal dysfunction (38 CFR § 4.115a)."
+ },
+ "7534": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as renal dysfunction (38 CFR § 4.115a)."
+ },
+ "7535": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as renal dysfunction (38 CFR § 4.115a)."
+ },
+ "7536": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as renal dysfunction (38 CFR § 4.115a)."
+ },
+ "7537": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as renal dysfunction (38 CFR § 4.115a)."
+ },
+ "7538": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as renal dysfunction (38 CFR § 4.115a)."
+ },
+ "7539": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as renal dysfunction (38 CFR § 4.115a)."
+ },
+ "7543": {
+  "type": "direct",
+  "ratings": {
+   "0": "Varicocele/Hydrocele"
+  }
+ },
+ "7544": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as renal dysfunction (38 CFR § 4.115a)."
+ },
+ "7545": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as voiding dysfunction or urinary tract infection, whichever is predominant (38 CFR § 4.115a). Review for entitlement to special monthly compensation under § 3.350."
+ },
+ "7831": {
+  "type": "direct",
+  "ratings": {
+   "0": "With loss of hair limited to scalp and face",
+   "10": "With loss of all body hair"
+  }
+ },
+ "7832": {
+  "type": "direct",
+  "ratings": {
+   "0": "Able to handle paper or tools after therapy",
+   "30": "Unable to handle paper or tools because of moisture, and unresponsive to therapy"
+  }
+ },
+ "7833": {
+  "type": "rated-as",
+  "ratedUnder": "Rate as scars (diagnostic codes 7801, 7802, 7804, or 7805), disfigurement of the head, face, or neck (diagnostic code 7800), or impairment of function. If therapy comparable to that for systemic malignancies is required, a 100-percent evaluation is assigned from onset of treatment, with a mandatory VA examination six months after completion (§ 3.105(e))."
+ },
+ "8610": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8510). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8611": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8511). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8612": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8512). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8613": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8513). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8614": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8514). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8615": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8515). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8616": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8516). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8617": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8517). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8618": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8518). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8619": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8519). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8621": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8521). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8622": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8522). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8623": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8523). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8624": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8524). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8625": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8525). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8626": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8526). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8627": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8527). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8628": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8528). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8629": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8529). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8630": {
+  "type": "rated-as",
+  "ratedUnder": "Neuritis of this nerve is rated on the scale for paralysis of the nerve (diagnostic code 8530). Per 38 CFR § 4.123, the maximum rating for neuritis not characterized by organic changes (loss of reflexes, muscle atrophy, sensory disturbances, constant pain) is that for moderate incomplete paralysis — or moderately severe incomplete paralysis with sciatic nerve involvement."
+ },
+ "8710": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8510). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8711": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8511). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8712": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8512). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8713": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8513). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8714": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8514). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8715": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8515). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8716": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8516). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8717": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8517). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8718": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8518). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8719": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8519). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8720": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8520). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8721": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8521). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8722": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8522). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8723": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8523). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8724": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8524). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8725": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8525). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8726": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8526). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8727": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8527). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8728": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8528). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8729": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8529). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8730": {
+  "type": "rated-as",
+  "ratedUnder": "Neuralgia of this nerve is rated on the same scale as paralysis of the nerve (diagnostic code 8530). Per 38 CFR § 4.124, the maximum rating for neuralgia is that for moderate incomplete paralysis."
+ },
+ "8910": {
+  "type": "formula",
+  "ratings": {
+   "10": "A confirmed diagnosis of epilepsy with a history of seizures",
+   "20": "At least 1 major seizure in the last 2 years; or at least 2 minor seizures in the last 6 months",
+   "40": "At least 1 major seizure in the last 6 months or 2 in the last year; or averaging at least 5 to 8 minor seizures weekly",
+   "60": "Averaging at least 1 major seizure in 4 months over the last year; or 9-10 minor seizures per week",
+   "80": "Averaging at least 1 major seizure in 3 months over the last year; or more than 10 minor seizures weekly",
+   "100": "Averaging at least 1 major seizure per month over the last year"
+  },
+  "formula": "General Rating Formula for Major and Minor Epileptic Seizures (38 CFR § 4.124a). A major seizure is a generalized tonic-clonic convulsion with unconsciousness; a minor seizure is a brief interruption in consciousness (pure petit mal), myoclonic, or akinetic type. When continuous medication is shown necessary for control, the minimum evaluation is 10 percent.",
+  "notes": [
+   "Grand mal epilepsy — rate under the general rating formula for major seizures."
+  ]
+ },
+ "8911": {
+  "type": "direct",
+  "ratings": {
+   "10": "General Rating Formula for Major and Minor Epileptic Seizures — A confirmed diagnosis of epilepsy with a history of seizures",
+   "20": "General Rating Formula for Major and Minor Epileptic Seizures — At least 1 major seizure in the last 2 years; or at least 2 minor seizures in the last 6 months",
+   "40": "General Rating Formula for Major and Minor Epileptic Seizures — At least 1 major seizure in the last 6 months or 2 in the last year; or averaging at least 5 to 8 minor seizures weekly",
+   "60": "General Rating Formula for Major and Minor Epileptic Seizures — Averaging at least 1 major seizure in 4 months over the last year; or 9-10 minor seizures per week",
+   "80": "General Rating Formula for Major and Minor Epileptic Seizures — Averaging at least 1 major seizure in 3 months over the last year; or more than 10 minor seizures weekly",
+   "100": "General Rating Formula for Major and Minor Epileptic Seizures — Averaging at least 1 major seizure per month over the last year"
+  }
+ },
+ "8912": {
+  "type": "formula",
+  "ratings": {
+   "10": "A confirmed diagnosis of epilepsy with a history of seizures",
+   "20": "At least 1 major seizure in the last 2 years; or at least 2 minor seizures in the last 6 months",
+   "40": "At least 1 major seizure in the last 6 months or 2 in the last year; or averaging at least 5 to 8 minor seizures weekly",
+   "60": "Averaging at least 1 major seizure in 4 months over the last year; or 9-10 minor seizures per week",
+   "80": "Averaging at least 1 major seizure in 3 months over the last year; or more than 10 minor seizures weekly",
+   "100": "Averaging at least 1 major seizure per month over the last year"
+  },
+  "formula": "General Rating Formula for Major and Minor Epileptic Seizures (38 CFR § 4.124a). A major seizure is a generalized tonic-clonic convulsion with unconsciousness; a minor seizure is a brief interruption in consciousness (pure petit mal), myoclonic, or akinetic type. When continuous medication is shown necessary for control, the minimum evaluation is 10 percent.",
+  "notes": [
+   "Jacksonian and focal motor or sensory epilepsy — rate under the general rating formula, as major or minor seizures per the manifestations."
+  ]
+ },
+ "8913": {
+  "type": "formula",
+  "ratings": {
+   "10": "A confirmed diagnosis of epilepsy with a history of seizures",
+   "20": "At least 1 major seizure in the last 2 years; or at least 2 minor seizures in the last 6 months",
+   "40": "At least 1 major seizure in the last 6 months or 2 in the last year; or averaging at least 5 to 8 minor seizures weekly",
+   "60": "Averaging at least 1 major seizure in 4 months over the last year; or 9-10 minor seizures per week",
+   "80": "Averaging at least 1 major seizure in 3 months over the last year; or more than 10 minor seizures weekly",
+   "100": "Averaging at least 1 major seizure per month over the last year"
+  },
+  "formula": "General Rating Formula for Major and Minor Epileptic Seizures (38 CFR § 4.124a). A major seizure is a generalized tonic-clonic convulsion with unconsciousness; a minor seizure is a brief interruption in consciousness (pure petit mal), myoclonic, or akinetic type. When continuous medication is shown necessary for control, the minimum evaluation is 10 percent.",
+  "notes": [
+   "Diencephalic epilepsy — rate as minor seizures, except in the presence of major and minor seizures rate the predominating type."
+  ]
+ },
+ "8914": {
+  "type": "formula",
+  "ratings": {
+   "10": "A confirmed diagnosis of epilepsy with a history of seizures",
+   "20": "At least 1 major seizure in the last 2 years; or at least 2 minor seizures in the last 6 months",
+   "40": "At least 1 major seizure in the last 6 months or 2 in the last year; or averaging at least 5 to 8 minor seizures weekly",
+   "60": "Averaging at least 1 major seizure in 4 months over the last year; or 9-10 minor seizures per week",
+   "80": "Averaging at least 1 major seizure in 3 months over the last year; or more than 10 minor seizures weekly",
+   "100": "Averaging at least 1 major seizure per month over the last year"
+  },
+  "formula": "General Rating Formula for Major and Minor Epileptic Seizures (38 CFR § 4.124a). A major seizure is a generalized tonic-clonic convulsion with unconsciousness; a minor seizure is a brief interruption in consciousness (pure petit mal), myoclonic, or akinetic type. When continuous medication is shown necessary for control, the minimum evaluation is 10 percent.",
+  "notes": [
+   "Psychomotor epilepsy — rated as major seizures when characterized by automatic states and/or generalized convulsions with unconsciousness; otherwise rated as minor seizures."
+  ]
+ },
+ "9520": {
+  "type": "formula",
+  "ratings": {
+   "0": "Binge eating followed by self-induced vomiting or other measures to prevent weight gain, or resistance to weight gain even when below expected minimum weight, with diagnosis of an eating disorder but without incapacitating episodes",
+   "10": "Binge eating followed by self-induced vomiting or other measures to prevent weight gain, or resistance to weight gain even when below expected minimum weight, with diagnosis of an eating disorder and incapacitating episodes of up to two weeks total duration per year",
+   "30": "Self-induced weight loss to less than 85 percent of expected minimum weight with incapacitating episodes of more than two but less than six weeks total duration per year",
+   "60": "Self-induced weight loss to less than 85 percent of expected minimum weight with incapacitating episodes of six or more weeks total duration per year",
+   "100": "Self-induced weight loss to less than 80 percent of expected minimum weight, with incapacitating episodes of at least six weeks total duration per year, and requiring hospitalization more than twice a year for parenteral nutrition or tube feeding"
+  },
+  "formula": "General Rating Formula for Eating Disorders (38 CFR § 4.130). Ratings turn on self-induced weight loss relative to expected minimum weight and the number and duration of incapacitating episodes per year.",
+  "notes": [
+   "Anorexia nervosa — rate under the General Rating Formula for Eating Disorders."
+  ]
+ },
+ "9521": {
+  "type": "formula",
+  "ratings": {
+   "0": "Binge eating followed by self-induced vomiting or other measures to prevent weight gain, or resistance to weight gain even when below expected minimum weight, with diagnosis of an eating disorder but without incapacitating episodes",
+   "10": "Binge eating followed by self-induced vomiting or other measures to prevent weight gain, or resistance to weight gain even when below expected minimum weight, with diagnosis of an eating disorder and incapacitating episodes of up to two weeks total duration per year",
+   "30": "Self-induced weight loss to less than 85 percent of expected minimum weight with incapacitating episodes of more than two but less than six weeks total duration per year",
+   "60": "Self-induced weight loss to less than 85 percent of expected minimum weight with incapacitating episodes of six or more weeks total duration per year",
+   "100": "Self-induced weight loss to less than 80 percent of expected minimum weight, with incapacitating episodes of at least six weeks total duration per year, and requiring hospitalization more than twice a year for parenteral nutrition or tube feeding"
+  },
+  "formula": "General Rating Formula for Eating Disorders (38 CFR § 4.130). Ratings turn on self-induced weight loss relative to expected minimum weight and the number and duration of incapacitating episodes per year.",
+  "notes": [
+   "Bulimia nervosa — rate under the General Rating Formula for Eating Disorders."
+  ]
+ },
+ "5250-5259": {
+  "type": "rated-as",
+  "ratedUnder": "Aggregate of hip conditions. Rate under the specific diagnostic code for the impairment: hip ankylosis (5250), limitation of thigh flexion/abduction/rotation (5251–5253), flail joint (5254), or impairment of the femur (5255), per 38 CFR § 4.71a."
+ },
+ "5256-5262": {
+  "type": "rated-as",
+  "ratedUnder": "Aggregate of knee conditions. Rate under the specific diagnostic code for the impairment: knee ankylosis (5256), cartilage/meniscus (5257–5259), limitation of flexion/extension (5260–5261), impairment of tibia and fibula (5262), or genu recurvatum (5263), per 38 CFR § 4.71a."
+ },
+ "5270-5276": {
+  "type": "rated-as",
+  "ratedUnder": "Aggregate of ankle and foot conditions. Rate under the specific diagnostic code for the impairment: ankle ankylosis (5270), subastragalar/tarsal ankylosis (5272–5273), astragalectomy (5274), or the foot conditions in diagnostic codes 5276–5284, per 38 CFR § 4.71a."
+ },
+ "8510-8540": {
+  "type": "rated-as",
+  "ratedUnder": "Aggregate entry for peripheral neuropathy. Rate under the specific nerve's diagnostic code as paralysis (8510–8540), neuritis (8610–8640), or neuralgia (8710–8740), per 38 CFR §§ 4.123, 4.124, 4.124a."
+ }
+}

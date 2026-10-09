@@ -1,0 +1,305 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  💎 DIAMOND STANDARD: VetRate-Auditor LoRA Training Config v2.0             ║
+# ║══════════════════════════════════════════════════════════════════════════════║
+# ║  Hardware: NVIDIA RTX 4080 Super OC (16GB VRAM)                             ║
+# ║  Base Model: meta-llama/Llama-3.2-3B-Instruct                               ║
+# ║  Role: VA Regulations Expert (38 CFR / BVA / OGC / FREG)                    ║
+# ║  Training Data: 3,058 examples (v2 prep pipeline)                           ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# ==============================================================================
+# BASE MODEL CONFIGURATION
+# ==============================================================================
+base_model: meta-llama/Llama-3.2-3B-Instruct
+model_type: LlamaForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+# QLoRA: 4-bit quantization (saves ~10GB VRAM)
+load_in_8bit: false
+load_in_4bit: true
+adapter: qlora
+
+# 4-bit quantization config (bitsandbytes)
+bnb_4bit_compute_dtype: bfloat16
+bnb_4bit_use_double_quant: true
+bnb_4bit_quant_type: nf4
+
+# ==============================================================================
+# DATASET CONFIGURATION
+# ==============================================================================
+datasets:
+  - path: ../training-data-v2/train_auditor.jsonl
+    type: alpaca
+    # Field mapping for our JSONL format
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+
+# Validation dataset
+val_set_size: 0.0  # Using separate validation file
+test_datasets:
+  - path: ../training-data-v2/val_auditor.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+
+# Dataset processing
+dataset_prepared_path: null
+push_dataset_to_hub: null
+
+# ==============================================================================
+# RTX 4080 SUPER HARDWARE OPTIMIZATION
+# ==============================================================================
+
+# Flash Attention 2 - REQUIRED for 40-series performance
+# Native support on Ada Lovelace (SM 8.9), ~40% faster attention
+flash_attention: true
+
+# Sample packing - fit multiple short examples per sequence
+sample_packing: true
+eval_sample_packing: false
+pad_to_sequence_len: true
+
+# BFloat16 precision - NATIVE on RTX 4080 (Ada architecture)
+# DO NOT use fp16 - bf16 has better dynamic range and is hardware-native
+bf16: true
+fp16: false
+tf32: false
+
+# Gradient checkpointing - trades compute for memory (~30% VRAM savings)
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+
+# ==============================================================================
+# TRAINING HYPERPARAMETERS (VRAM-Optimized)
+# ==============================================================================
+
+# Context window (4080 Super handles 4096 tokens in 4-bit easily)
+sequence_len: 4096
+max_packed_sequence_len: 4096
+
+# Batch sizing - Conservative for 16GB VRAM
+# ┌─────────────────────────────────────────────────────────┐
+# │ micro_batch_size: 4    (samples per forward pass)       │
+# │ gradient_accumulation_steps: 4                          │
+# │ ─────────────────────────────────────────────────────── │
+# │ Effective batch size = 4 × 4 = 16                       │
+# │ Estimated VRAM: ~11-12 GB (70% utilization)             │
+# └─────────────────────────────────────────────────────────┘
+micro_batch_size: 4
+gradient_accumulation_steps: 4
+eval_batch_size: 2
+
+# Training duration
+# 3,058 train examples ÷ 16 effective batch = ~191 steps/epoch
+# 3 epochs × 191 = ~573 total steps
+num_epochs: 3
+max_steps: null
+warmup_steps: 30  # ~5% warmup
+warmup_ratio: 0.05
+
+# Learning rate configuration
+learning_rate: 2.0e-4  # Standard for LoRA fine-tuning
+lr_scheduler: cosine
+lr_scheduler_kwargs:
+  num_cycles: 0.5
+
+# Optimizer (8-bit AdamW saves ~2GB VRAM)
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+adam_beta1: 0.9
+adam_beta2: 0.999
+adam_epsilon: 1.0e-8
+
+# ==============================================================================
+# LoRA CONFIGURATION
+# ==============================================================================
+
+# LoRA hyperparameters
+# ┌─────────────────────────────────────────────────────────┐
+# │ Rank (r): 32        Quality vs size tradeoff            │
+# │ Alpha: 64           Scaling factor (2× rank standard)   │
+# │ Dropout: 0.05       Light regularization                │
+# │ ─────────────────────────────────────────────────────── │
+# │ Trainable params: ~25-30M (0.8% of 3B)                  │
+# │ Adapter size: ~30 MB                                    │
+# └─────────────────────────────────────────────────────────┘
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+lora_fan_in_fan_out: false
+
+# Target modules - Core attention + MLP for comprehensive adaptation
+lora_target_modules:
+  - q_proj      # Query projection
+  - k_proj      # Key projection
+  - v_proj      # Value projection
+  - o_proj      # Output projection
+  - gate_proj   # MLP gating
+  - up_proj     # MLP up-projection
+  - down_proj   # MLP down-projection
+
+# Auto-detect all linear layers (alternative to explicit list)
+lora_target_linear: false  # Using explicit module list above
+
+# Output directory for trained adapter
+output_dir: ./models/lora-adapters/vetrate-auditor-3b-v2
+
+# ==============================================================================
+# CHECKPOINTING & SAVING
+# ==============================================================================
+
+# Save checkpoints during training
+save_strategy: steps
+save_steps: 100
+save_total_limit: 3
+save_safetensors: true
+
+# Best model selection
+load_best_model_at_end: true
+metric_for_best_model: eval_loss
+greater_is_better: false
+
+# ==============================================================================
+# EVALUATION & LOGGING
+# ==============================================================================
+
+# Evaluation during training
+eval_strategy: steps
+eval_steps: 100
+eval_table_size: 5
+eval_max_new_tokens: 256
+
+# Logging
+logging_steps: 10
+report_to: tensorboard
+log_level: info
+
+# Weights & Biases (optional)
+wandb_project: vetrate-swarm
+wandb_name: auditor-3b-qlora-v2
+wandb_watch: false
+wandb_log_model: false
+# Set WANDB_DISABLED=true to skip W&B entirely
+
+# ==============================================================================
+# TRAINING STABILITY
+# ==============================================================================
+
+# Gradient clipping prevents exploding gradients
+max_grad_norm: 1.0
+
+# Reproducibility
+seed: 42
+data_seed: 42
+
+# Early stopping
+early_stopping_patience: 5
+early_stopping_threshold: 0.001
+
+# ==============================================================================
+# SPECIAL TOKENS (Llama-3.2 Format)
+# ==============================================================================
+
+special_tokens:
+  bos_token: "<|begin_of_text|>"
+  eos_token: "<|end_of_text|>"
+  pad_token: "<|end_of_text|>"
+
+# Chat template for Llama-3.2-Instruct format
+chat_template: |
+  {% if messages[0]['role'] == 'system' %}
+    {% set system_message = messages[0]['content'] %}
+    {% set messages = messages[1:] %}
+  {% else %}
+    {% set system_message = '' %}
+  {% endif %}
+  {{ bos_token }}
+  {% if system_message %}
+  <|start_header_id|>system<|end_header_id|>
+
+  {{ system_message }}<|eot_id|>
+  {% endif %}
+  {% for message in messages %}
+  <|start_header_id|>{{ message['role'] }}<|end_header_id|>
+
+  {{ message['content'] }}<|eot_id|>
+  {% endfor %}
+  {% if add_generation_prompt %}
+  <|start_header_id|>assistant<|end_header_id|>
+
+  {% endif %}
+
+# ==============================================================================
+# RESUME & DEBUG
+# ==============================================================================
+
+# Resume from checkpoint
+resume_from_checkpoint: null
+auto_resume_from_checkpoints: true
+
+# Debug mode
+debug: false
+debug_text_only_length: 10
+debug_num_examples: 5
+
+# ==============================================================================
+# DISTRIBUTED TRAINING (Single GPU - Disabled)
+# ==============================================================================
+
+ddp: false
+fsdp: []
+fsdp_config: null
+deepspeed: null
+
+# ==============================================================================
+# POST-TRAINING OPTIONS
+# ==============================================================================
+
+# Keep adapter separate for swarm hot-swapping
+merge_lora: false
+
+# Hub upload (set to push trained adapter)
+hub_model_id: null
+push_to_hub: false
+
+# ==============================================================================
+# EXECUTION NOTES
+# ==============================================================================
+# 
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ TRAINING COMMAND                                                            │
+# │ ─────────────────────────────────────────────────────────────────────────── │
+# │ cd ~/vetrate-llm-compiler  (in WSL2)                                        │
+# │ axolotl train axolotl-configs/auditor-3b-qlora-v2.yml                       │
+# │                                                                             │
+# │ MONITOR GPU                                                                 │
+# │ ─────────────────────────────────────────────────────────────────────────── │
+# │ watch -n 1 nvidia-smi                                                       │
+# │                                                                             │
+# │ EXPECTED METRICS                                                            │
+# │ ─────────────────────────────────────────────────────────────────────────── │
+# │ • VRAM Usage:       11-12 GB (70% of 16GB)                                  │
+# │ • GPU Utilization:  90-100%                                                 │
+# │ • Training Time:    2-4 hours                                               │
+# │ • Steps/epoch:      ~191                                                    │
+# │ • Total steps:      ~573                                                    │
+# │ • Adapter size:     ~30 MB                                                  │
+# │                                                                             │
+# │ RESUME FROM CHECKPOINT                                                      │
+# │ ─────────────────────────────────────────────────────────────────────────── │
+# │ axolotl train auditor-3b-qlora-v2.yml \                                     │
+# │   --resume_from_checkpoint ./models/lora-adapters/vetrate-auditor-3b-v2/checkpoint-XXX │
+# │                                                                             │
+# │ MERGE ADAPTER (After Training)                                              │
+# │ ─────────────────────────────────────────────────────────────────────────── │
+# │ python -m axolotl.cli.merge_lora auditor-3b-qlora-v2.yml \                  │
+# │   --lora_model_dir ./models/lora-adapters/vetrate-auditor-3b-v2             │
+# └─────────────────────────────────────────────────────────────────────────────┘
+#
+# 💎 DIAMOND STANDARD: Production-ready configuration for RTX 4080 Super

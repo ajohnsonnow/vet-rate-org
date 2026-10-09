@@ -1,0 +1,205 @@
+{
+  "state": "Oklahoma",
+  "stateCode": "OK",
+  "officialSource": "https://oklahoma.gov/veterans/benefits.html",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "ok-property_tax_exemption-100-disabled-veterans-real-property-tax-exemptio",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "100% Disabled Veterans Real Property Tax Exemption",
+      "description": "Veterans who are Oklahoma residents, honorably discharged, and certified by the U.S. Department of Veterans Affairs as 100% permanently disabled (from military action, accident, or a disease contracted in active service) are exempt from property tax on the full fair cash value of their homestead. Surviving spouses of qualifying veterans may also be eligible. Applicants file Oklahoma Tax Commission Form 998 with their county assessor; the exemption does not need to be reapplied for annually once granted unless qualifications change. This session could not directly read Form 998's full text (the PDF did not extract cleanly) or the Tulsa County Assessor page (blocked automated access), so the application-process specifics above come from the official ODVA benefits page plus a WebSearch summary rather than a directly-read form; the core eligibility/exemption-scope facts are confirmed on the ODVA page itself.",
+      "value": "Full exemption of the homestead's fair cash value from property tax",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged",
+          "Must own and occupy the homestead",
+          "Must qualify for Homestead Exemption",
+          "100% VA-certified permanent disability"
+        ]
+      },
+      "application": {
+        "agency": "Oklahoma Tax Commission / County Assessors",
+        "form": "Form 998",
+        "url": "https://oklahoma.gov/veterans/benefits.html",
+        "documentation": [
+          "VA certification of 100% permanent disability",
+          "Proof of honorable discharge",
+          "Homestead Exemption qualification"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://oklahoma.gov/veterans/benefits.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ok-state_veterans_home-oklahoma-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Oklahoma Veterans Homes",
+      "description": "Oklahoma operates state Veterans Homes providing long-term, federally-approved skilled nursing care, physical therapy, and pharmacy services for veterans certified by the VA for per diem payment, with at least 90 days of active duty service and a disability requiring skilled nursing care. The ODVA benefits page states Oklahoma is 'among the top two states in the number of Veterans Centers' and that the homes care for over 1,400 Oklahoma veterans, but this session could not confirm an exact current list or count of individual home locations against a directly-read official page (the veterans-centers.html list page returned a 404 both times it was fetched this session) — a WebSearch summary suggested seven locations (Ardmore, Claremore, Clinton, Lawton, Norman, Sallisaw, Sulphur), but that specific list is presented here only as unconfirmed context, not fact.",
+      "value": "Long-term skilled nursing care, physical therapy, and pharmacy services",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Certified by USDVA for per diem payment",
+          "At least 90 days active duty service",
+          "Disabled/diseased requiring skilled nursing care"
+        ]
+      },
+      "application": {
+        "agency": "Oklahoma Department of Veterans Affairs (ODVA)",
+        "form": null,
+        "url": "https://oklahoma.gov/content/dam/ok/en/veterans/documents/veteran-centers/Application-for-Admission-Vets-center.pdf",
+        "documentation": [
+          "USDVA per diem payment certification",
+          "Medical records supporting need for skilled nursing care"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://oklahoma.gov/veterans/veterans-homes/eligibility.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ok-hiring_preference-state-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veterans Preference",
+      "description": "Oklahoma's Office of Veterans Placement provides eligible veterans a guaranteed interview for matched state government positions they apply to. This session directly confirmed the guaranteed-interview mechanism and the statutory definition of qualifying 'veteran' status on the official OMES Veterans Placement page. It could NOT confirm the specific point-value preference system (a WebSearch summary described 5 points for non-disabled veterans and 10 points for service-connected-disabled veterans) against any directly-read official source this session — the OMES Veterans Placement PDF fact sheet did not extract as readable text, and the HTML placement page itself states point values are governed by separate Civil Service Rules it does not reproduce. The point figures are therefore presented as unconfirmed, not fact.",
+      "value": "Guaranteed interview for eligible veterans applying to matched state positions; a separate points-based preference system exists but its exact values are unconfirmed this session",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Full obligation of active duty, reserve, or National Guard service (or qualifying early discharge)",
+          "Honorable or under-honorable-conditions discharge"
+        ]
+      },
+      "application": {
+        "agency": "Office of Management and Enterprise Services (OMES), Office of Veterans Placement",
+        "form": null,
+        "url": "https://oklahoma.gov/omes/omes-careers/veterans-placement.html",
+        "documentation": [
+          "DD-214 or other proof of qualifying service and discharge status"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://oklahoma.gov/omes/omes-careers/veterans-placement.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ok-license_plate-disabled-veteran-license-plate-reduced-fee-regis",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate (Reduced-Fee Registration)",
+      "description": "Veterans with a 50% or greater VA service-connected disability rating (or who received a VA grant for a specially-adapted vehicle, or lost a limb/eye) qualify for a Disabled Veteran/DAV license plate carrying a reduced annual registration fee, limited to two vehicles per veteran. Applicants must first obtain a sales tax exemption number or C599 Card from ODVA. The discounted rate is not available for online renewal. Surviving spouses may qualify for one discounted registration with an ODVA eligibility letter.",
+      "value": "$5 plus applicable insurance and mailing fees, in place of the standard registration fee",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "50%+ VA service-connected disability rating (or qualifying vehicle grant/limb-or-eye loss)",
+          "Limited to two vehicles per veteran",
+          "Not available for online renewal",
+          "Requires sales tax exemption number or ODVA C599 Card"
+        ]
+      },
+      "application": {
+        "agency": "Service Oklahoma",
+        "form": "Form 599 (Reduced Licensing Charge Card); Form 751-J (plate application)",
+        "url": "https://oklahoma.gov/service/popular-services/military.html",
+        "documentation": [
+          "ODVA sales tax exemption number or C599 Card",
+          "VA disability rating documentation"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://oklahoma.gov/service/popular-services/military.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ok-recreation-disabled-veteran-hunting-fishing-permit",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Hunting & Fishing Permit",
+      "description": "Legal Oklahoma resident veterans with a disability rating of 60% or more are eligible for a free hunting and fishing permit.",
+      "value": "Free hunting and fishing permit",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 60,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": ["Oklahoma residency", "60%+ VA disability rating"]
+      },
+      "application": {
+        "agency": "Oklahoma Department of Veterans Affairs",
+        "form": null,
+        "url": "https://oklahoma.gov/veterans/benefits/hunting-fishing-application.html",
+        "documentation": ["VA disability rating letter (60%+)"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://oklahoma.gov/veterans/benefits.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ok-other-state-income-tax-exemptions-for-military-pay-and",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "State Income Tax Exemptions for Military Pay and Retirement Pay",
+      "description": "Oklahoma exempts 100% of active-duty military/Armed Forces salary or compensation earned by an Oklahoma resident from state taxable income. Separately, military retirement benefits are exempt from state taxable income up to the greater of 75% of the benefit or $10,000. Oklahoma also exempts qualifying 100%-disabled veterans (VA-certified) from state sales tax up to a threshold amount, and grants free admission to state parks and museums for all honorably discharged Oklahoma-resident veterans. This entry does not address the tax treatment of VA disability compensation itself, which was not addressed on the fetched page.",
+      "value": "100% exemption of active-duty military pay from state income tax; retirement pay exempt up to the greater of 75% or $10,000; sales tax exemption for 100%-disabled veterans; free state park/museum admission for honorably discharged resident veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Oklahoma residency",
+          "100% VA disability certification required specifically for the sales tax exemption piece"
+        ]
+      },
+      "application": {
+        "agency": "Oklahoma Tax Commission",
+        "form": null,
+        "url": "https://oklahoma.gov/tax/individuals/exemptions.html",
+        "documentation": [
+          "Military/VA documentation as applicable to each exemption"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://oklahoma.gov/veterans/benefits.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

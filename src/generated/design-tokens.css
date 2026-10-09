@@ -1,0 +1,80 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --color-va-blue: #2d5016; /* Legacy alias — VA brand blue (kept as fallback for --va-blue CSS var) */
+  --color-va-gold: #88b04b; /* Legacy alias — VA brand gold (kept as fallback for --va-gold CSS var) */
+  --color-service-blue-50: #f0f4f8; /* Service Blue — palest tint */
+  --color-service-blue-100: #d9e2ec;
+  --color-service-blue-200: #bcccdc;
+  --color-service-blue-300: #9fb3c8;
+  --color-service-blue-400: #829ab1;
+  --color-service-blue-500: #627d98;
+  --color-service-blue-600: #486581;
+  --color-service-blue-700: #334e68;
+  --color-service-blue-800: #243b53;
+  --color-service-blue-900: #1b365d; /* Primary — high authority headers, WCAG AAA */
+  --color-service-blue-950: #102a43;
+  --color-tactical-grey-50: #f0f4f8;
+  --color-tactical-grey-100: #d9e2ec;
+  --color-tactical-grey-200: #bcccdc;
+  --color-tactical-grey-300: #9fb3c8;
+  --color-tactical-grey-400: #829ab1;
+  --color-tactical-grey-500: #627d98;
+  --color-tactical-grey-600: #486581;
+  --color-tactical-grey-700: #334e68;
+  --color-tactical-grey-800: #333e48; /* Secondary — navigation surfaces */
+  --color-tactical-grey-900: #243b53;
+  --color-tactical-grey-950: #102a43;
+  --color-medal-green-50: #e8f5e9;
+  --color-medal-green-100: #c8e6c9;
+  --color-medal-green-200: #a5d6a7;
+  --color-medal-green-300: #81c784;
+  --color-medal-green-400: #66bb6a;
+  --color-medal-green-500: #4caf50;
+  --color-medal-green-600: #43a047;
+  --color-medal-green-700: #2e7d32; /* Primary success — WCAG AAA on white */
+  --color-medal-green-800: #256626;
+  --color-medal-green-900: #1b5e20;
+  --color-medal-green-950: #0d3610;
+  --color-warning-gold-50: #fff8e1;
+  --color-warning-gold-100: #ffecb3;
+  --color-warning-gold-200: #ffe082;
+  --color-warning-gold-300: #ffd54f;
+  --color-warning-gold-400: #ffca28;
+  --color-warning-gold-500: #ffc107;
+  --color-warning-gold-600: #ffb300;
+  --color-warning-gold-700: #c5a059; /* Primary warning — visible across all modes */
+  --color-warning-gold-800: #856404; /* High-contrast warning text */
+  --color-warning-gold-900: #5c4300;
+  --color-warning-gold-950: #3d2c00;
+  --color-paper-50: #ffffff;
+  --color-paper-100: #fefefe;
+  --color-paper-200: #fcfcfc;
+  --color-paper-300: #f8f9fa; /* Main workspace background — low-glare */
+  --color-paper-400: #f1f3f4;
+  --color-paper-500: #e8eaed;
+  --color-paper-600: #dadce0;
+  --color-paper-700: #bdc1c6;
+  --color-paper-800: #9aa0a6;
+  --color-paper-900: #5f6368;
+  --color-paper-950: #3c4043;
+  --color-tbi-charcoal: #1a1a16; /* TBI-Comfort: deep warm background */
+  --color-tbi-amber: #e8d5b5; /* TBI-Comfort: soft amber text */
+  --color-tbi-gold: #c5a059; /* TBI-Comfort: accent */
+  --color-tbi-warm-white: #f5f0e6; /* TBI-Comfort: comfortable reading surface */
+  --color-tbi-soft-cream: #ede4d3; /* TBI-Comfort: secondary surface */
+  --color-aaa-black: #000000;
+  --color-aaa-white: #ffffff;
+  --color-aaa-yellow: #ffff00; /* AAA high-vis accent */
+  --color-aaa-cyan: #00ffff; /* AAA secondary accent */
+  --color-protected-20yr: #1b365d; /* Protected (20-yr): Service Blue — Shield icon */
+  --color-protected-10yr: #486581; /* Protected (10-yr): partial shield */
+  --color-protected-5yr: #2e7d32; /* Protected (5-yr): Medal Green — checkmark */
+  --color-protected-risk: #c5a059; /* At-risk: Warning Gold — triangle */
+  --color-protected-critical: #8b0000; /* Critical: deep crimson — octagon */
+  --size-touch-target-min: 44px;
+  --size-ring-thick: 3px; /* AAA focus ring — 3px stroke + 3px offset */
+  --size-font-base-lg: 18px; /* AAA body text — pairs with line-height 1.6 */
+}

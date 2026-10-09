@@ -1,0 +1,324 @@
+/* =========================================
+   Vet-Rate.org User Manual - PDF Export Styles
+   Professional print-ready styling
+   ========================================= */
+
+@page {
+  size: letter;
+  margin: 1in;
+  
+  @top-center {
+    content: "Vet-Rate.org User Manual";
+    font-size: 10pt;
+    color: #2d5016;
+  }
+  
+  @bottom-center {
+    content: counter(page);
+    font-size: 10pt;
+    color: #666;
+  }
+  
+  @bottom-left {
+    content: "© 2024-2026 Vet-Rate.org";
+    font-size: 8pt;
+    color: #999;
+  }
+}
+
+@page :first {
+  @top-center {
+    content: none;
+  }
+  @bottom-center {
+    content: none;
+  }
+  @bottom-left {
+    content: none;
+  }
+}
+
+/* PDF Cover Page */
+.pdf-cover {
+  page-break-after: always;
+  text-align: center;
+  padding-top: 3in;
+}
+
+.pdf-cover h1 {
+  font-size: 36pt;
+  color: #2d5016;
+  margin-bottom: 0.5in;
+}
+
+.pdf-cover .subtitle {
+  font-size: 18pt;
+  color: #88b04b;
+  margin-bottom: 1in;
+}
+
+.pdf-cover .version {
+  font-size: 12pt;
+  color: #666;
+}
+
+/* PDF Body Styles */
+.pdf-content {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-size: 11pt;
+  line-height: 1.6;
+  color: #1a1f16;
+}
+
+.pdf-content h1 {
+  font-size: 24pt;
+  color: #2d5016;
+  border-bottom: 3px solid #88b04b;
+  padding-bottom: 0.25in;
+  margin-top: 0.5in;
+  page-break-after: avoid;
+}
+
+.pdf-content h2 {
+  font-size: 18pt;
+  color: #2d5016;
+  margin-top: 0.4in;
+  page-break-after: avoid;
+}
+
+.pdf-content h3 {
+  font-size: 14pt;
+  color: #3d453d;
+  margin-top: 0.3in;
+  page-break-after: avoid;
+}
+
+.pdf-content h4 {
+  font-size: 12pt;
+  color: #3d453d;
+  margin-top: 0.2in;
+  page-break-after: avoid;
+}
+
+/* Avoid page breaks inside important elements */
+.pdf-content .admonition,
+.pdf-content .feature-card,
+.pdf-content table,
+.pdf-content figure {
+  page-break-inside: avoid;
+}
+
+/* Chapter breaks */
+.pdf-content .chapter-start {
+  page-break-before: always;
+}
+
+/* Table of Contents */
+.pdf-toc {
+  page-break-after: always;
+}
+
+.pdf-toc h2 {
+  text-align: center;
+  color: #2d5016;
+}
+
+.pdf-toc ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.pdf-toc li {
+  margin: 0.5em 0;
+  border-bottom: 1px dotted #ccc;
+}
+
+.pdf-toc a {
+  color: #2d5016;
+  text-decoration: none;
+}
+
+.pdf-toc .toc-page {
+  float: right;
+  color: #666;
+}
+
+/* Callout boxes for PDF */
+.pdf-content .admonition {
+  border: 1px solid #2d5016;
+  border-left: 4px solid #2d5016;
+  padding: 0.5in;
+  margin: 0.25in 0;
+  background-color: #f8f9f7;
+}
+
+.pdf-content .admonition.warning {
+  border-color: #f59e0b;
+  background-color: #fef3c7;
+}
+
+.pdf-content .admonition.danger,
+.pdf-content .admonition.crisis {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.pdf-content .admonition.tip {
+  border-color: #88b04b;
+  background-color: #f0f7e9;
+}
+
+.pdf-content .admonition.info {
+  border-color: #0284c7;
+  background-color: #f0f9ff;
+}
+
+/* Tables */
+.pdf-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.25in 0;
+}
+
+.pdf-content th {
+  background-color: #2d5016;
+  color: white;
+  padding: 0.1in;
+  text-align: left;
+  font-weight: 600;
+}
+
+.pdf-content td {
+  border: 1px solid #ddd;
+  padding: 0.08in;
+}
+
+.pdf-content tr:nth-child(even) {
+  background-color: #f8f9f7;
+}
+
+/* Code blocks */
+.pdf-content code {
+  font-family: 'Roboto Mono', monospace;
+  background-color: #f1f3f0;
+  padding: 0.02in 0.05in;
+  border-radius: 3px;
+  font-size: 10pt;
+}
+
+.pdf-content pre {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 0.2in;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-size: 9pt;
+}
+
+/* Images and figures */
+.pdf-content figure {
+  margin: 0.25in 0;
+  text-align: center;
+}
+
+.pdf-content figure img {
+  max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.pdf-content figcaption {
+  font-style: italic;
+  color: #666;
+  margin-top: 0.1in;
+  font-size: 10pt;
+}
+
+/* Lists */
+.pdf-content ul,
+.pdf-content ol {
+  margin: 0.15in 0;
+  padding-left: 0.3in;
+}
+
+.pdf-content li {
+  margin: 0.05in 0;
+}
+
+/* Links */
+.pdf-content a {
+  color: #2d5016;
+  text-decoration: underline;
+}
+
+/* Step-by-step in PDF */
+.pdf-content .step-container {
+  counter-reset: pdf-step;
+}
+
+.pdf-content .step {
+  counter-increment: pdf-step;
+  padding-left: 0.6in;
+  position: relative;
+  margin: 0.15in 0;
+}
+
+.pdf-content .step::before {
+  content: counter(pdf-step);
+  position: absolute;
+  left: 0;
+  width: 0.4in;
+  height: 0.4in;
+  background-color: #2d5016;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 11pt;
+}
+
+/* Keyboard shortcuts */
+.pdf-content kbd {
+  background-color: #f1f3f0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 0.02in 0.06in;
+  font-family: monospace;
+  font-size: 10pt;
+}
+
+/* Crisis banner for PDF */
+.pdf-content .crisis-banner {
+  background-color: #dc2626;
+  color: white;
+  padding: 0.2in;
+  text-align: center;
+  font-weight: bold;
+  margin: 0.2in 0;
+}
+
+/* Glossary definitions */
+.pdf-content .glossary-term {
+  font-weight: bold;
+  color: #2d5016;
+}
+
+.pdf-content .glossary-def {
+  margin-left: 0.3in;
+  margin-bottom: 0.15in;
+}
+
+/* Back cover */
+.pdf-back-cover {
+  page-break-before: always;
+  text-align: center;
+  padding-top: 4in;
+}
+
+.pdf-back-cover .support-info {
+  margin-top: 2in;
+  font-size: 12pt;
+  color: #666;
+}

@@ -1,0 +1,1462 @@
+/**
+ * Vet-Rate.org - My Packet Document Manager
+ * Copyright (c) 2024-2026 Anthony Johnson
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * DIAMOND STANDARD: Persistent document storage for all veteran documents.
+ * Think of "My Packet" like a digital filing cabinet. Every document the
+ * veteran uploads gets stored here with:
+ *   - The raw OCR text (so any AI tool can re-read it later)
+ *   - The structured extracted data (so forms auto-fill instantly)
+ *   - Document metadata (filename, upload date, page count, type)
+ *   - Classification (DD214, Claim Letter, C-File, Blue Button, etc.)
+ *
+ * Storage: IndexedDB (unlimited capacity, persists across sessions)
+ * Fallback: localStorage (5-10MB limit, for older browsers)
+ *
+ * All data stays 100% on the veteran's device - never sent to servers.
+ */
+
+import { logger } from "./logger";
+import { markAsModified } from "./persistentStorage";
+import { ensureQuota } from "./storage";
+import { awardDisplayName } from "./combatService";
+import {
+  getServiceEntryForDocument,
+  getVeteranProfile,
+} from "./veteranProfile";
+import { isSameCalendarDay } from "./serviceEntryDate";
+import { scrubText, redactVeteranIdentifiers } from "./piiScrubber";
+import { loadVKB } from "./veteranKnowledgeBase";
+
+// ============================================================
+// DATABASE CONFIGURATION
+// ============================================================
+
+const PACKET_DB_NAME = "VetRateMyPacket";
+const PACKET_DB_VERSION = 2; // Bump when schema changes
+const PACKET_STORE_NAME = "documents";
+const PACKET_INDEX_STORE = "document_index";
+const PACKET_META_KEY = "vetrate_my_packet_meta";
+
+let packetDB = null;
+
+// ============================================================
+// DATABASE INITIALIZATION
+// ============================================================
+
+/**
+ * Open or create the My Packet IndexedDB database.
+ * IndexedDB is like a mini database inside the browser -
+ * it can store megabytes of data without any server.
+ */
+const openPacketDB = () => {
+  return new Promise((resolve, reject) => {
+    if (packetDB) {
+      resolve(packetDB);
+      return;
+    }
+
+    const request = indexedDB.open(PACKET_DB_NAME, PACKET_DB_VERSION);
+
+    request.onerror = () => {
+      console.error("Failed to open My Packet database:", request.error);
+      reject(request.error);
+    };
+
+    request.onblocked = () => {
+      console.warn(
+        "My Packet database is waiting for another tab to release it.",
+      );
+    };
+
+    request.onsuccess = () => {
+      const db = request.result;
+      packetDB = db;
+      // A connection that outlives its own upgrade blocks every other tab's
+      // open forever; closing on versionchange/close also keeps a dead handle
+      // from being reused.
+      const drop = () => {
+        db.close();
+        if (packetDB === db) packetDB = null;
+      };
+      db.onversionchange = drop;
+      db.onclose = () => {
+        if (packetDB === db) packetDB = null;
+      };
+      resolve(db);
+    };
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+
+      // Main documents store
+      if (!db.objectStoreNames.contains(PACKET_STORE_NAME)) {
+        const store = db.createObjectStore(PACKET_STORE_NAME, {
+          keyPath: "id",
+        });
+        store.createIndex("classification", "classification", {
+          unique: false,
+        });
+        store.createIndex("uploadDate", "uploadDate", { unique: false });
+        store.createIndex("fileName", "fileName", { unique: false });
+      }
+
+      // Lightweight index store (for fast lookups without loading full text)
+      if (!db.objectStoreNames.contains(PACKET_INDEX_STORE)) {
+        const indexStore = db.createObjectStore(PACKET_INDEX_STORE, {
+          keyPath: "id",
+        });
+        indexStore.createIndex("classification", "classification", {
+          unique: false,
+        });
+      }
+    };
+  });
+};
+
+// After a step timed out the cached connection may be the stuck one: drop it
+// so the retry opens a fresh connection instead of queueing behind it.
+export const resetPacketConnection = () => {
+  try {
+    packetDB?.close();
+  } catch {
+    // already closed
+  }
+  packetDB = null;
+};
+
+// ============================================================
+// DOCUMENT CLASSIFICATION CONSTANTS
+// ============================================================
+
+export const PACKET_DOC_TYPES = {
+  DD214: "DD214",
+  DD215: "DD215",
+  NGB22: "NGB22",
+  DD256: "DD256",
+  DD257: "DD257",
+  RATING_DECISION: "RATING_DECISION",
+  CLAIM_LETTER: "CLAIM_LETTER",
+  C_FILE: "C_FILE",
+  BLUE_BUTTON: "BLUE_BUTTON",
+  MEDICAL_RECORD: "MEDICAL_RECORD",
+  DBQ: "DBQ",
+  NEXUS_LETTER: "NEXUS_LETTER",
+  PERSONAL_STATEMENT: "PERSONAL_STATEMENT",
+  BUDDY_STATEMENT: "BUDDY_STATEMENT",
+  VA_CORRESPONDENCE: "VA_CORRESPONDENCE",
+  EXAM_REPORT: "EXAM_REPORT",
+  OTHER: "OTHER",
+};
+
+export const PACKET_DOC_LABELS = {
+  [PACKET_DOC_TYPES.DD214]: "DD-214 (Service Record)",
+  [PACKET_DOC_TYPES.DD215]: "DD-215 (Correction to DD-214)",
+  [PACKET_DOC_TYPES.NGB22]: "NGB-22 (Guard Service Record)",
+  [PACKET_DOC_TYPES.DD256]: "DD-256 (Reserve Discharge)",
+  [PACKET_DOC_TYPES.DD257]: "DD-257 (Reserve General Discharge)",
+  [PACKET_DOC_TYPES.RATING_DECISION]: "VA Rating Decision",
+  [PACKET_DOC_TYPES.CLAIM_LETTER]: "VA Claim Letter",
+  [PACKET_DOC_TYPES.C_FILE]: "C-File (Claims File)",
+  [PACKET_DOC_TYPES.BLUE_BUTTON]: "VA Blue Button Report",
+  [PACKET_DOC_TYPES.MEDICAL_RECORD]: "Medical Record",
+  [PACKET_DOC_TYPES.DBQ]: "DBQ (Disability Benefits Questionnaire)",
+  [PACKET_DOC_TYPES.NEXUS_LETTER]: "Nexus Letter",
+  [PACKET_DOC_TYPES.PERSONAL_STATEMENT]: "Personal Statement",
+  [PACKET_DOC_TYPES.BUDDY_STATEMENT]: "Buddy Statement",
+  [PACKET_DOC_TYPES.VA_CORRESPONDENCE]: "VA Correspondence",
+  [PACKET_DOC_TYPES.EXAM_REPORT]: "C&P Exam Report",
+  [PACKET_DOC_TYPES.OTHER]: "Other Document",
+};
+
+export const PACKET_DOC_ICONS = {
+  [PACKET_DOC_TYPES.DD214]: "🎖️",
+  [PACKET_DOC_TYPES.DD215]: "📝",
+  [PACKET_DOC_TYPES.NGB22]: "🏛️",
+  [PACKET_DOC_TYPES.DD256]: "📜",
+  [PACKET_DOC_TYPES.DD257]: "📜",
+  [PACKET_DOC_TYPES.RATING_DECISION]: "⚖️",
+  [PACKET_DOC_TYPES.CLAIM_LETTER]: "📬",
+  [PACKET_DOC_TYPES.C_FILE]: "📋",
+  [PACKET_DOC_TYPES.BLUE_BUTTON]: "💊",
+  [PACKET_DOC_TYPES.MEDICAL_RECORD]: "🏥",
+  [PACKET_DOC_TYPES.DBQ]: "📊",
+  [PACKET_DOC_TYPES.NEXUS_LETTER]: "🔗",
+  [PACKET_DOC_TYPES.PERSONAL_STATEMENT]: "✍️",
+  [PACKET_DOC_TYPES.BUDDY_STATEMENT]: "🤝",
+  [PACKET_DOC_TYPES.VA_CORRESPONDENCE]: "📮",
+  [PACKET_DOC_TYPES.EXAM_REPORT]: "🩺",
+  [PACKET_DOC_TYPES.OTHER]: "📄",
+};
+
+// ============================================================
+// CORE CRUD OPERATIONS
+// ============================================================
+
+/**
+ * FIX-6 (packet store): find an existing packet document that represents
+ * the same underlying file as an incoming save, so re-importing an
+ * unchanged file updates that record in place instead of appending a
+ * duplicate. Same (fileName, fileSize) pairing as addDocumentToVKB's
+ * idempotency guard in veteranKnowledgeBase.js. Pure function - no
+ * IndexedDB - so it's directly unit-testable.
+ */
+export const findDuplicatePacketDocument = (
+  existingDocs,
+  fileName,
+  fileSize,
+) => {
+  if (!Array.isArray(existingDocs)) return null;
+  return (
+    existingDocs.find(
+      (doc) =>
+        doc.fileName === fileName && (doc.metadata?.fileSize || 0) === fileSize,
+    ) || null
+  );
+};
+
+/**
+ * Save a document to My Packet.
+ * This is the main function - call it whenever a document is processed.
+ *
+ * @param {Object} doc - Document to save
+ * @param {string} doc.fileName - Original filename
+ * @param {string} doc.classification - One of PACKET_DOC_TYPES
+ * @param {string} doc.rawText - Full OCR/extracted text
+ * @param {Object} doc.extractedData - Structured data extracted from the document
+ * @param {number} doc.pageCount - Number of pages
+ * @param {number} doc.fileSize - File size in bytes
+ * @param {string} doc.ocrMethod - How text was extracted (standard, advanced_ocr, etc.)
+ * @param {number} doc.ocrConfidence - OCR confidence percentage
+ * @param {Object} doc.aiAnalysis - AI analysis results (if available)
+ * @returns {Promise<{success: boolean, documentId: string}>}
+ */
+// Pure object-literal builder split out of saveDocumentToPacket purely to
+// keep that function's cyclomatic complexity under the repo's lint ceiling
+// - every branch here is just a field default, no new behavior.
+function _buildPacketDocumentRecord({
+  doc,
+  id,
+  duplicate,
+  sanitizedFileName,
+  incomingFileSize,
+}) {
+  return {
+    id,
+    fileName: sanitizedFileName,
+    classification: doc.classification || PACKET_DOC_TYPES.OTHER,
+    uploadDate: duplicate ? duplicate.uploadDate : new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+
+    // The raw text - this is what AI tools can re-read at any time
+    rawText: doc.rawText || "",
+
+    // Structured extracted data - differs by document type
+    extractedData: doc.extractedData || {},
+
+    // AI analysis results
+    aiAnalysis: doc.aiAnalysis || null,
+
+    // Document metadata
+    metadata: {
+      pageCount: doc.pageCount || 1,
+      fileSize: incomingFileSize,
+      ocrMethod: doc.ocrMethod || "unknown",
+      ocrConfidence: doc.ocrConfidence || 0,
+      fileType: doc.fileType || "pdf",
+      processingTime: doc.processingTime || 0,
+    },
+
+    // Version tracking (for re-processing the same document)
+    version: duplicate ? (duplicate.version || 1) + 1 : 1,
+    supersedes: null, // ID of previous version if re-processed
+
+    // Tags for organization
+    tags: doc.tags || [],
+    notes: sanitize(doc.notes || "", 5000),
+  };
+}
+
+export const saveDocumentToPacket = async (doc) => {
+  try {
+    const db = await openPacketDB();
+    const sanitizedFileName = sanitize(doc.fileName || "Unknown Document", 500);
+    const incomingFileSize = doc.fileSize || 0;
+
+    const existingDocs = await getAllPacketDocuments();
+    const duplicate = findDuplicatePacketDocument(
+      existingDocs,
+      sanitizedFileName,
+      incomingFileSize,
+    );
+
+    const id = duplicate
+      ? duplicate.id
+      : `pkt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    const document = _buildPacketDocumentRecord({
+      doc,
+      id,
+      duplicate,
+      sanitizedFileName,
+      incomingFileSize,
+    });
+
+    // Pre-flight quota check - still attempt the write either way, but
+    // attach a warning the caller can surface to the veteran
+    const quota = await ensureQuota(JSON.stringify(document).length);
+
+    // Save the full document to IndexedDB. put() with the same id
+    // (re-used from the duplicate above) replaces the existing row instead
+    // of adding a new one.
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(
+        [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+        "readwrite",
+      );
+
+      // Save full document
+      tx.objectStore(PACKET_STORE_NAME).put(document);
+
+      // Save lightweight index entry (no rawText, for fast listing)
+      tx.objectStore(PACKET_INDEX_STORE).put({
+        id,
+        fileName: document.fileName,
+        classification: document.classification,
+        uploadDate: document.uploadDate,
+        lastUpdated: document.lastUpdated,
+        pageCount: document.metadata.pageCount,
+        fileSize: document.metadata.fileSize,
+        ocrConfidence: document.metadata.ocrConfidence,
+        hasExtractedData: Object.keys(document.extractedData).length > 0,
+        hasAIAnalysis: !!document.aiAnalysis,
+        tags: document.tags,
+        version: document.version,
+      });
+
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () =>
+        reject(
+          tx.error || new DOMException("Transaction aborted", "AbortError"),
+        );
+    });
+
+    // Update localStorage metadata cache
+    await updatePacketMetadata();
+    markAsModified();
+
+    logger.info(`📁 Saved to My Packet: ${document.classification} (${id})`);
+    const result = { success: true, documentId: id };
+    if (!quota.ok) result.quotaWarning = quota.message;
+    return result;
+  } catch (error) {
+    console.error("Failed to save document to My Packet:", error);
+    if (error?.name === "QuotaExceededError") {
+      return {
+        success: false,
+        quotaExceeded: true,
+        error:
+          "Your device storage is full, so this document could not be saved. Export a backup and free up space, then try again.",
+      };
+    }
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get a single document by ID (full document with raw text)
+ */
+export const getPacketDocument = async (documentId) => {
+  try {
+    const db = await openPacketDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction([PACKET_STORE_NAME], "readonly");
+      const request = tx.objectStore(PACKET_STORE_NAME).get(documentId);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => resolve(null);
+    });
+  } catch (error) {
+    console.error("Failed to get packet document:", error);
+    return null;
+  }
+};
+
+/**
+ * Get all document index entries (lightweight - no raw text)
+ * Use this for listing documents in the UI
+ */
+export const getPacketIndex = async () => {
+  try {
+    const db = await openPacketDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction([PACKET_INDEX_STORE], "readonly");
+      const request = tx.objectStore(PACKET_INDEX_STORE).getAll();
+      request.onsuccess = () => {
+        const results = request.result || [];
+        // Sort by upload date, newest first
+        results.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
+        resolve(results);
+      };
+      request.onerror = () => resolve([]);
+    });
+  } catch (error) {
+    console.error("Failed to get packet index:", error);
+    return [];
+  }
+};
+
+/**
+ * Get all documents of a specific type
+ */
+export const getPacketDocumentsByType = async (classification) => {
+  try {
+    const db = await openPacketDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction([PACKET_INDEX_STORE], "readonly");
+      const index = tx.objectStore(PACKET_INDEX_STORE).index("classification");
+      const request = index.getAll(classification);
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => resolve([]);
+    });
+  } catch (error) {
+    console.error("Failed to get documents by type:", error);
+    return [];
+  }
+};
+
+/**
+ * Get ALL full documents (with raw text) - use carefully, can be large
+ */
+export const getAllPacketDocuments = async ({ strict = false } = {}) => {
+  try {
+    const db = await openPacketDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction([PACKET_STORE_NAME], "readonly");
+      const request = tx.objectStore(PACKET_STORE_NAME).getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => (strict ? reject(request.error) : resolve([]));
+    });
+  } catch (error) {
+    console.error("Failed to get all packet documents:", error);
+    if (strict) throw error;
+    return [];
+  }
+};
+
+/**
+ * Update a document (e.g., after re-processing or adding AI analysis)
+ */
+export const updatePacketDocument = async (documentId, updates) => {
+  try {
+    const existing = await getPacketDocument(documentId);
+    if (!existing) return { success: false, error: "Document not found" };
+
+    const updated = {
+      ...existing,
+      ...updates,
+      id: documentId, // Ensure ID doesn't change
+      lastUpdated: new Date().toISOString(),
+      version: (existing.version || 1) + 1,
+    };
+
+    const db = await openPacketDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(
+        [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+        "readwrite",
+      );
+      tx.objectStore(PACKET_STORE_NAME).put(updated);
+
+      // Update index too
+      tx.objectStore(PACKET_INDEX_STORE).put({
+        id: updated.id,
+        fileName: updated.fileName,
+        classification: updated.classification,
+        uploadDate: updated.uploadDate,
+        lastUpdated: updated.lastUpdated,
+        pageCount: updated.metadata?.pageCount || 1,
+        fileSize: updated.metadata?.fileSize || 0,
+        ocrConfidence: updated.metadata?.ocrConfidence || 0,
+        hasExtractedData: Object.keys(updated.extractedData || {}).length > 0,
+        hasAIAnalysis: !!updated.aiAnalysis,
+        tags: updated.tags || [],
+        version: updated.version,
+      });
+
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+
+    await updatePacketMetadata();
+    markAsModified();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update packet document:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Delete a document from My Packet
+ */
+export const deletePacketDocument = async (documentId) => {
+  try {
+    const db = await openPacketDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(
+        [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+        "readwrite",
+      );
+      tx.objectStore(PACKET_STORE_NAME).delete(documentId);
+      tx.objectStore(PACKET_INDEX_STORE).delete(documentId);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+
+    await updatePacketMetadata();
+    markAsModified();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete packet document:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ============================================================
+// SEARCH & QUERY
+// ============================================================
+
+/**
+ * Search all documents in My Packet by text content.
+ * This searches the raw OCR text - useful for finding specific
+ * phrases, dates, or conditions mentioned anywhere in the veteran's records.
+ *
+ * @param {string} query - Text to search for
+ * @param {Object} options - Search options
+ * @param {string} options.classification - Filter by doc type
+ * @param {boolean} options.caseSensitive - Case-sensitive search
+ * @returns {Promise<Array>} Matching documents with highlighted snippets
+ */
+export const searchPacketDocuments = async (query, options = {}) => {
+  if (!query || query.length < 2) return [];
+
+  try {
+    const allDocs = await getAllPacketDocuments();
+    const searchText = options.caseSensitive ? query : query.toLowerCase();
+    const results = [];
+
+    for (const doc of allDocs) {
+      // Filter by classification if specified
+      if (
+        options.classification &&
+        doc.classification !== options.classification
+      )
+        continue;
+
+      const rawText = options.caseSensitive
+        ? doc.rawText
+        : (doc.rawText || "").toLowerCase();
+      const matchIndex = rawText.indexOf(searchText);
+
+      if (matchIndex !== -1) {
+        // Extract a snippet around the match
+        const start = Math.max(0, matchIndex - 100);
+        const end = Math.min(rawText.length, matchIndex + query.length + 100);
+        const snippet = (doc.rawText || "").substring(start, end);
+
+        results.push({
+          id: doc.id,
+          fileName: doc.fileName,
+          classification: doc.classification,
+          uploadDate: doc.uploadDate,
+          snippet: `...${snippet}...`,
+          matchPosition: matchIndex,
+        });
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Failed to search packet documents:", error);
+    return [];
+  }
+};
+
+/**
+ * Get the raw text for a specific document - used by AI tools
+ * that need to re-read a document for analysis.
+ */
+export const getDocumentRawText = async (documentId) => {
+  const doc = await getPacketDocument(documentId);
+  return doc?.rawText || "";
+};
+
+/**
+ * Get the extracted structured data for a document
+ */
+export const getDocumentExtractedData = async (documentId) => {
+  const doc = await getPacketDocument(documentId);
+  return doc?.extractedData || {};
+};
+
+/**
+ * Get ALL extracted structured data for use by AI tools.
+ * Returns a combined object with data organized by document type.
+ */
+export const getAllExtractedData = async ({ strict = false } = {}) => {
+  try {
+    const allDocs = await getAllPacketDocuments({ strict });
+    const data = {
+      dd214s: [],
+      claimLetters: [],
+      ratingDecisions: [],
+      medicalRecords: [],
+      blueButton: [],
+      cFiles: [],
+      other: [],
+    };
+
+    for (const doc of allDocs) {
+      const entry = {
+        id: doc.id,
+        fileName: doc.fileName,
+        uploadDate: doc.uploadDate,
+        extractedData: doc.extractedData || {},
+        aiAnalysis: doc.aiAnalysis || null,
+      };
+
+      switch (doc.classification) {
+        case PACKET_DOC_TYPES.DD214:
+        case PACKET_DOC_TYPES.DD215:
+        case PACKET_DOC_TYPES.NGB22:
+        case PACKET_DOC_TYPES.DD256:
+        case PACKET_DOC_TYPES.DD257:
+          data.dd214s.push(entry);
+          break;
+        case PACKET_DOC_TYPES.CLAIM_LETTER:
+          data.claimLetters.push(entry);
+          break;
+        case PACKET_DOC_TYPES.RATING_DECISION:
+          data.ratingDecisions.push(entry);
+          break;
+        case PACKET_DOC_TYPES.MEDICAL_RECORD:
+        case PACKET_DOC_TYPES.DBQ:
+        case PACKET_DOC_TYPES.NEXUS_LETTER:
+        case PACKET_DOC_TYPES.EXAM_REPORT:
+          data.medicalRecords.push(entry);
+          break;
+        case PACKET_DOC_TYPES.BLUE_BUTTON:
+          data.blueButton.push(entry);
+          break;
+        case PACKET_DOC_TYPES.C_FILE:
+          data.cFiles.push(entry);
+          break;
+        default:
+          data.other.push(entry);
+      }
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Failed to get all extracted data:", error);
+    if (strict) throw error;
+    return {
+      dd214s: [],
+      claimLetters: [],
+      ratingDecisions: [],
+      medicalRecords: [],
+      blueButton: [],
+      cFiles: [],
+      other: [],
+    };
+  }
+};
+
+// ============================================================
+// METADATA & STATISTICS
+// ============================================================
+
+/**
+ * Update the lightweight metadata cache in localStorage
+ */
+const updatePacketMetadata = async () => {
+  try {
+    const index = await getPacketIndex();
+    const meta = {
+      documentCount: index.length,
+      byType: {},
+      lastUpdated: new Date().toISOString(),
+      totalSize: 0,
+    };
+
+    for (const doc of index) {
+      meta.byType[doc.classification] =
+        (meta.byType[doc.classification] || 0) + 1;
+      meta.totalSize += doc.fileSize || 0;
+    }
+
+    localStorage.setItem(PACKET_META_KEY, JSON.stringify(meta));
+  } catch (error) {
+    console.error("Failed to update packet metadata:", error);
+  }
+};
+
+/**
+ * Get packet statistics (fast - uses cached metadata)
+ */
+export const getPacketStats = () => {
+  try {
+    const meta = localStorage.getItem(PACKET_META_KEY);
+    if (meta) return JSON.parse(meta);
+    return { documentCount: 0, byType: {}, lastUpdated: null, totalSize: 0 };
+  } catch {
+    return { documentCount: 0, byType: {}, lastUpdated: null, totalSize: 0 };
+  }
+};
+
+/**
+ * Check if packet has any documents
+ */
+export const hasPacketDocuments = () => {
+  const stats = getPacketStats();
+  return stats.documentCount > 0;
+};
+
+/**
+ * Check if packet has a specific document type
+ */
+export const hasDocumentType = (classification) => {
+  const stats = getPacketStats();
+  return (stats.byType[classification] || 0) > 0;
+};
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+
+/**
+ * Export all My Packet documents as a JSON file for backup
+ */
+export const exportPacket = async () => {
+  try {
+    const allDocs = await getAllPacketDocuments();
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      version: "1.0",
+      documentCount: allDocs.length,
+      documents: allDocs,
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `vetrate-my-packet-${new Date().toISOString().split("T")[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    return { success: true, documentCount: allDocs.length };
+  } catch (error) {
+    console.error("Failed to export packet:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Import documents from a packet backup file
+ */
+export const importPacket = async (jsonData, mode = "merge") => {
+  try {
+    const data = typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
+    if (!data.documents || !Array.isArray(data.documents)) {
+      return { success: false, error: "Invalid packet backup file" };
+    }
+
+    let imported = 0;
+    let skipped = 0;
+
+    for (const doc of data.documents) {
+      if (mode === "merge") {
+        // Check if document already exists
+        const existing = await getPacketDocument(doc.id);
+        if (existing) {
+          skipped++;
+          continue;
+        }
+      }
+
+      const db = await openPacketDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(
+          [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+          "readwrite",
+        );
+        tx.objectStore(PACKET_STORE_NAME).put(doc);
+        tx.objectStore(PACKET_INDEX_STORE).put({
+          id: doc.id,
+          fileName: doc.fileName,
+          classification: doc.classification,
+          uploadDate: doc.uploadDate,
+          lastUpdated: doc.lastUpdated,
+          pageCount: doc.metadata?.pageCount || 1,
+          fileSize: doc.metadata?.fileSize || 0,
+          ocrConfidence: doc.metadata?.ocrConfidence || 0,
+          hasExtractedData: Object.keys(doc.extractedData || {}).length > 0,
+          hasAIAnalysis: !!doc.aiAnalysis,
+          tags: doc.tags || [],
+          version: doc.version || 1,
+        });
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+      imported++;
+    }
+
+    await updatePacketMetadata();
+    markAsModified();
+    return { success: true, imported, skipped };
+  } catch (error) {
+    console.error("Failed to import packet:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Clear all documents from My Packet
+ */
+export const clearPacket = async () => {
+  try {
+    const db = await openPacketDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(
+        [PACKET_STORE_NAME, PACKET_INDEX_STORE],
+        "readwrite",
+      );
+      tx.objectStore(PACKET_STORE_NAME).clear();
+      tx.objectStore(PACKET_INDEX_STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+
+    localStorage.removeItem(PACKET_META_KEY);
+    markAsModified();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to clear packet:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ============================================================
+// GENERATE AI CONTEXT FROM PACKET
+// ============================================================
+
+/**
+ * Generate a comprehensive AI context string from all packet documents.
+ * This is what gets injected into AI prompts so the AI knows everything
+ * about the veteran's case without re-reading documents.
+ *
+ * @param {Object} options - Options
+ * @param {number} options.maxTokens - Approximate max tokens (chars/2)
+ * @param {string[]} options.types - Filter to specific doc types
+ * @returns {Promise<string>} AI-ready context string
+ */
+export function _groupDocsByType(allDocs, types) {
+  const grouped = {};
+  for (const doc of allDocs) {
+    if (types && !types.includes(doc.classification)) continue;
+    if (!grouped[doc.classification]) grouped[doc.classification] = [];
+    grouped[doc.classification].push(doc);
+  }
+  return grouped;
+}
+
+function _formatDeployment(d) {
+  const place = d.location || d.operation || "";
+  const dates = `${d.startDate || ""}-${d.endDate || ""}`;
+  return `${place} ${dates}`;
+}
+
+// ADR-007: the entry date line is now a projection of the SAME canonical
+// resolver every other consumer uses, not the document's own raw
+// extractedData - getServiceEntryForDocument proves this specific document
+// is linked to a canonical period before overriding its own printed value,
+// so a veteran's correction (or a later document's higher-precedence date)
+// is visible here too, with honest provenance, instead of this AI-context
+// line silently disagreeing with the Service tab/dossier/system prompt.
+function _formatServiceEntryLine(data, documentEntryDate, fileName) {
+  const p = getServiceEntryForDocument(fileName);
+  if (p) {
+    let line = `  Entry: ${p.date}`;
+    if (p.derived) line += " (calculated from net service)";
+    // p.documentDate (startDateCorrection.documentDate) is period-level,
+    // not per-document - a later document merging onto this same period
+    // (a code sheet, say) refreshes it to ITS OWN incoming date, so it can
+    // disagree with what THIS specific fileName actually printed. This
+    // packet doc's own extractedData (documentEntryDate) is always this
+    // document's real value.
+    if (
+      p.source === "veteran" &&
+      documentEntryDate &&
+      !isSameCalendarDay(documentEntryDate, p.date)
+    ) {
+      line += ` (veteran-corrected; this document shows ${documentEntryDate})`;
+    }
+    return `${line}\n`;
+  }
+  const derived = !!(data.entryDateDerived || data.serviceStartDateDerived);
+  return `  Entry: ${documentEntryDate}${derived ? " (calculated from net service)" : ""}\n`;
+}
+
+// Owner decision D (2026-09-28, ADR-008): a DD-214/NGB-22's own extracted
+// `fullName` is a direct veteran identifier - it never enters an AI
+// context, full stop, the same as VKB's buildPersonalContext. This used to
+// print `  Name: ${data.fullName}` here.
+export function _formatServiceRecordBasics(data, fileName) {
+  let out = "";
+  if (data.branch) out += `  Branch: ${data.branch}\n`;
+  if (data.component) out += `  Component: ${data.component}\n`;
+  // F19 (final13 QA re-review, 2026-09-28): the same D13-7 empty-placeholder
+  // defect (fixed in veteranKnowledgeBase.js's Period line) was still live
+  // here - a rank with no extracted pay grade printed "SGT ()", and a MOS
+  // with no title left a trailing " - ".
+  if (data.rank) {
+    const payGradePart = data.payGrade ? ` (${data.payGrade})` : "";
+    out += `  Rank: ${data.rank}${payGradePart}\n`;
+  }
+  if (data.mos) {
+    const mosTitlePart = data.mosTitle ? ` - ${data.mosTitle}` : "";
+    out += `  MOS: ${data.mos}${mosTitlePart}\n`;
+  }
+  const documentEntryDate = data.entryDate ?? data.serviceStartDate;
+  if (documentEntryDate) {
+    out += _formatServiceEntryLine(data, documentEntryDate, fileName);
+  }
+  if (data.separationDate) out += `  Separation: ${data.separationDate}\n`;
+  if (data.characterOfService)
+    out += `  Character: ${data.characterOfService}\n`;
+  return out;
+}
+
+// D11-5 (final11 QA, 2026-09-27): award objects reaching this function have
+// no flat `.name` when they came from ribbonRackData.parseDD214Text (Muster
+// Call's regex path emits {award: {name}, matchedText}, not {name}) - `a.name
+// || a` fell through to the whole object, printing "[object Object]" into
+// this packet doc's AI context. awardDisplayName (combatService.js) already
+// handles every award shape in circulation; reused here instead of
+// duplicating that shape knowledge.
+export function _formatServiceRecordHighlights(data) {
+  let out = "";
+  if (data.awards?.length) {
+    out += `  Awards: ${data.awards.map((a) => awardDisplayName(a)).join("; ")}\n`;
+  }
+  if (data.combatService?.hasVerifiedCombat) {
+    out += `  Combat: YES (${data.combatService.indicators?.join(", ") || "verified"})\n`;
+  }
+  if (data.deployments?.length) {
+    out += `  Deployments: ${data.deployments.map(_formatDeployment).join("; ")}\n`;
+  }
+  if (data.specialQualifications?.length) {
+    out += `  Qualifications: ${data.specialQualifications.join(", ")}\n`;
+  }
+  return out;
+}
+
+// D15-3: DD214Analyzer.jsx classifies EVERY service-record upload as
+// PACKET_DOC_TYPES.DD214 regardless of which form it actually is (an
+// NGB-22 the analyzer processed lands in the same packet group as a real
+// DD-214 - Muster Call's own import path classifies correctly, so this
+// only matters for documents that went through DD214Analyzer). The
+// group's label alone is therefore unreliable; the document's OWN
+// extracted form type (`masterRecordType`, or `documentTypes[0]` as a
+// fallback - both are fields DD214Analyzer's AI schema always returns,
+// never gated by ADR-008 since neither is a direct identifier) is the
+// source of truth whenever it names a form this app has its own label
+// for. Order-independent by construction - it reads only the document's
+// own already-saved data, never anything about WHEN or in what sequence
+// other documents were imported.
+const EXTRACTED_TYPE_TO_PACKET_TYPE = {
+  DD214: PACKET_DOC_TYPES.DD214,
+  NGB22: PACKET_DOC_TYPES.NGB22,
+  DD256: PACKET_DOC_TYPES.DD256,
+  DD257: PACKET_DOC_TYPES.DD257,
+  DD215: PACKET_DOC_TYPES.DD215,
+};
+
+// D15-3: strip anything but letters/digits and uppercase before the lookup,
+// so "NGB-22" / "NGB 22" / "ngb22" (all real model/OCR output shapes) match
+// EXTRACTED_TYPE_TO_PACKET_TYPE's plain "NGB22" key the same as an exact one.
+function _normalizeExtractedType(value) {
+  return typeof value === "string"
+    ? value.replace(/[^A-Za-z0-9]/g, "").toUpperCase()
+    : value;
+}
+
+// D15-3: documentClassifier routinely misclassifies a genuine NGB-22 scan
+// as "DD214" (FIX-15's own note in musterCallProcessor.js), which is what
+// archiveDocumentInPacket's group label (`fallbackLabel` here) is keyed on
+// - so a real NGB-22 could read "DD-214 (Service Record)" in the packet.
+// parseServiceRecord's own output only ever carries `formType` (NEVER
+// `masterRecordType`/`documentTypes` - those are DD214Analyzer's AI-schema
+// field names, a different pipeline entirely), so a Muster Call-imported
+// document's own recorded formType is checked too, and wins over the
+// group's classification-derived fallback whenever it names a form this
+// app has its own label for.
+function _resolveDocTypeLabel(doc, fallbackLabel) {
+  const extractedType = _normalizeExtractedType(
+    doc.extractedData?.masterRecordType ||
+      doc.extractedData?.documentTypes?.[0] ||
+      doc.extractedData?.formType,
+  );
+  const packetType =
+    extractedType && EXTRACTED_TYPE_TO_PACKET_TYPE[extractedType];
+  return packetType ? PACKET_DOC_LABELS[packetType] : fallbackLabel;
+}
+
+// Owner decision D (2026-09-28, ADR-008): a veteran's real exported
+// document filenames commonly carry their own surname/first name and the
+// last four of their VA file number (VA's own export naming convention).
+// Every AI-context label built from a document uses a neutral, structural
+// label - document type + upload date + index - instead of the raw
+// fileName, so a document label can never itself be an identifier. The
+// real fileName is still shown in the veteran-facing UI (My Packet's
+// document list) - only the AI-context text goes through this.
+function _neutralDocLabel(doc, typeLabel, index) {
+  const date = (doc.uploadDate || "").split("T")[0] || "unknown date";
+  const resolvedLabel = _resolveDocTypeLabel(doc, typeLabel);
+  return `${resolvedLabel} ${date} (#${index + 1})`;
+}
+
+// D13-4: no raw-OCR-text fallback here (dropped a dormant, never-called
+// `options.includeRawText` branch that used to embed up to 2000 chars of a
+// document's raw text - a claim letter's raw OCR is its own letterhead,
+// carrying the veteran's name/address/VA file number). A service record
+// with no structured extraction contributes nothing, same as any other
+// doc type once JSON.stringify(doc.extractedData) itself was replaced by
+// an explicit safe-field whitelist below.
+export function _formatServiceRecordDoc(
+  doc,
+  typeLabel = "Service record",
+  index = 0,
+) {
+  const data = doc.extractedData || {};
+  if (Object.keys(data).length === 0) return "";
+
+  let out = `Document: ${_neutralDocLabel(doc, typeLabel, index)}\n`;
+  out += _formatServiceRecordBasics(data, doc.fileName);
+  out += _formatServiceRecordHighlights(data);
+  out += "\n";
+  return out;
+}
+
+function _formatServiceRecordSection(grouped) {
+  const serviceRecordTypes = [
+    PACKET_DOC_TYPES.DD214,
+    PACKET_DOC_TYPES.NGB22,
+    PACKET_DOC_TYPES.DD256,
+  ];
+
+  let out = "";
+  for (const type of serviceRecordTypes) {
+    if (!grouped[type]) continue;
+    const typeLabel = PACKET_DOC_LABELS[type];
+    out += `--- ${typeLabel} ---\n`;
+    grouped[type].forEach((doc, index) => {
+      out += _formatServiceRecordDoc(doc, typeLabel, index);
+    });
+    delete grouped[type];
+  }
+  return out;
+}
+
+// D12-5 residual (final12 QA re-review, 2026-09-27): musterCallProcessor's
+// buildSegmentedCFileResult stores `summary` as quickScanCFile()'s scan
+// object ({estimatedPages, hasCodeSheet, hasDD214, hasDBQs, hasBVA,
+// detectedTypes}), not prose - `String(summary)` printed "[object Object]"
+// into every AI tool's context. cfileAnalyzer.js's separate AI-analysis path
+// still emits a plain string summary, so that shape is rendered unchanged.
+function _formatCFileSummaryLine(summary) {
+  if (!summary) return "";
+  if (typeof summary === "string") return summary.slice(0, 400);
+  if (typeof summary !== "object") return "";
+  const pages = Number.isFinite(summary.estimatedPages)
+    ? `~${summary.estimatedPages} pages`
+    : "";
+  const types = Array.isArray(summary.detectedTypes)
+    ? summary.detectedTypes.join(", ")
+    : "";
+  return [pages, types && `detected: ${types}`].filter(Boolean).join(", ");
+}
+
+// Structured C-File formatter - replaces the 500-char JSON blob for C-Files.
+// The extractedData is the C-File analysis object (potential_claims, timeline,
+// summary, exposures), so emit readable condition/evidence lines an AI tool can
+// actually use. Conditions are AI SUGGESTIONS (not filed claims) - labelled so.
+export function _formatCFileDoc(doc, index = 0) {
+  const data = doc.extractedData || {};
+  let out = `Document: ${_neutralDocLabel(doc, "C-File", index)}\n`;
+  const summaryLine = _formatCFileSummaryLine(data.summary);
+  if (summaryLine) {
+    out += `  Summary: ${summaryLine}\n`;
+  }
+  const claims = Array.isArray(data.potential_claims)
+    ? data.potential_claims
+    : [];
+  if (claims.length > 0) {
+    out += "  Identified conditions (AI suggestions, not yet filed):\n";
+    claims.slice(0, 25).forEach((c) => {
+      const name = c.condition || c.name || "Unknown";
+      const dc = c.diagnosticCode ? ` [DC ${c.diagnosticCode}]` : "";
+      out += `    • ${name}${dc}`;
+      if (c.missing_element) out += ` - missing: ${c.missing_element}`;
+      out += "\n";
+    });
+    if (claims.length > 25) {
+      out += `    ... and ${claims.length - 25} more\n`;
+    }
+  }
+  const exposures = Array.isArray(data.exposures) ? data.exposures : [];
+  const exposureNames = exposures
+    .map((e) => (typeof e === "string" ? e : e?.type))
+    .filter(Boolean);
+  if (exposureNames.length > 0) {
+    out += `  Exposures: ${exposureNames.join(", ")}\n`;
+  }
+  out += "\n";
+  return out;
+}
+
+function _formatCFileSection(grouped) {
+  const cFiles = grouped[PACKET_DOC_TYPES.C_FILE];
+  if (!cFiles || cFiles.length === 0) return "";
+  let out = `--- ${PACKET_DOC_LABELS[PACKET_DOC_TYPES.C_FILE]} ---\n`;
+  cFiles.forEach((doc, index) => {
+    out += _formatCFileDoc(doc, index);
+  });
+  // Remove so it does NOT also fall through to the truncated JSON blob below.
+  delete grouped[PACKET_DOC_TYPES.C_FILE];
+  return out;
+}
+
+// D13-4: every musterCallProcessor.js parser bakes a `raw: text.substring(0,
+// N)` field straight into extractedData (a claim letter's letterhead - the
+// veteran's own name/home address/VA file number), and a document type with
+// no dedicated parser resolves to ONLY that raw field
+// (parseDocumentByType's default branch). Dumping doc.extractedData whole
+// used to embed all of it verbatim. An explicit allowlist of known-safe,
+// non-identifying field names - never `raw`/`type`/`error`, never
+// `vaFileNumber` (often literally the veteran's SSN, per parseClaimLetter's
+// own comment), never `claimNumber` (document-identifying, not needed for
+// analysis) - so a document with nothing but the raw-text fallback
+// contributes nothing at all instead of leaking it.
+const PACKET_CONTEXT_SAFE_FIELDS = [
+  "combinedRating",
+  "combinedRatingHistory",
+  "effectiveDate",
+  "decisionDate",
+  "claimDate",
+  "letterDate",
+  "decisions",
+  "conditions",
+  "evidenceNeeded",
+  "responseDeadlineDays",
+  "status",
+  "condition",
+  "diagnosis",
+  "diagnoses",
+  "nexusOpinion",
+  "opinion",
+  "rationale",
+  "examDate",
+  "examiner",
+  "dateOfService",
+  "treatments",
+  "medications",
+  "provider",
+];
+
+// F5 (final13 QA re-review, 2026-09-28): several allowlisted fields are
+// near-raw OCR text rather than tightly-structured extraction -
+// evidenceNeeded is a regex capture of up to 800 chars of page text
+// (musterCallProcessor.js's parseClaimLetter), and diagnosis/rationale/
+// opinion/provider/examiner are similarly loosely bounded. A letterhead or
+// footer landing inside that captured span (a running page header pdf.js
+// emits at the end of a content stream, a "write your name and file
+// number" line) carries the veteran's own name/VA file number straight
+// through the allowlist. Scrubbed for the numeric PII piiScrubber.js can
+// actually detect (SSN/VA file number/phone/email/DOB/address) before
+// being embedded - it has no name-detection (no regex catches a bare
+// name), so this narrows the exposure rather than closing it outright.
+const FREE_TEXT_SAFE_FIELDS = new Set([
+  "evidenceNeeded",
+  "diagnosis",
+  "diagnoses",
+  "rationale",
+  "opinion",
+  "nexusOpinion",
+  "provider",
+  "examiner",
+]);
+
+function _scrubFreeTextValue(value) {
+  if (typeof value === "string") return scrubText(value);
+  if (Array.isArray(value)) {
+    return value.map((v) => (typeof v === "string" ? scrubText(v) : v));
+  }
+  return value;
+}
+
+// D15-4: was `JSON.stringify(safe).substring(0, 500)` - a fixed character
+// cut with no regard for where a value ended, routinely slicing mid-JSON
+// (an unterminated string, a dangling `"field":` with the rest of its
+// value cut off). `_safeExtractedDataSummary`'s null check was also
+// top-level only - a nested sub-field (a `{years:0,months:null,days:5}`-
+// shaped service-time object, say) still printed `"months":null` into the
+// blob. Rendered as readable "Label: value" lines instead of JSON:
+// _deepCleanNullish drops null/undefined/empty values at EVERY depth, and
+// nothing is ever cut mid-value - a field line is either included whole or
+// dropped whole (see the char-budget loop in _formatOtherDocsSection).
+function _humanizeFieldLabel(field) {
+  return field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+// D15-4: an LLM-parsed field can come back holding the literal STRING
+// "null" (a common model output for "no value") rather than a real JS
+// null - that string is truthy and non-empty by every other check here, so
+// it survived to render as "Status: null" instead of being dropped like an
+// actual null would be.
+function _isEmptyValue(value) {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed === "" || trimmed.toLowerCase() === "null";
+  }
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object") return Object.keys(value).length === 0;
+  return false;
+}
+
+function _deepCleanNullish(value) {
+  if (_isEmptyValue(value)) return undefined;
+  if (Array.isArray(value)) {
+    const cleaned = value
+      .map(_deepCleanNullish)
+      .filter((v) => !_isEmptyValue(v));
+    return cleaned.length > 0 ? cleaned : undefined;
+  }
+  if (typeof value === "object") {
+    const cleaned = {};
+    for (const [key, val] of Object.entries(value)) {
+      const cleanedVal = _deepCleanNullish(val);
+      if (!_isEmptyValue(cleanedVal)) cleaned[key] = cleanedVal;
+    }
+    return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+  }
+  return value;
+}
+
+// Renders an already-deep-cleaned value as a compact, readable string -
+// never JSON.stringify, so the result can never contain a literal "null"
+// or an unbalanced brace/quote from a mid-value cut.
+function _renderReadableValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(_renderReadableValue).join("; ");
+  }
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(
+        ([key, val]) =>
+          `${_humanizeFieldLabel(key)}: ${_renderReadableValue(val)}`,
+      )
+      .join(", ");
+  }
+  return String(value);
+}
+
+function _safeExtractedDataSummary(extractedData) {
+  const safe = {};
+  for (const field of PACKET_CONTEXT_SAFE_FIELDS) {
+    const rawValue = extractedData[field];
+    const scrubbedValue = FREE_TEXT_SAFE_FIELDS.has(field)
+      ? _scrubFreeTextValue(rawValue)
+      : rawValue;
+    const cleaned = _deepCleanNullish(scrubbedValue);
+    if (cleaned === undefined) continue;
+    safe[field] = cleaned;
+  }
+  return safe;
+}
+
+// Whole-line budget, never a mid-value cut: a field's "Label: value" line
+// is either included in full or dropped in full once the running total
+// would exceed the budget - unlike the old fixed substring(0, 500), no
+// value is ever sliced partway through.
+const MAX_OTHER_DOC_SUMMARY_CHARS = 2000;
+// D15-4: a single field (a multi-issue rating decision's `decisions`
+// array, one line per issue) can be large enough to consume the ENTIRE
+// doc budget on its own, leaving nothing for every field that comes after
+// it (evidenceNeeded, responseDeadlineDays, rationale) even though each
+// would fit easily by itself. Capping any one field's own share guarantees
+// the remaining fields still get a chance at the rest of the budget.
+const MAX_SINGLE_FIELD_CHARS = Math.floor(MAX_OTHER_DOC_SUMMARY_CHARS * 0.6);
+
+// D15-4 regression: a multi-issue rating decision's `decisions` array (25+
+// items for a real decision letter) rendered as ONE line via
+// `_renderReadableValue`'s array branch (`.join("; ")`) - a single line
+// that alone exceeds the whole-doc budget. The original `break` on the
+// first over-budget line then dropped every field that came AFTER it too
+// (evidenceNeeded, responseDeadlineDays, rationale), even ones that would
+// have fit on their own. Rendering an array field as one line PER ITEM
+// lets individual decisions be included up to the budget instead of an
+// all-or-nothing blob, and `continue` (not `break`) below means one
+// oversized line only costs itself, not every field after it.
+function _fieldLines(field, value) {
+  const label = _humanizeFieldLabel(field);
+  if (Array.isArray(value)) {
+    return value.map(
+      (item, i) => `    ${label} ${i + 1}: ${_renderReadableValue(item)}\n`,
+    );
+  }
+  return [`    ${label}: ${_renderReadableValue(value)}\n`];
+}
+
+function _formatOtherDoc(doc, label, index) {
+  let out = `  ${_neutralDocLabel(doc, label, index)}\n`;
+  const safe = _safeExtractedDataSummary(doc.extractedData || {});
+  let summaryChars = 0;
+  for (const [field, value] of Object.entries(safe)) {
+    let fieldChars = 0;
+    for (const line of _fieldLines(field, value)) {
+      if (summaryChars + line.length > MAX_OTHER_DOC_SUMMARY_CHARS) continue;
+      if (fieldChars + line.length > MAX_SINGLE_FIELD_CHARS) continue;
+      out += line;
+      summaryChars += line.length;
+      fieldChars += line.length;
+    }
+  }
+  return out;
+}
+
+export function _formatOtherDocsSection(grouped) {
+  let out = "";
+  for (const [type, docs] of Object.entries(grouped)) {
+    const label = PACKET_DOC_LABELS[type] || type;
+    out += `--- ${label} (${docs.length} document${docs.length > 1 ? "s" : ""}) ---\n`;
+    docs.forEach((doc, index) => {
+      out += _formatOtherDoc(doc, label, index);
+    });
+    out += "\n";
+  }
+  return out;
+}
+
+// ADR-008: generatePacketContext is called both directly (VSO/AI tools that
+// only want the document archive) and as one half of getVeteranAIContext -
+// it must self-apply the final redaction pass rather than rely on a caller
+// to do it, since a direct caller has no reason to know that's needed.
+// Best-effort: an identifier-load failure (e.g. no IndexedDB) must never
+// block the packet context itself from returning.
+async function _redactPacketContext(context) {
+  try {
+    const vkb = await loadVKB();
+    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+      .map((c) => c.claimNumber)
+      .filter(Boolean);
+    // ADR-008: merge in the flat legacy profile - it's the only place
+    // firstName/lastName/serviceNumber/mailingStreet/mailingCity live.
+    const personal = { ...getVeteranProfile(), ...vkb?.personal };
+    return redactVeteranIdentifiers(context, personal, claimNumbers);
+  } catch {
+    return context;
+  }
+}
+
+export const generatePacketContext = async (options = {}) => {
+  try {
+    const allDocs = await getAllPacketDocuments();
+    if (allDocs.length === 0) return "";
+
+    const maxChars = (options.maxTokens || 4000) * 2;
+    let context = "=== MY PACKET: VETERAN DOCUMENT SUMMARY ===\n\n";
+    context += `Documents on file: ${allDocs.length}\n\n`;
+
+    const grouped = _groupDocsByType(allDocs, options.types);
+
+    // DD214s first (most important for claims)
+    context += _formatServiceRecordSection(grouped);
+
+    // C-Files get a structured formatter (conditions + missing evidence +
+    // summary) instead of the truncated JSON blob used for other types.
+    context += _formatCFileSection(grouped);
+
+    // Other document types
+    context += _formatOtherDocsSection(grouped);
+
+    // ADR-008: redact BEFORE truncating - cutting first can leave a
+    // partial name/file-number token (e.g. a surname sliced to "Faketo"
+    // immediately before "[... TRUNCATED ...]") that no longer matches a
+    // whole known value and survives the cut.
+    const redacted = await _redactPacketContext(context);
+
+    if (redacted.length > maxChars) {
+      return (
+        redacted.substring(0, maxChars) +
+        "\n[... TRUNCATED ...]\n=== END MY PACKET ===\n"
+      );
+    }
+    return redacted + "=== END MY PACKET ===\n";
+  } catch (error) {
+    console.error("Failed to generate packet context:", error);
+    return "";
+  }
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+/**
+ * Simple string sanitizer
+ */
+function sanitize(str, maxLength = 500) {
+  if (typeof str !== "string") return "";
+  let s = str.slice(0, maxLength);
+  s = s.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+  s = s.replace(/on\w+\s*=/gi, "");
+  s = s.replace(/javascript:/gi, "");
+  // eslint-disable-next-line no-control-regex
+  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  return s.trim();
+}
+
+export default {
+  saveDocumentToPacket,
+  findDuplicatePacketDocument,
+  getPacketDocument,
+  getPacketIndex,
+  getPacketDocumentsByType,
+  getAllPacketDocuments,
+  updatePacketDocument,
+  deletePacketDocument,
+  searchPacketDocuments,
+  getDocumentRawText,
+  getDocumentExtractedData,
+  getAllExtractedData,
+  getPacketStats,
+  hasPacketDocuments,
+  hasDocumentType,
+  exportPacket,
+  importPacket,
+  clearPacket,
+  generatePacketContext,
+  PACKET_DOC_TYPES,
+  PACKET_DOC_LABELS,
+  PACKET_DOC_ICONS,
+};

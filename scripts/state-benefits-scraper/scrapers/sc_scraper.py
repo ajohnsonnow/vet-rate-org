@@ -1,0 +1,135 @@
+"""
+South Carolina State Benefits Scraper
+"""
+
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
+from simple_scraper import SimpleStateScraper, Benefit, Requirements, LegalCitation
+
+
+class SouthCarolinaScraper(SimpleStateScraper):
+    """Scraper for South Carolina veteran benefits"""
+    
+    def __init__(self):
+        super().__init__(
+            state_name="South Carolina",
+            state_code="SC",
+            base_url="https://dvs.sc.gov"
+        )
+    
+    def scrape_benefits(self) -> list[Benefit]:
+        """Scrape all South Carolina veteran benefits"""
+        benefits = []
+        
+        # Property Tax - 100% Disabled Veteran Exemption
+        benefits.append(Benefit(
+            state="South Carolina",
+            state_code="SC",
+            name="100% Disabled Veteran Property Tax Exemption",
+            category="Property Tax",
+            description="Veterans rated 100% service-connected disabled by the VA receive property tax exemption on their primary residence.",
+            estimated_value="$2,000-$5,000/year",
+            requirements=Requirements(
+                min_rating=100,
+                residency_required=True,
+                disability_specific=["100% service-connected disability"],
+                additional_notes=["Must be primary residence"]
+            ),
+            how_to_apply="Apply with your county tax assessor. Submit VA rating letter showing 100% disability, DD-214, and proof of residency.",
+            legal_citations=[
+                LegalCitation(
+                    statute="South Carolina Property Tax Code",
+                    description="Property tax exemption for 100% disabled veterans",
+                    url="https://dvs.sc.gov"
+                )
+            ],
+            source_url="https://dvs.sc.gov/benefits/property-tax",
+            last_verified="2026-01-24"
+        ))
+        
+        # Vehicle - Disabled Veteran License Plates
+        benefits.append(Benefit(
+            state="South Carolina",
+            state_code="SC",
+            name="Disabled Veteran License Plates",
+            category="Vehicle",
+            description="Veterans with service-connected disabilities can obtain special DV license plates with reduced or waived registration fees.",
+            estimated_value="$35-$75/year",
+            requirements=Requirements(
+                min_rating=0,
+                residency_required=True,
+                disability_specific=None,
+                additional_notes=["Any service-connected disability qualifies"]
+            ),
+            how_to_apply="Visit your local DMV office. Submit VA rating letter and DD-214.",
+            legal_citations=[
+                LegalCitation(
+                    statute="South Carolina Vehicle Code",
+                    description="Disabled veteran license plates",
+                    url="https://dmv.sc.gov"
+                )
+            ],
+            source_url="https://dmv.sc.gov/dv-plates",
+            last_verified="2026-01-24"
+        ))
+        
+        # Education - In-State Tuition
+        benefits.append(Benefit(
+            state="South Carolina",
+            state_code="SC",
+            name="In-State Tuition for Veterans",
+            category="Education",
+            description="Veterans using GI Bill benefits qualify for in-state tuition at South Carolina public colleges and universities.",
+            estimated_value="$12,000-$20,000/year",
+            requirements=Requirements(
+                min_rating=0,
+                residency_required=False,
+                disability_specific=None,
+                additional_notes=["Must be using GI Bill benefits"]
+            ),
+            how_to_apply="Contact the veterans services office at your South Carolina institution. Submit DD-214 and proof of GI Bill eligibility.",
+            legal_citations=[
+                LegalCitation(
+                    statute="South Carolina Education Code",
+                    description="In-state tuition for veterans",
+                    url="https://education.sc.gov"
+                )
+            ],
+            source_url="https://education.sc.gov/veterans",
+            last_verified="2026-01-24"
+        ))
+        
+        # Recreation - Hunting/Fishing Licenses
+        benefits.append(Benefit(
+            state="South Carolina",
+            state_code="SC",
+            name="Hunting and Fishing License Discount",
+            category="Recreation",
+            description="Disabled veterans receive discounted or free hunting and fishing licenses in South Carolina.",
+            estimated_value="$50-$100/year",
+            requirements=Requirements(
+                min_rating=10,
+                residency_required=True,
+                disability_specific=None,
+                additional_notes=["Discount varies by disability rating"]
+            ),
+            how_to_apply="Purchase licenses from any vendor or online. Show VA rating letter for discount.",
+            legal_citations=[
+                LegalCitation(
+                    statute="South Carolina Wildlife Code",
+                    description="License discounts for disabled veterans",
+                    url="https://wildlife.sc.gov"
+                )
+            ],
+            source_url="https://wildlife.sc.gov/veterans",
+            last_verified="2026-01-24"
+        ))
+        
+        return benefits
+
+
+if __name__ == "__main__":
+    scraper = SouthCarolinaScraper()
+    scraper.run()

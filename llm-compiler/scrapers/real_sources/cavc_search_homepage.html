@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>USCAVC: Search</title>
+<link rel="stylesheet" href="http://www.uscourts.cavc.gov/style/master_regform.css" type="text/css" media="all" />
+<script src="http://www.uscourts.cavc.gov/scripts/jquery.js"></script>
+<script>
+
+	$(function(){
+
+	  var tipsDiv = $("#tips,#hideTips").hide().add("#showTips");
+	  $("#tips").prev("p").bind("click", function(){
+		tipsDiv.toggle();
+		return false;
+	  });
+
+	});
+
+</script>
+ </head>
+
+<body>
+
+<div id="wrapper"> <!--General wrapper-->		<a href="http://www.uscourts.cavc.gov/index.php"><div id="seal_box"></div></a>
+   	 
+		<div id="header"> <!--Header-->		
+		<h1><a href="http://www.uscourts.cavc.gov/index.php">United States Court of Appeals<br/>for Veterans Claims</a></h1>
+		<ul>
+		<li><a href="http://www.uscourts.cavc.gov/index.php">Home</a></li>
+		<li><a href="http://www.uscourts.cavc.gov/about.php">About the Court</a></li>
+		<li><a href="http://www.uscourts.cavc.gov/links.php">Helpful Links</a></li>
+		<li><a href="http://www.uscourts.cavc.gov/employment.php">Employment</a></li>
+		<li><a href="http://www.uscourts.cavc.gov/faqs.php">FAQs</a></li>
+		<li><a href="http://www.uscourts.cavc.gov/contact.php">Contact Us</a></li>
+		</ul>
+		<p id="chief_judge_link">
+		Chief Judge<br/><a href="http://www.uscourts.cavc.gov/allen.php"><b>Michael P. Allen</b></a><br />
+		Clerk of the Court<br /><a href="http://www.uscourts.cavc.gov/wagner.php"><b>Tiffany M. Wagner</b></a>
+		</p>
+		</div> <!--Ends header-->		
+<div id="main_content"> <!--Main content-->
+
+<div id="content" class="column">
+<h3>Welcome to the USCAVC Opinion and Decision Search Site</h3>
+
+<form method="POST" action="/search/">
+<b>Keyword(s): </b><input id="keyword-box" name="IW_FIELD_WEB_STYLE" type="text" style="width: 100%" value="">
+<script type="text/javascript">
+	var keyword_hint='Enter keywords';
+	var current_query='';
+	if (current_query.length == 0) {
+		document.getElementById('keyword-box').value=keyword_hint;
+		document.getElementById('keyword-box').onfocus=function () {
+			if (this.value==keyword_hint) this.value='';
+		}
+	}
+</script>
+<br/>
+<b>Decision Type:</b><br>
+<select name="IW_DATABASE" style="width: 50%">
+<option value="*" selected>All Opinions/Decisions</option>
+<option value="SingleJudgeDecisions">Single Judge Decisions</option>
+<option value="PanelDecisions">Panel Opinions</option>
+</select>
+<br/><br/>
+<input type="submit" value=" Search " />
+
+<input type="hidden" name="IW_DATABASE" value="USCAVC Opinions" />
+</form>
+
+      <!--Search Options -->     
+      <hr />
+      <strong>Search Options:</strong><br />
+      Home | 
+      <a href="/isysadvsearch.html"> Advanced Search</a> | 
+      <a href="/isysmenu.html">Menu Assisted</a> | 
+      <a href="/isysnatural.html">Natural Language</a><br /><br />
+
+
+
+
+
+<!--Allison's search tips -->
+<hr />
+<p><a href="#"><span id="showTips">Show</span><span id="hideTips">Hide</span> search tips</a></p>
+<div id="tips">
+<h3>Search Tips</h3>
+<ol>
+<li>
+AND searches<br>
+&nbsp;&nbsp;&nbsp;example: <strong>medical and dental</strong>
+</li>
+<li>
+OR searches<br>
+&nbsp;&nbsp;&nbsp;example: <strong>medical or dental</strong>
+</li>
+<li>
+Use quotation marks for exact phrase<br>
+&nbsp;&nbsp;&nbsp;example: <strong>"medical malpractice"</strong>
+</li>
+<li>
+Use /10/ for matches within 10 words (note: this only works for the number 10)<br>
+&nbsp;&nbsp;&nbsp;example: <strong>medical /10/ malpractice</strong><br>
+&nbsp;&nbsp;&nbsp;The example above searches for medical within 10 words of malpractice.
+</li>
+<li>
+Use // for matches within the same paragraph<br>
+&nbsp;&nbsp;&nbsp;example: <strong>medical // malpractice</strong><br>
+&nbsp;&nbsp;&nbsp;The example above searches for medical within the same paragraph as malpractice.
+</li>
+<li>
+When setting up your search, be sure to select Panel Opinions where offered to see precedential opinions. Because of Rule 30(a), you cannot cite to single judge decisions.
+</li>
+<li>
+From the results list, click on the primary link to see an HTML rendering of the document. Your search terms will be highlighted in yellow.
+</li>
+<li>
+When viewing a document, click on the word [Download] in the upper left of the screen to see the original PDF or Word Perfect document.
+</li>
+</ol>
+</div>
+</div>
+<div id="side" class="column">
+
+
+
+</div>
+</div>
+
+<hr />
+
+<div id="footer-wrapper">
+<div id="footer" style="padding: 20px;">
+<address style="font-style: normal;"><strong class="aace"><a 
+href="http://www.uscourts.cavc.gov" style="color: #036;">United States Court of Appeals for Veterans Claims</a></strong><br />
+625 Indiana Avenue, NW, Suite 900, Washington, D.C. 20004-2950<br />
+<small><strong>Case related matters only</strong> &nbsp; Phone:(202) 501-5970 
+&nbsp; Fax:(202) 501-5848</address>
+</div>
+</div>
+
+</div>
+
+
+</body>
+</html> 
+

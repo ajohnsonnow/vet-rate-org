@@ -1,0 +1,60 @@
+{
+  "description": "WS-1 ground truth for the very large C-File stress harness. Synthetic and PII-free: condition names, diagnostic codes, and ratings mirror tests/fixtures/redacted-packet.json (an invented combined-70% rating scenario). Nothing here is derived from real document content.",
+  "derivedFrom": "tests/fixtures/redacted-packet.json",
+  "validDcSource": "src/data/disabilityData.json",
+  "expectedCombined": 70,
+  "minInServiceEvents": 5,
+  "conservativeConditionSubstrings": [
+    "Migraine",
+    "Irritable Bowel",
+    "Neuropathy",
+    "Hammer Toe"
+  ],
+  "conditions": [
+    {
+      "conditionName": "Migraine Headaches",
+      "diagnosticCode": 8100,
+      "rating": 40
+    },
+    {
+      "conditionName": "Cervical Strain",
+      "diagnosticCode": 5237,
+      "rating": 10
+    },
+    {
+      "conditionName": "Neuropathy, Upper Extremity, Left",
+      "diagnosticCode": 8515,
+      "rating": 10
+    },
+    {
+      "conditionName": "Neuropathy, Upper Extremity, Right",
+      "diagnosticCode": 8515,
+      "rating": 20
+    },
+    {
+      "conditionName": "Shoulder, Limitation of Motion, Left",
+      "diagnosticCode": 5201,
+      "rating": 10
+    },
+    {
+      "conditionName": "Shoulder, Limitation of Motion, Right",
+      "diagnosticCode": 5201,
+      "rating": 10
+    },
+    {
+      "conditionName": "Knee, Limitation of Extension, Left",
+      "diagnosticCode": 5261,
+      "rating": 0
+    },
+    {
+      "conditionName": "Hammer Toe, Bilateral",
+      "diagnosticCode": 5282,
+      "rating": 0
+    },
+    {
+      "conditionName": "Irritable Bowel Syndrome",
+      "diagnosticCode": 7319,
+      "rating": 10
+    }
+  ]
+}

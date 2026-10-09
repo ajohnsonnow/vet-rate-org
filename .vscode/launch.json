@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Vitest: run all",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "test"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Vitest: current file",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vitest", "run", "${file}"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Chrome: dev server",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/src"
+    }
+  ]
+}

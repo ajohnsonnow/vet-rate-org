@@ -1,0 +1,47 @@
+# Normalize line endings in the git index to LF for all text files.
+# Working-tree files are written as LF on every platform — this prevents
+# the recurring CRLF/LF diff churn that core.autocrlf=true produces on Windows
+# when tools (prettier, eslint, markdownlint --fix, etc.) rewrite files.
+
+* text=auto eol=lf
+
+# Markdown, JSON, YAML, JS/TS, Python — explicit LF
+*.md       text eol=lf
+*.json     text eol=lf
+*.yaml     text eol=lf
+*.yml      text eol=lf
+*.js       text eol=lf
+*.mjs      text eol=lf
+*.cjs      text eol=lf
+*.ts       text eol=lf
+*.tsx      text eol=lf
+*.py       text eol=lf
+*.sh       text eol=lf
+*.bash     text eol=lf
+*.zsh      text eol=lf
+*.toml     text eol=lf
+
+# Windows-only scripts — must use CRLF or cmd.exe / PowerShell legacy hosts mis-parse
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+*.ps1      text eol=crlf
+
+# Binary assets — never diff or merge
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.webp     binary
+*.ico      binary
+*.pdf      binary
+*.zip      binary
+*.gz       binary
+*.tar      binary
+*.7z       binary
+*.woff     binary
+*.woff2    binary
+*.ttf      binary
+*.otf      binary
+*.mp4      binary
+*.mp3      binary
+*.wav      binary

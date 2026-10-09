@@ -1,0 +1,53 @@
+rules:
+  - id: no-eval-usage
+    pattern: eval(...)
+    message: "eval() is a security risk — use JSON.parse() or Function() carefully"
+    languages: [javascript, typescript]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-95"
+
+  - id: no-inner-html-unsanitized
+    patterns:
+      - pattern: $X.innerHTML = $Y
+      - pattern-not: $X.innerHTML = String(safeHtml`...`)
+      - pattern-not: $X.innerHTML = ""
+    message: "Direct innerHTML assignment. Use DOMPurify.sanitize() or safeHtml template tag"
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: no-console-log-production
+    patterns:
+      - pattern: console.log(...)
+      - pattern-not-inside: |
+          if (...) { ... }
+    message: "console.log() in production code. Use a logger (pino, winston) instead."
+    languages: [typescript, javascript]
+    severity: WARNING
+    metadata:
+      category: quality
+
+  - id: hardcoded-ip-address
+    pattern-regex: '(?:10|172\.(?:1[6-9]|2\d|3[01])|192\.168)\.\d{1,3}\.\d{1,3}'
+    message: "Hardcoded private IP address. Use configuration/environment variables."
+    languages: [typescript, javascript, python]
+    severity: WARNING
+
+  - id: python-subprocess-shell-true
+    pattern: subprocess.run(..., shell=True, ...)
+    message: "subprocess with shell=True enables command injection. Pass args as list."
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78"
+
+  - id: python-pickle-usage
+    pattern: pickle.load(...)
+    message: "pickle.load() executes arbitrary code. Use json or msgpack for data serialization."
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502"

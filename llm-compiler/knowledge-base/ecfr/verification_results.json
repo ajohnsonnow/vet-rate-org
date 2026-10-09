@@ -1,0 +1,3763 @@
+{
+  "metadata": {
+    "verified": "2026-01-22T10:17:29.178551",
+    "local_file": "src/data/disabilityData.json",
+    "ecfr_source": "eCFR.gov"
+  },
+  "summary": {
+    "total_local": 748,
+    "total_scraped": 0,
+    "matched": 0,
+    "mismatched": 0,
+    "missing_ecfr": 748,
+    "missing_local": 0
+  },
+  "results": {
+    "matched": [],
+    "mismatched": [],
+    "missing_local": [],
+    "missing_ecfr": [
+      {
+        "dc": "5000",
+        "local_name": "Osteomyelitis (Acute, Subacute, or Chronic)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5001",
+        "local_name": "Bones and Joints, tuberculosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5002",
+        "local_name": "Rheumatoid Arthritis (Multi-joint Arthritis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5003",
+        "local_name": "Degenerative Joint Disease (Osteoarthritis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5004",
+        "local_name": "Arthritis, gonorrheal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5005",
+        "local_name": "Arthritis, pneumococcic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5006",
+        "local_name": "Arthritis, typhoid",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5007",
+        "local_name": "Arthritis, syphilitic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5008",
+        "local_name": "Arthritis, streptococcic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5009",
+        "local_name": "Other specified forms of arthropathy (excluding gout)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5010",
+        "local_name": "Post-Traumatic Arthritis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5011",
+        "local_name": "Decompression illness",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5012",
+        "local_name": "Bones, neoplasm, malignant, primary or secondary",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5013",
+        "local_name": "Osteoporosis, residuals of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5014",
+        "local_name": "Osteomalacia, residuals of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5015",
+        "local_name": "Bones, neoplasm, benign",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5016",
+        "local_name": "Osteitis deformans",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5017",
+        "local_name": "Gout",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5019",
+        "local_name": "Bursitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5021",
+        "local_name": "Myositis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5023",
+        "local_name": "Heterotopic ossification",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5024",
+        "local_name": "Tenosynovitis, tendinitis, tendinosis or tendinopathy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5025",
+        "local_name": "Fibromyalgia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5051",
+        "local_name": "Shoulder replacement (prosthesis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5052",
+        "local_name": "Elbow replacement (prosthesis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5053",
+        "local_name": "Wrist replacement (prosthesis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5054",
+        "local_name": "Hip, resurfacing or replacement (prosthesis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5055",
+        "local_name": "Knee, resurfacing or replacement (prosthesis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5056",
+        "local_name": "Ankle replacement (prosthesis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5104",
+        "local_name": "Anatomical loss of one hand and loss of use of one foot",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5105",
+        "local_name": "Anatomical loss of one foot and loss of use of one hand",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5106",
+        "local_name": "Anatomical loss of both hands",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5107",
+        "local_name": "Anatomical loss of both feet",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5108",
+        "local_name": "Anatomical loss of one hand and one foot",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5109",
+        "local_name": "Loss of use of both hands",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5110",
+        "local_name": "Loss of use of both feet",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5111",
+        "local_name": "Loss of use of one hand and one foot",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5120",
+        "local_name": "Complete amputation, upper extremity",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5121",
+        "local_name": "Arm amputation above insertion of deltoid",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5122",
+        "local_name": "Arm amputation below insertion of deltoid",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5123",
+        "local_name": "Forearm amputation above insertion of pronator teres",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5124",
+        "local_name": "Forearm amputation below insertion of pronator teres",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5125",
+        "local_name": "Hand, loss of use of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5126",
+        "local_name": "Five digits of one hand",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5127",
+        "local_name": "Four digits: Thumb, index, long and ring",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5128",
+        "local_name": "Four digits: Thumb, index, long and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5129",
+        "local_name": "Four digits: Thumb, index, ring and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5130",
+        "local_name": "Four digits: Thumb, long, ring and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5131",
+        "local_name": "Four digits: Index, long, ring and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5132",
+        "local_name": "Three digits: Thumb, index and long",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5133",
+        "local_name": "Three digits: Thumb, index and ring",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5134",
+        "local_name": "Three digits: Thumb, index and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5135",
+        "local_name": "Three digits: Thumb, long and ring",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5136",
+        "local_name": "Three digits: Thumb, long and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5137",
+        "local_name": "Three digits: Thumb, ring and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5138",
+        "local_name": "Three digits: Index, long and ring",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5139",
+        "local_name": "Three digits: Index, long and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5140",
+        "local_name": "Three digits: Index, ring and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5141",
+        "local_name": "Three digits: Long, ring and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5142",
+        "local_name": "Two digits: Thumb and index",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5143",
+        "local_name": "Two digits: Thumb and long",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5144",
+        "local_name": "Two digits: Thumb and ring",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5145",
+        "local_name": "Two digits: Thumb and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5146",
+        "local_name": "Two digits: Index and long",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5147",
+        "local_name": "Two digits: Index and ring",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5148",
+        "local_name": "Two digits: Index and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5149",
+        "local_name": "Two digits: Long and ring",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5150",
+        "local_name": "Two digits: Long and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5151",
+        "local_name": "Two digits: Ring and little",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5152",
+        "local_name": "Single finger: Thumb",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5153",
+        "local_name": "Single finger: Index finger",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5154",
+        "local_name": "Single finger: Long finger",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5155",
+        "local_name": "Single finger: Ring finger",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5156",
+        "local_name": "Single finger: Little finger",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5160",
+        "local_name": "Complete amputation, lower extremity",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5161",
+        "local_name": "Thigh amputation, upper third",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5162",
+        "local_name": "Thigh amputation, middle or lower thirds",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5163",
+        "local_name": "Leg amputation with defective stump",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5164",
+        "local_name": "Leg amputation not improvable by prosthesis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5165",
+        "local_name": "Leg amputation at lower level, permitting prosthesis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5166",
+        "local_name": "Forefoot amputation, proximal to metatarsal bones",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5167",
+        "local_name": "Foot, loss of use of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5170",
+        "local_name": "Toes, all, amputation of, without metatarsal loss",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5171",
+        "local_name": "Toe, great, amputation of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5172",
+        "local_name": "Toes, other than great, with removal of metatarsal head",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5173",
+        "local_name": "Toes, three or more, without metatarsal involvement",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5200",
+        "local_name": "Scapulohumeral articulation, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5201",
+        "local_name": "Arm, limitation of motion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5202",
+        "local_name": "Humerus, other impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5203",
+        "local_name": "Clavicle or scapula, impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5205",
+        "local_name": "Elbow, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5206",
+        "local_name": "Forearm, limitation of flexion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5207",
+        "local_name": "Forearm, limitation of extension",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5208",
+        "local_name": "Forearm, flexion limited",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5209",
+        "local_name": "Elbow, other impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5210",
+        "local_name": "Radius and ulna, nonunion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5211",
+        "local_name": "Ulna, impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5212",
+        "local_name": "Radius, impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5213",
+        "local_name": "Supination and pronation, impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5214",
+        "local_name": "Wrist, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5215",
+        "local_name": "Wrist, limitation of motion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5216",
+        "local_name": "Five digits unfavorable ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5217",
+        "local_name": "Four digits unfavorable ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5218",
+        "local_name": "Three digits unfavorable ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5219",
+        "local_name": "Two digits unfavorable ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5220",
+        "local_name": "Five digits favorable ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5221",
+        "local_name": "Four digits favorable ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5222",
+        "local_name": "Three digits favorable ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5223",
+        "local_name": "Two digits favorable ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5224",
+        "local_name": "Thumb, ankylosis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5225",
+        "local_name": "Index finger, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5226",
+        "local_name": "Long finger, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5227",
+        "local_name": "Ring or little finger, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5228",
+        "local_name": "Thumb, limitation of motion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5229",
+        "local_name": "Index or long finger, limitation of motion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5230",
+        "local_name": "Ring or little finger, limitation of motion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5235",
+        "local_name": "Vertebral Fracture or Dislocation",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5236",
+        "local_name": "Sacroiliac injury and weakness",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5237",
+        "local_name": "Lumbosacral or Cervical Strain",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5238",
+        "local_name": "Spinal stenosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5239",
+        "local_name": "Spondylolisthesis or segmental instability",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5240",
+        "local_name": "Ankylosing Spondylitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5241",
+        "local_name": "Spinal fusion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5242",
+        "local_name": "Degenerative arthritis, degenerative disc disease other than intervertebral disc syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5243",
+        "local_name": "Intervertebral Disc Syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5244",
+        "local_name": "Traumatic paralysis, complete",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5250",
+        "local_name": "Hip, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5251",
+        "local_name": "Thigh, limitation of extension",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5252",
+        "local_name": "Thigh, limitation of flexion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5253",
+        "local_name": "Thigh, impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5254",
+        "local_name": "Hip, flail joint",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5255",
+        "local_name": "Femur, impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5256",
+        "local_name": "Knee, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5257",
+        "local_name": "Knee, other impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5258",
+        "local_name": "Cartilage, Semilunar, Dislocated (Meniscus Tear)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5259",
+        "local_name": "Cartilage, Semilunar, Removal of (Meniscectomy)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5260",
+        "local_name": "Leg, limitation of flexion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5261",
+        "local_name": "Leg, limitation of extension",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5262",
+        "local_name": "Tibia and fibula, impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5263",
+        "local_name": "Genu recurvatum",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5269",
+        "local_name": "Plantar fasciitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5270",
+        "local_name": "Ankle, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5271",
+        "local_name": "Ankle, limited motion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5272",
+        "local_name": "Subastragalar or tarsal joint, ankylosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5273",
+        "local_name": "Os calcis or astragalus, malunion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5274",
+        "local_name": "Astragalectomy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5275",
+        "local_name": "Bones of lower extremity, shortening",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5276",
+        "local_name": "Flatfoot, acquired",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5277",
+        "local_name": "Weak foot, bilateral",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5278",
+        "local_name": "Claw foot (pes cavus), acquired",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5279",
+        "local_name": "Metatarsalgia, anterior (Morton's disease)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5280",
+        "local_name": "Hallux valgus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5281",
+        "local_name": "Hallux rigidus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5282",
+        "local_name": "Hammer toe",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5283",
+        "local_name": "Tarsal or metatarsal bones",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5284",
+        "local_name": "Foot injuries, other",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5296",
+        "local_name": "Skull, loss of part of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5297",
+        "local_name": "Ribs, removal of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5298",
+        "local_name": "Complex Regional Pain Syndrome (CRPS)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5301",
+        "local_name": "Group I: Upward rotation of scapula",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5302",
+        "local_name": "Group II: Depression of arm",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5303",
+        "local_name": "Group III: Elevation and abduction of arm",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5304",
+        "local_name": "Group IV: Stabilization of shoulder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5305",
+        "local_name": "Group V: Elbow supination",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5306",
+        "local_name": "Group VI: Extension of elbow",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5307",
+        "local_name": "Group VII: Flexion of wrist and fingers",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5308",
+        "local_name": "Group VIII: Extension of wrist, fingers, thumb",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5309",
+        "local_name": "Group IX: Forearm muscles",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5310",
+        "local_name": "Group X: Movement of forefoot and toes",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5311",
+        "local_name": "Group XI: Propulsion of foot",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5312",
+        "local_name": "Group XII: Dorsiflexion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5313",
+        "local_name": "Group XIII: Extension of hip and flexion of knee",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5314",
+        "local_name": "Group XIV: Extension of knee",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5315",
+        "local_name": "Group XV: Adduction of hip",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5316",
+        "local_name": "Group XVI: Flexion of hip",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5317",
+        "local_name": "Group XVII: Extension of hip",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5318",
+        "local_name": "Group XVIII: Outward rotation of thigh",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5319",
+        "local_name": "Group XIX: Abdominal wall and lower thorax",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5320",
+        "local_name": "Group XX: Postural support of body",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5321",
+        "local_name": "Group XXI: Respiration",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5322",
+        "local_name": "Group XXII: Rotary and forward movements, head",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5323",
+        "local_name": "Group XXIII: Movements of head",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5324",
+        "local_name": "Diaphragm, rupture of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5325",
+        "local_name": "Muscle injury, facial muscles",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5326",
+        "local_name": "Muscle hernia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5327",
+        "local_name": "Muscle, neoplasm of, malignant",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5328",
+        "local_name": "Muscle, neoplasm of, benign",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5329",
+        "local_name": "Sarcoma, soft tissue",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5330",
+        "local_name": "Rhabdomyolysis, residuals of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5331",
+        "local_name": "Compartment syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6000",
+        "local_name": "Visual Acuity Impairment",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6001",
+        "local_name": "Keratopathy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6002",
+        "local_name": "Diabetes Mellitus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6003",
+        "local_name": "Iritis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6004",
+        "local_name": "Cyclitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6005",
+        "local_name": "Choroiditis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6006",
+        "local_name": "Retinopathy or maculopathy not otherwise specified",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6007",
+        "local_name": "Intraocular hemorrhage",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6008",
+        "local_name": "Detachment of retina",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6009",
+        "local_name": "Unhealed eye injury",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6010",
+        "local_name": "Tuberculosis of eye",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6011",
+        "local_name": "Retinal scars, atrophy, or irregularities",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6012",
+        "local_name": "Angle-closure glaucoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6013",
+        "local_name": "Open-angle glaucoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6014",
+        "local_name": "Malignant neoplasms of eye, orbit, and adnexa",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6015",
+        "local_name": "Benign neoplasms of eye, orbit, and adnexa",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6016",
+        "local_name": "Nystagmus, central",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6017",
+        "local_name": "Conjunctivitis, trachomatous, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6018",
+        "local_name": "Conjunctivitis, other, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6019",
+        "local_name": "Ptosis, unilateral or bilateral",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6020",
+        "local_name": "Ectropion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6021",
+        "local_name": "Entropion",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6022",
+        "local_name": "Lagophthalmos",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6023",
+        "local_name": "Eyebrows, loss of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6024",
+        "local_name": "Eyelashes, loss of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6025",
+        "local_name": "Disorders of lacrimal apparatus (epiphora, dacryocystitis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6026",
+        "local_name": "Glaucoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6027",
+        "local_name": "Cataract",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6028",
+        "local_name": "Cataract, senile, and others",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6029",
+        "local_name": "Aphakia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6030",
+        "local_name": "Accommodation, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6031",
+        "local_name": "Dacryocystitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6032",
+        "local_name": "Eyelids, loss of portion of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6033",
+        "local_name": "Lens, crystalline, dislocation of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6034",
+        "local_name": "Pterygium",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6035",
+        "local_name": "Keratoconus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6036",
+        "local_name": "Status post corneal transplant",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6040",
+        "local_name": "Diabetic retinopathy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6042",
+        "local_name": "Retinal dystrophy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6046",
+        "local_name": "Post-chiasmal disorders",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6061",
+        "local_name": "Anatomical loss, both eyes",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6062",
+        "local_name": "Blindness, both eyes, only light perception",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6063",
+        "local_name": "Anatomical loss one eye, other 5/200",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6064",
+        "local_name": "Anatomical loss one eye, other 10/200-20/200",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6065",
+        "local_name": "Anatomical loss one eye, other 20/100-20/50",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6066",
+        "local_name": "Anatomical loss one eye, other 20/40",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6067",
+        "local_name": "Blindness one eye, other 5/200",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6068",
+        "local_name": "Blindness one eye, other 10/200-20/200",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6069",
+        "local_name": "Blindness one eye, other 20/100-20/50",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6070",
+        "local_name": "Blindness one eye, other 20/40",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6071",
+        "local_name": "Vision 5/200 one eye, other 5/200",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6072",
+        "local_name": "Vision 5/200 one eye, other 10/200-20/200",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6073",
+        "local_name": "Vision 5/200 one eye, other 20/100-20/50",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6074",
+        "local_name": "Vision 5/200 one eye, other 20/40",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6075",
+        "local_name": "Vision 10/200-20/200, both eyes or one eye",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6076",
+        "local_name": "Vision 10/200-20/200 one eye, other 20/100-20/50",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6077",
+        "local_name": "Vision 10/200-20/200 one eye, other 20/40",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6078",
+        "local_name": "Vision 20/100-20/50, both eyes or one eye",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6079",
+        "local_name": "Vision 20/40 or better, specified combinations",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6080",
+        "local_name": "Field vision, impairment of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6081",
+        "local_name": "Scotoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6090",
+        "local_name": "Diplopia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6091",
+        "local_name": "Symblepharon",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6092",
+        "local_name": "Diplopia, limited muscle function",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6100",
+        "local_name": "Hearing Loss (Sensorineural)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6200",
+        "local_name": "Chronic suppurative otitis media",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6201",
+        "local_name": "Chronic nonsuppurative otitis media",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6202",
+        "local_name": "Otosclerosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6204",
+        "local_name": "Peripheral vestibular disorders",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6205",
+        "local_name": "Meniere's syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6207",
+        "local_name": "Loss of auricle",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6208",
+        "local_name": "Malignant neoplasm of ear",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6209",
+        "local_name": "Benign neoplasm of ear",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6210",
+        "local_name": "Chronic otitis externa",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6211",
+        "local_name": "Tympanic membrane, perforation of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6260",
+        "local_name": "Tinnitus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6262",
+        "local_name": "Hearing Loss",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6266",
+        "local_name": "Peripheral Vertigo",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6268",
+        "local_name": "Meniere's Syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6275",
+        "local_name": "Sense of smell, complete loss",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6276",
+        "local_name": "Sense of taste, complete loss",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6300",
+        "local_name": "Tuberculosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6301",
+        "local_name": "Visceral Leishmaniasis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6302",
+        "local_name": "Leprosy (Hansen's Disease)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6304",
+        "local_name": "Malaria",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6305",
+        "local_name": "Lymphatic filariasis, to include elephantiasis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6306",
+        "local_name": "Bartonellosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6307",
+        "local_name": "Plague",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6308",
+        "local_name": "Relapsing fever",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6309",
+        "local_name": "Rheumatic fever",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6310",
+        "local_name": "Syphilis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6311",
+        "local_name": "Tuberculosis, miliary",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6312",
+        "local_name": "Nontuberculosis mycobacterium infection",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6313",
+        "local_name": "Avitaminosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6314",
+        "local_name": "Beriberi",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6315",
+        "local_name": "Pellagra",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6316",
+        "local_name": "Brucellosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6317",
+        "local_name": "Rickettsial, ehrlichia, and anaplasma infections",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6318",
+        "local_name": "Melioidosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6319",
+        "local_name": "Lyme disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6320",
+        "local_name": "Parasitic diseases",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6325",
+        "local_name": "Hyperinfection syndrome or disseminated strongyloidiasis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6326",
+        "local_name": "Schistosomiasis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6329",
+        "local_name": "Hemorrhagic fevers (dengue, yellow fever, and others)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6330",
+        "local_name": "Campylobacter jejuni infection",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6331",
+        "local_name": "Coxiella burnetii infection (Q Fever)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6333",
+        "local_name": "Nontyphoid salmonella infections",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6334",
+        "local_name": "Shigella infections",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6335",
+        "local_name": "West Nile virus infection",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6350",
+        "local_name": "Systemic Lupus Erythematosus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6351",
+        "local_name": "HIV-Related Illness",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6354",
+        "local_name": "Chronic Fatigue Syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6502",
+        "local_name": "Septum, nasal, deviation of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6504",
+        "local_name": "Nose, loss of part of, or scars",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6510",
+        "local_name": "Sinusitis (Chronic)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6511",
+        "local_name": "Sinusitis, ethmoid, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6512",
+        "local_name": "Sinusitis, frontal, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6513",
+        "local_name": "Sinusitis, maxillary, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6514",
+        "local_name": "Sinusitis, sphenoid, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6515",
+        "local_name": "Laryngitis, tuberculous",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6516",
+        "local_name": "Laryngitis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6518",
+        "local_name": "Laryngectomy, total",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6519",
+        "local_name": "Aphonia, complete organic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6520",
+        "local_name": "Larynx, stenosis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6521",
+        "local_name": "Pharynx, injuries to",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6522",
+        "local_name": "Allergic Rhinitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6523",
+        "local_name": "Bacterial rhinitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6524",
+        "local_name": "Granulomatous rhinitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6600",
+        "local_name": "Bronchitis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6601",
+        "local_name": "Bronchiectasis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6602",
+        "local_name": "Asthma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6603",
+        "local_name": "Emphysema, pulmonary",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6604",
+        "local_name": "Chronic Obstructive Pulmonary Disease (COPD)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6701",
+        "local_name": "Pulmonary TB, active, far advanced",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6702",
+        "local_name": "Pulmonary TB, active, moderately advanced",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6703",
+        "local_name": "Pulmonary TB, active, minimal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6704",
+        "local_name": "Pulmonary TB, active, advancement unspecified",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6721",
+        "local_name": "Pulmonary TB, inactive, far advanced",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6722",
+        "local_name": "Pulmonary TB, inactive, moderately advanced",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6723",
+        "local_name": "Pulmonary TB, inactive, minimal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6724",
+        "local_name": "Pulmonary TB, inactive, advancement unspecified",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6730",
+        "local_name": "Pulmonary TB, chronic, active",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6731",
+        "local_name": "Pulmonary TB, chronic, inactive",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6732",
+        "local_name": "Pleurisy, active or inactive tuberculous",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6817",
+        "local_name": "Pulmonary Vascular Disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6819",
+        "local_name": "Neoplasms, malignant, respiratory",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6820",
+        "local_name": "Neoplasms, benign, respiratory",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6822",
+        "local_name": "Actinomycosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6823",
+        "local_name": "Nocardiosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6824",
+        "local_name": "Chronic lung abscess",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6825",
+        "local_name": "Diffuse interstitial fibrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6826",
+        "local_name": "Desquamative interstitial pneumonitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6827",
+        "local_name": "Pulmonary alveolar proteinosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6828",
+        "local_name": "Eosinophilic granuloma of lung",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6829",
+        "local_name": "Drug-induced pneumonitis and fibrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6830",
+        "local_name": "Radiation-induced pneumonitis and fibrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6831",
+        "local_name": "Hypersensitivity pneumonitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6832",
+        "local_name": "Pneumoconiosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6833",
+        "local_name": "Asbestosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6834",
+        "local_name": "Histoplasmosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6835",
+        "local_name": "Coccidioidomycosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6836",
+        "local_name": "Blastomycosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6837",
+        "local_name": "Cryptococcosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6838",
+        "local_name": "Aspergillosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6839",
+        "local_name": "Mucormycosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6840",
+        "local_name": "Diaphragm paralysis or paresis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6841",
+        "local_name": "Spinal cord injury with respiratory insufficiency",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6842",
+        "local_name": "Kyphoscoliosis, pectus excavatum/carinatum",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6843",
+        "local_name": "Traumatic chest wall defect",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6844",
+        "local_name": "Post-surgical residual",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6845",
+        "local_name": "Pleural effusion or fibrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6846",
+        "local_name": "Sarcoidosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "6847",
+        "local_name": "Sleep Apnea Syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7000",
+        "local_name": "Valvular heart disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7001",
+        "local_name": "Endocarditis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7002",
+        "local_name": "Congestive Heart Failure",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7003",
+        "local_name": "Pericardial adhesions",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7004",
+        "local_name": "Syphilitic Heart Disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7005",
+        "local_name": "Arteriosclerotic Heart Disease (Coronary Artery Disease)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7006",
+        "local_name": "Myocardial infarction",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7007",
+        "local_name": "Hypertensive heart disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7008",
+        "local_name": "Hyperthyroid heart disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7009",
+        "local_name": "Bradycardia, symptomatic, requiring permanent pacemaker",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7010",
+        "local_name": "Atrial Fibrillation",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7011",
+        "local_name": "Ventricular arrhythmias",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7015",
+        "local_name": "Atrioventricular block",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7016",
+        "local_name": "Heart valve replacement",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7017",
+        "local_name": "Coronary bypass surgery",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7018",
+        "local_name": "Implantable cardiac pacemakers",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7019",
+        "local_name": "Cardiac transplantation",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7020",
+        "local_name": "Cardiomyopathy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7101",
+        "local_name": "Hypertensive Vascular Disease (Hypertension)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7110",
+        "local_name": "Aortic aneurysm",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7111",
+        "local_name": "Aneurysm, large artery",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7112",
+        "local_name": "Aneurysm, small artery",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7113",
+        "local_name": "Arteriovenous fistula, traumatic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7114",
+        "local_name": "Peripheral arterial disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7115",
+        "local_name": "Thrombo-angiitis obliterans (Buerger's Disease)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7117",
+        "local_name": "Peripheral Artery Disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7118",
+        "local_name": "Angioneurotic edema",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7119",
+        "local_name": "Erythromelalgia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7120",
+        "local_name": "Varicose veins",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7121",
+        "local_name": "Post-phlebitic syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7122",
+        "local_name": "Cold injury residuals",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7123",
+        "local_name": "Soft tissue sarcoma, vascular origin",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7124",
+        "local_name": "Raynaud's disease (primary Raynaud's)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7200",
+        "local_name": "Soft tissue injury of the mouth",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7201",
+        "local_name": "Lips, injuries of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7202",
+        "local_name": "Tongue, loss of whole or part",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7203",
+        "local_name": "Esophagus, stricture of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7204",
+        "local_name": "Esophageal motility disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7205",
+        "local_name": "Esophagus, diverticulum of, acquired",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7206",
+        "local_name": "Gastroesophageal reflux disease (GERD)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7207",
+        "local_name": "Barrett's esophagus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7301",
+        "local_name": "Peritoneum, adhesions of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7303",
+        "local_name": "Chronic complications of upper gastrointestinal surgery",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7304",
+        "local_name": "Peptic Ulcer Disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7307",
+        "local_name": "Gastritis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7308",
+        "local_name": "Postgastrectomy syndromes",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7309",
+        "local_name": "Stomach, stenosis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7310",
+        "local_name": "Stomach, injury of, residuals",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7311",
+        "local_name": "Liver, injury of, residuals",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7312",
+        "local_name": "Cirrhosis of the Liver",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7314",
+        "local_name": "Chronic biliary tract disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7315",
+        "local_name": "Cholelithiasis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7317",
+        "local_name": "Gallbladder, injury of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7318",
+        "local_name": "Cholecystectomy, complications of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7319",
+        "local_name": "Irritable Bowel Syndrome (IBS)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7323",
+        "local_name": "Ulcerative Colitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7325",
+        "local_name": "Enteritis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7326",
+        "local_name": "Crohn's Disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7327",
+        "local_name": "Diverticulitis and diverticulosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7328",
+        "local_name": "Intestine, small, resection of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7329",
+        "local_name": "Intestine, large, resection of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7330",
+        "local_name": "Intestinal fistulous diseases, external",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7331",
+        "local_name": "Peritonitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7332",
+        "local_name": "Rectum and anus, impairment of sphincter control",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7333",
+        "local_name": "Rectum and anus, stricture of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7334",
+        "local_name": "Rectum, prolapse of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7335",
+        "local_name": "Fistula in ano (anorectal fistula, anorectal abscess)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7336",
+        "local_name": "Hemorrhoids, external or internal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7337",
+        "local_name": "Pruritus ani (anal itching)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7338",
+        "local_name": "Hernia (femoral, inguinal, umbilical, ventral, incisional)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7342",
+        "local_name": "Visceroptosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7343",
+        "local_name": "Neoplasms, malignant, digestive",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7344",
+        "local_name": "Benign neoplasms, digestive",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7345",
+        "local_name": "Chronic liver disease without cirrhosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7346",
+        "local_name": "Hiatal hernia and paraesophageal hernia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7347",
+        "local_name": "Pancreatitis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7348",
+        "local_name": "Vagotomy with pyloroplasty or gastroenterostomy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7350",
+        "local_name": "Liver abscess",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7351",
+        "local_name": "Liver transplant",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7352",
+        "local_name": "Pancreas transplant",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7354",
+        "local_name": "Hepatitis C",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7355",
+        "local_name": "Celiac disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7356",
+        "local_name": "Gastrointestinal dysmotility syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7357",
+        "local_name": "Post pancreatectomy syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7500",
+        "local_name": "Kidney, removal of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7501",
+        "local_name": "Chronic Kidney Disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7502",
+        "local_name": "Nephritis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7504",
+        "local_name": "Pyelonephritis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7505",
+        "local_name": "Kidney, tuberculosis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7507",
+        "local_name": "Nephrosclerosis, arteriolar",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7508",
+        "local_name": "Nephrolithiasis/Ureterolithiasis/Nephrocalcinosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7509",
+        "local_name": "Hydronephrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7511",
+        "local_name": "Ureter, stricture of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7512",
+        "local_name": "Cystitis, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7515",
+        "local_name": "Bladder, calculus in",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7516",
+        "local_name": "Bladder, fistula of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7517",
+        "local_name": "Bladder, injury of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7518",
+        "local_name": "Urethra, stricture of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7519",
+        "local_name": "Urethra, fistula of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7520",
+        "local_name": "Penis, removal of half or more",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7521",
+        "local_name": "Penis, removal of glans",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7522",
+        "local_name": "Erectile Dysfunction",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7523",
+        "local_name": "Testis, atrophy, complete",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7524",
+        "local_name": "Testis, removal of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7525",
+        "local_name": "Prostatitis, urethritis, epididymitis, orchitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7527",
+        "local_name": "Prostate gland injuries, infections, hypertrophy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7528",
+        "local_name": "Malignant neoplasms of the genitourinary system",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7529",
+        "local_name": "Benign neoplasms of genitourinary system",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7530",
+        "local_name": "Renal disease, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7531",
+        "local_name": "Kidney transplant",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7532",
+        "local_name": "Renal tubular disorders",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7533",
+        "local_name": "Cystic diseases of the kidneys",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7534",
+        "local_name": "Atherosclerotic renal disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7535",
+        "local_name": "Toxic nephropathy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7536",
+        "local_name": "Glomerulonephritis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7537",
+        "local_name": "Interstitial nephritis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7538",
+        "local_name": "Papillary necrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7539",
+        "local_name": "Renal amyloid disease",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7540",
+        "local_name": "Disseminated intravascular coagulation with renal cortical necrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7541",
+        "local_name": "Renal involvement in diabetes mellitus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7542",
+        "local_name": "Neurogenic Bladder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7543",
+        "local_name": "Varicocele/Hydrocele",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7544",
+        "local_name": "Renal disease caused by viral infection",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7545",
+        "local_name": "Bladder, diverticulum of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7610",
+        "local_name": "Vulva or Clitoris, Disease or Injury (Including Vulvovaginitis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7611",
+        "local_name": "Vagina, Disease or Injury",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7612",
+        "local_name": "Cervix, Disease or Injury",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7613",
+        "local_name": "Uterus, Disease, Injury, or Adhesions",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7614",
+        "local_name": "Fallopian Tube, Disease, Injury, or Adhesions (Including PID)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7615",
+        "local_name": "Ovary, Disease, Injury, or Adhesions",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7617",
+        "local_name": "Uterus and Both Ovaries, Complete Removal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7618",
+        "local_name": "Uterus, Removal (Including Corpus)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7619",
+        "local_name": "Ovary, Removal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7620",
+        "local_name": "Ovaries, Complete Atrophy of Both",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7621",
+        "local_name": "Pelvic Organ Prolapse",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7624",
+        "local_name": "Fistula, Rectovaginal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7625",
+        "local_name": "Fistula, Urethrovaginal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7626",
+        "local_name": "Breast, Surgery (Mastectomy)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7627",
+        "local_name": "Malignant Neoplasms of Gynecological System",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7628",
+        "local_name": "Benign Neoplasms of Gynecological System",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7629",
+        "local_name": "Endometriosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7630",
+        "local_name": "Malignant Neoplasms of the Breast",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7631",
+        "local_name": "Benign Neoplasms and Other Injuries of the Breast",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7632",
+        "local_name": "Female Sexual Arousal Disorder (FSAD)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7702",
+        "local_name": "Agranulocytosis, acquired",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7703",
+        "local_name": "Leukemia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7704",
+        "local_name": "Polycythemia vera",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7705",
+        "local_name": "Immune thrombocytopenia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7706",
+        "local_name": "Splenectomy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7707",
+        "local_name": "Spleen, injury of, healed",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7709",
+        "local_name": "Hodgkin's lymphoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7710",
+        "local_name": "Adenitis, tuberculous",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7712",
+        "local_name": "Multiple myeloma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7714",
+        "local_name": "Sickle cell anemia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7715",
+        "local_name": "Non-Hodgkin's lymphoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7716",
+        "local_name": "Aplastic anemia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7717",
+        "local_name": "AL amyloidosis (primary amyloidosis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7718",
+        "local_name": "Essential thrombocythemia and primary myelofibrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7719",
+        "local_name": "Chronic myelogenous leukemia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7720",
+        "local_name": "Iron deficiency anemia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7721",
+        "local_name": "Folic acid deficiency",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7722",
+        "local_name": "Pernicious anemia and Vitamin B12 deficiency",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7723",
+        "local_name": "Acquired hemolytic anemia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7724",
+        "local_name": "Solitary plasmacytoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7725",
+        "local_name": "Myelodysplastic syndromes",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7800",
+        "local_name": "Skin Conditions (Various)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7801",
+        "local_name": "Burn scars with underlying soft tissue damage",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7802",
+        "local_name": "Burn scars without underlying soft tissue damage",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7804",
+        "local_name": "Scars, unstable or painful",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7805",
+        "local_name": "Scars, other",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7806",
+        "local_name": "Eczema (Atopic Dermatitis)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7807",
+        "local_name": "Leishmaniasis, American (New World)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7808",
+        "local_name": "Leishmaniasis, Old World",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7809",
+        "local_name": "Discoid lupus erythematosus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7811",
+        "local_name": "Tuberculosis luposa (lupus vulgaris)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7813",
+        "local_name": "Dermatophytosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7815",
+        "local_name": "Bullous disorders",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7816",
+        "local_name": "Psoriasis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7817",
+        "local_name": "Erythroderma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7818",
+        "local_name": "Malignant skin neoplasms",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7819",
+        "local_name": "Benign skin neoplasms",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7820",
+        "local_name": "Infections of the skin",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7821",
+        "local_name": "Cutaneous manifestations of collagen-vascular diseases",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7822",
+        "local_name": "Papulosquamous disorders",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7823",
+        "local_name": "Vitiligo",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7824",
+        "local_name": "Keratinization, diseases of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7825",
+        "local_name": "Chronic urticaria",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7826",
+        "local_name": "Vasculitis, primary cutaneous",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7827",
+        "local_name": "Erythema multiforme",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7828",
+        "local_name": "Acne",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7829",
+        "local_name": "Chloracne",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7830",
+        "local_name": "Scarring alopecia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7831",
+        "local_name": "Alopecia areata",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7832",
+        "local_name": "Hyperhidrosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7833",
+        "local_name": "Malignant melanoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7900",
+        "local_name": "Hyperthyroidism (Graves' disease)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7901",
+        "local_name": "Thyroid enlargement, toxic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7902",
+        "local_name": "Thyroid enlargement, nontoxic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7903",
+        "local_name": "Hypothyroidism",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7904",
+        "local_name": "Hyperparathyroidism",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7905",
+        "local_name": "Hypoparathyroidism",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7906",
+        "local_name": "Thyroiditis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7907",
+        "local_name": "Cushing's syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7908",
+        "local_name": "Acromegaly",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7909",
+        "local_name": "Diabetes insipidus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7911",
+        "local_name": "Addison's disease (adrenocortical insufficiency)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7912",
+        "local_name": "Polyglandular syndrome",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7913",
+        "local_name": "Diabetes mellitus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7914",
+        "local_name": "Malignant neoplasm, endocrine",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7915",
+        "local_name": "Benign neoplasm, endocrine",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7916",
+        "local_name": "Hyperpituitarism",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7917",
+        "local_name": "Hyperaldosteronism",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7918",
+        "local_name": "Pheochromocytoma",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "7919",
+        "local_name": "C-cell hyperplasia, thyroid",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8000",
+        "local_name": "Encephalitis, epidemic, chronic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8002",
+        "local_name": "Paralysis of Facial Nerve (Bell's Palsy)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8003",
+        "local_name": "Brain, new growth of, benign",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8004",
+        "local_name": "Paralysis agitans",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8005",
+        "local_name": "Bulbar palsy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8007",
+        "local_name": "Brain, vessels, embolism of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8008",
+        "local_name": "Brain, vessels, thrombosis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8009",
+        "local_name": "Brain, vessels, hemorrhage from",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8010",
+        "local_name": "Myelitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8011",
+        "local_name": "Poliomyelitis, anterior",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8012",
+        "local_name": "Hematomyelia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8013",
+        "local_name": "Syphilis, cerebrospinal",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8014",
+        "local_name": "Syphilis, meningovascular",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8015",
+        "local_name": "Tabes dorsalis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8017",
+        "local_name": "Amyotrophic lateral sclerosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8018",
+        "local_name": "Multiple Sclerosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8019",
+        "local_name": "Meningitis, cerebrospinal, epidemic",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8020",
+        "local_name": "Brain, abscess of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8021",
+        "local_name": "Spinal cord, new growth of, malignant",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8022",
+        "local_name": "Spinal cord, new growth of, benign",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8023",
+        "local_name": "Progressive muscular atrophy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8024",
+        "local_name": "Syringomyelia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8025",
+        "local_name": "Myasthenia Gravis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8045",
+        "local_name": "Traumatic Brain Injury (TBI) Residuals",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8046",
+        "local_name": "Cerebral arteriosclerosis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8100",
+        "local_name": "Migraine Headaches",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8103",
+        "local_name": "Tic, convulsive",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8104",
+        "local_name": "Paramyoclonus multiplex",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8105",
+        "local_name": "Chorea, Sydenham's",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8106",
+        "local_name": "Chorea, Huntington's",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8107",
+        "local_name": "Athetosis, acquired",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8108",
+        "local_name": "Narcolepsy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8205",
+        "local_name": "Fifth (trigeminal) nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8207",
+        "local_name": "Seventh (facial) nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8209",
+        "local_name": "Ninth (glossopharyngeal) nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8210",
+        "local_name": "Tenth (pneumogastric, vagus) nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8211",
+        "local_name": "Eleventh (spinal accessory) nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8212",
+        "local_name": "Twelfth (hypoglossal) nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8305",
+        "local_name": "Neuritis, fifth cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8307",
+        "local_name": "Neuritis, seventh cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8309",
+        "local_name": "Neuritis, ninth cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8310",
+        "local_name": "Neuritis, tenth cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8311",
+        "local_name": "Neuritis, eleventh cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8312",
+        "local_name": "Neuritis, twelfth cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8405",
+        "local_name": "Neuralgia, fifth cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8407",
+        "local_name": "Neuralgia, seventh cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8409",
+        "local_name": "Neuralgia, ninth cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8410",
+        "local_name": "Neuralgia, tenth cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8411",
+        "local_name": "Neuralgia, eleventh cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8412",
+        "local_name": "Neuralgia, twelfth cranial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8510",
+        "local_name": "Upper radicular group, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8511",
+        "local_name": "Middle radicular group, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8512",
+        "local_name": "Lower radicular group, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8513",
+        "local_name": "All radicular groups, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8514",
+        "local_name": "Musculospiral nerve (radial), paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8515",
+        "local_name": "Median nerve, paralysis of (includes Carpal Tunnel Syndrome)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8516",
+        "local_name": "Ulnar nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8517",
+        "local_name": "Musculocutaneous nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8518",
+        "local_name": "Circumflex nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8519",
+        "local_name": "Long thoracic nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8520",
+        "local_name": "Radiculopathy (Sciatic Nerve)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8521",
+        "local_name": "External popliteal nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8522",
+        "local_name": "Musculocutaneous nerve (superficial peroneal), paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8523",
+        "local_name": "Anterior tibial nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8524",
+        "local_name": "Internal popliteal nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8525",
+        "local_name": "Posterior tibial nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8526",
+        "local_name": "Anterior crural nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8527",
+        "local_name": "Internal saphenous nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8528",
+        "local_name": "Obturator nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8529",
+        "local_name": "External cutaneous nerve of thigh, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8530",
+        "local_name": "Ilio-inguinal nerve, paralysis of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8540",
+        "local_name": "Soft-tissue sarcoma (Neurogenic origin)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8610",
+        "local_name": "Neuritis, upper radicular group",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8611",
+        "local_name": "Neuritis, middle radicular group",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8612",
+        "local_name": "Neuritis, lower radicular group",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8613",
+        "local_name": "Neuritis, all radicular groups",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8614",
+        "local_name": "Neuritis, musculospiral nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8615",
+        "local_name": "Neuritis, median nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8616",
+        "local_name": "Neuritis, ulnar nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8617",
+        "local_name": "Neuritis, musculocutaneous nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8618",
+        "local_name": "Neuritis, circumflex nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8619",
+        "local_name": "Neuritis, long thoracic nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8620",
+        "local_name": "Neuritis, sciatic nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8621",
+        "local_name": "Neuritis, external popliteal nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8622",
+        "local_name": "Neuritis, musculocutaneous nerve (superficial peroneal)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8623",
+        "local_name": "Neuritis, anterior tibial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8624",
+        "local_name": "Neuritis, internal popliteal nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8625",
+        "local_name": "Neuritis, posterior tibial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8626",
+        "local_name": "Neuritis, anterior crural nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8627",
+        "local_name": "Neuritis, internal saphenous nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8628",
+        "local_name": "Neuritis, obturator nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8629",
+        "local_name": "Neuritis, external cutaneous nerve of thigh",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8630",
+        "local_name": "Neuritis, ilio-inguinal nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8710",
+        "local_name": "Neuralgia, upper radicular group",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8711",
+        "local_name": "Neuralgia, middle radicular group",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8712",
+        "local_name": "Neuralgia, lower radicular group",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8713",
+        "local_name": "Neuralgia, all radicular groups",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8714",
+        "local_name": "Neuralgia, musculospiral nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8715",
+        "local_name": "Neuralgia, median nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8716",
+        "local_name": "Neuralgia, ulnar nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8717",
+        "local_name": "Neuralgia, musculocutaneous nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8718",
+        "local_name": "Neuralgia, circumflex nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8719",
+        "local_name": "Neuralgia, long thoracic nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8720",
+        "local_name": "Neuralgia, sciatic nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8721",
+        "local_name": "Neuralgia, external popliteal nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8722",
+        "local_name": "Neuralgia, musculocutaneous nerve (superficial peroneal)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8723",
+        "local_name": "Neuralgia, anterior tibial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8724",
+        "local_name": "Neuralgia, internal popliteal nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8725",
+        "local_name": "Neuralgia, posterior tibial nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8726",
+        "local_name": "Neuralgia, anterior crural nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8727",
+        "local_name": "Neuralgia, internal saphenous nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8728",
+        "local_name": "Neuralgia, obturator nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8729",
+        "local_name": "Neuralgia, external cutaneous nerve of thigh",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8730",
+        "local_name": "Neuralgia, ilio-inguinal nerve",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8910",
+        "local_name": "Epilepsy (Major Seizures)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8911",
+        "local_name": "Petit mal epilepsy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8912",
+        "local_name": "Jacksonian and focal motor or sensory epilepsy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8913",
+        "local_name": "Diencephalic epilepsy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8914",
+        "local_name": "Psychomotor epilepsy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9201",
+        "local_name": "Schizophrenia",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9208",
+        "local_name": "Delusional disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9210",
+        "local_name": "Other specified schizophrenia spectrum disorders",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9211",
+        "local_name": "Schizoaffective disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9300",
+        "local_name": "Delirium",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9301",
+        "local_name": "Major or mild neurocognitive disorder due to HIV",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9304",
+        "local_name": "Major or mild neurocognitive disorder due to TBI",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9305",
+        "local_name": "Major or mild vascular neurocognitive disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9310",
+        "local_name": "Unspecified neurocognitive disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9312",
+        "local_name": "Major or mild neurocognitive disorder due to Alzheimer's",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9326",
+        "local_name": "Substance/medication-induced neurocognitive disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9400",
+        "local_name": "Generalized Anxiety Disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9403",
+        "local_name": "Specific phobia; social anxiety disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9404",
+        "local_name": "Obsessive Compulsive Disorder (OCD)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9410",
+        "local_name": "Other specified anxiety disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9411",
+        "local_name": "Post-Traumatic Stress Disorder (PTSD)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9412",
+        "local_name": "Panic Disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9413",
+        "local_name": "Unspecified anxiety disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9416",
+        "local_name": "Dissociative amnesia; dissociative identity disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9417",
+        "local_name": "Depersonalization/derealization disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9421",
+        "local_name": "Somatic symptom disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9422",
+        "local_name": "Other specified somatic symptom disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9423",
+        "local_name": "Unspecified somatic symptom disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9424",
+        "local_name": "Conversion disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9425",
+        "local_name": "Illness anxiety disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9431",
+        "local_name": "Cyclothymic disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9432",
+        "local_name": "Bipolar Disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9433",
+        "local_name": "Persistent depressive disorder (dysthymia)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9434",
+        "local_name": "Major Depressive Disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9435",
+        "local_name": "Unspecified depressive disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9440",
+        "local_name": "Chronic Adjustment Disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9520",
+        "local_name": "Anorexia nervosa",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9521",
+        "local_name": "Bulimia nervosa",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9900",
+        "local_name": "Maxilla or mandible, chronic osteomyelitis",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9901",
+        "local_name": "Mandible, loss of, complete",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9902",
+        "local_name": "Mandible, loss of, including ramus",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9903",
+        "local_name": "Mandible, nonunion of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9904",
+        "local_name": "Mandible, malunion of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9905",
+        "local_name": "Temporomandibular Joint (TMJ) Disorder",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9908",
+        "local_name": "Condyloid process",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9909",
+        "local_name": "Coronoid process",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9911",
+        "local_name": "Hard palate, loss of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9913",
+        "local_name": "Teeth, loss of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9914",
+        "local_name": "Maxilla, loss of more than half",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9915",
+        "local_name": "Maxilla, loss of half or less",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9916",
+        "local_name": "Maxilla, malunion or nonunion of",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9917",
+        "local_name": "Neoplasm, hard and soft tissue, benign",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "9918",
+        "local_name": "Neoplasm, hard and soft tissue, malignant",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5250-5259",
+        "local_name": "Hip Conditions (Various)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5256-5262",
+        "local_name": "Knee Conditions (Various)",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "5270-5276",
+        "local_name": "Ankle and Foot Conditions",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      },
+      {
+        "dc": "8510-8540",
+        "local_name": "Peripheral Neuropathy",
+        "status": "NOT_IN_ECFR_SCRAPE"
+      }
+    ],
+    "errors": []
+  }
+}

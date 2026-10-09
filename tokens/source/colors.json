@@ -1,0 +1,96 @@
+{
+  "color": {
+    "service-blue": {
+      "50":  { "value": "#f0f4f8", "comment": "Service Blue — palest tint" },
+      "100": { "value": "#d9e2ec" },
+      "200": { "value": "#bcccdc" },
+      "300": { "value": "#9fb3c8" },
+      "400": { "value": "#829ab1" },
+      "500": { "value": "#627d98" },
+      "600": { "value": "#486581" },
+      "700": { "value": "#334e68" },
+      "800": { "value": "#243b53" },
+      "900": { "value": "#1b365d", "comment": "Primary — high authority headers, WCAG AAA" },
+      "950": { "value": "#102a43" }
+    },
+
+    "tactical-grey": {
+      "50":  { "value": "#f0f4f8" },
+      "100": { "value": "#d9e2ec" },
+      "200": { "value": "#bcccdc" },
+      "300": { "value": "#9fb3c8" },
+      "400": { "value": "#829ab1" },
+      "500": { "value": "#627d98" },
+      "600": { "value": "#486581" },
+      "700": { "value": "#334e68" },
+      "800": { "value": "#333e48", "comment": "Secondary — navigation surfaces" },
+      "900": { "value": "#243b53" },
+      "950": { "value": "#102a43" }
+    },
+
+    "medal-green": {
+      "50":  { "value": "#e8f5e9" },
+      "100": { "value": "#c8e6c9" },
+      "200": { "value": "#a5d6a7" },
+      "300": { "value": "#81c784" },
+      "400": { "value": "#66bb6a" },
+      "500": { "value": "#4caf50" },
+      "600": { "value": "#43a047" },
+      "700": { "value": "#2e7d32", "comment": "Primary success — WCAG AAA on white" },
+      "800": { "value": "#256626" },
+      "900": { "value": "#1b5e20" },
+      "950": { "value": "#0d3610" }
+    },
+
+    "warning-gold": {
+      "50":  { "value": "#fff8e1" },
+      "100": { "value": "#ffecb3" },
+      "200": { "value": "#ffe082" },
+      "300": { "value": "#ffd54f" },
+      "400": { "value": "#ffca28" },
+      "500": { "value": "#ffc107" },
+      "600": { "value": "#ffb300" },
+      "700": { "value": "#c5a059", "comment": "Primary warning — visible across all modes" },
+      "800": { "value": "#856404", "comment": "High-contrast warning text" },
+      "900": { "value": "#5c4300" },
+      "950": { "value": "#3d2c00" }
+    },
+
+    "paper": {
+      "50":  { "value": "#ffffff" },
+      "100": { "value": "#fefefe" },
+      "200": { "value": "#fcfcfc" },
+      "300": { "value": "#f8f9fa", "comment": "Main workspace background — low-glare" },
+      "400": { "value": "#f1f3f4" },
+      "500": { "value": "#e8eaed" },
+      "600": { "value": "#dadce0" },
+      "700": { "value": "#bdc1c6" },
+      "800": { "value": "#9aa0a6" },
+      "900": { "value": "#5f6368" },
+      "950": { "value": "#3c4043" }
+    },
+
+    "tbi": {
+      "charcoal":   { "value": "#1a1a16", "comment": "TBI-Comfort: deep warm background" },
+      "amber":      { "value": "#e8d5b5", "comment": "TBI-Comfort: soft amber text" },
+      "gold":       { "value": "#c5a059", "comment": "TBI-Comfort: accent" },
+      "warm-white": { "value": "#f5f0e6", "comment": "TBI-Comfort: comfortable reading surface" },
+      "soft-cream": { "value": "#ede4d3", "comment": "TBI-Comfort: secondary surface" }
+    },
+
+    "aaa": {
+      "black":  { "value": "#000000" },
+      "white":  { "value": "#ffffff" },
+      "yellow": { "value": "#ffff00", "comment": "AAA high-vis accent" },
+      "cyan":   { "value": "#00ffff", "comment": "AAA secondary accent" }
+    },
+
+    "protected": {
+      "20yr":     { "value": "#1b365d", "comment": "Protected (20-yr): Service Blue — Shield icon" },
+      "10yr":     { "value": "#486581", "comment": "Protected (10-yr): partial shield" },
+      "5yr":      { "value": "#2e7d32", "comment": "Protected (5-yr): Medal Green — checkmark" },
+      "risk":     { "value": "#c5a059", "comment": "At-risk: Warning Gold — triangle" },
+      "critical": { "value": "#8b0000", "comment": "Critical: deep crimson — octagon" }
+    }
+  }
+}

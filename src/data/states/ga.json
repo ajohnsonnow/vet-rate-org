@@ -1,0 +1,286 @@
+{
+  "state": "Georgia",
+  "stateCode": "GA",
+  "officialSource": "https://veterans.georgia.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "ga-property_tax_exemption-disabled-veteran-homestead-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran Homestead Tax Exemption",
+      "description": "Georgia grants a homestead property tax exemption to veterans who are VA-rated 100% totally disabled, rated less than 100% but paid at the 100% rate due to individual unemployability, or who qualify for certain statutory VA awards (e.g., loss of limbs, hands, or sight). The exemption is the greater of $32,500 or the federally indexed amount under 38 U.S.C. 2102 ($121,812 for 2025, per the official state page), applied against the assessed value of the veteran's owned and occupied home for all state, county, municipal, and school ad valorem taxes.",
+      "value": "Exemption of the greater of $32,500 or the current 38 U.S.C. 2102 index amount ($121,812 stated for 2025) off assessed home value",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged Georgia veteran (or unremarried surviving spouse / minor children of a qualified veteran)",
+          "Must own the home and occupy it as primary residence",
+          "VA-rated 100% totally disabled, OR rated less than 100% but compensated at the 100% rate due to unemployability, OR statutory VA award for loss/permanent loss of use of limbs, hands, or sight"
+        ]
+      },
+      "application": {
+        "agency": "Georgia Department of Revenue (filed with county tax commissioner)",
+        "form": null,
+        "url": "https://veterans.georgia.gov/disabled-veteran-homestead-tax-exemption",
+        "documentation": [
+          "VA disability rating letter",
+          "Proof of Georgia residency/homeownership"
+        ]
+      },
+      "legalCitation": "O.C.G.A. § 48-5-47",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dor.georgia.gov/property-tax-homestead-exemptions",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ga-vehicle_registration-disabled-veteran-ad-valorem-tavt-vehicle-tax-exe",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Disabled Veteran Ad Valorem / TAVT Vehicle Tax Exemption",
+      "description": "Georgia exempts one vehicle owned by a qualifying disabled veteran from ad valorem tax or Title Ad Valorem Tax (TAVT). Eligibility requires VA verification of 100% total and permanent service-connected disability, or unemployability at the 100% rate, or specific statutory losses (feet, hands, sight). The exemption applies to only one vehicle per veteran.",
+      "value": "Full ad valorem/TAVT exemption on one vehicle owned by the veteran",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Verified by VA as 100 percent totally and permanently service-connected disabled, OR rated unemployable at the 100 percent level, OR statutory loss of feet, hands, sight, or permanent vision impairment",
+          "Exemption limited to ONLY one vehicle the veteran owns",
+          "Apply through the county tag office using Form MV-30"
+        ]
+      },
+      "application": {
+        "agency": "Georgia Department of Revenue (processed at county tag offices)",
+        "form": "MV-30",
+        "url": "https://dor.georgia.gov/document/form/mv-30-georgia-veterans-affidavit-relief-state-and-local-title-ad-valorem-tax-feespdf/download",
+        "documentation": [
+          "VA Summary of Benefits letter (recent)",
+          "Form MV-30 affidavit"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.georgia.gov/tax-exemptions",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ga-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "Georgia issues a free disabled veteran license plate for up to two motorcycles or passenger vehicles per veteran, with no registration, manufacturing, or annual fee. Eligible categories range from 100% totally and permanently disabled to certain statutory losses, and in some cases veterans compensated at less than 100% or with a nonservice-connected disability, depending on the certification path (VA entitlement letter or authorized physician statement).",
+      "value": "Free plate (no registration, manufacturing, or annual fee) for up to 2 motorcycles/passenger vehicles",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Georgia resident with qualifying honorable/active-duty service",
+          "Certified by VA or an authorized physician in one of the plate's disability categories (100% permanent, 100% nonpermanent requiring annual recertification, loss/loss of use of limbs, loss of sight, or in some cases compensated at less than 100% / nonservice-connected)"
+        ]
+      },
+      "application": {
+        "agency": "Georgia Department of Revenue, Motor Vehicle Division (Special Tag Unit)",
+        "form": null,
+        "url": "https://dor.georgia.gov/military-veteran-license-plates",
+        "documentation": [
+          "VA disabled veteran entitlement letter, OR certified statement from an authorized physician",
+          "Discharge paperwork",
+          "Proof of residency"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.georgia.gov/license-plates-disabled-veteran",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ga-state_veterans_home-georgia-war-veterans-homes-milledgeville-and-aug",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Georgia War Veterans Homes (Milledgeville and Augusta)",
+      "description": "Georgia operates two state skilled-nursing War Veterans Homes, in Milledgeville and Augusta, for veterans who served on active duty during qualifying wartime/conflict periods, were discharged under other than dishonorable conditions, and are VA-approved as eligible for skilled nursing care. A nominal daily fee applies; for veterans with a service-connected disability rating of 70% or higher, or whose admission relates to a service-connected condition, VA pays the daily fee in full.",
+      "value": "Nominal daily fee; fully VA-paid for veterans rated 70%+ service-connected or admitted for a service-connected condition",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Resided in Georgia for 2 years immediately preceding application, or 5 of the past 15 years",
+          "Served on active duty during a qualifying wartime/conflict period (WWII, Post-WWII, Korea, Cold War, Vietnam, Persian Gulf)",
+          "Discharged under other than dishonorable conditions",
+          "Approved as eligible for skilled nursing care by the VA",
+          "Free of contagious infectious disease and behavioral/psychiatric problems; not sustained by line-operated mechanical means"
+        ]
+      },
+      "application": {
+        "agency": "Georgia Department of Veterans Service",
+        "form": null,
+        "url": "https://veterans.georgia.gov/services/nursing-homes/eligibility-criteria",
+        "documentation": [
+          "DD-214",
+          "VA eligibility determination for skilled nursing care",
+          "Proof of Georgia residency"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.georgia.gov/services/nursing-homes/eligibility-criteria",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ga-hiring_preference-state-of-georgia-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State of Georgia Employment Veterans' Preference",
+      "description": "Eligible veterans applying for State of Georgia jobs receive a bonus of 5 or 10 points added to their passing score on numerically scored pre-employment assessments; where no numerical assessment is used, equally qualified veterans receive preference over non-veteran applicants. The point-split criteria (e.g., disability-linked 10-point tier) are governed by State Personnel Board Rule 478-1-.18, which the agency's own text could not be machine-read for this research, so the exact disability threshold for the 10-point tier is not confirmed here.",
+      "value": "5 or 10 points added to passing score on numerical pre-employment assessment",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Documentation (DD-214, VA Benefit Summary Letter, etc.) submitted to the hiring agency's HR department",
+          "Preference not granted until required documentation is received"
+        ]
+      },
+      "application": {
+        "agency": "Georgia Department of Administrative Services (Team Georgia Careers)",
+        "form": null,
+        "url": "https://careers.ga.gov/frequently-asked-questions",
+        "documentation": [
+          "DD-214",
+          "VA Benefit Summary Letter (for disability-based preference)"
+        ]
+      },
+      "legalCitation": "Ga. Comp. R. & Regs. 478-1-.18 (State Personnel Board Rule, Veterans' Preference)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://careers.ga.gov/frequently-asked-questions",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ga-education_tuition-georgia-hero-scholarship",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Georgia HERO Scholarship",
+      "description": "The Georgia HERO Scholarship, administered by the Georgia Student Finance Commission, provides up to $2,000 per academic year (max $8,000 over four years) to Georgia National Guard members and U.S. Military Reservists deployed to a combat zone, and to the children/spouses of such service members — including children of a service member who died or became 100% disabled from combat-zone injuries. This is not a general disabled-veteran tuition waiver; it is limited to Guard/Reserve combat deployment and its dependents.",
+      "value": "Up to $2,000 per academic year; maximum $8,000 over four academic years",
+      "estimatedAnnualValue": 2000,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Georgia residency for 12 consecutive months immediately prior to term start",
+          "Enrollment at an eligible USG, TCSG, or private nonprofit Georgia institution",
+          "Service member deployed to a combat zone 181+ cumulative days after Feb 1, 2003 (or evacuated for severe injuries), OR qualifying child/spouse of such a service member, including a child of one who died or became 100% disabled from combat-zone injuries"
+        ]
+      },
+      "application": {
+        "agency": "Georgia Student Finance Commission",
+        "form": null,
+        "url": "https://www.gafutures.org/hope-state-aid-programs/scholarships-grants/hero/",
+        "documentation": [
+          "Proof of qualifying deployment/discharge or dependent relationship",
+          "GSFAPPS application"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.gafutures.org/hope-state-aid-programs/scholarships-grants/hero/award-amounts/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ga-recreation-one-time-veterans-hunting-fishing-license",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "One-Time Veterans Hunting & Fishing License",
+      "description": "Georgia offers a free, one-time, full-privilege sportsman's license (hunting, big game, migratory bird stamp, salt/fresh water fishing, mountain trout) to resident veterans who served 90+ days of active federal duty and were honorably discharged on or after July 1, 2005. It is valid for one year and may be issued only once; afterward, veterans may purchase a discounted lifetime license. Separately, Georgia residents certified as permanently and totally disabled (by VA, SSA, Medicaid, Medicare, or Railroad Retirement) qualify for a discounted 3-year disability sportsman's license.",
+      "value": "Free one-time, one-year full-privilege license; discounted 3-year disability sportsman's license for permanently/totally disabled residents",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Georgia resident veteran with 90+ days active Federal duty, honorably discharged July 1, 2005 or later (one-time license)",
+          "For the disability sportsman's license: certified permanently and totally disabled by VA, SSA, Medicaid, Medicare, or Railroad Retirement",
+          "DD Form 214 copy and current Georgia driver's license/ID required for the one-time veterans license"
+        ]
+      },
+      "application": {
+        "agency": "Georgia Department of Natural Resources, Wildlife Resources Division",
+        "form": null,
+        "url": "https://georgiawildlife.com/licenses-permits-passes/veterans",
+        "documentation": [
+          "DD-214 copy",
+          "Georgia driver's license or ID card",
+          "VA/SSA/Medicaid/Medicare/Railroad Retirement disability certification (for disability license)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://georgiawildlife.com/licenses-permits-passes/veterans",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ga-other-free-veteran-designation-on-georgia-driver-s-lic",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "Free Veteran Designation on Georgia Driver's License/ID",
+      "description": "Georgia resident veterans who served on active duty and received an honorable or medical discharge (or National Guard members with 20 years of service) can receive a free veteran designation on their Georgia driver's license or ID card. Activation for training purposes only does not qualify.",
+      "value": "Free veteran designation added to driver's license/ID (no fee stated for the designation itself)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable or medical discharge (or 20 years National Guard service)",
+          "Current Georgia resident",
+          "Activation for training purposes only does not qualify"
+        ]
+      },
+      "application": {
+        "agency": "Georgia Department of Driver Services",
+        "form": null,
+        "url": "https://veterans.georgia.gov/veteran-drivers-licenses",
+        "documentation": [
+          "DD Form 214 (Member 4 copy) or GDVS-endorsed Certificate of Eligibility",
+          "Proof of residency",
+          "Social Security card",
+          "Birth certificate or passport"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.georgia.gov/veteran-drivers-licenses",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

@@ -1,0 +1,4900 @@
+﻿import { useState, useRef } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useBodyScrollLock } from "../utils/useBodyScrollLock";
+import { useFocusTrap } from "../hooks/useFocusTrap";
+import { triggerTourRestart } from "./BootCampTour";
+import { getTotalToolCount } from "../data/toolkitData";
+import { getDisabilityCount } from "../utils/disabilityCount";
+import { sanitizeUrl, escapeHtml } from "../utils/sanitize";
+import ScrollRegion from "./common/ScrollRegion";
+
+// Navigation structure matching the docs - organized by category
+const navigationStructure = [
+  {
+    id: "home",
+    title: "Home",
+    icon: "🏠",
+  },
+  {
+    id: "getting-started",
+    title: "Getting Started",
+    icon: "🚀",
+    children: [
+      { id: "first-visit", title: "Your First Visit" },
+      { id: "interface-overview", title: "Interface Overview" },
+      { id: "accessibility", title: "Accessibility" },
+    ],
+  },
+  {
+    id: "search",
+    title: "Search & Explore",
+    icon: "🔍",
+    children: [
+      { id: "how-to-search", title: "How to Search" },
+      { id: "search-results", title: "Search Results" },
+      { id: "disability-details", title: "Disability Details" },
+      { id: "rating-criteria", title: "Rating Criteria" },
+    ],
+  },
+  // === CALCULATE YOUR RATING ===
+  {
+    id: "category-calculate",
+    title: "📊 Calculate",
+    isCategory: true,
+  },
+  {
+    id: "what-if-sandbox",
+    title: "What-If Sandbox",
+    icon: "🧮",
+  },
+  {
+    id: "retro-pay-hunter",
+    title: "Retro Pay Hunter",
+    icon: "🧮",
+  },
+  {
+    id: "time-machine",
+    title: "Time Machine",
+    icon: "🧮",
+  },
+  {
+    id: "tactical-calculator",
+    title: "Tactical Calculator",
+    icon: "🧮",
+    children: [
+      { id: "calc-overview", title: "How VA Math Works" },
+      { id: "calc-bilateral", title: "Bilateral Factor" },
+      { id: "calc-dependents", title: "Dependent Benefits" },
+      { id: "calc-what-if", title: "What-If Scenarios" },
+    ],
+  },
+  // === DISCOVER YOUR CLAIMS ===
+  {
+    id: "category-discover",
+    title: "🔍 Discover",
+    isCategory: true,
+  },
+  {
+    id: "bdd-builder",
+    title: "BDD Builder",
+    icon: "🔍",
+  },
+  {
+    id: "cap-exam-simulator",
+    title: "C&P Exam Simulator",
+    icon: "🔍",
+  },
+  {
+    id: "mos-hazard-matcher",
+    title: "MOS Hazard Matcher",
+    icon: "🔍",
+  },
+  {
+    id: "web-of-conditions",
+    title: "Web of Conditions",
+    icon: "🔍",
+  },
+  {
+    id: "secondary-scout",
+    title: "Secondary Scout",
+    icon: "🔬",
+    children: [
+      { id: "scout-launching", title: "Launching Scout" },
+      { id: "scout-results", title: "Understanding Results" },
+      { id: "scout-add-to-packet", title: "Add to Packet" },
+    ],
+  },
+  {
+    id: "cap-simulator",
+    title: "C&P Exam Simulator",
+    icon: "🎯",
+    children: [
+      { id: "simulator-getting-started", title: "Getting Started" },
+      { id: "condition-selection", title: "Condition Selection" },
+      { id: "taking-simulation", title: "Taking the Simulation" },
+      { id: "simulator-results", title: "Results & Feedback" },
+      { id: "flashcards", title: "Flashcard Mode" },
+    ],
+  },
+  {
+    id: "dbq-library",
+    title: "DBQ Library",
+    icon: "📑",
+    children: [
+      { id: "dbq-overview", title: "What are DBQs?" },
+      { id: "dbq-browse", title: "Browsing DBQs" },
+      { id: "dbq-usage", title: "Using DBQs" },
+    ],
+  },
+  {
+    id: "pathfinder",
+    title: "Pathfinder",
+    icon: "🧭",
+  },
+  {
+    id: "workflow-guide",
+    title: "Workflow Guide",
+    icon: "🗺️",
+    children: [
+      { id: "workflow-overview", title: "Mission Briefings" },
+      { id: "workflow-progress", title: "Tracking Progress" },
+    ],
+  },
+  // === BUILD YOUR EVIDENCE ===
+  {
+    id: "category-evidence",
+    title: "📋 Build Evidence",
+    isCategory: true,
+  },
+  {
+    id: "c-file-ai-analyzer",
+    title: "C-File AI Analyzer",
+    icon: "📋",
+  },
+  {
+    id: "pdf-evidence-finder",
+    title: "Record Search",
+    icon: "📋",
+  },
+  {
+    id: "somatic-target",
+    title: "Somatic Target",
+    icon: "📋",
+  },
+  {
+    id: "evidence-timeline",
+    title: "Evidence Timeline",
+    icon: "📋",
+  },
+  {
+    id: "foia-keysmith",
+    title: "FOIA Keysmith",
+    icon: "📋",
+  },
+  {
+    id: "cfile-analyzer",
+    title: "C-File AI Analyzer",
+    icon: "🔎",
+    children: [
+      { id: "cfile-what-is", title: "What is a C-File?" },
+      { id: "cfile-upload", title: "Dropping In Records" },
+      { id: "cfile-analysis", title: "Understanding Results" },
+    ],
+  },
+  {
+    id: "blue-button",
+    title: "Blue Button X-Ray",
+    icon: "💙",
+    children: [
+      { id: "blue-overview", title: "What Is Blue Button?" },
+      { id: "blue-extract", title: "Extracting Evidence" },
+    ],
+  },
+  {
+    id: "witness-bench",
+    title: "Witness Bench",
+    icon: "👥",
+    children: [
+      { id: "witness-overview", title: "Buddy Statements" },
+      { id: "witness-interview", title: "The Interview" },
+      { id: "witness-output", title: "Statement Output" },
+    ],
+  },
+  {
+    id: "nexus-builder",
+    title: "Nexus Builder",
+    icon: "🔗",
+    children: [
+      { id: "what-is-nexus", title: "What is a Nexus?" },
+      { id: "building-statement", title: "Building Your Statement" },
+      { id: "doctor-cheat-sheet", title: "Doctor's Cheat Sheet" },
+      { id: "download-options", title: "Download Options" },
+    ],
+  },
+  {
+    id: "forms-helper",
+    title: "Forms Helper",
+    icon: "📋",
+    children: [
+      { id: "available-forms", title: "Available Forms" },
+      { id: "buddy-statements", title: "Buddy Statements" },
+      { id: "intent-to-file", title: "Intent to File" },
+      { id: "ptsd-stressor", title: "PTSD Stressor" },
+      { id: "veteran-profile", title: "Veteran Profile" },
+    ],
+  },
+  // === QUALITY CONTROL ===
+  {
+    id: "category-qc",
+    title: "🎯 Quality Control",
+    isCategory: true,
+  },
+  {
+    id: "the-war-game",
+    title: "The War Game",
+    icon: "✅",
+  },
+  {
+    id: "denials-decoder",
+    title: "Denials Decoder",
+    icon: "✅",
+  },
+  {
+    id: "consistency-engine",
+    title: "Consistency Engine",
+    icon: "✅",
+  },
+  {
+    id: "evidence-gap-finder",
+    title: "Evidence Gap Finder",
+    icon: "✅",
+  },
+  {
+    id: "red-team",
+    title: "Red Team Simulator",
+    icon: "🎭",
+    children: [
+      { id: "red-overview", title: "What is Red Team?" },
+      { id: "red-analysis", title: "Weakness Analysis" },
+    ],
+  },
+  {
+    id: "decision-decoder",
+    title: "Decision Decoder",
+    icon: "📜",
+    children: [
+      { id: "decoder-overview", title: "Overview" },
+      { id: "decoder-upload", title: "Drop In Decision" },
+      { id: "decoder-appeal", title: "Appeal Options" },
+    ],
+  },
+  {
+    id: "shark-radar",
+    title: "Shark Radar",
+    icon: "🦈",
+  },
+  // === ADVANCED STRATEGY ===
+  {
+    id: "category-advanced",
+    title: "⚡ Advanced Strategy",
+    isCategory: true,
+  },
+  {
+    id: "state-benefit-hunter",
+    title: "State Benefit Hunter",
+    icon: "💰",
+  },
+  {
+    id: "the-tribunal",
+    title: "The Tribunal",
+    icon: "💰",
+  },
+  {
+    id: "legislative-watchdog",
+    title: "Legislative Watchdog",
+    icon: "💰",
+  },
+  {
+    id: "tdiu-builder",
+    title: "TDIU Builder",
+    icon: "💼",
+    children: [
+      { id: "tdiu-overview", title: "What is TDIU?" },
+      { id: "tdiu-eligibility", title: "Eligibility Check" },
+    ],
+  },
+  {
+    id: "risk-assessment",
+    title: "Risk Assessment",
+    icon: "⚠️",
+  },
+  {
+    id: "symptom-logger",
+    title: "Symptom Logger",
+    icon: "📊",
+    children: [
+      { id: "symptom-overview", title: "Why Track Symptoms?" },
+      { id: "symptom-logging", title: "Logging Symptoms" },
+      { id: "symptom-reports", title: "Reports & Export" },
+    ],
+  },
+  {
+    id: "pact-act",
+    title: "PACT Act Navigator",
+    icon: "☢️",
+    children: [
+      { id: "pact-overview", title: "What is PACT Act?" },
+      { id: "pact-conditions", title: "Covered Conditions" },
+      { id: "pact-locations", title: "Covered Locations" },
+    ],
+  },
+  {
+    id: "foia-generator",
+    title: "FOIA Keysmith",
+    icon: "🔑",
+  },
+  {
+    id: "appeals-lane-advisor",
+    title: "Appeals Lane Advisor",
+    icon: "⚖️",
+  },
+  {
+    id: "remand-risk-checker",
+    title: "Remand Risk Checker",
+    icon: "⚠️",
+  },
+  // === SHOCK & AWE ===
+  {
+    id: "category-shock",
+    title: "💎 Shock & Awe",
+    isCategory: true,
+  },
+  {
+    id: "million-dollar",
+    title: "Million Dollar Dashboard",
+    icon: "💰",
+  },
+  {
+    id: "mos-matcher",
+    title: "MOS Hazard Matcher",
+    icon: "🎖️",
+  },
+  {
+    id: "web-conditions",
+    title: "Web of Conditions",
+    icon: "🕸️",
+  },
+  // === SUPPORT & RESOURCES ===
+  {
+    id: "category-support",
+    title: "🤝 Support",
+    isCategory: true,
+  },
+  {
+    id: "field-manual",
+    title: "Field Manual",
+    icon: "🤝",
+  },
+  {
+    id: "the-bunker",
+    title: "The Bunker",
+    icon: "🤝",
+  },
+  {
+    id: "cloud-sync",
+    title: "Cloud Sync",
+    icon: "🤝",
+  },
+  {
+    id: "va-gov-integration",
+    title: "VA.gov Integration",
+    icon: "🤝",
+  },
+  {
+    id: "knowledge-base",
+    title: "Knowledge Base",
+    icon: "🤝",
+  },
+  {
+    id: "user-manual",
+    title: "Field Manual",
+    icon: "🤝",
+  },
+  {
+    id: "vso-finder",
+    title: "VSO Finder",
+    icon: "🏢",
+  },
+  {
+    id: "state-benefits",
+    title: "State Benefit Hunter",
+    icon: "💵",
+  },
+  // === DATA MANAGEMENT ===
+  {
+    id: "category-data",
+    title: "📁 Data & Settings",
+    isCategory: true,
+  },
+  {
+    id: "my-packet",
+    title: "My Packet",
+    icon: "📁",
+    children: [
+      { id: "managing-claims", title: "Managing Claims" },
+      { id: "saved-forms", title: "Saved Forms" },
+      { id: "backup-restore", title: "Backup & Restore" },
+      { id: "exporting-data", title: "Exporting Data" },
+    ],
+  },
+  {
+    id: "va-resources",
+    title: "VA Resources",
+    icon: "🏛️",
+    children: [
+      { id: "online-portals", title: "Online Portals" },
+      { id: "phone-numbers", title: "Phone Numbers" },
+      { id: "external-resources", title: "External Resources" },
+    ],
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    icon: "⚙️",
+    children: [
+      { id: "display-mode", title: "Display Mode" },
+      { id: "accessibility-options", title: "Accessibility Options" },
+      { id: "data-management", title: "Data Management" },
+    ],
+  },
+  {
+    id: "ai-settings",
+    title: "AI Settings",
+    icon: "🤖",
+    children: [
+      { id: "local-ai-overview", title: "Local AI Overview" },
+      { id: "model-selection", title: "Choosing the Right Model" },
+      { id: "cloud-vs-local", title: "Cloud vs Local AI" },
+      { id: "vram-requirements", title: "VRAM Requirements" },
+    ],
+  },
+  {
+    id: "reference",
+    title: "Reference",
+    icon: "📖",
+    children: [
+      { id: "glossary", title: "Glossary" },
+      { id: "cfr-reference", title: "CFR Reference" },
+      { id: "keyboard-shortcuts", title: "Keyboard Shortcuts" },
+    ],
+  },
+  {
+    id: "faq",
+    title: "FAQ",
+    icon: "❓",
+  },
+];
+
+// Documentation content - organized by section ID
+const documentationContent = {
+  home: {
+    title: "Vet-Rate.org Field Manual",
+    content: `
+Welcome to the comprehensive field manual for **Vet-Rate.org** - your complete VA claims toolkit with **{getTotalToolCount()} powerful tools**.
+
+## About This Manual
+
+This manual covers every feature and function of the Vet-Rate.org platform, designed to help you:
+
+- **Search & understand** {getDisabilityCount()} VA disability conditions
+- **Discover secondary conditions** linked to your service-connected disabilities
+- **Calculate combined ratings** with the Tactical Calculator
+- **Prepare for C&P exams** with our simulator and Exam Prep Room
+- **Analyze your C-File** with AI assistance
+- **Build nexus statements** to support your claims
+- **Complete VA forms** with guided assistance
+- **Organize your claims packet** in one place
+- **Find free VSO help** and avoid claim sharks
+- **Track regulatory changes** with Legislative Watchdog
+- **Stress test your claim** before submission
+
+## All {getTotalToolCount()}+ Tools
+
+### Core Intelligence Tools
+| Tool | What It Does |
+|------|--------------|
+| **Smart Search** | Find any of {getDisabilityCount()} rated disabilities |
+| **PACT Act Navigator** | Identify toxic exposure presumptive conditions |
+| **Web of Conditions** | Interactive visualization of connected disabilities |
+| **Legislative Watchdog** | Track Federal Register changes affecting veterans |
+| **VA Resources Hub** | Direct access to official VA programs |
+| **Field Manual** | Complete documentation for all features |
+
+### Rating & Benefits Calculators
+| Tool | What It Does |
+|------|--------------|
+| **Tactical Calculator** | Combined ratings with bilateral factors & 2026 pay rates |
+| **Million Dollar Dashboard** | Lifetime benefit value & retirement projections |
+| **TDIU Builder** | Total Disability Individual Unemployability evaluation |
+| **State Benefit Hunter** | Discover state-level veteran benefits |
+
+### Discovery & Research Tools
+| Tool | What It Does |
+|------|--------------|
+| **Secondary Scout** | 65+ medically-recognized secondary conditions |
+| **MOS Hazard Matcher** | Link military jobs to exposures and conditions |
+| **Pathfinder** | Strategic roadmap from claim to appeal |
+| **Risk Assessment** | Identify claim weaknesses before filing |
+| **What-If Sandbox** | Model rating scenarios and strategic options |
+
+### Evidence Building Suite
+| Tool | What It Does |
+|------|--------------|
+| **C&P Exam Simulator** | DBQ-aligned practice with percentage predictions |
+| **Exam Prep Room** | DBQ preview and examiner question preparation |
+| **Nexus Builder** | Medical nexus statements with AI enhancement |
+| **Forms Helper** | 16+ VA forms including buddy & PTSD stressor statements |
+| **Witness Bench** | AI-powered buddy statement wizard |
+| **Symptom Logger** | Track daily symptoms for documentation |
+| **Somatic Target** | Interactive body map for pain documentation |
+| **Continuity Thread** | Evidence timeline with gap detection |
+| **FOIA Keysmith** | Generate records requests for military documents |
+
+### Advanced Analysis
+| Tool | What It Does |
+|------|--------------|
+| **C-File AI Analyzer** | Find evidence in thousands of pages |
+| **Decision Decoder** | AI analysis of VA letters for appeal opportunities |
+| **Denial Decoder** | OCR scan denial letters to find appeal angles |
+| **Blue Button X-Ray** | Extract claim-relevant evidence from medical records |
+| **Record Search** | Keyword search across dropped in documents |
+| **Red Team Simulator** | Simulate VA examiner review to find weaknesses |
+
+### Battle Labs
+| Tool | What It Does |
+|------|--------------|
+| **The Tribunal** | Mock BVA hearing simulation |
+| **Consistency Engine** | Detect contradictions across your evidence |
+| **War Game** | Adversarial claim stress testing |
+| **Time Machine** | Intent to File deadline countdown tracker |
+
+### Appeals Strategy
+| Tool | What It Does |
+|------|--------------|
+| **Appeals Lane Advisor** | Choose Supplemental, HLR, or BVA based on your evidence and error type |
+| **Remand Risk Checker** | Find gaps using 18,609 BVA remand decision patterns before filing |
+
+### Protection & Support
+| Tool | What It Does |
+|------|--------------|
+| **VSO Finder** | Locate accredited Veterans Service Officers |
+| **Shark Radar** | Identify predatory claim services |
+| **Mission Protocol** | Guided onboarding with mission objectives |
+
+### Data Management
+| Tool | What It Does |
+|------|--------------|
+| **My Packet** | Save and manage all claims evidence |
+| **The Bunker** | Export/import your complete data backup |
+| **Cloud Sync** | Google Drive backup integration |
+| **PDF Reports** | Download comprehensive condition guides |
+
+## Important Notice
+
+> **🆘 Veterans Crisis Line:** Call 988, Press 1 | Text 838255 | Available 24/7
+
+This tool is for **educational purposes only**. It is not affiliated with the VA and does not constitute legal or medical advice.
+
+## Your Privacy
+
+All data stays in your browser - we don't collect, store, or transmit any personal information to servers.
+
+**Storage & encryption status:**
+- Your data is stored in your browser's localStorage and IndexedDB. These are **not encrypted at rest** - anyone with physical or forensic access to your device can read them.
+- **Bunker Backup exports** (.json files you download) are **not encrypted** unless you enable cloud sync.
+- **Cloud Sync** (Google Drive / Dropbox / OneDrive) backups **are encrypted** with your passphrase before leaving your device.
+- To protect sensitive data on shared or untrusted devices, use Cloud Sync with a strong passphrase and clear your browser storage when done.
+    `,
+  },
+
+  "getting-started": {
+    title: "Getting Started",
+    content: `
+Get up and running with Vet-Rate.org in minutes.
+
+## What You'll Learn
+
+- How to navigate the interface
+- Understanding your first search
+- Setting up accessibility options
+- Making the most of each feature
+
+## Before You Begin
+
+**No account needed!** Vet-Rate.org works entirely in your browser. Your data stays on your device.
+
+## Recommended First Steps
+
+1. **Acknowledge the disclaimer** - Understand this is an educational tool
+2. **Search for a condition** - Try your primary service-connected disability
+3. **Explore Secondary Scout** - Discover potential secondary claims
+4. **Try the C&P Simulator** - Prepare for your exam
+5. **Check Settings** - Adjust display and accessibility options
+    `,
+  },
+
+  "first-visit": {
+    title: "Your First Visit",
+    content: `
+Here's what to expect when you first visit Vet-Rate.org.
+
+## Interactive Tour
+
+First-time visitors automatically see an **interactive tour** that highlights the key features:
+- Where to search
+- How to add conditions
+- Where your saved data lives
+
+**Want to see the tour again?** Click the button below.
+
+<tour-restart-button></tour-restart-button>
+
+## The Disclaimer
+
+On your first visit, you'll see a disclaimer explaining:
+- This is an educational tool
+- Not affiliated with the VA
+- Not legal or medical advice
+
+Click **"I Understand"** to continue.
+
+## Try Demo Data
+
+New and want to see what a complete claim looks like? Use the **"Load Example Data"** link on the main dashboard to load a sample veteran's packet with:
+- Pre-written personal statements
+- Evidence timeline
+- Secondary conditions
+
+This shows you the "gold standard" before you start your own.
+
+## The Main Interface
+
+After acknowledging the disclaimer, you'll see:
+
+1. **Header** - Navigation to main features
+2. **Search Bar** - Search {getDisabilityCount()} disabilities
+3. **Feature Cards** - Quick access to tools
+4. **Footer** - Links to policies and support
+
+## Try Your First Search
+
+1. Click the search bar
+2. Type a condition name (e.g., "PTSD", "sleep apnea", "tinnitus")
+3. Press Enter or click a result
+4. View detailed rating criteria
+
+## Next Steps
+
+- Explore the disability details
+- Try Secondary Scout for linked conditions
+- Practice with the C&P Simulator
+    `,
+  },
+
+  "interface-overview": {
+    title: "Interface Overview",
+    content: `
+Learn your way around the Vet-Rate.org interface.
+
+## Header Navigation
+
+| Button | Function |
+|--------|----------|
+| **Secondary Scout** | Find linked conditions |
+| **C&P Simulator** | Practice for exams |
+| **My Packet** | View saved claims |
+| **VA Resources** | Official VA links |
+| **Forms Helper** | VA form assistance |
+
+## Main Content Area
+
+- **Search Bar** - Central search functionality
+- **Feature Cards** - Quick-launch tools
+- **Search Results** - Condition cards with key info
+
+## Footer
+
+- Privacy Policy
+- About Us
+- Contact Us
+- Bug Report
+
+## Accessibility Menu
+
+Click the **☰** icon in the header for:
+- Dark/Light mode toggle
+- Color blind modes
+- Font size adjustment
+- Reduced motion option
+    `,
+  },
+
+  accessibility: {
+    title: "Accessibility",
+    content: `
+Vet-Rate.org is designed to be accessible to all veterans.
+
+## Visual Options
+
+### Dark Mode
+Reduces eye strain in low-light conditions.
+
+### Color Blind Modes
+- **Protanopia** - Red-blind friendly
+- **Deuteranopia** - Green-blind friendly  
+- **Tritanopia** - Blue-blind friendly
+- **High Contrast** - Maximum visibility
+
+### Font Size
+Adjustable from small to extra-large.
+
+### Reduced Motion
+Disables animations for vestibular sensitivities.
+
+## Keyboard Navigation
+
+- **Tab** - Move between elements
+- **Enter** - Activate buttons/links
+- **Escape** - Close modals
+- **/** - Focus search bar
+
+## Screen Reader Support
+
+- Proper heading hierarchy
+- ARIA labels on interactive elements
+- Live regions for dynamic content
+    `,
+  },
+
+  search: {
+    title: "Search & Explore",
+    content: `
+Master the search functionality to find any VA disability condition.
+
+## What You Can Search
+
+- **{getDisabilityCount()} disabilities** from 38 CFR Part 4
+- **Condition names** (e.g., "PTSD", "tinnitus")
+- **Diagnostic codes** (e.g., "9411", "6260")
+- **Keywords** (e.g., "knee", "back", "anxiety")
+
+## Search Features
+
+- **Instant results** - As you type
+- **Fuzzy matching** - Handles typos
+- **All body systems** - Complete coverage
+
+## From Search Results
+
+- View rating criteria
+- See related conditions
+- Launch Secondary Scout
+- Add to My Packet
+    `,
+  },
+
+  "how-to-search": {
+    title: "How to Search",
+    content: `
+Find exactly what you're looking for.
+
+## Basic Search
+
+1. Click the search bar (or press **/**)
+2. Type your search term
+3. Results appear automatically
+
+## Search Tips
+
+| Search Type | Example |
+|-------------|---------|
+| Condition name | "sleep apnea" |
+| Diagnostic code | "6847" |
+| Body part | "knee" |
+| Symptom | "pain" |
+
+## Advanced Tips
+
+- **Partial matches work** - "anx" finds anxiety
+- **Case insensitive** - "PTSD" = "ptsd"
+- **Multiple words** - "sleep apnea" searches for both
+    `,
+  },
+
+  "search-results": {
+    title: "Search Results",
+    content: `
+Understanding your search results.
+
+## Result Cards
+
+Each card shows:
+- **Condition name**
+- **Diagnostic code**
+- **Rating range** (e.g., 0-100%)
+- **Body system**
+
+## Actions
+
+- **Click card** - View full details
+- **View criteria** - See rating percentages
+- **Launch Scout** - Find secondary conditions
+
+## No Results?
+
+Try:
+- Different spelling
+- Medical terminology
+- Related terms
+- Diagnostic code directly
+    `,
+  },
+
+  "disability-details": {
+    title: "Disability Details",
+    content: `
+Deep dive into any disability condition.
+
+## Information Displayed
+
+- **Official name** and aliases
+- **Diagnostic code** from 38 CFR
+- **Rating percentages** with criteria
+- **Documentation requirements**
+- **Related secondary conditions**
+
+## Rating Criteria
+
+Shows each rating level (0%, 10%, 20%, etc.) with:
+- Exact criteria required
+- Special notes
+- DeLuca factors (if applicable)
+
+## Actions Available
+
+- **Build Nexus Statement**
+- **Launch Secondary Scout**
+- **Add to My Packet**
+- **View CFR Reference**
+    `,
+  },
+
+  "rating-criteria": {
+    title: "Rating Criteria",
+    content: `
+Understanding VA rating criteria.
+
+## How Ratings Work
+
+The VA assigns percentage ratings (0-100%) based on how your condition affects you:
+
+| Rating | Typical Impact |
+|--------|----------------|
+| 0% | Diagnosed, minimal impact |
+| 10-20% | Mild functional limitation |
+| 30-40% | Moderate impairment |
+| 50-70% | Significant disability |
+| 100% | Total disability |
+
+## Reading the Criteria
+
+Each rating level lists specific requirements. You must meet the criteria for that level.
+
+## VA Math
+
+Combined ratings use VA math (not simple addition):
+- 50% + 30% ≠ 80%
+- 50% + 30% = 65% (rounds to 70%)
+
+Formula: Combined = A + B × (1 - A)
+    `,
+  },
+
+  "secondary-scout": {
+    title: "Secondary Scout",
+    content: `
+Discover secondary conditions linked to your service-connected disabilities.
+
+## What Are Secondary Conditions?
+
+Conditions caused or aggravated by your service-connected disabilities under 38 CFR § 3.310.
+
+## How Secondary Scout Works
+
+1. Enter your service-connected conditions
+2. Scout searches the nexus database
+3. View potential secondary claims
+4. Learn about the medical connection
+
+## Why It Matters
+
+Secondary conditions can significantly increase your combined rating without proving direct service connection.
+    `,
+  },
+
+  "scout-launching": {
+    title: "Launching Secondary Scout",
+    content: `
+Start finding your secondary conditions.
+
+## How to Launch
+
+1. Click **"Secondary Scout"** in the header
+2. Or click **"Launch Secondary Scout"** on the home page
+
+## Adding Conditions
+
+1. Search for your service-connected conditions
+2. Click to add each one
+3. Click **"Launch Scout"** when ready
+
+## Tips
+
+- Add ALL your service-connected conditions
+- Include conditions rated at 0%
+- The more you add, the more connections found
+    `,
+  },
+
+  "scout-results": {
+    title: "Understanding Scout Results",
+    content: `
+Make sense of your Secondary Scout findings.
+
+## Result Categories
+
+- **High Connection** - Strong medical link
+- **Moderate Connection** - Established link
+- **Possible Connection** - May require more evidence
+
+## Each Result Shows
+
+- Secondary condition name
+- Which primary it links to
+- Medical rationale
+- Typical rating range
+
+## What to Do Next
+
+1. Review each suggestion
+2. Click **"Learn How"** for nexus guidance
+3. Click **"Add to Packet"** to save
+4. Consult with VSO or doctor
+    `,
+  },
+
+  "scout-add-to-packet": {
+    title: "Adding to My Packet",
+    content: `
+Save secondary condition suggestions for your claims packet.
+
+## How to Save
+
+1. Find a relevant secondary condition
+2. Click **"Add to Packet"**
+3. Condition is saved to My Packet
+
+## What Gets Saved
+
+- Condition name and code
+- Primary condition link
+- Medical rationale
+- Date added
+
+## Next Steps
+
+1. Open My Packet
+2. Build nexus statement
+3. Gather supporting evidence
+4. File your claim
+    `,
+  },
+
+  "cap-simulator": {
+    title: "C&P Exam Simulator",
+    content: `
+Prepare for your Compensation & Pension examination.
+
+## What Is a C&P Exam?
+
+A medical examination by the VA to evaluate your claimed disability. Your rating often depends on this exam.
+
+## What the Simulator Does
+
+- Asks questions based on real DBQs
+- Covers condition-specific criteria
+- Provides instant feedback
+- Estimates potential ratings
+
+## Important
+
+This is for **practice only**. It cannot predict your actual rating. Always be honest in your real exam.
+    `,
+  },
+
+  "simulator-getting-started": {
+    title: "Getting Started with Simulator",
+    content: `
+Begin your C&P exam preparation.
+
+## How to Start
+
+1. Click **"C&P Simulator"** in the header
+2. Or click **"Launch C&P Simulator"** on the home page
+3. Select a condition to practice
+4. Answer the questions
+
+## Simulation Modes
+
+- **Full Simulation** - Complete DBQ-style exam
+- **Flashcard Mode** - Quick question review
+
+## Best Practices
+
+- Take your time
+- Answer honestly (as you would in real exam)
+- Review the feedback carefully
+- Practice multiple times
+    `,
+  },
+
+  "condition-selection": {
+    title: "Condition Selection",
+    content: `
+Choose which condition to simulate.
+
+## Available Conditions
+
+The simulator covers conditions with DBQ-specific questions:
+- Mental health (PTSD, depression, anxiety)
+- Musculoskeletal (back, knees, shoulders)
+- And more
+
+## Selecting a Condition
+
+1. Browse the condition list
+2. Use search to filter
+3. Click to select
+4. Begin simulation
+
+## Multiple Conditions
+
+You can run separate simulations for each claimed condition.
+    `,
+  },
+
+  "taking-simulation": {
+    title: "Taking the Simulation",
+    content: `
+What to expect during the simulation.
+
+## Question Types
+
+- **Frequency questions** - How often symptoms occur
+- **Severity questions** - How bad symptoms are
+- **Functional impact** - How it affects daily life
+- **Treatment questions** - What treatments you've tried
+
+## Answering Questions
+
+- Select the option that best describes your situation
+- Consider your worst days (flare-ups)
+- Think about functional limitations
+
+## Navigation
+
+- Use **Next** to proceed
+- Use **Back** to review
+- Progress bar shows completion
+    `,
+  },
+
+  "simulator-results": {
+    title: "Results & Feedback",
+    content: `
+Understanding your simulation results.
+
+## What You'll See
+
+- **Estimated rating range**
+- **Key factors** that influenced the estimate
+- **Suggestions** for documentation
+- **What to discuss** in your real exam
+
+## Important Disclaimer
+
+This estimate is for **educational purposes only**:
+- Not a prediction of your actual rating
+- Based on your self-reported answers
+- Actual VA decisions may differ
+
+## Using the Feedback
+
+- Identify gaps in documentation
+- Know what criteria matter
+- Prepare talking points for C&P
+    `,
+  },
+
+  flashcards: {
+    title: "Flashcard Mode",
+    content: `
+Quick-review C&P exam concepts.
+
+## What Are Flashcards?
+
+Quick question-and-answer cards for reviewing:
+- Rating criteria
+- Key terminology
+- What examiners look for
+
+## How to Use
+
+1. Select flashcard mode
+2. Read the question
+3. Think of your answer
+4. Flip to see the answer
+5. Mark as learned or review again
+
+## Benefits
+
+- Quick review sessions
+- No pressure
+- Learn at your pace
+- Reinforce key concepts
+    `,
+  },
+
+  // DBQ Library Documentation
+  "dbq-library": {
+    title: "DBQ Library",
+    content: `
+Browse the complete Disability Benefits Questionnaire (DBQ) library.
+
+## What Are DBQs?
+
+DBQs are standardized medical evaluation forms the VA uses to assess disabilities:
+- **Standardized format** - Same questions for same conditions
+- **Rating criteria aligned** - Questions map directly to rating levels
+- **Used by examiners** - What your C&P examiner fills out
+
+## Why This Matters
+
+Understanding DBQs helps you:
+- Know exactly what criteria the VA evaluates
+- Prepare specific evidence for each question
+- Understand how your symptoms translate to ratings
+- Communicate effectively with your examiner
+
+## Browsing the Library
+
+The DBQ Library is organized by condition category for easy navigation.
+    `,
+  },
+
+  "dbq-overview": {
+    title: "What are DBQs?",
+    content: `
+Understanding Disability Benefits Questionnaires.
+
+## Purpose of DBQs
+
+The VA created DBQs to standardize disability evaluations:
+- Ensures consistent evaluations nationwide
+- Maps directly to 38 CFR rating criteria
+- Captures functional impairment levels
+
+## Types of DBQs
+
+- **Initial evaluation** - First-time claims
+- **Review examination** - Reevaluations
+- **Specialty-specific** - Tailored to condition types
+
+## Key Sections
+
+Most DBQs include:
+1. **Diagnosis** - Medical condition confirmation
+2. **Symptoms** - Current manifestations
+3. **Functional Impact** - Effect on work/daily life
+4. **Severity Measures** - Specific measurements or frequencies
+
+## Using This Knowledge
+
+Review the DBQ for your condition before your C&P exam to understand what will be evaluated.
+    `,
+  },
+
+  "dbq-browse": {
+    title: "Browsing DBQs",
+    content: `
+Navigate the DBQ collection effectively.
+
+## How to Access
+
+1. Click **"DBQ Library"** in the Tools menu
+2. Browse by category or search
+3. Select a DBQ to view details
+
+## Categories
+
+DBQs are organized by body system:
+- Mental Disorders
+- Musculoskeletal
+- Respiratory
+- Cardiovascular
+- And more
+
+## Search Features
+
+- Search by condition name
+- Filter by category
+- View related conditions
+
+## What You'll Find
+
+For each DBQ:
+- Form title and number
+- Condition it covers
+- Key evaluation criteria
+- Direct link to official form
+    `,
+  },
+
+  "dbq-usage": {
+    title: "Using DBQs",
+    content: `
+Get the most value from DBQ information.
+
+## Before Your C&P Exam
+
+1. Find the DBQ for your condition
+2. Review each section and question
+3. Document your symptoms matching the criteria
+4. Prepare examples for functional impact questions
+
+## Supporting Your Claim
+
+- Use DBQ criteria to structure personal statements
+- Ensure medical evidence addresses DBQ questions
+- Identify any gaps in your documentation
+
+## Private DBQ Option
+
+Some veterans have private doctors complete DBQs:
+- Must be an acceptable provider
+- Can supplement VA examinations
+- Discuss with your VSO first
+
+## Tips
+
+- Don't minimize symptoms
+- Document your worst days
+- Be specific about functional limitations
+    `,
+  },
+
+  // Workflow Guide Documentation
+  "workflow-guide": {
+    title: "Workflow Guide",
+    content: `
+Follow step-by-step "Mission Briefings" for every claims scenario.
+
+## What Is Workflow Guide?
+
+Pre-built, step-by-step workflows that walk you through:
+- Original claims
+- Increase claims
+- Secondary claims
+- Appeals and more
+
+## Why Use Workflow Guide?
+
+- **Never miss a step** - Comprehensive checklists
+- **Right tool at right time** - Guided tool recommendations
+- **Track progress** - Save your place and continue later
+- **Expert-designed** - Based on successful claims strategies
+
+## Available Workflows
+
+Multiple mission briefings covering the most common claims scenarios with specific steps for each.
+    `,
+  },
+
+  "workflow-overview": {
+    title: "Mission Briefings",
+    content: `
+Understand the workflow system.
+
+## How It Works
+
+1. **Select Your Mission** - Choose the workflow that matches your goal
+2. **Follow the Steps** - Each step tells you what to do and which tool to use
+3. **Mark Progress** - Check off steps as you complete them
+4. **Return Anytime** - Your progress is saved automatically
+
+## Workflow Categories
+
+- **Original Claim** - First-time filing for a condition
+- **Increase Claim** - Requesting higher rating
+- **Secondary Claim** - Claiming conditions caused by service-connected disabilities
+- **Appeal** - Challenging a VA decision
+
+## Tips for Success
+
+- Complete steps in order when possible
+- Don't skip the evidence-gathering steps
+- Use the recommended tools for each step
+- Take notes as you go
+    `,
+  },
+
+  "workflow-progress": {
+    title: "Tracking Progress",
+    content: `
+Monitor and continue your workflow progress.
+
+## Saving Progress
+
+- Progress saves automatically to your browser
+- Return to any workflow to continue
+- Completed steps remain checked
+
+## Progress Indicators
+
+- **Circle** - Not started
+- **Checkmark** - Completed
+- **Progress bar** - Overall workflow completion
+
+## Resetting Progress
+
+You can reset a workflow if you need to start over or are working on a new claim.
+
+## Multiple Workflows
+
+You can work through multiple workflows simultaneously for different claims or conditions.
+
+## Best Practices
+
+- Complete one step fully before moving on
+- Gather all evidence before filing
+- Review completed steps before submission
+    `,
+  },
+
+  "nexus-builder": {
+    title: "Nexus Builder",
+    content: `
+Create supporting statements for your claims.
+
+## What Is a Nexus?
+
+A medical connection between your current condition and military service. Required for service connection.
+
+## What Nexus Builder Does
+
+- Guides you through statement creation
+- Provides templates and language
+- Creates doctor-friendly summaries
+- Generates downloadable documents
+
+## Types of Statements
+
+- **Personal statements** - Your own words
+- **Doctor's cheat sheet** - For medical providers
+- **Nexus framework** - Connection outline
+    `,
+  },
+
+  "what-is-nexus": {
+    title: "What is a Nexus?",
+    content: `
+Understanding the nexus requirement.
+
+## The Three Elements
+
+To establish service connection, you need:
+
+1. **Current diagnosis** - You have the condition now
+2. **In-service event** - Something happened during service
+3. **Nexus** - Medical link between them
+
+## Nexus Language
+
+The magic words: **"at least as likely as not"**
+
+This means 50% or greater probability - not certainty.
+
+## Who Can Provide Nexus?
+
+- VA examiners (during C&P)
+- Private physicians
+- Specialists in the relevant field
+
+## Why It Matters
+
+Without a nexus, your claim will likely be denied - even with a diagnosis and in-service event.
+    `,
+  },
+
+  "building-statement": {
+    title: "Building Your Statement",
+    content: `
+Create your personal statement step by step.
+
+## What to Include
+
+1. **Your information** - Name, service dates
+2. **The condition** - What you're claiming
+3. **In-service connection** - What happened
+4. **Current impact** - How it affects you now
+5. **Timeline** - Continuity of symptoms
+
+## Writing Tips
+
+- Be specific with dates and events
+- Describe functional limitations
+- Use "I" statements
+- Be honest and accurate
+
+## The Builder Process
+
+1. Select or enter your condition
+2. Answer guided questions
+3. Review generated statement
+4. Download or edit as needed
+    `,
+  },
+
+  "doctor-cheat-sheet": {
+    title: "Doctor's Cheat Sheet",
+    content: `
+Help your doctor help you.
+
+## What Is It?
+
+A summary document to give your physician including:
+- The condition you're claiming
+- Rating criteria from 38 CFR
+- Key phrases for nexus letters
+- What the VA needs to see
+
+## Why Use It?
+
+Most doctors don't know VA requirements. This helps them:
+- Understand what to document
+- Use correct terminology
+- Provide useful opinions
+
+## How to Use
+
+1. Generate the cheat sheet
+2. Print or email to your doctor
+3. Discuss at your appointment
+4. Request an opinion letter
+    `,
+  },
+
+  "download-options": {
+    title: "Download Options",
+    content: `
+Export your statements and documents.
+
+## Available Formats
+
+- **PDF** - Print-ready document
+- **Word (.docx)** - Editable format
+- **Text** - Plain text copy
+
+## What Gets Downloaded
+
+- Your personal statement
+- Doctor's cheat sheet
+- Supporting information
+
+## After Downloading
+
+1. Review for accuracy
+2. Sign if required
+3. Keep copies
+4. Submit with your claim
+    `,
+  },
+
+  "forms-helper": {
+    title: "Forms Helper",
+    content: `
+Get help filling out VA forms.
+
+## Available Forms
+
+- **Buddy Statements** - Third-party support
+- **Intent to File** - Protect your effective date
+- **PTSD Stressor** - Document traumatic events
+- **Veteran Profile** - Your information template
+
+## How It Works
+
+1. Select a form
+2. Follow the guided wizard
+3. Enter your information
+4. Generate completed form
+5. Download and submit
+
+## Important
+
+Forms Helper assists with completion but doesn't submit to VA. You must submit through official channels.
+    `,
+  },
+
+  "available-forms": {
+    title: "Available Forms",
+    content: `
+Forms Helper currently supports:
+
+## Buddy Statement (VA Form 21-4138)
+Third-party statements supporting your claim. One of the most powerful forms of evidence!
+
+## Intent to File
+Protect your effective date while gathering evidence. Gives you 1 year to complete your claim.
+
+## PTSD Stressor Statement (VA Form 21-0781)
+Document the traumatic events related to your PTSD claim.
+
+## Veteran Profile
+Not a VA form - a personal reference document with your key information.
+
+## Coming Soon
+We're working on adding more forms. Let us know which ones you need!
+    `,
+  },
+
+  "buddy-statements": {
+    title: "Buddy Statements",
+    content: `
+Powerful supporting evidence from people who know you.
+
+## What Is a Buddy Statement?
+
+A written statement from someone who can attest to:
+- Your condition or symptoms
+- Events during service
+- How your disability affects you
+
+## Who Can Write One?
+
+- Fellow service members
+- Family members
+- Friends
+- Coworkers
+- Anyone with relevant knowledge
+
+## What to Include
+
+- Relationship to you
+- What they witnessed
+- Specific examples
+- Dates if possible
+
+## Using the Helper
+
+1. Open Forms Helper
+2. Select Buddy Statements
+3. Enter information
+4. Generate the form
+5. Have your buddy sign it
+    `,
+  },
+
+  "intent-to-file": {
+    title: "Intent to File",
+    content: `
+Protect your effective date.
+
+## What Is Intent to File?
+
+A notice to VA that you plan to file a claim. It:
+- Reserves your effective date
+- Gives you 1 year to complete your claim
+- Protects back pay potential
+
+## Why It Matters
+
+Your effective date determines when benefits start. Filing ITF first can mean more back pay.
+
+## How to File
+
+**Best method:** File online at VA.gov
+
+**Using Forms Helper:** 
+- Generate the form
+- Submit via mail or fax
+- Note: Online is faster
+
+## After Filing
+
+You have 1 year to submit your full claim with evidence.
+    `,
+  },
+
+  "ptsd-stressor": {
+    title: "PTSD Stressor Statement",
+    content: `
+Document traumatic events for your PTSD claim.
+
+## What Is It?
+
+VA Form 21-0781 - describes the traumatic event(s) that caused your PTSD.
+
+## What to Include
+
+- What happened
+- When it happened
+- Where it happened
+- Who was involved
+- How it affected you
+
+## Types of Stressors
+
+- Combat-related
+- Personal assault (MST) - also on VA Form 21-0781, which has its own section for it
+- Non-combat trauma
+- Fear of hostile activity
+
+## Tips
+
+- Be as specific as possible
+- Include dates, locations, unit info
+- Describe your reaction
+- Note any witnesses
+
+## The Helper guides you through each section.
+    `,
+  },
+
+  "veteran-profile": {
+    title: "Veteran Profile",
+    content: `
+Keep your information organized.
+
+## What Is It?
+
+A personal reference document with your key information:
+- Service dates
+- Duty stations
+- Current conditions
+- Claim information
+
+## Not a VA Form
+
+This is for your reference - not submitted to VA.
+
+## Why Use It?
+
+- Quick reference for filling forms
+- Keep information consistent
+- Track your claims history
+- Share with VSO
+    `,
+  },
+
+  // ========== NEW TOOLS DOCUMENTATION ==========
+
+  "tactical-calculator": {
+    title: "Tactical Calculator",
+    content: `
+Calculate your combined VA disability rating with precision.
+
+## What It Does
+
+- Calculates combined ratings using official VA math (38 CFR § 4.25)
+- Applies the Bilateral Factor for paired extremities
+- Shows 2026 compensation rates with dependents
+- Projects "What If" scenarios
+
+## Why VA Math Matters
+
+The VA doesn't add ratings. They use "efficiency" math:
+- 50% + 30% ≠ 80%
+- 50% + 30% = 65% (rounds to 70%)
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Combined Rating** | Precise VA math calculation |
+| **Bilateral Factor** | 10% boost for paired limbs |
+| **Pay Calculator** | Monthly/yearly compensation |
+| **Dependents** | Spouse, children, parents |
+| **What-If** | Test adding new ratings |
+    `,
+  },
+
+  "calc-overview": {
+    title: "How VA Math Works",
+    content: `
+Understanding the VA Combined Ratings Table.
+
+## The Formula
+
+Combined = A + B × (1 - A)
+
+Where A and B are decimal ratings.
+
+## Example
+
+50% + 30%:
+1. Convert: 0.50 + 0.30
+2. Calculate: 0.50 + (0.30 × 0.50) = 0.50 + 0.15 = 0.65
+3. Result: 65% (rounds to 70%)
+
+## Key Rules
+
+- Ratings are applied largest first
+- Final result rounds to nearest 10
+- 0.5 rounds UP (favorable to veteran)
+
+## Why This Matters
+
+Understanding VA math helps you:
+- Know your realistic combined rating
+- Identify which conditions will boost you most
+- Plan strategic claim filing
+    `,
+  },
+
+  "calc-bilateral": {
+    title: "Bilateral Factor",
+    content: `
+Get a 10% boost for paired extremity conditions.
+
+## What Is It?
+
+Per 38 CFR § 4.26, when you have conditions affecting both:
+- Arms/shoulders
+- Legs/hips/knees
+- Hands/feet
+
+You get a 10% increase on the COMBINED bilateral rating.
+
+## Example
+
+Left knee 20% + Right knee 10%:
+1. Combine: 20% + 10% = 28%
+2. Add 10%: 28% × 1.10 = 30.8%
+3. Use 31% in final calculation
+
+## How to Use
+
+1. Mark conditions as Left/Right/Bilateral
+2. Calculator automatically applies the factor
+3. See the bilateral bonus in your breakdown
+    `,
+  },
+
+  "calc-dependents": {
+    title: "Dependent Benefits",
+    content: `
+Additional compensation for dependents at 30%+.
+
+## Who Qualifies
+
+Veterans rated 30% or higher can receive additional compensation for:
+- Spouse
+- Children under 18
+- Children 18-23 in school
+- Dependent parents
+
+## 2026 Rates Example (100%)
+
+| Dependent | Additional |
+|-----------|------------|
+| Spouse | +$219.59/mo |
+| Child <18 | +$109.11/mo |
+| Child 18+ in school | +$352.45/mo |
+| 1 Parent | +$176.24/mo |
+| 2 Parents | +$352.48/mo |
+
+## Spouse Aid & Attendance
+
+Extra amount if your spouse requires A&A care.
+    `,
+  },
+
+  "calc-what-if": {
+    title: "What-If Scenarios",
+    content: `
+Test how new ratings would affect your combined.
+
+## How to Use
+
+1. Enter your current conditions
+2. Click "What If" or add a test condition
+3. See projected new combined rating
+4. Compare pay difference
+
+## Strategic Planning
+
+Use What-If to:
+- Prioritize which claims to file first
+- See impact of potential rating increases
+- Plan for secondary conditions
+- Understand diminishing returns at higher ratings
+    `,
+  },
+
+  "cfile-analyzer": {
+    title: "C-File AI Analyzer",
+    content: `
+AI-powered analysis of your VA claims file.
+
+## What Others Charge $500+ For - FREE
+
+The C-File Analyzer uses AI to:
+- Identify favorable evidence
+- Find missing nexus connections
+- Spot rating inconsistencies
+- Suggest claim strategies
+
+## What Is a C-File?
+
+Your Claims File (C-File) contains everything VA has about you:
+- Service records
+- Medical records
+- Previous decisions
+- Correspondence
+
+## Privacy First
+
+Your documents are processed locally or with your own API key. We never store your records.
+    `,
+  },
+
+  "cfile-what-is": {
+    title: "What is a C-File?",
+    content: `
+Your complete VA claims history.
+
+## Contents
+
+- Service treatment records
+- VA medical records
+- Private medical records you've submitted
+- Previous rating decisions
+- Exam reports
+- Correspondence
+
+## How to Get Yours
+
+1. Request via VA.gov
+2. Submit FOIA request (use our FOIA Generator)
+3. Request through your VSO
+
+## Why Review It?
+
+- Find evidence you didn't know existed
+- Identify errors in previous decisions
+- Prepare stronger appeals
+- Understand VA's reasoning
+    `,
+  },
+
+  "cfile-upload": {
+    title: "Dropping In Records",
+    content: `
+How to use the C-File Analyzer.
+
+## Supported Formats
+
+- PDF files
+- Text documents
+- Images (with OCR)
+
+## Privacy
+
+Your files are processed:
+- In your browser (when possible)
+- Via your own API key (Gemini)
+- Never stored on our servers
+
+## Tips
+
+- Drop in complete documents
+- Include decision letters
+- Add medical records
+- Include service records
+    `,
+  },
+
+  "cfile-analysis": {
+    title: "Understanding Results",
+    content: `
+Reading your C-File analysis.
+
+## What You'll See
+
+- **Favorable Evidence** - Supports your claims
+- **Missing Elements** - What you need
+- **Inconsistencies** - Potential rating errors
+- **Action Items** - Next steps
+
+## Using the Results
+
+1. Review highlighted evidence
+2. Note missing documentation
+3. Identify appeal opportunities
+4. Plan your next filing
+    `,
+  },
+
+  "decision-decoder": {
+    title: "Decision Decoder",
+    content: `
+Understand VA decision letters and find appeal opportunities.
+
+## What It Does
+
+Drop in your VA decision letter and get:
+- Plain-English explanation
+- Rating breakdown analysis
+- Appeal option recommendations
+- Timeline information
+
+## Decision Types
+
+- **Rating Decision** - Initial claim result
+- **Statement of Case** - Appeal response
+- **Supplemental Decision** - New evidence result
+- **Board Decision** - BVA ruling
+    `,
+  },
+
+  "decoder-overview": {
+    title: "Decision Decoder Overview",
+    content: `
+Turn confusing VA letters into actionable information.
+
+## The Problem
+
+VA decision letters are:
+- Full of legal jargon
+- Hard to understand
+- Confusing on appeal rights
+- Easy to miss deadlines
+
+## The Solution
+
+Decision Decoder:
+- Translates to plain English
+- Highlights key dates
+- Explains your options
+- Suggests next steps
+    `,
+  },
+
+  "decoder-upload": {
+    title: "Drop In Decision",
+    content: `
+How to drop in your decision letter.
+
+## Steps
+
+1. Click "Drop In Decision Letter"
+2. Select your PDF or image
+3. Wait for AI analysis
+4. Review the breakdown
+
+## Tips
+
+- Drop in complete letters
+- Include all pages
+- Clearer scans work better
+    `,
+  },
+
+  "decoder-appeal": {
+    title: "Appeal Options",
+    content: `
+Understanding your appeal choices.
+
+## Appeal Lanes (AMA)
+
+| Lane | Best For | Timeline |
+|------|----------|----------|
+| **Supplemental Claim** | New evidence | ~4-6 months |
+| **Higher-Level Review** | VA error | ~4-6 months |
+| **Board Appeal** | Complex issues | 1-2+ years |
+
+## Key Deadlines
+
+- **1 Year** - Appeal most decisions
+- **Continuous Pursuit** - Maintain effective date
+
+## Decision Decoder Shows
+
+- Which lane fits your situation
+- Required evidence
+- Expected timelines
+- Strategic recommendations
+    `,
+  },
+
+  "blue-button": {
+    title: "Blue Button X-Ray",
+    content: `
+Extract claim-relevant evidence from your VA medical records.
+
+## What Is Blue Button?
+
+Blue Button is the VA's health record download system. X-Ray helps you find the evidence hidden in those records.
+
+## What It Finds
+
+- Diagnosis dates
+- Symptom documentation
+- Treatment history
+- Provider opinions
+- Medication records
+
+## Why It Matters
+
+Your VA records often contain evidence you didn't know existed - including statements from doctors that support service connection.
+    `,
+  },
+
+  "blue-overview": {
+    title: "What Is Blue Button?",
+    content: `
+VA's health record download system.
+
+## Getting Your Records
+
+1. Go to va.gov/my-health/medical-records/download/
+2. Sign in with Login.gov or ID.me
+3. **Step 1:** Select "All Time" date range
+4. **Step 2:** Check "Select all VA records"
+5. **Step 3:** Choose "Text file" format
+6. Click "Download report"
+
+## Record Types Included
+
+- Lab and test results
+- Care summaries and notes
+- Vaccines
+- Allergies and reactions
+- Health conditions
+- Vitals
+- Medications
+- Appointments (last 2 years)
+- VA demographics
+- DOD military service info (1980+)
+
+## Using with X-Ray
+
+1. Download Blue Button records (text file)
+2. Drop in to X-Ray
+3. AI extracts evidence
+4. Review findings
+    `,
+  },
+
+  "blue-extract": {
+    title: "Extracting Evidence",
+    content: `
+Finding hidden evidence in your records.
+
+## What X-Ray Looks For
+
+- **Diagnoses** - Condition names and dates
+- **Nexus Language** - "Related to," "caused by," etc.
+- **Symptom Severity** - Frequency, duration, impact
+- **Treatment Records** - Continuity of care
+
+## Using Results
+
+1. Review extracted evidence
+2. Note strong statements
+3. Identify gaps
+4. Build your claim
+    `,
+  },
+
+  "red-team": {
+    title: "Red Team Simulator",
+    content: `
+Think like a VA examiner to strengthen your claim.
+
+## What Is Red Teaming?
+
+Military concept: Have someone attack your own plan to find weaknesses before the enemy does.
+
+## How It Works
+
+1. Enter your claim details
+2. AI simulates examiner review
+3. See potential denial reasons
+4. Get strengthening recommendations
+
+## What You Learn
+
+- Weak points in your evidence
+- Missing documentation
+- Examiner perspective
+- How to address gaps
+    `,
+  },
+
+  "red-overview": {
+    title: "What is Red Team?",
+    content: `
+Adversarial analysis of your claim.
+
+## The Concept
+
+Before filing, understand how VA might deny your claim. Then fix those weaknesses.
+
+## Examiner Perspective
+
+VA examiners look for:
+- Nexus to service
+- Current diagnosis
+- Severity evidence
+- Rating criteria fit
+
+## Benefits
+
+- File stronger claims
+- Fewer denials
+- Better preparation
+- Realistic expectations
+    `,
+  },
+
+  "red-analysis": {
+    title: "Weakness Analysis",
+    content: `
+Understanding Red Team results.
+
+## Risk Levels
+
+- 🟢 **Low Risk** - Strong evidence
+- 🟡 **Medium Risk** - Needs strengthening
+- 🔴 **High Risk** - Likely denial point
+
+## Common Weaknesses
+
+- Missing nexus statement
+- No current diagnosis
+- Gaps in treatment
+- Inconsistent statements
+
+## Action Items
+
+Each weakness includes:
+- What's missing
+- Why it matters
+- How to fix it
+    `,
+  },
+
+  "witness-bench": {
+    title: "Witness Bench",
+    content: `
+AI-powered buddy statement wizard.
+
+## The Problem
+
+Veterans downplay their symptoms. Witnesses see the truth.
+
+## How It Works
+
+1. Select relationship to veteran
+2. Enter the condition
+3. Answer interview questions
+4. AI generates formal statement
+
+## Why Buddy Statements Matter
+
+Third-party observations are powerful evidence:
+- Spouses see sleep problems
+- Coworkers see work limitations
+- Friends see personality changes
+- Battle buddies saw the event
+    `,
+  },
+
+  "witness-overview": {
+    title: "Buddy Statements",
+    content: `
+Third-party evidence for your claim.
+
+## What Is a Buddy Statement?
+
+A lay/witness statement (VA Form 21-10210) from someone who:
+- Witnessed the event
+- Observes your symptoms
+- Knows your limitations
+
+## Who Can Write One?
+
+- Spouse/partner
+- Family members
+- Fellow veterans
+- Coworkers
+- Friends
+- Neighbors
+
+## What Makes Them Powerful?
+
+Specific, observable details that veterans often don't report themselves.
+    `,
+  },
+
+  "witness-interview": {
+    title: "The Interview",
+    content: `
+Guided questions for powerful statements.
+
+## How It Works
+
+The Witness Bench asks questions designed to elicit:
+- Specific examples
+- Observable behaviors
+- Changes over time
+- Impact on daily life
+
+## Question Types
+
+- Sleep behaviors
+- Social withdrawal
+- Activity limitations
+- Work impact
+- Personality changes
+
+## Tips
+
+- Be specific
+- Give examples
+- Include dates when possible
+- Describe what you SEE, not diagnose
+    `,
+  },
+
+  "witness-output": {
+    title: "Statement Output",
+    content: `
+Your completed buddy statement.
+
+## Generated Content
+
+- Properly formatted statement
+- First-person narrative
+- Specific observations
+- Attestation clause
+
+## Download Options
+
+- **PDF** - Ready to print/sign
+- **DOCX** - Edit in Word
+- **Copy** - Paste anywhere
+
+## Next Steps
+
+1. Review for accuracy
+2. Witness signs and dates
+3. Submit with claim
+    `,
+  },
+
+  "appeals-lane-advisor": {
+    title: "Appeals Lane Advisor",
+    content: `
+Choose the right AMA decision review lane before you file an appeal.
+
+## Why Lane Selection Matters
+
+Filing in the wrong lane can cost months or years. The three AMA options are:
+
+- **Supplemental Claim** - fastest; requires new and relevant evidence
+- **Higher-Level Review (HLR)** - same evidence, de novo review by a senior adjudicator; no new evidence allowed
+- **Board of Veterans Appeals (BVA)** - longest wait but reaches a Veterans Law Judge; three docket options
+
+## BVA Docket Options
+
+| Docket | Avg. Wait | Notes |
+|--------|-----------|-------|
+| **Direct** | 12-18 months | No new evidence or hearing |
+| **Evidence** | 12-24 months | Submit new evidence without a hearing |
+| **Hearing** | 36-48 months | Testify before a VLJ (in person or by video) |
+
+## How Appeals Lane Advisor Helps
+
+Analyzes your situation based on:
+- What went wrong (rating error, nexus denial, error of fact)
+- Whether you have new and relevant evidence
+- How long you can wait
+- Your specific conditions and percentages
+
+## When to Use
+
+Use before filing any appeal to confirm you're on the fastest path to the outcome you need.
+
+> This tool provides educational guidance only. Consult an accredited VSO or attorney for case-specific advice.
+    `,
+  },
+
+  "remand-risk-checker": {
+    title: "Remand Risk Checker",
+    content: `
+Identify gaps in your claim before the BVA sends it back for more development.
+
+## What Is a Remand?
+
+When the BVA cannot grant or deny your appeal - often because the record is incomplete - it remands (returns) the claim to the Regional Office for further development. Remands add 1-3 years to your wait.
+
+## How This Tool Helps
+
+Analyzes patterns from 18,609 BVA remand decisions to identify the most common failure modes:
+
+| Remand Reason | Description |
+|---------------|-------------|
+| **Missing nexus opinion** | No medical link between condition and service |
+| **Inadequate C&P exam** | Examiner failed to address all elements |
+| **Missing service records** | STRs or treatment records not obtained |
+| **Ignored lay evidence** | Veteran statements not addressed |
+| **Inadequate VA opinion** | Opinion didn't consider all relevant evidence |
+
+## How to Use
+
+1. Describe your condition and the current state of your evidence
+2. Review your personalized remand risk profile
+3. Address flagged gaps before your appeal reaches the Board
+
+## Remand vs. Denial
+
+A remand is not a denial - the BVA believes you may have a viable claim but needs a more complete record. This tool helps you provide that record before your file is reviewed.
+    `,
+  },
+
+  "risk-assessment": {
+    title: "Risk Assessment",
+    content: `
+Identify potential weaknesses before filing.
+
+## What It Does
+
+Analyzes your claim for:
+- Evidence gaps
+- Documentation issues
+- Rating criteria fit
+- Strategic concerns
+
+## Risk Categories
+
+| Category | Description |
+|----------|-------------|
+| **Evidence** | Medical documentation |
+| **Nexus** | Service connection link |
+| **Severity** | Rating level support |
+| **Timing** | Effective date issues |
+
+## How to Use
+
+1. Enter your conditions
+2. Add your evidence
+3. Review risk analysis
+4. Address weaknesses before filing
+    `,
+  },
+
+  "tdiu-builder": {
+    title: "TDIU Builder",
+    content: `
+Evaluate your eligibility for Total Disability Individual Unemployability.
+
+## What Is TDIU?
+
+Compensation at the 100% rate when you can't work due to service-connected disabilities, even if your combined rating is less than 100%.
+
+## Eligibility Requirements
+
+**Schedular:**
+- One disability at 60%+, OR
+- Combined 70%+ with one at 40%+
+
+**Extraschedular:**
+- Any rating if you can't work
+
+## What TDIU Builder Does
+
+- Checks your eligibility
+- Calculates your ratings
+- Identifies qualifying conditions
+- Guides your application
+    `,
+  },
+
+  "tdiu-overview": {
+    title: "What is TDIU?",
+    content: `
+100% pay without 100% rating.
+
+## The Concept
+
+If your service-connected disabilities prevent you from maintaining "substantially gainful employment," you may qualify for TDIU.
+
+## Types
+
+- **Schedular TDIU** - Meet rating requirements
+- **Extraschedular TDIU** - Special circumstances
+
+## Benefits
+
+- Paid at 100% rate
+- May be easier than proving 100% schedular
+- Protects if you can't work
+    `,
+  },
+
+  "tdiu-eligibility": {
+    title: "Eligibility Check",
+    content: `
+Do you qualify for TDIU?
+
+## Schedular Requirements
+
+**Option 1:** Single disability at 60%+
+
+**Option 2:** Combined 70%+ with at least one disability at 40%+
+
+## Employment Factor
+
+Must be unable to secure and follow "substantially gainful employment" due to service-connected disabilities.
+
+## TDIU Builder Shows
+
+- Your current rating math
+- Which option you might qualify for
+- Which conditions count
+- What evidence you need
+    `,
+  },
+
+  "symptom-logger": {
+    title: "Symptom Logger",
+    content: `
+Track your symptoms over time to build evidence.
+
+## Why Track?
+
+- Document severity patterns
+- Show "bad days" frequency
+- Build evidence for ratings
+- Prepare for C&P exams
+
+## What to Log
+
+- Pain levels
+- Flare-up frequency
+- Sleep disruption
+- Mood changes
+- Activity limitations
+- Medication use
+
+## How It Helps
+
+Your symptom history becomes powerful evidence showing the true impact of your conditions.
+    `,
+  },
+
+  "symptom-overview": {
+    title: "Why Track Symptoms?",
+    content: `
+Build an evidence trail.
+
+## The Problem
+
+At C&P exams, veterans often:
+- Forget their worst days
+- Understate their symptoms
+- Can't remember frequency
+
+## The Solution
+
+Daily logging creates:
+- Objective record
+- Frequency data
+- Severity patterns
+- Evidence for claims
+
+## What Raters Want
+
+- How often symptoms occur
+- How severe they get
+- How they affect function
+- Treatment response
+    `,
+  },
+
+  "symptom-logging": {
+    title: "Logging Symptoms",
+    content: `
+Recording your daily symptoms.
+
+## Quick Log
+
+- Select condition
+- Rate severity (1-10)
+- Add notes
+- Save
+
+## Detail Log
+
+- Time of day
+- Duration
+- Triggers
+- Impact on activities
+- Medications taken
+
+## Consistency
+
+Log regularly - even good days. It shows the complete picture.
+    `,
+  },
+
+  "symptom-reports": {
+    title: "Reports & Export",
+    content: `
+Using your symptom data.
+
+## Reports Available
+
+- **Summary** - Overview by condition
+- **Trends** - Severity over time
+- **Frequency** - How often symptoms occur
+- **Calendar** - Visual timeline
+
+## Export Options
+
+- PDF report
+- CSV data
+- Print-friendly
+
+## For Your C&P Exam
+
+Bring your symptom log to show the examiner your true condition over time, not just that one day.
+    `,
+  },
+
+  "million-dollar": {
+    title: "Million Dollar Dashboard",
+    content: `
+See the lifetime value of your VA benefits.
+
+## What It Shows
+
+- **Lifetime Compensation** - Total benefits over time
+- **Healthcare Value** - VA medical savings
+- **Education Benefits** - GI Bill value
+- **Other Benefits** - Insurance, commissary, etc.
+
+## Why "Million Dollar"?
+
+A 100% disabled veteran retiring at 50 with 35+ years of benefits often receives over $1 million in total value.
+
+## Calculations Include
+
+- Monthly compensation × life expectancy
+- Healthcare cost savings
+- Dependent benefits
+- COLA adjustments (estimated)
+
+## Motivation
+
+See the true value of fighting for accurate ratings.
+    `,
+  },
+
+  "pact-act": {
+    title: "PACT Act Navigator",
+    content: `
+Find toxic exposure conditions covered by the PACT Act.
+
+## What Is the PACT Act?
+
+The Promise to Address Comprehensive Toxics (PACT) Act of 2022 expanded VA benefits for veterans exposed to:
+- Burn pits
+- Agent Orange
+- Radiation
+- Other toxic substances
+
+## What Changed
+
+- New presumptive conditions
+- Expanded locations
+- Extended timeframes
+- Easier service connection
+
+## How Navigator Helps
+
+1. Enter your service details
+2. See which exposures apply
+3. Find presumptive conditions
+4. Learn filing requirements
+    `,
+  },
+
+  "pact-overview": {
+    title: "What is PACT Act?",
+    content: `
+Major expansion of toxic exposure benefits.
+
+## Key Provisions
+
+- 23+ new presumptive conditions
+- Burn pit exposure recognition
+- Agent Orange expansion
+- Radiation exposure updates
+
+## Who Benefits
+
+Veterans who served in:
+- Gulf War (1990+)
+- Post-9/11 conflicts
+- Vietnam (expanded)
+- Specific bases/locations
+
+## Timeline
+
+- Some conditions presumptive now
+- Others phased in through 2026
+    `,
+  },
+
+  "pact-conditions": {
+    title: "Covered Conditions",
+    content: `
+Presumptive conditions under PACT Act.
+
+## Respiratory
+
+- Asthma
+- Rhinitis
+- Sinusitis
+- Constrictive bronchiolitis
+- Pulmonary fibrosis
+- And more...
+
+## Cancers
+
+- Head/neck cancers
+- Respiratory cancers
+- GI cancers
+- Reproductive cancers
+- Kidney cancer
+- Multiple others
+
+## Other
+
+- Hypertension (Agent Orange)
+- Various other conditions
+
+Navigator shows which conditions apply to your service.
+    `,
+  },
+
+  "pact-locations": {
+    title: "Covered Locations",
+    content: `
+Where toxic exposure is presumed.
+
+## Gulf War / Post-9/11
+
+- Iraq
+- Afghanistan
+- Kuwait
+- Saudi Arabia
+- And other Southwest Asia locations
+
+## Agent Orange
+
+- Vietnam
+- Thailand (certain bases)
+- Korean DMZ
+- Guam
+- Other specific locations
+
+## Other
+
+- Radiation exposure sites
+- Water contamination (Camp Lejeune)
+- Specific bases with known exposures
+    `,
+  },
+
+  "state-benefits": {
+    title: "State Benefit Hunter",
+    content: `
+Discover state-level veteran benefits you may be missing.
+
+## What It Finds
+
+- Property tax exemptions
+- State income tax breaks
+- Education benefits
+- Employment preferences
+- Vehicle registration discounts
+- Recreation passes
+- And more...
+
+## How to Use
+
+1. Enter your state
+2. Enter your rating
+3. See available benefits
+4. Get links to apply
+
+## Why It Matters
+
+State benefits can add thousands in annual savings on top of federal VA compensation.
+    `,
+  },
+
+  "vso-finder": {
+    title: "VSO Finder",
+    content: `
+Find FREE, accredited help near you.
+
+## What Is a VSO?
+
+Veterans Service Organizations provide FREE assistance with VA claims:
+- DAV
+- VFW
+- American Legion
+- County/State VSOs
+
+## Why Use a VSO?
+
+- 100% free
+- Accredited by VA
+- Experienced with claims
+- Can access your records
+- Represent you at hearings
+
+## How to Find One
+
+1. Enter your ZIP code
+2. See local options
+3. Verify accreditation
+4. Schedule appointment
+
+## Warning
+
+BEWARE of "claim sharks" who charge fees! Legitimate VSOs are FREE.
+    `,
+  },
+
+  "mos-matcher": {
+    title: "MOS Hazard Matcher",
+    content: `
+Link your military job to exposures and conditions.
+
+## What It Does
+
+Enter your MOS/Rating/AFSC and see:
+- Known hazards of that job
+- Common conditions
+- Exposure documentation
+- Nexus suggestions
+
+## Why It Matters
+
+Your job specialty often involved exposures that cause conditions decades later. Documentation helps prove the connection.
+
+## Examples
+
+- Infantry → Hearing loss, joint problems
+- Burn pit exposure → Respiratory conditions
+- Mechanics → Chemical exposures
+- Aviation → Hearing, toxic exposures
+    `,
+  },
+
+  "web-conditions": {
+    title: "Web of Conditions",
+    content: `
+Visualize how conditions connect to each other.
+
+## The Interactive Map
+
+See a visual web showing:
+- Primary conditions (your service-connected)
+- Secondary conditions (caused by primaries)
+- Connection strength
+- Medical nexus logic
+
+## How to Use
+
+1. Click a primary condition
+2. See connected secondaries
+3. Click connection lines
+4. Read the nexus explanation
+
+## Why It Helps
+
+Understand the medical logic connecting conditions, making it easier to argue secondary claims.
+    `,
+  },
+
+  "foia-generator": {
+    title: "FOIA Generator",
+    content: `
+Create Freedom of Information Act requests for your records.
+
+## What You Can Request
+
+- Service personnel records
+- Medical records
+- VA claims file (C-File)
+- Unit records
+- Investigation reports
+
+## How It Works
+
+1. Select record type
+2. Enter your information
+3. Generate the request
+4. Submit to appropriate agency
+
+## Why Use FOIA?
+
+Sometimes records aren't in your C-File. FOIA requests can uncover documentation that supports your claim.
+    `,
+  },
+
+  "shark-radar": {
+    title: "Shark Radar",
+    content: `
+Identify and avoid predatory claim services.
+
+## Warning Signs
+
+- Upfront fees for initial claims
+- Percentage of backpay demands
+- Pressure tactics
+- Guarantees of ratings
+- Unlicensed "consultants"
+
+## Safe Options
+
+- VSOs (always free)
+- VA-accredited attorneys (regulated fees)
+- VA-accredited claims agents (regulated fees)
+
+## Red Flags
+
+| Warning | Safe Alternative |
+|---------|------------------|
+| "Pay us 5x your backpay" | VSO (free) |
+| "Guaranteed 100%" | No one can guarantee |
+| "Act now or lose benefits" | You have time |
+| Unlicensed | Check VA accreditation |
+
+## Verify
+
+Always verify accreditation at VA.gov before signing anything.
+    `,
+  },
+
+  pathfinder: {
+    title: "Pathfinder",
+    content: `
+Your strategic roadmap from claim to benefits.
+
+## What It Does
+
+Creates a step-by-step plan based on:
+- Your current rating
+- Conditions you want to claim
+- Your evidence situation
+- Your timeline
+
+## The Path
+
+1. **Assessment** - Where you are now
+2. **Planning** - What to file and when
+3. **Evidence** - What you need
+4. **Filing** - How to submit
+5. **Exam** - Preparation
+6. **Decision** - Next steps
+
+## Customized Strategy
+
+Pathfinder considers your specific situation to recommend whether to file primary claims, secondaries, increases, or appeals.
+    `,
+  },
+
+  "my-packet": {
+    title: "My Packet",
+    content: `
+Organize all your claims in one place.
+
+## What Is My Packet?
+
+Your personal claims organizer containing:
+- Saved conditions
+- Secondary condition suggestions
+- Nexus statements
+- Forms in progress
+
+## Features
+
+- Add/remove conditions
+- Track status
+- Store statements
+- Export everything
+
+## Data Storage
+
+All data stored locally in your browser. Use Backup & Restore to save externally.
+    `,
+  },
+
+  "managing-claims": {
+    title: "Managing Claims",
+    content: `
+Organize your disability claims.
+
+## Adding Claims
+
+- From search results
+- From Secondary Scout
+- Manual entry
+
+## Claim Information
+
+Each saved claim shows:
+- Condition name
+- Diagnostic code
+- Primary or secondary
+- Linked conditions
+- Status
+
+## Actions
+
+- Edit claim details
+- Build nexus statement
+- Remove from packet
+- Export data
+    `,
+  },
+
+  "saved-forms": {
+    title: "Saved Forms",
+    content: `
+Access your form progress.
+
+## What Gets Saved
+
+- Buddy statement drafts
+- Completed forms
+- Personal statements
+
+## Finding Your Forms
+
+1. Open My Packet
+2. Click "Forms" tab
+3. Select a form to continue
+
+## Editing
+
+- Resume where you left off
+- Update information
+- Re-download when ready
+    `,
+  },
+
+  "backup-restore": {
+    title: "Backup & Restore",
+    content: `
+Protect your data.
+
+## Why Backup?
+
+Your data is stored in your browser. If you:
+- Clear browser data
+- Use a different browser
+- Use a different device
+
+...your data won't be there.
+
+## How to Backup
+
+1. Open My Packet
+2. Click "Backup Data"
+3. Save the file somewhere safe
+
+## How to Restore
+
+1. Open My Packet
+2. Click "Restore Data"
+3. Select your backup file
+4. Confirm restoration
+
+## Best Practices
+
+- Backup regularly
+- Keep multiple copies
+- Use cloud storage
+    `,
+  },
+
+  "exporting-data": {
+    title: "Exporting Data",
+    content: `
+Download your claims packet.
+
+## Export Options
+
+- **Full Backup** - All data, restorable
+- **PDF Summary** - Printable overview
+- **Individual Items** - Specific documents
+
+## Full Backup
+
+Creates a .json file containing everything. Use this for data portability.
+
+## PDF Summary
+
+Generates a printable document with:
+- All saved conditions
+- Statements
+- Notes
+
+## Individual Export
+
+Download specific:
+- Nexus statements
+- Completed forms
+- Condition details
+    `,
+  },
+
+  "va-resources": {
+    title: "VA Resources",
+    content: `
+Quick access to official VA resources.
+
+## Categories
+
+- **Online Portals** - VA.gov, eBenefits, My HealtheVet
+- **Phone Numbers** - Key VA contacts
+- **External Resources** - VSOs, legal help
+
+## Important Numbers
+
+| Service | Number |
+|---------|--------|
+| VA Benefits | 1-800-827-1000 |
+| VA Health | 1-877-222-8387 |
+| Crisis Line | 988 (Press 1) |
+
+## We Are NOT the VA
+
+Vet-Rate.org is independent. For official help, use VA resources.
+    `,
+  },
+
+  "online-portals": {
+    title: "Online Portals",
+    content: `
+## VA.gov
+Main VA portal for:
+- Filing claims
+- Checking status
+- Managing benefits
+
+## My HealtheVet
+Health records and:
+- Prescription refills
+- Secure messaging
+- Appointment scheduling
+
+## eBenefits
+Legacy portal (transitioning to VA.gov):
+- Benefits letters
+- Disability rating info
+- Dependents management
+    `,
+  },
+
+  "phone-numbers": {
+    title: "Phone Numbers",
+    content: `
+## Emergency
+
+**Veterans Crisis Line:** 988, Press 1
+Text: 838255
+
+## General VA
+
+- **Benefits Hotline:** 1-800-827-1000
+- **Health Care:** 1-877-222-8387
+- **GI Bill:** 1-888-442-4551
+
+## Specialized
+
+- **Women Veterans:** 1-855-829-6636
+- **Homeless Veterans:** 1-877-424-3838
+- **Caregiver Support:** 1-855-260-3274
+    `,
+  },
+
+  "external-resources": {
+    title: "External Resources",
+    content: `
+## Veterans Service Organizations (VSOs)
+
+Free claims help from accredited representatives:
+- **DAV** - Disabled American Veterans
+- **VFW** - Veterans of Foreign Wars
+- **American Legion**
+- **Vietnam Veterans of America**
+
+## Legal Help
+
+- **VA Accredited Attorneys**
+- **Legal aid societies**
+- **Law school clinics**
+
+## Find a VSO
+
+Visit VA.gov and search for accredited representatives in your area.
+    `,
+  },
+
+  settings: {
+    title: "Settings",
+    content: `
+Customize your Vet-Rate.org experience.
+
+## Display Settings
+
+- Dark/Light mode
+- Color blind modes
+- Font size
+
+## Accessibility
+
+- Reduced motion
+- Screen reader optimization
+
+## Data
+
+- Clear local data
+- Backup/Restore
+    `,
+  },
+
+  "display-mode": {
+    title: "Display Mode",
+    content: `
+Choose your preferred appearance.
+
+## Light Mode
+Default bright theme. Best for well-lit environments.
+
+## Dark Mode
+Reduced brightness theme. Best for:
+- Low light conditions
+- Reducing eye strain
+- OLED screen battery savings
+
+## How to Change
+
+1. Click the accessibility menu (☰)
+2. Toggle Dark Mode on/off
+
+Setting is saved for future visits.
+    `,
+  },
+
+  "accessibility-options": {
+    title: "Accessibility Options",
+    content: `
+Make Vet-Rate.org work for you.
+
+## Color Blind Modes
+
+- **Protanopia** - Red-blind friendly
+- **Deuteranopia** - Green-blind friendly
+- **Tritanopia** - Blue-blind friendly
+- **High Contrast** - Maximum visibility
+
+## Font Size
+
+Adjustable sizes from small to extra-large.
+
+## Reduced Motion
+
+Disables animations and transitions for:
+- Vestibular sensitivities
+- Motion sickness
+- Distraction reduction
+
+All settings persist across sessions.
+    `,
+  },
+
+  "data-management": {
+    title: "Data Management",
+    content: `
+Control your local data.
+
+## Where Data Lives
+
+All data stored in your browser's localStorage:
+- Only on your device
+- Only in this browser
+- Cleared if you clear browser data
+
+## Managing Data
+
+### View Storage Used
+Check how much space your data uses.
+
+### Clear All Data
+Remove everything. **Cannot be undone!**
+
+### Backup First
+Always backup before clearing data.
+
+## Privacy
+
+We never see, collect, or transmit your data. It stays on your device.
+    `,
+  },
+
+  "ai-settings": {
+    title: "AI Settings",
+    content: `
+Configure AI to power your claims analysis.
+
+## Two AI Options
+
+### 🔒 Local AI (100% Private)
+Runs entirely in your browser using WebGPU. Your data NEVER leaves your device.
+- 3 specialized roles (Auditor, Writer, Rater): stock open models guided by role prompts and our knowledge base, plus fallback options
+- Works offline after initial download
+- Zero internet required during analysis
+
+### ☁️ Cloud AI (Google Gemini)
+Fast and powerful, requires internet.
+- Free tier available
+- Bring your own API key
+- Data sent to Google (with your consent)
+
+## Privacy Comparison
+
+| Feature | Local AI | Cloud AI |
+|---------|----------|----------|
+| Data leaves device | ❌ Never | ✅ Yes |
+| Internet required | ❌ After download | ✅ Always |
+| Speed | Varies by model | Fast |
+| Quality | Good to Excellent | Excellent |
+| Cost | Free (VRAM) | Free tier available |
+    `,
+  },
+
+  "local-ai-overview": {
+    title: "Local AI Overview",
+    content: `
+Run AI 100% on your device - your data never leaves your computer.
+
+## How It Works
+
+Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browser:
+
+1. **Download Once**: The model is a one-time download kept on your device in browser storage (about 2.4 GB for the desktop model)
+2. **Run Locally**: All processing happens on YOUR GPU
+3. **Stay Private**: Zero data transmission - no internet needed
+
+## Requirements
+
+- **Modern Browser**: Chrome, Edge, or Brave (WebGPU support)
+- **GPU with VRAM**: 2-8 GB depending on model size
+- **Storage**: 0.3 GB to 4.8 GB per model
+
+Your device picks the on-device model for you: Qwen 3.5 4B on desktops (about 2.4 GB download) and Qwen 3.5 2B on laptops (about 1.1 GB download), with Qwen 2.5 models used if the first choice cannot load. Tablets use Qwen 2.5 1.5B (about 0.9 GB download). Download sizes are the published file sizes read on 2026-10-05. These are general-purpose open models, not trained on VA data.
+
+## First Time Setup
+
+1. Click the 🤖 AI Settings button in the header
+2. Select "Local AI" mode
+3. Choose a model (start with VetRate models)
+4. Click "Initialize" - the model downloads once; how long depends on its size and your connection
+5. You're ready! The model stays on your device, so it is not downloaded again
+
+## GPU Selection (Dual-GPU Laptops)
+
+If you have a gaming laptop with both integrated and discrete GPUs:
+- **High Performance**: Use NVIDIA/AMD GPU for speed
+- **Power Saver**: Use Intel/AMD integrated for battery life
+    `,
+  },
+
+  "model-selection": {
+    title: "Choosing the Right Model",
+    content: `
+The Diamond Swarm automatically selects the best model for each task:
+
+## 💎 Diamond Swarm Models
+
+| Model | Specialized For | Size |
+|-------|----------------|------|
+| **VetRate Auditor** | Claims review, evidence analysis, regulatory compliance | 7B params |
+| **VetRate Writer** | Personal statements, nexus letters, buddy statements | 7B params |
+| **VetRate Rater** | VA math, bilateral calculations, rating predictions | 7B params |
+
+The system automatically routes your request to the appropriate specialist model.
+
+## 🔄 Fallback Options
+
+If Diamond Swarm is unavailable:
+- **Wllama**: Browser-based WASM inference (any device)
+- **Local Server**: Connect to llama.cpp server (advanced users)
+- **Cloud AI**: Google Gemini (requires API key)
+
+## 📄 Document Parsing (C-Files, DD214s, Medical Records)
+
+| Model | Why |
+|-------|-----|
+| **VetRate Auditor ⭐** | Chain-of-thought reasoning finds evidence in complex files |
+| **VetRate Writer** | Excellent medical terminology understanding |
+
+## ✍️ Creative Writing (Nexus Letters, Statements)
+
+| Model | Why |
+|-------|-----|
+| **VetRate Writer** | Most natural, persuasive writing |
+| **VetRate Writer** | Great fluency and varied prose |
+
+## ⚖️ Legal Analysis (Decisions, TDIU, Regulations)
+
+| Model | Why |
+|-------|-----|
+| **DeepSeek R1 Llama 8B** | Professional-grade reasoning |
+| **VetRate models** | Specialized for regulatory interpretation |
+
+## 🔴 Adversarial (Red Team, War Room)
+
+| Model | Why |
+|-------|-----|
+| **VetRate Auditor** | Thinks like a skeptical examiner |
+
+## 👁️ Vision (Scanned Documents, Photos)
+
+| Model | Why |
+|-------|-----|
+| **Vet-Rate Vision Phi ✅** | Custom build for standard Chrome! Reads images directly |
+
+## ⚡ Quick Tasks (Search, Calculator, Scout)
+
+| Model | Why |
+|-------|-----|
+| **VetRate models** | Fast responses, good quality |
+| **VetRate models** | Works on any device |
+
+## Smart Recommendations
+
+Each AI-powered tool shows a badge recommending the best model. Look for:
+- 👁️ Vision - Use Vet-Rate Vision Phi
+- ⭐ Recommended - Optimal for that tool
+- ⚡ Fast - Speed-optimized
+- 🧠 Reasoning - Complex analysis
+    `,
+  },
+
+  "cloud-vs-local": {
+    title: "Cloud vs Local AI",
+    content: `
+Choose based on your priorities.
+
+## Choose Local AI When:
+
+✅ **Privacy is critical** - Analyzing sensitive medical records
+✅ **Working offline** - No reliable internet
+✅ **Avoiding costs** - No API fees ever
+✅ **You have a modern GPU** - 4+ GB VRAM
+
+## Choose Cloud AI When:
+
+✅ **Speed matters most** - Fastest responses
+✅ **Complex analysis** - Gemini is very capable
+✅ **Limited hardware** - Old computer or low VRAM
+✅ **Occasional use** - Free tier handles light usage
+
+## Can I Use Both?
+
+Yes! You can switch modes anytime:
+1. Use Cloud AI for quick questions
+2. Switch to Local AI for document analysis
+3. Each tool remembers your last setting
+
+## Privacy Comparison
+
+| What Happens | Local AI | Cloud AI |
+|--------------|----------|----------|
+| Your DD214 text | Stays on device | Sent to Google |
+| Medical records | Stays on device | Sent to Google |
+| AI responses | Generated locally | From Google servers |
+| Data retention | None - browser only | Google's policy |
+    `,
+  },
+
+  "vram-requirements": {
+    title: "VRAM Requirements",
+    content: `
+Choose a model that fits your GPU memory.
+
+## How to Check Your VRAM
+
+**Windows:**
+1. Right-click desktop → Display Settings
+2. Advanced Display Settings → Display Adapter Properties
+3. Look for "Dedicated Video Memory"
+
+**Mac:** Apple Silicon has shared memory - use Light models
+
+## Model Recommendations by VRAM
+
+### 2 GB VRAM (Integrated Graphics)
+- VetRate models ⚡ (0.3 GB)
+- VetRate models ⚡ (0.7 GB)
+
+### 4 GB VRAM (Entry Gaming GPU)
+- VetRate models ✓ (1.8 GB) - RECOMMENDED
+- Qwen 3.5 2B (laptops): about 2.2 GB GPU memory, about 1.1 GB download
+- Qwen 2.5 3B (fallback): about 2.5 GB GPU memory, about 1.8 GB download
+- VetRate models (2.3 GB)
+
+### 6 GB VRAM (GTX 1060, RTX 3060)
+- Qwen 3.5 4B (desktops): about 3.9 GB GPU memory, about 2.4 GB download
+- VetRate Auditor ⭐ (3.5 GB) - BEST VALUE
+- VetRate Vision Phi 👁️ (3.5 GB)
+
+### 8+ GB VRAM (RTX 3070+, RTX 4070+)
+- VetRate Writer (4.8 GB) - TOP TIER
+- VetRate Writer (4.1 GB)
+- VetRate Writer (4.5 GB)
+
+## Tips
+
+- **Start small**: Try VetRate models first
+- **Model stays cached**: Only downloads once
+- **Switch anytime**: Install multiple models
+- **Watch memory**: Close other apps if loading fails
+    `,
+  },
+
+  reference: {
+    title: "Reference",
+    content: `
+Quick reference materials.
+
+## Glossary
+Definitions of common VA terms.
+
+## CFR Reference
+Guide to 38 CFR sections.
+
+## Keyboard Shortcuts
+Navigate efficiently with your keyboard.
+    `,
+  },
+
+  glossary: {
+    title: "Glossary",
+    content: `
+Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
+
+## A-C
+
+- **Active Duty** - Full-time service in the military - required for most VA disability benefits
+- **ADL** - Activities of Daily Living - Basic self-care tasks like bathing, dressing, eating
+- **Agent Orange** - Toxic herbicide used in Vietnam; certain conditions are presumptive for exposed veterans
+- **Aggravation** - Worsening of a pre-existing condition beyond natural progression due to military service
+- **Aid & Attendance** - Additional benefit for veterans who need help with daily activities
+- **Airborne Hazards** - Exposure to smoke, fumes, sand, dust, and particulate matter during deployments - covered by PACT Act
+- **AMA** - Appeals Modernization Act - The current VA appeals process implemented in 2019, offering three decision review lanes
+- **Analogous Rating** - A rating assigned using a diagnostic code for a similar condition when your specific condition is not listed in the V...
+- **Ancillary Benefits** - Additional benefits automatically considered with your claim like SMC, DEA, and CHAMPVA
+- **Ankylosis** - Complete immobility of a joint - typically qualifies for higher ratings than limited motion
+- **at least as likely as not** - Medical probability of 50% or greater - the standard required for VA nexus opinions
+- **Backpay** - Retroactive compensation from your effective date to the present
+- **benefit of the doubt** - When evidence is approximately equal, VA must decide in favor of the veteran (38 CFR 3.102)
+- **Bilateral Factor** - Additional percentage added when you have the same disability affecting both sides of your body
+- **BiPAP** - Bilevel Positive Airway Pressure - Breathing device similar to CPAP that can support 50% sleep apnea rating
+- **Blue Button** - VA's online tool to download your VA medical records and health information
+- **Buddy Statement** - A sworn statement from someone who witnessed your condition during or after service, often filed on VA Form 21-10210
+- **Burn Pit** - Open-air waste burning common in Iraq/Afghanistan; PACT Act establishes presumptive conditions
+- **BVA** - Board of Veterans' Appeals - The appellate body that reviews claim decisions when higher-level review doesn't resolve...
+- **C-File** - Claims File - Your complete VA claims folder containing all evidence, decisions, and correspondence
+- **C&P** - Compensation & Pension Exam - A medical examination scheduled by the VA to evaluate your claimed disability
+- **Camp Lejeune** - Marine base with contaminated water (1953-1987); presumptive conditions established by PACT Act
+- **CAPRI** - Computerized Patient Record Interface - VA's internal medical records system
+- **CAVC** - Court of Appeals for Veterans Claims - Federal court that reviews BVA decisions
+- **CFR** - Code of Federal Regulations - The legal framework governing VA disability ratings. Title 38 CFR covers veterans benefits
+- **CFS** - Chronic Fatigue Syndrome - Presumptive condition for Gulf War veterans under 38 CFR 3.317
+- **CHAMPVA** - Civilian Health and Medical Program of VA - Healthcare for dependents of P&T veterans
+- **Chapter 31** - Another name for VR&E/Vocational Rehabilitation
+- **Chapter 35** - See DEA - education benefits for dependents
+- **Chronic Disease** - A disease listed in 38 CFR 3.309 that is presumptively service-connected if it manifests within one year of discharge
+- **Combined Rating** - The VA's unique math formula for combining multiple disability ratings (not simple addition)
+- **competent evidence** - Evidence from a qualified source (medical evidence from doctors, lay evidence from witnesses)
+- **Continuous Pursuit** - Maintaining your appeal through proper review options to preserve your effective date
+- **COPD** - Chronic Obstructive Pulmonary Disease - Progressive lung disease often service-connected from toxic exposures
+- **credible evidence** - Evidence that is believable and trustworthy
+- **CUE** - Clear and Unmistakable Error - A specific type of appeal arguing the VA made an obvious mistake in law or fact
+
+## D-I
+
+- **Date of Claim** - The official date VA receives your claim or Intent to File
+- **Date of Entitlement** - The date your condition met the criteria for a particular rating level
+- **DBQ** - Disability Benefits Questionnaire - A standardized form used by medical providers to document disability evaluations ...
+- **DC** - Diagnostic Code - See Diagnostic Code
+- **DD-214** - Certificate of Release or Discharge from Active Duty - Official proof of military service
+- **DD-215** - Correction to DD-214 - Used to correct or add information to your discharge document
+- **De Novo Review** - A fresh look at your claim by a different reviewer (used in Higher-Level Review)
+- **DEA** - Dependents' Educational Assistance (Chapter 35) - Education benefits for dependents of 100% P&T veterans
+- **Decision Notice** - Official VA letter informing you of the decision on your claim and your appeal rights
+- **Deferred** - When VA postpones deciding part of your claim pending additional evidence or examination
+- **Development** - The process of gathering evidence for your claim - VA has a duty to assist in this process
+- **Diagnostic Code** - Specific numerical code in 38 CFR used to rate a particular condition (e.g., DC 5003 for arthritis)
+- **DIC** - Dependency and Indemnity Compensation - Benefits for surviving spouses and dependents of veterans who died from servi...
+- **Direct Review Docket** - Board appeal option where only existing evidence is reviewed with no new evidence or hearing - typically the fastest ...
+- **Direct Service Connection** - A disability directly caused by an event, injury, or disease during military service
+- **DRO** - Decision Review Officer - A senior VA employee who reviews claim decisions during the appeals process
+- **DSM-5** - Diagnostic and Statistical Manual of Mental Disorders, 5th Edition - Mental health diagnosis criteria
+- **duty to assist** - VA's legal obligation to help veterans develop evidence for their claims
+- **Duty to Notify** - VA obligation to inform you what evidence is needed to substantiate your claim (38 CFR 3.159(b))
+- **Ebenefits** - VA's online portal for managing claims and viewing disability ratings (being replaced by VA.gov)
+- **EED** - Earliest Effective Date - The date VA uses to calculate when benefits begin, usually the claim filing date
+- **Effective Date** - The date from which VA compensation payments begin
+- **EPTS** - Existed Prior to Service - A condition that existed before military service that may have been aggravated
+- **Evidence Submission Docket** - Board appeal option allowing 90 days to submit new evidence after filing the NOD, but no hearing
+- **Ex Parte** - The nature of VA proceedings meaning VA is supposed to help develop your claim, not act as an adversary
+- **Extraschedular Rating** - A rating above the schedule maximum for exceptional cases (38 CFR 3.321)
+- **favorable finding** - Evidence or testimony that supports the veteran's claim
+- **Favorable Finding** - A determination in your favor by VA that becomes binding on future adjudicators and cannot be reversed without CUE
+- **FDC** - Fully Developed Claim - A claim submitted with all evidence upfront for faster processing
+- **FEV-1** - Forced Expiratory Volume in 1 Second - A key PFT measurement used in asthma and COPD ratings
+- **FOIA** - Freedom of Information Act - Legal right to request copies of your records from VA and DoD
+- **Functional Impairment** - How your disability affects your ability to work, perform daily activities, and live your life
+- **GAD** - Generalized Anxiety Disorder - Chronic anxiety that may be service-connected
+- **GAF** - Global Assessment of Functioning - Outdated mental health rating scale (no longer used by VA)
+- **Goniometer** - Device used to measure range of motion in joints during C&P exams - critical for musculoskeletal ratings
+- **Gulf War Illness** - Medically unexplained chronic symptoms affecting Gulf War veterans, presumed service-connected
+- **Hearing Request Docket** - Board appeal option to testify before a Veterans Law Judge and submit evidence - longest wait but most thorough review
+- **Herbicide Exposure** - Exposure to tactical herbicides like Agent Orange during military service
+- **HLR** - Higher-Level Review - A review of your claim by a senior VA employee using only existing evidence
+- **Housebound** - Additional benefit for veterans substantially confined to their home
+- **IADL** - Instrumental Activities of Daily Living - Complex tasks like cooking, cleaning, managing finances
+- **IBS** - Irritable Bowel Syndrome - Functional GI disorder presumptive for Gulf War veterans
+- **ICD-10** - International Classification of Diseases, 10th Edition - Standard medical diagnosis codes
+- **IDES** - Integrated Disability Evaluation System - DoD/VA process for evaluating disabilities before separation from service
+- **IME** - Independent Medical Examination - Similar to IMO, a private medical exam obtained outside the VA system
+- **IMO** - Independent Medical Opinion - A private medical evaluation obtained by the veteran, often a nexus letter
+- **In-Service Event** - The incident, injury, illness, or exposure during military service that caused or aggravated your disability
+- **Informal Conference** - Optional phone call during Higher-Level Review to discuss errors in your claim
+- **Intent to File** - VA Form 21-0966 - Locks in an effective date while you gather evidence for your claim
+- **Ionizing Radiation** - Radiation exposure from nuclear weapons testing, occupying Hiroshima/Nagasaki, or other qualifying activities
+
+## J-M
+
+- **Lay Evidence** - Personal statements from the veteran, buddies, or family members describing symptoms and functional impact
+- **Legacy** - Legacy Appeals System - The old VA appeals process (pre-2019). Some claims are still in this system
+- **LHI** - Logistics Health Incorporated - Another VA contractor that conducts C&P exams
+- **LOD** - Line of Duty - Determination that injury or illness occurred while performing military duties, not due to misconduct
+- **Loss of Use** - When a limb or organ has no effective remaining function - qualifies for SMC even without amputation
+- **material fact** - A fact significant enough to affect the outcome of a claim
+- **MDD** - Major Depressive Disorder - Clinical depression that may be service-connected
+- **MEB** - Medical Evaluation Board - Military board that determines fitness for duty due to medical conditions
+- **Medical Evidence** - Evidence provided by licensed healthcare professionals including diagnoses, treatment records, and medical opinions
+- **MST** - Military Sexual Trauma - Sexual assault or harassment experienced during military service
+- **Multi-Symptom Illness** - Conditions like chronic fatigue syndrome, fibromyalgia, or functional GI disorders presumptive for Gulf War veterans
+
+## N-S
+
+- **New and Relevant Evidence** - Evidence not previously submitted that tends to prove an unestablished element of your claim - required for supplemen...
+- **NEXUS** - Medical link or connection between your service-connected condition and your claimed disability. Often stated as "at ...
+- **Nexus Letter** - A medical opinion letter from a doctor establishing the connection between your service/service-connected condition a...
+- **NOD** - Notice of Disagreement - The initial appeal filed when you disagree with a VA decision
+- **NOVA** - National Organization of Veterans' Advocates - Professional association of VA-accredited attorneys
+- **NSC** - Non-Service-Connected - A disability not related to military service
+- **OGC** - Office of General Counsel - VA's legal department
+- **OSA** - Obstructive Sleep Apnea - The most common type of sleep apnea rated under DC 6847
+- **P&T** - Permanent and Total - A 100% disability rating that VA considers permanent and unlikely to improve
+- **PACT Act** - Promise to Address Comprehensive Toxics Act - Expands VA benefits for veterans exposed to burn pits, Agent Orange, an...
+- **Particulate Matter** - Fine particles in the air from burn pits, sand, and dust that can cause respiratory conditions
+- **PEB** - Physical Evaluation Board - Military board that determines disability rating upon separation
+- **Peripheral Neuropathy** - Nerve damage affecting the hands and feet - often secondary to diabetes or herbicide exposure
+- **Persian Gulf War** - Operations after August 2, 1990; qualifies for Gulf War presumptive conditions
+- **Personal Statement** - A written account from the veteran describing symptoms, functional impact, and history in their own words
+- **PFT** - Pulmonary Function Test - Breathing test that measures lung capacity and function, required for respiratory ratings
+- **POA** - Power of Attorney - Document authorizing a VSO or attorney to represent you
+- **preponderance of evidence** - Standard where more evidence supports one side than the other
+- **Presumptive** - A condition automatically assumed to be service-connected if you served in certain locations or time periods
+- **Presumptive Period** - The timeframe after discharge during which certain conditions are presumed service-connected (often 1 year for chroni...
+- **Private Medical Records** - Medical records from non-VA healthcare providers that can be submitted as evidence
+- **probative value** - The weight or persuasiveness of evidence in supporting a claim
+- **Proposed Reduction** - A notice from VA that they intend to reduce your rating - you have 60 days to respond with evidence
+- **Protected Rating** - A rating that cannot be reduced once held for 20+ years (38 CFR 3.951)
+- **PTSD** - Post-Traumatic Stress Disorder - Mental health condition triggered by traumatic events
+- **Pyramiding** - Illegal practice of rating the same disability or symptoms under multiple diagnostic codes
+- **QTC** - QTC Medical Services - One of the private contractors VA uses to conduct C&P exams
+- **Radiation Exposure** - Exposure to ionizing radiation during service; certain conditions are presumptive
+- **Radiculopathy** - Nerve damage causing pain, numbness, or weakness radiating from the spine to the extremities
+- **Rating Criteria** - The specific symptoms, findings, or functional limitations listed in 38 CFR Part 4 for each disability rating level
+- **Rating Decision** - The official VA document explaining the decision on your claim including ratings assigned and effective dates
+- **Rating Reduction** - When VA lowers your disability percentage - subject to due process protections under 38 CFR 3.105(e)
+- **Rating Stabilization** - Protection against reduction for ratings held 5+ years - requires sustained improvement to reduce (38 CFR 3.344)
+- **Remand** - When the BVA sends a case back to the regional office for additional development
+- **Reserve/Guard** - Part-time military service that may qualify for VA benefits during certain periods of active duty
+- **ROM** - Range of Motion - Measurement of joint flexibility, critical for musculoskeletal ratings
+- **SBP** - Survivor Benefit Plan - DoD program that may offset DIC payments
+- **SC** - Service-Connected - A disability that was caused or aggravated by military service
+- **Schedular Rating** - A disability rating based on the criteria in 38 CFR Part 4
+- **Secondary Condition** - A disability caused or aggravated by an already service-connected condition (38 CFR 3.310)
+- **Section 4.3** - Resolution of reasonable doubt in ratings - when disability picture falls between two ratings, assign the higher one
+- **Section 4.7** - Higher of two evaluations - assigns the higher rating when symptoms more nearly approximate those criteria
+- **SF-180** - Request Pertaining to Military Records - Used to request service records from NPRC
+- **SMC** - Special Monthly Compensation - Additional compensation for veterans with severe disabilities like loss of limbs, blin...
+- **SMC(k)** - Special Monthly Compensation for loss of use of one hand, foot, eye, or creative organ - paid in addition to schedula...
+- **SMC(l)** - Special Monthly Compensation for veterans needing aid and attendance of another person
+- **SMC(s)** - Special Monthly Compensation for being housebound OR having 100% rating plus additional 60% disability
+- **SOC** - Statement of the Case - The VA's detailed explanation of their decision on your claim
+- **Southwest Asia** - Iraq, Kuwait, Saudi Arabia, and surrounding areas - location for Gulf War presumptives
+- **SSOC** - Supplemental Statement of the Case - Additional VA explanation issued after new evidence or arguments
+- **Staged Rating** - Different rating percentages for different time periods based on changing severity
+- **Static Disability** - A condition that has reached maximum improvement and is unlikely to change - protects against routine reexaminations
+- **STR** - Service Treatment Records - Your official military medical records created during active duty
+- **Stressor** - A traumatic event during service that caused PTSD - must be documented or corroborated for non-combat PTSD claims
+- **Supplemental Claim** - An appeal lane where you submit new and relevant evidence to reopen a denied claim
+- **Sustained Improvement** - Improvement that is maintained in ordinary conditions of life - required to reduce ratings held 5+ years
+
+## T-Z
+
+- **38 CFR** - Title 38 of the Code of Federal Regulations - The specific section of law covering VA disability rating criteria
+- **38 CFR Part 3** - Adjudication rules - Covers who qualifies, how claims are processed, and eligibility requirements
+- **38 CFR Part 4** - Schedule for Rating Disabilities (VASRD) - Contains all diagnostic codes and rating criteria
+- **50/50 rule** - Legal principle that VA must give veterans the benefit of the doubt when evidence is equal on both sides
+- **TBI** - Traumatic Brain Injury - Brain injury from blast, impact, or concussion during service
+- **TDIU** - Total Disability Individual Unemployability - Provides 100% compensation when service-connected disabilities prevent ...
+- **Toxic Exposure** - Exposure to hazardous substances during military service including burn pits, Agent Orange, contaminated water, and r...
+- **Toxic Exposure Screening** - Required VA health screening for veterans with potential toxic exposures under the PACT Act
+- **Undiagnosed Illness** - Medically unexplained chronic symptoms that qualify Gulf War veterans for compensation under 38 CFR 3.317
+- **VA** - Department of Veterans Affairs - The federal agency responsible for providing benefits and services to veterans
+- **VA Form 10182** - Decision Review Request: Board Appeal - The form to file a Notice of Disagreement and appeal to the Board of Veterans...
+- **VA Form 20-0995** - Decision Review Request: Supplemental Claim - Used to submit new evidence on a denied claim
+- **VA Form 20-0996** - Decision Review Request: Higher-Level Review - Used to request senior reviewer look at your claim
+- **VA Form 21-0781** - Statement in Support of Claim for PTSD - Specialized form for describing PTSD stressors
+- **VA Form 21-0966** - Intent to File - Locks in your effective date for up to 1 year while you gather evidence
+- **VA Form 21-10210** - Lay/Witness Statement - Form for buddy statements from people who observed your condition
+- **VA Form 21-22** - Appointment of Veterans Service Organization as Claimant Representative
+- **VA Form 21-22a** - Appointment of Individual as Claimant Representative (for attorneys/agents)
+- **VA Form 21-2680** - Examination for Housebound Status or Permanent Need for Regular Aid and Attendance
+- **VA Form 21-4138** - Statement in Support of Claim - A general-purpose form for submitting personal statements and additional information
+- **VA Form 21-4192** - Request for Employment Information in Connection with Claim for Disability Benefits - Employer verification for TDIU
+- **VA Form 21-526EZ** - Application for Disability Compensation and Related Compensation Benefits - The main form to file a VA disability claim
+- **VA Form 21-534EZ** - Application for DIC, Death Pension, and Accrued Benefits by Surviving Spouse or Child
+- **VA Form 21-686c** - Declaration of Status of Dependents - Used to add dependents for additional compensation
+- **VA Form 21-8940** - Veterans Application for Increased Compensation Based on Unemployability - The form to apply for TDIU
+- **VA Math** - The VA's unique method of combining disability percentages (uses efficiency of function, not simple addition)
+- **VA Pension** - Non-service-connected pension for low-income wartime veterans
+- **VA Treatment Records** - Medical records from VA healthcare facilities automatically in your claims file
+- **VARO** - VA Regional Office - The local VA office that processes disability claims for your region
+- **VASRD** - VA Schedule for Rating Disabilities - The rating criteria in 38 CFR Part 4 used to evaluate all disabilities
+- **VBA** - Veterans Benefits Administration - The VA division that handles disability compensation, pension, and other benefits
+- **VBMS** - Veterans Benefits Management System - The VA's electronic claims processing system
+- **VCAA** - Veterans Claims Assistance Act - Law requiring VA to notify veterans of evidence needed and assist in gathering evide...
+- **VES** - Veterans Evaluation Services - Another VA contractor for C&P exams
+- **VHA** - Veterans Health Administration - The VA division that provides healthcare services to veterans
+- **VLJ** - Veterans Law Judge - An attorney employed by the Board of Veterans Appeals who reviews and decides appeals
+- **VR&E** - Vocational Rehabilitation & Employment - VA program providing job training and employment support (formerly Voc Rehab)
+- **VSO** - Veterans Service Organization - Accredited organizations (like DAV, VFW, American Legion) that provide free help with...
+- **Wartime Service** - Service during a designated wartime period - required for VA pension eligibility
+- **WHODAS** - World Health Organization Disability Assessment Schedule - Current tool VA uses to assess functional impairment
+- **Whole Person Theory** - VA rating concept that additional disabilities have smaller impact on already-disabled person
+
+## Full Glossary
+
+For the complete glossary with 195+ terms, hover over highlighted VA terms throughout the app to see tooltips.
+    `,
+  },
+
+  "cfr-reference": {
+    title: "CFR Reference",
+    content: `
+Key Code of Federal Regulations sections.
+
+## 38 CFR Part 3 - Adjudication
+
+- **§ 3.303** - Principles of service connection
+- **§ 3.310** - Secondary service connection
+- **§ 3.317** - Gulf War presumptives
+
+## 38 CFR Part 4 - Rating Schedule
+
+- **§ 4.71a** - Musculoskeletal system
+- **§ 4.97** - Respiratory system
+- **§ 4.104** - Cardiovascular system
+- **§ 4.124a** - Neurological conditions
+- **§ 4.130** - Mental disorders
+
+## Key Principles
+
+- **§ 4.3** - Reasonable doubt favors veteran
+- **§ 4.7** - Higher rating when between levels
+    `,
+  },
+
+  "keyboard-shortcuts": {
+    title: "Keyboard Shortcuts",
+    content: `
+Navigate efficiently with your keyboard.
+
+## Global
+
+| Shortcut | Action |
+|----------|--------|
+| **/** | Focus search |
+| **Escape** | Close modal |
+| **Tab** | Next element |
+| **Shift+Tab** | Previous element |
+
+## Within Modals
+
+| Shortcut | Action |
+|----------|--------|
+| **Escape** | Close |
+| **Enter** | Confirm/Submit |
+| **Tab** | Navigate fields |
+
+## Browser Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| **Ctrl+R** | Refresh |
+| **Ctrl+F** | Find on page |
+| **Ctrl++/-** | Zoom in/out |
+    `,
+  },
+
+  faq: {
+    title: "Frequently Asked Questions",
+    content: `
+Common questions answered.
+
+## General
+
+**Is Vet-Rate.org affiliated with the VA?**
+No. We are an independent educational resource.
+
+**Is it free?**
+Yes, completely free. No subscriptions or hidden costs.
+
+**Do I need an account?**
+No. Everything works in your browser without login.
+
+## Privacy
+
+**Is my data safe?**
+Yes. Data stays in your browser and is never transmitted.
+
+**Can you see my information?**
+No. We have no ability to access your data.
+
+## Features
+
+**Will the C&P Simulator predict my rating?**
+No. It's for educational preparation only.
+
+**Are the secondary conditions reliable?**
+They're based on medical literature, but success depends on evidence. Consult professionals.
+
+**Can I submit forms directly to VA?**
+No. You must submit through official VA channels.
+
+## Technical
+
+**My data disappeared!**
+Likely browser data was cleared. Restore from backup if you have one.
+
+**Why won't PDFs download?**
+Check your popup blocker and browser permissions.
+
+## Getting Help
+
+**How do I report a bug?**
+Use the Bug Squasher tool in the footer.
+
+**Where can I get claims help?**
+Contact a VSO - free and accredited assistance.
+
+## Crisis Support
+
+**🆘 Veterans Crisis Line:** 988, Press 1 | Text 838255
+Available 24/7
+    `,
+  },
+};
+
+// Simple markdown-like renderer
+function _createManualParserState() {
+  return {
+    elements: [],
+    tableRows: [],
+    inList: false,
+    listItems: [],
+    blockquoteContent: [],
+  };
+}
+
+function _renderInline(text) {
+  if (!text) return text;
+
+  // RT-5: escape EVERYTHING first (safety floor) - the markdown replacements
+  // below only re-introduce a fixed allow-list of tags, so a future raw-HTML
+  // edit to the manual strings is inert. The CSP is NOT a backstop here
+  // (script-src 'unsafe-inline' is set).
+  text = escapeHtml(text);
+
+  // Handle bold
+  text = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // Handle inline code
+  text = text.replace(
+    /`(.+?)`/g,
+    '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
+  );
+  // Handle links - sanitize the href so a future contributor cannot land a
+  // javascript: URL in the static manual content. sanitizeUrl returns '#'
+  // for any non-http(s)/mailto/tel protocol.
+  text = text.replace(
+    /\[(.{1,2000}?)\]\((.{1,2000}?)\)/g,
+    (_match, label, url) => {
+      const safeUrl = sanitizeUrl(url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
+    },
+  );
+
+  // Safe-by-construction: input is escapeHtml()'d first (above), then only a
+  // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-
+  // wrapped. (Not relying on CSP - script-src 'unsafe-inline' is set.)
+  // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
+  return <span dangerouslySetInnerHTML={{ __html: text }} />;
+}
+
+function _flushList(state) {
+  if (state.listItems.length > 0) {
+    state.elements.push(
+      <ul
+        key={`list-${state.elements.length}`}
+        className="list-disc pl-6 mb-4 space-y-1"
+      >
+        {state.listItems.map((item, i) => (
+          <li key={i} className="text-gray-700 dark:text-gray-300 max-w-prose">
+            {_renderInline(item)}
+          </li>
+        ))}
+      </ul>,
+    );
+    state.listItems = [];
+    state.inList = false;
+  }
+}
+
+function _flushBlockquote(state) {
+  if (state.blockquoteContent.length > 0) {
+    state.elements.push(
+      <blockquote
+        key={`bq-${state.elements.length}`}
+        className="border-l-4 border-va-gold pl-4 py-2 my-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-r"
+      >
+        {state.blockquoteContent.map((line, i) => (
+          <p key={i} className="text-gray-700 dark:text-gray-300">
+            {_renderInline(line)}
+          </p>
+        ))}
+      </blockquote>,
+    );
+    state.blockquoteContent = [];
+  }
+}
+
+function _flushTable(state) {
+  if (state.tableRows.length > 0) {
+    const headers = state.tableRows[0];
+    const dataRows = state.tableRows.slice(2); // Skip header separator
+    state.elements.push(
+      <ScrollRegion
+        key={`table-${state.elements.length}`}
+        label={`Table: ${headers.join(", ")}`}
+        className="mb-4"
+      >
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              {headers.map((cell, i) => (
+                <th
+                  key={i}
+                  className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  {_renderInline(cell.trim())}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            {dataRows.map((row, rowIdx) => (
+              <tr key={rowIdx}>
+                {row.map((cell, cellIdx) => (
+                  <td
+                    key={cellIdx}
+                    className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300"
+                  >
+                    {_renderInline(cell.trim())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ScrollRegion>,
+    );
+    state.tableRows = [];
+  }
+}
+
+function _flushAllPending(state) {
+  _flushList(state);
+  _flushBlockquote(state);
+  _flushTable(state);
+}
+
+function TourRestartButton({ onClose }) {
+  return (
+    <button
+      onClick={() => {
+        // Close the User Manual first
+        if (onClose) onClose();
+        // Trigger tour restart after a brief delay
+        setTimeout(() => {
+          triggerTourRestart();
+        }, 300);
+      }}
+      className="inline-flex items-center gap-2 bg-va-gold hover:bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+    >
+      🎓 Restart Interactive Tour
+    </button>
+  );
+}
+
+function _processManualContentLine(line, i, state, onClose) {
+  // Empty line - flush lists/blockquotes
+  if (line.trim() === "") {
+    _flushAllPending(state);
+    return;
+  }
+
+  // Headers
+  if (line.startsWith("## ")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <h2
+        key={`h2-${i}`}
+        className="text-xl font-bold text-gray-900 dark:text-white mt-6 mb-3"
+      >
+        {line.slice(3)}
+      </h2>,
+    );
+    return;
+  }
+
+  if (line.startsWith("### ")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <h3
+        key={`h3-${i}`}
+        className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2"
+      >
+        {line.slice(4)}
+      </h3>,
+    );
+    return;
+  }
+
+  // Blockquote
+  if (line.startsWith("> ")) {
+    _flushList(state);
+    _flushTable(state);
+    state.blockquoteContent.push(line.slice(2));
+    return;
+  }
+
+  // Table
+  if (line.startsWith("|")) {
+    _flushList(state);
+    _flushBlockquote(state);
+    const cells = line.split("|").filter((cell) => cell.trim() !== "");
+    state.tableRows.push(cells);
+    return;
+  }
+
+  // List item
+  if (line.startsWith("- ")) {
+    _flushBlockquote(state);
+    _flushTable(state);
+    state.inList = true;
+    state.listItems.push(line.slice(2));
+    return;
+  }
+
+  // Numbered list
+  if (/^\d+\.\s/.test(line)) {
+    _flushBlockquote(state);
+    _flushTable(state);
+    const match = line.match(/^\d+\.\s(.+)/);
+    if (match) {
+      if (!state.inList) {
+        state.inList = true;
+      }
+      state.listItems.push(match[1]);
+    }
+    return;
+  }
+
+  // Special: Tour restart button
+  if (line.includes("<tour-restart-button>")) {
+    _flushAllPending(state);
+    state.elements.push(
+      <div key={`tour-btn-${i}`} className="my-4">
+        <TourRestartButton onClose={onClose} />
+      </div>,
+    );
+    return;
+  }
+
+  // Regular paragraph
+  _flushAllPending(state);
+  state.elements.push(
+    <p key={`p-${i}`} className="text-gray-700 dark:text-gray-300 mb-3">
+      {_renderInline(line)}
+    </p>,
+  );
+}
+
+const renderContent = (content, onClose) => {
+  if (!content) return null;
+
+  // Resolve template variables embedded in markdown content strings
+  const resolved = content
+    .replaceAll("{getTotalToolCount()}", String(getTotalToolCount()))
+    .replaceAll("{getDisabilityCount()}", String(getDisabilityCount()));
+
+  const lines = resolved.trim().split("\n");
+  const state = _createManualParserState();
+
+  for (let i = 0; i < lines.length; i++) {
+    _processManualContentLine(lines[i], i, state, onClose);
+  }
+
+  // Flush remaining
+  _flushAllPending(state);
+
+  return state.elements;
+};
+
+const NAV_KEY_MAP = {
+  home: "navHome",
+  "getting-started": "navGettingStarted",
+  "first-visit": "navFirstVisit",
+  "interface-overview": "navInterfaceOverview",
+  accessibility: "navAccessibility",
+  search: "navSearchExplore",
+  "how-to-search": "navHowToSearch",
+  "search-results": "navSearchResults",
+  "disability-details": "navDisabilityDetails",
+  "rating-criteria": "navRatingCriteria",
+  "tactical-calculator": "navTacticalCalculator",
+  "calc-overview": "navCalcOverview",
+  "calc-bilateral": "navCalcBilateral",
+  "calc-dependents": "navCalcDependents",
+  "calc-what-if": "navCalcWhatIf",
+  "secondary-scout": "navSecondaryScout",
+  "scout-launching": "navScoutLaunching",
+  "scout-results": "navScoutResults",
+  "scout-add-to-packet": "navScoutAddToPacket",
+  "cp-exam-simulator": "navCPExamSimulator",
+  "simulator-getting-started": "navSimulatorGettingStarted",
+  "condition-selection": "navConditionSelection",
+  "taking-simulation": "navTakingSimulation",
+  "simulator-results": "navSimulatorResults",
+  flashcards: "navFlashcards",
+  "dbq-library": "navDBQLibrary",
+  "dbq-overview": "navDBQOverview",
+  "dbq-browse": "navDBQBrowse",
+  "dbq-usage": "navDBQUsage",
+  pathfinder: "navPathfinder",
+  "workflow-guide": "navWorkflowGuide",
+  "workflow-overview": "navWorkflowOverview",
+  "workflow-progress": "navWorkflowProgress",
+  "cfile-analyzer": "navCFileAnalyzer",
+  "cfile-what-is": "navCFileWhatIs",
+  "cfile-upload": "navCFileUpload",
+  "cfile-analysis": "navCFileAnalysis",
+  "blue-button": "navBlueButtonXRay",
+  "blue-overview": "navBlueOverview",
+  "blue-extract": "navBlueExtract",
+  "witness-bench": "navWitnessBench",
+  "witness-overview": "navWitnessOverview",
+  "witness-interview": "navWitnessInterview",
+  "witness-output": "navWitnessOutput",
+  "nexus-builder": "navNexusBuilder",
+  "what-is-nexus": "navWhatIsNexus",
+  "building-statement": "navBuildingStatement",
+  "doctor-cheat-sheet": "navDoctorCheatSheet",
+  "download-options": "navDownloadOptions",
+  "forms-helper": "navFormsHelper",
+  "available-forms": "navAvailableForms",
+  "buddy-statements": "navBuddyStatements",
+  "intent-to-file": "navIntentToFile",
+  "ptsd-stressor": "navPTSDStressor",
+  "veteran-profile": "navVeteranProfile",
+  "red-team": "navRedTeamSimulator",
+  "red-overview": "navRedOverview",
+  "red-analysis": "navRedAnalysis",
+  "decision-decoder": "navDecisionDecoder",
+  "decoder-overview": "navDecoderOverview",
+  "decoder-upload": "navDecoderUpload",
+  "decoder-appeal": "navDecoderAppeal",
+  "shark-radar": "navSharkRadar",
+  "tdiu-builder": "navTDIUBuilder",
+  "tdiu-overview": "navTDIUOverview",
+  "tdiu-eligibility": "navTDIUEligibility",
+  "risk-assessment": "navRiskAssessment",
+  "symptom-logger": "navSymptomLogger",
+  "symptom-overview": "navSymptomOverview",
+  "symptom-logging": "navSymptomLogging",
+  "symptom-reports": "navSymptomReports",
+  "pact-act": "navPACTActNavigator",
+  "pact-overview": "navPACTOverview",
+  "pact-conditions": "navPACTConditions",
+  "pact-locations": "navPACTLocations",
+  "foia-generator": "navFOIAKeysmith",
+  "million-dollar": "navMillionDollar",
+  "mos-matcher": "navMOSHazardMatcher",
+  "web-conditions": "navWebOfConditions",
+  "vso-finder": "navVSOFinder",
+  "state-benefits": "navStateBenefitHunter",
+  "my-packet": "navMyPacket",
+  "managing-claims": "navManagingClaims",
+  "saved-forms": "navSavedForms",
+  "backup-restore": "navBackupRestore",
+  "exporting-data": "navExportingData",
+  "va-resources": "navVAResources",
+  "online-portals": "navOnlinePortals",
+  "phone-numbers": "navPhoneNumbers",
+  "external-resources": "navExternalResources",
+  settings: "navSettings",
+  "display-mode": "navDisplayMode",
+  "accessibility-options": "navAccessibilityOptions",
+  "data-management": "navDataManagement",
+  "ai-settings": "navAISettings",
+  "local-ai-overview": "navLocalAIOverview",
+  "model-selection": "navModelSelection",
+  "cloud-vs-local": "navCloudVsLocal",
+};
+
+const CATEGORY_KEY_MAP = {
+  "Getting Started": "catGettingStarted",
+  "Search & Explore": "catSearchExplore",
+  "📊 Calculate": "catCalculate",
+  "🔍 Discover": "catDiscover",
+  "📋 Build Evidence": "catBuildEvidence",
+  "🎯 Quality Control": "catQualityControl",
+  "⚡ Advanced Strategy": "catAdvancedStrategy",
+  "💎 Shock & Awe": "catShockAwe",
+  "🤝 Support": "catSupport",
+  "📁 Data & Settings": "catDataSettings",
+};
+
+function _lookupTranslatedLabel(map, id, fallback, t) {
+  const key = map[id];
+  if (key) {
+    const translated = t("userManual", key);
+    if (translated !== key) return translated;
+  }
+  return fallback;
+}
+
+function _toggleSection(sectionId, setExpandedSections) {
+  setExpandedSections((prev) =>
+    prev.includes(sectionId)
+      ? prev.filter((id) => id !== sectionId)
+      : [...prev, sectionId],
+  );
+}
+
+function _searchManualContent(searchQuery) {
+  if (!searchQuery.trim()) return [];
+  return Object.entries(documentationContent)
+    .filter(
+      ([_id, content]) =>
+        content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        content.content.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .slice(0, 10);
+}
+
+function UserManualMobileHeader({ t, sidebarOpen, setSidebarOpen, onClose }) {
+  return (
+    <div className="md:hidden flex items-center justify-between bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="p-2 hover:bg-white/20 rounded-lg"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+      <h1 className="font-bold">{t("userManual", "title")}</h1>
+      <button
+        onClick={onClose}
+        className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded-lg"
+        aria-label="Close Field Manual"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Close control for the >=md two-pane layout, pinned to the whole dialog
+ * panel's own top end corner (`end-3` - RTL-safe logical inset, matching
+ * the language-switch direction, not the sidebar-scrollbar `dir="rtl"`
+ * trick two levels down in UserManualSidebar) rather than living inside
+ * the sidebar it used to share a header with - the sidebar is the LEFT
+ * pane, not the header, in this layout. `hidden md:flex`: below `md` the
+ * mobile header (above) already renders its own close-X.
+ *
+ * `top-3` (flush with the panel's own top corner, decision (1)'s "top end
+ * corner" placement): the panel itself now reserves the Quick Exit gutter
+ * via `md:mt-16` on its own margin (see the dialog panel's className
+ * comment), the same 64px this button used to carry on its own `top`
+ * offset - which floated it 64px down *inside* the panel, past the content
+ * pane's own top padding and into the section title's row (measured
+ * overlap at 768px). Clearing Quick Exit on the panel instead means
+ * nothing else ever renders above this button to collide with.
+ */
+function UserManualDesktopCloseButton({ onClose }) {
+  return (
+    <button
+      onClick={onClose}
+      className="hidden md:flex absolute top-3 end-3 z-20 h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+      aria-label="Close Field Manual"
+    >
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
+  );
+}
+
+function UserManualSidebarHeader({ t, searchQuery, setSearchQuery }) {
+  return (
+    <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h1 className="text-lg font-bold flex items-center gap-2">
+          {t("userManual", "title")}
+        </h1>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder={t("userManual", "searchPlaceholder")}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-3 py-2 pl-9 bg-white/20 rounded-lg text-white placeholder-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+        />
+        <svg
+          className="absolute left-3 top-2.5 w-4 h-4 text-white/70"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function UserManualSearchResults({
+  t,
+  searchQuery,
+  searchResults,
+  getNavTitle,
+  setCurrentSection,
+  setSearchQuery,
+  setSidebarOpen,
+}) {
+  if (!searchQuery.trim()) return null;
+  return (
+    <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+      <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+        {t("userManual", "searchResults")}
+      </h3>
+      {searchResults.length > 0 ? (
+        <div className="space-y-1">
+          {searchResults.map(([id, content]) => (
+            <button
+              key={id}
+              onClick={() => {
+                setCurrentSection(id);
+                setSearchQuery("");
+                setSidebarOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            >
+              {getNavTitle(id, content.title)}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {t("userManual", "noResultsFound")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function UserManualNavCategoryLabel({ section, getCategoryTitle }) {
+  return (
+    <div className="mt-4 mb-2 px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+      {getCategoryTitle(section.title)}
+    </div>
+  );
+}
+
+function UserManualNavExpandableSection({
+  t,
+  section,
+  currentSection,
+  expandedSections,
+  getNavTitle,
+  toggleSection,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
+  return (
+    <>
+      <button
+        onClick={() => toggleSection(section.id)}
+        className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+      >
+        <span className="flex items-center gap-2">
+          <span>{section.icon}</span>
+          <span>{getNavTitle(section.id, section.title)}</span>
+        </span>
+        <svg
+          className={`w-4 h-4 transition-transform ${expandedSections.includes(section.id) ? "rotate-90" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </button>
+      {expandedSections.includes(section.id) && (
+        <div className="ml-6 mt-1 space-y-1">
+          <button
+            onClick={() => {
+              setCurrentSection(section.id);
+              setSidebarOpen(false);
+            }}
+            className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
+              currentSection === section.id
+                ? "bg-va-blue text-white"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            {t("userManual", "overview")}
+          </button>
+          {section.children.map((child) => (
+            <button
+              key={child.id}
+              onClick={() => {
+                setCurrentSection(child.id);
+                setSidebarOpen(false);
+              }}
+              className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
+                currentSection === child.id
+                  ? "bg-va-blue text-white"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              {getNavTitle(child.id, child.title)}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function UserManualNavLeaf({
+  section,
+  currentSection,
+  getNavTitle,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
+  return (
+    <button
+      onClick={() => {
+        setCurrentSection(section.id);
+        setSidebarOpen(false);
+      }}
+      className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
+        currentSection === section.id
+          ? "bg-va-blue text-white"
+          : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+      }`}
+    >
+      <span>{section.icon}</span>
+      <span>{getNavTitle(section.id, section.title)}</span>
+    </button>
+  );
+}
+
+function UserManualNavSection({
+  t,
+  section,
+  currentSection,
+  expandedSections,
+  getNavTitle,
+  getCategoryTitle,
+  toggleSection,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
+  let sectionContent;
+  if (section.isCategory) {
+    sectionContent = (
+      <UserManualNavCategoryLabel
+        section={section}
+        getCategoryTitle={getCategoryTitle}
+      />
+    );
+  } else if (section.children) {
+    sectionContent = (
+      <UserManualNavExpandableSection
+        t={t}
+        section={section}
+        currentSection={currentSection}
+        expandedSections={expandedSections}
+        getNavTitle={getNavTitle}
+        toggleSection={toggleSection}
+        setCurrentSection={setCurrentSection}
+        setSidebarOpen={setSidebarOpen}
+      />
+    );
+  } else {
+    sectionContent = (
+      <UserManualNavLeaf
+        section={section}
+        currentSection={currentSection}
+        getNavTitle={getNavTitle}
+        setCurrentSection={setCurrentSection}
+        setSidebarOpen={setSidebarOpen}
+      />
+    );
+  }
+  return <div className="mb-1">{sectionContent}</div>;
+}
+
+function UserManualNav({
+  t,
+  currentSection,
+  expandedSections,
+  getNavTitle,
+  getCategoryTitle,
+  toggleSection,
+  setCurrentSection,
+  setSidebarOpen,
+}) {
+  return (
+    <nav className="p-3">
+      {navigationStructure.map((section) => (
+        <UserManualNavSection
+          key={section.id}
+          t={t}
+          section={section}
+          currentSection={currentSection}
+          expandedSections={expandedSections}
+          getNavTitle={getNavTitle}
+          getCategoryTitle={getCategoryTitle}
+          toggleSection={toggleSection}
+          setCurrentSection={setCurrentSection}
+          setSidebarOpen={setSidebarOpen}
+        />
+      ))}
+    </nav>
+  );
+}
+
+function UserManualStartTourButton({ t, onClose }) {
+  return (
+    <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+      <button
+        onClick={() => {
+          // Close the User Manual first
+          if (onClose) onClose();
+          // Trigger tour restart after a brief delay
+          setTimeout(() => {
+            triggerTourRestart();
+          }, 300);
+        }}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all hover:scale-105 mb-2"
+      >
+        {t("userManual", "startTour")}
+      </button>
+    </div>
+  );
+}
+
+function UserManualReportBugLink({ t, onReportBug }) {
+  return (
+    <div className="px-3 pb-3">
+      <button
+        onClick={onReportBug}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+      >
+        {t("userManual", "reportBug")}
+      </button>
+    </div>
+  );
+}
+
+function UserManualSidebar({ s }) {
+  const {
+    t,
+    sidebarOpen,
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    currentSection,
+    expandedSections,
+    getNavTitle,
+    getCategoryTitle,
+    toggleSection,
+    setCurrentSection,
+    setSidebarOpen,
+    onClose,
+    onReportBug,
+  } = s;
+
+  return (
+    <div
+      className={`${sidebarOpen ? "block" : "hidden"} md:block w-full md:w-72 lg:w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-y-auto`}
+      dir="rtl"
+    >
+      {/* Wrapper to restore LTR for content */}
+      <div dir="ltr">
+        {/* Desktop header */}
+        <UserManualSidebarHeader
+          t={t}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+
+        {/* Search results */}
+        <UserManualSearchResults
+          t={t}
+          searchQuery={searchQuery}
+          searchResults={searchResults}
+          getNavTitle={getNavTitle}
+          setCurrentSection={setCurrentSection}
+          setSearchQuery={setSearchQuery}
+          setSidebarOpen={setSidebarOpen}
+        />
+
+        {/* Navigation */}
+        <UserManualNav
+          t={t}
+          currentSection={currentSection}
+          expandedSections={expandedSections}
+          getNavTitle={getNavTitle}
+          getCategoryTitle={getCategoryTitle}
+          toggleSection={toggleSection}
+          setCurrentSection={setCurrentSection}
+          setSidebarOpen={setSidebarOpen}
+        />
+
+        {/* Start Tour button */}
+        <UserManualStartTourButton t={t} onClose={onClose} />
+
+        {/* Report bug link */}
+        <UserManualReportBugLink t={t} onReportBug={onReportBug} />
+      </div>
+    </div>
+  );
+}
+
+function UserManualBreadcrumb({
+  t,
+  currentSection,
+  currentContent,
+  getNavTitle,
+  setCurrentSection,
+}) {
+  return (
+    <nav className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+      <button
+        onClick={() => setCurrentSection("home")}
+        className="hover:text-va-blue dark:hover:text-va-gold"
+      >
+        {t("userManual", "home")}
+      </button>
+      {currentSection !== "home" && (
+        <>
+          <span className="mx-2">/</span>
+          <span className="text-gray-900 dark:text-white">
+            {getNavTitle(currentSection, currentContent.title)}
+          </span>
+        </>
+      )}
+    </nav>
+  );
+}
+
+function UserManualContentNavButtons({ t, setCurrentSection, onClose }) {
+  return (
+    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between">
+      <button
+        onClick={() => setCurrentSection("home")}
+        className="flex items-center gap-2 text-va-blue dark:text-va-gold hover:underline"
+      >
+        {t("userManual", "backToHome")}
+      </button>
+      <button
+        onClick={onClose}
+        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+      >
+        {t("userManual", "closeManual")}
+      </button>
+    </div>
+  );
+}
+
+function UserManualContentArea({ s }) {
+  const {
+    t,
+    currentSection,
+    currentContent,
+    getNavTitle,
+    setCurrentSection,
+    onClose,
+  } = s;
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="max-w-4xl mx-auto p-6 md:p-8">
+        {/* Breadcrumb */}
+        <UserManualBreadcrumb
+          t={t}
+          currentSection={currentSection}
+          currentContent={currentContent}
+          getNavTitle={getNavTitle}
+          setCurrentSection={setCurrentSection}
+        />
+
+        {/* Title. No end-edge reserve needed for UserManualDesktopCloseButton
+            (unlike the old `top-16` placement, that used to float down to
+            this row's own height): the panel's `md:mt-16` margin now clears
+            the close-X well above where this title (and the breadcrumb
+            above it) ever renders, on every section - verified live. */}
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+          {getNavTitle(currentSection, currentContent.title)}
+        </h1>
+
+        {/* Content */}
+        <div className="prose dark:prose-invert max-w-none">
+          {renderContent(currentContent.content, onClose)}
+        </div>
+
+        {/* Navigation buttons */}
+        <UserManualContentNavButtons
+          t={t}
+          setCurrentSection={setCurrentSection}
+          onClose={onClose}
+        />
+      </div>
+    </div>
+  );
+}
+
+const UserManual = ({ onClose, onReportBug }) => {
+  const { t } = useLanguage();
+  const panelRef = useRef(null);
+
+  // Lock background scroll when modal is open
+  useBodyScrollLock(true);
+
+  const [currentSection, setCurrentSection] = useState("home");
+  const [expandedSections, setExpandedSections] = useState(["getting-started"]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Get current content
+  const currentContent =
+    documentationContent[currentSection] || documentationContent.home;
+
+  // Helper to get translated navigation title
+  const getNavTitle = (id, fallbackTitle) =>
+    _lookupTranslatedLabel(NAV_KEY_MAP, id, fallbackTitle, t);
+
+  // Helper to get translated category title
+  const getCategoryTitle = (title) =>
+    _lookupTranslatedLabel(CATEGORY_KEY_MAP, title, title, t);
+
+  // Toggle section expansion
+  const toggleSection = (sectionId) =>
+    _toggleSection(sectionId, setExpandedSections);
+
+  // Search functionality
+  const searchResults = _searchManualContent(searchQuery);
+
+  // Two-pane layout keeps independent sidebar/content scroll, so it stays a
+  // hand-built dialog rather than the single-scroll-body ResponsiveModal.
+  useFocusTrap(panelRef, { active: true, onEscape: onClose });
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
+      {/* Main container */}
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("userManual", "title")}
+        // pt-20 below `md` reserves the same Quick Exit gutter as
+        // ResponsiveModal.jsx (D3, 52a1edd8): this two-pane dialog stays
+        // hand-built (see the note above), so the mobile header's hamburger
+        // button and title need their own reserved space instead of
+        // ResponsiveModal's built-in one. `md:` (not `sm:`): the mobile
+        // header (below) stays mounted through 767px and this panel is
+        // still full-bleed (`m-0`) there too, so dropping the gutter to 0 at
+        // `sm:` left the 640-767px band with no clearance at all from Quick
+        // Exit, which moves to top-right at that same `sm:` breakpoint
+        // (measured at 640x800).
+        //
+        // `md:mt-16` (not the plain `md:m-4` this used to share on every
+        // side): at >=md the panel has no shared header row (see
+        // UserManualDesktopCloseButton below), so the close-X used to clear
+        // Quick Exit's box the same way this comment used to justify -
+        // sitting at a fixed `top-16` *inside* the panel, floating 64px down
+        // into the content pane and overlapping the section title (decision
+        // (1) violation - measured at 768px). Reserving that same 64px as
+        // the panel's own top margin instead moves the clearance to where
+        // ResponsiveModal.jsx puts it for every other dialog - on the panel,
+        // not the button - so the close-X can sit flush at the panel's own
+        // top corner (see UserManualDesktopCloseButton) with nothing ever
+        // rendering above it to overlap.
+        className="relative flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:mx-4 md:mb-4 md:mt-16 pt-20 md:pt-0 rounded-none md:rounded-xl overflow-hidden"
+      >
+        {/* Mobile header */}
+        <UserManualMobileHeader
+          t={t}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          onClose={onClose}
+        />
+
+        {/* Desktop close - the two-pane layout (>=md) has no single unified
+            top bar (title/search live in the LEFT sidebar), so the close-X
+            is pinned directly to the panel's own top end corner instead,
+            per decision (1)/HeaderCloseSlot's "last control" convention. */}
+        <UserManualDesktopCloseButton onClose={onClose} />
+
+        {/* Sidebar - scrollbar on left using RTL */}
+        <UserManualSidebar
+          s={{
+            t,
+            sidebarOpen,
+            searchQuery,
+            setSearchQuery,
+            searchResults,
+            currentSection,
+            expandedSections,
+            getNavTitle,
+            getCategoryTitle,
+            toggleSection,
+            setCurrentSection,
+            setSidebarOpen,
+            onClose,
+            onReportBug,
+          }}
+        />
+
+        {/* Content area */}
+        <UserManualContentArea
+          s={{
+            t,
+            currentSection,
+            currentContent,
+            getNavTitle,
+            setCurrentSection,
+            onClose,
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default UserManual;

@@ -1,0 +1,42 @@
+{
+  "started": "2026-01-22T01:16:56.835970",
+  "phases": {
+    "verify_data": {
+      "status": "OK",
+      "timestamp": "2026-01-22T01:16:56.850716",
+      "details": "1496 examples, 771.1 KB"
+    },
+    "prepare_dataset": {
+      "status": "OK",
+      "timestamp": "2026-01-22T01:16:56.864680",
+      "details": "Converted 1496 examples"
+    },
+    "check_wsl": {
+      "status": "WARN",
+      "timestamp": "2026-01-22T01:16:56.907122",
+      "details": "Available distros: U\u0000b\u0000u\u0000n\u0000t\u0000u\u0000-\u00002\u00004\u0000.\u00000\u00004\u0000\n\u0000\n\u0000d\u0000o\u0000c\u0000k\u0000e\u0000r\u0000-\u0000d\u0000e\u0000s\u0000k\u0000t\u0000o\u0000p\u0000\n\u0000\n\u0000"
+    },
+    "axolotl_training": {
+      "status": "PREPARED",
+      "timestamp": "2026-01-22T01:16:56.908373",
+      "details": "Config saved to E:\\VS_Studio\\vet-rate-org-official\\llm-compiler\\models\\lora-adapters\\training_config.json"
+    },
+    "mlc_preparation": {
+      "status": "OK",
+      "timestamp": "2026-01-22T01:16:56.909418",
+      "details": "Scripts saved to E:\\VS_Studio\\vet-rate-org-official\\llm-compiler\\mlc-compile"
+    },
+    "rag_integration": {
+      "status": "OK",
+      "timestamp": "2026-01-22T01:16:56.929031",
+      "details": "RAG code saved to E:\\VS_Studio\\vet-rate-org-official\\llm-compiler\\rag-integration"
+    },
+    "webllm_integration": {
+      "status": "OK",
+      "timestamp": "2026-01-22T01:16:56.930775",
+      "details": "WebLLM code saved to E:\\VS_Studio\\vet-rate-org-official\\llm-compiler\\webllm-integration"
+    }
+  },
+  "errors": [],
+  "completed": "2026-01-22T01:16:56.931635"
+}

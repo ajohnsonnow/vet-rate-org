@@ -1,0 +1,104 @@
+name: model-watch
+
+# Weekly check for new open-weight models that fit what the app runs on the
+# device (WebLLM text; transformers.js vision, OCR and embeddings), plus newer
+# releases of the four runtime packages. Wednesdays 05:00 UTC (legal-ingestion
+# owns Mondays, dkb-freshness Tuesdays).
+#
+# scripts/eval/model-watch.mjs exit codes:
+#   0  nothing new
+#   1  a source could not be fetched or parsed  -> this job fails visibly
+#   2  new candidates to evaluate, or a newer runtime package
+#      -> one issue is opened or updated (found by label + title)
+#
+# Everything the script prints is built from validated model ids and numbers
+# only. The issue body goes through a file, never through a script line or a
+# workflow expression. This workflow never commits, pushes or edits the
+# snapshot: after a person has evaluated the candidates they run
+# `npm run eval:model-watch:snapshot` and commit the result.
+
+on:
+  schedule:
+    - cron: "0 5 * * 3"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: model-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: Model watch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ISSUE_TITLE: "Model watch: new candidates to evaluate"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "20"
+
+      # No npm ci — the script uses node builtins and the global fetch only.
+
+      - name: Run model watch
+        id: watch
+        run: |
+          set +e
+          node scripts/eval/model-watch.mjs --out-dir model-watch-out > model-watch.log 2>&1
+          CODE=$?
+          echo "exitcode=$CODE" >> "$GITHUB_OUTPUT"
+          echo "=== model-watch.log ==="
+          cat model-watch.log
+          if [ -f model-watch-out/model-watch-report.md ]; then
+            cat model-watch-out/model-watch-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit 0
+
+      - name: Open or update the model-watch issue
+        if: steps.watch.outputs.exitcode == '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          {
+            cat model-watch-out/model-watch-report.md
+            printf '\nWorkflow run: %s\n' "$RUN_URL"
+          } > issue-body.md
+          gh label create model-watch --description "Weekly model watch findings" --color 5319e7 2>/dev/null || true
+          NUMBER=$(gh issue list --label model-watch --state open --limit 50 --json number,title \
+            --jq '[.[] | select(.title == env.ISSUE_TITLE)] | first | .number // empty')
+          if [ -n "$NUMBER" ]; then
+            gh issue edit "$NUMBER" --body-file issue-body.md
+          else
+            gh issue create --title "$ISSUE_TITLE" --label model-watch --body-file issue-body.md
+          fi
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: model-watch-${{ github.run_id }}
+          path: |
+            model-watch-out/
+            model-watch.log
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Fail the job on a fetch or parse failure
+        if: steps.watch.outputs.exitcode != '0' && steps.watch.outputs.exitcode != '2'
+        env:
+          EXIT_CODE: ${{ steps.watch.outputs.exitcode }}
+        run: |
+          echo "::error title=model-watch::a source could not be fetched or parsed (exit code ${EXIT_CODE}); see the log and the report artifact"
+          exit 1

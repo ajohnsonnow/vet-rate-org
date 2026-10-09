@@ -1,0 +1,442 @@
+{
+  "generatedAt": "2026-02-18T05:50:18.793Z",
+  "staticAnalysis": {
+    "totalFiles": 288,
+    "totalFunctions": 2399,
+    "totalComponents": 297,
+    "totalHooks": 34,
+    "totalExports": 1285,
+    "totalEventHandlers": 2179,
+    "riskDistribution": {
+      "high": 283,
+      "medium": 799,
+      "low": 1317
+    },
+    "highRiskFunctions": [
+      {
+        "name": "authenticatedFetch",
+        "file": "api/va.js",
+        "risk": "high",
+        "params": 3,
+        "async": true
+      },
+      {
+        "name": "getDisabilityRating",
+        "file": "api/va.js",
+        "risk": "high",
+        "params": 1,
+        "async": true
+      },
+      {
+        "name": "authenticatedFetch",
+        "file": "api/vaSandbox.js",
+        "risk": "high",
+        "params": 3,
+        "async": true
+      },
+      {
+        "name": "handleCrisisEvent",
+        "file": "App.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "handleSendToCalculator",
+        "file": "App.jsx",
+        "risk": "high",
+        "params": 3,
+        "async": false
+      },
+      {
+        "name": "generateCodeVerifier",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "generateCodeChallenge",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 1,
+        "async": true
+      },
+      {
+        "name": "base64URLEncode",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "generateState",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "saveTokens",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "getStoredTokens",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "clearTokens",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "isTokenExpired",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "useVaAuth",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "checkAuth",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 0,
+        "async": true
+      },
+      {
+        "name": "fetchUserInfo",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 1,
+        "async": true
+      },
+      {
+        "name": "refreshAccessToken",
+        "file": "auth/useVaAuth.js",
+        "risk": "high",
+        "params": 1,
+        "async": true
+      },
+      {
+        "name": "VaAuthCallback",
+        "file": "auth/VaAuthCallback.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "handleCallback",
+        "file": "auth/VaAuthCallback.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": true
+      },
+      {
+        "name": "AtomicWipe",
+        "file": "components/AtomicWipe.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "handleAtomicWipe",
+        "file": "components/AtomicWipe.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": true
+      },
+      {
+        "name": "ConfirmModal",
+        "file": "components/AtomicWipe.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "BunkerPrivacyNotice",
+        "file": "components/AtomicWipe.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "BackupManager",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "loadDbqStats",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": true
+      },
+      {
+        "name": "handleExport",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": true
+      },
+      {
+        "name": "handleFileSelect",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": true
+      },
+      {
+        "name": "handleDragOver",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "handleDragLeave",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "handleDrop",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "handleFileInputChange",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "handleClearData",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "handleViewStats",
+        "file": "components/BackupManager.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "calculateGenericRating",
+        "file": "components/CAPSimulator.jsx",
+        "risk": "high",
+        "params": 2,
+        "async": false
+      },
+      {
+        "name": "calculateResults",
+        "file": "components/CAPSimulator.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "calculateCompleteness",
+        "file": "components/ClaimProgress.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "loadBackups",
+        "file": "components/CloudSyncManager.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": true
+      },
+      {
+        "name": "handleCreateBackup",
+        "file": "components/CloudSyncManager.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": true
+      },
+      {
+        "name": "handleRestoreBackup",
+        "file": "components/CloudSyncManager.jsx",
+        "risk": "high",
+        "params": 2,
+        "async": true
+      },
+      {
+        "name": "handleDeleteBackup",
+        "file": "components/CloudSyncManager.jsx",
+        "risk": "high",
+        "params": 2,
+        "async": true
+      },
+      {
+        "name": "CrisisModal",
+        "file": "components/CrisisModal.jsx",
+        "risk": "high",
+        "params": 1,
+        "async": false
+      },
+      {
+        "name": "handleCallClick",
+        "file": "components/CrisisModal.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "handleChatClick",
+        "file": "components/CrisisModal.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "handleEncryptedDownload",
+        "file": "components/DbqShareMenu.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": true
+      },
+      {
+        "name": "handleBackup",
+        "file": "components/FormsHelper.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "handleRestoreClick",
+        "file": "components/FormsHelper.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "generateThirdPartyAuth",
+        "file": "components/FormsHelper.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      },
+      {
+        "name": "calculateMonthlyPay",
+        "file": "components/MillionDollarDashboard.jsx",
+        "risk": "high",
+        "params": 3,
+        "async": false
+      },
+      {
+        "name": "calculateLifetimeValue",
+        "file": "components/MillionDollarDashboard.jsx",
+        "risk": "high",
+        "params": 5,
+        "async": false
+      },
+      {
+        "name": "handleLoadMyRatings",
+        "file": "components/MillionDollarDashboard.jsx",
+        "risk": "high",
+        "params": 0,
+        "async": false
+      }
+    ],
+    "filesWithErrors": 0
+  },
+  "dynamicTesting": {
+    "totalTests": 85,
+    "passed": 85,
+    "failed": 0,
+    "skipped": 0,
+    "passRate": 100,
+    "failures": []
+  },
+  "gapAnalysis": {
+    "unwiredComponents": 0,
+    "unwiredList": [],
+    "unusedExports": 0,
+    "unusedList": [],
+    "functionCoverage": 100,
+    "testableFlows": 157,
+    "isolatedComponents": [
+      "AccessibilityMenu",
+      "AIWarningBanner",
+      "AnimatedBug",
+      "AppealsLaneAdvisor",
+      "AtomicWipe",
+      "Badge",
+      "BodyMapSelector",
+      "BuyMeCoffee",
+      "CertificationCheckbox",
+      "CFileClaimsCards",
+      "CFileTimeline",
+      "ClaimEvidenceUpload",
+      "DiffHighlighter",
+      "LoadingSpinner",
+      "Disclaimer",
+      "DraftWatermark",
+      "ExperimentalModeWarning",
+      "FlagIcon",
+      "FloatingBugButton",
+      "HelperModeToggle",
+      "LanguageSelector",
+      "LoadingBunker",
+      "MobileBottomNav",
+      "MobileNotice",
+      "NexusDisclaimerFooter",
+      "NexusQualityAnalyzer",
+      "PACTActBadge",
+      "PublicationCard",
+      "PWAInstallButton",
+      "RemandRiskChecker",
+      "ReportBugLink",
+      "SearchResultCard",
+      "SecurityBadge",
+      "SimulatorFeedback",
+      "TermsOfServicePage",
+      "Toast",
+      "UpdateBanner",
+      "VaDataConsentPrompt",
+      "VisualRibbon",
+      "VoiceInputButton",
+      "ZonkButton"
+    ]
+  },
+  "riskAssessment": {
+    "overallScore": 100,
+    "grade": "A",
+    "deductions": []
+  },
+  "overallScore": 100,
+  "dependencyHealth": {
+    "orphanedFiles": 0,
+    "circularDependencies": 0,
+    "unresolvedImports": 0,
+    "architecturalViolations": 0,
+    "externalPackages": 21,
+    "violations": []
+  }
+}

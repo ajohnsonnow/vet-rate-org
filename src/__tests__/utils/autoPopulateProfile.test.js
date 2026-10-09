@@ -1,0 +1,390 @@
+/**
+ * FIX-9: profile never auto-populated. Two root causes -
+ * (1) applyServiceRecordToProfileUpdates read entryDate/separationDate/
+ *     characterOfService while parseServiceRecord emits serviceStartDate/
+ *     serviceEndDate/dischargeType, so every conditional was false.
+ * (2) processFormationDocument (single-document path) never called
+ *     autoPopulateProfile at all.
+ * Also covers the "don't clobber the user" overwrite semantics:
+ * fill-if-empty, document may keep refining, but a user-edited field is
+ * never silently overwritten - a conflict is surfaced instead.
+ */
+import { describe, it, expect, beforeEach } from "vitest";
+
+globalThis.DOMMatrix ??= class DOMMatrix {};
+globalThis.Path2D ??= class Path2D {};
+globalThis.ImageData ??= class ImageData {};
+
+const { autoPopulateProfile } = await import("../../utils/musterCallProcessor");
+const { getVeteranProfile, saveVeteranProfile } =
+  await import("../../utils/veteranProfile");
+
+const serviceRecordResult = (overrides = {}) => ({
+  filename: "dd214.pdf",
+  status: "complete",
+  extractedData: {
+    type: "service_record",
+    branch: "Army",
+    serviceStartDate: "06/01/2010",
+    serviceEndDate: "05/30/2015",
+    dischargeType: "HONORABLE",
+    mos: "11B",
+    ...overrides,
+  },
+});
+
+describe("FIX-9: autoPopulateProfile field-name mismatch fix", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills an empty profile from parseServiceRecord's field names (serviceStartDate/serviceEndDate/dischargeType)", async () => {
+    const result = await autoPopulateProfile([serviceRecordResult()]);
+    expect(result.success).toBe(true);
+    expect(result.count).toBe(1);
+
+    const profile = getVeteranProfile();
+    expect(profile.branch).toBe("Army");
+    expect(profile.serviceStartDate).toBe("06/01/2010");
+    expect(profile.serviceEndDate).toBe("05/30/2015");
+    expect(profile.characterOfService).toBe("HONORABLE");
+    expect(profile.mos).toBe("11B");
+  });
+
+  it("also accepts dd214FieldExtractor's naming (entryDate/separationDate/characterOfService)", async () => {
+    const result = await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: undefined,
+        serviceEndDate: undefined,
+        dischargeType: undefined,
+        entryDate: "01/01/2008",
+        separationDate: "01/01/2012",
+        characterOfService: "GENERAL",
+      }),
+    ]);
+    expect(result.success).toBe(true);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("01/01/2008");
+    expect(profile.serviceEndDate).toBe("01/01/2012");
+    expect(profile.characterOfService).toBe("GENERAL");
+  });
+});
+
+describe("FIX-17: autoPopulateProfile maps extracted name fields onto the profile", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills firstName/lastName/middleName/fullName from veteranName/lastName/firstName/middleName", async () => {
+    const result = await autoPopulateProfile([
+      serviceRecordResult({
+        veteranName: "WILLIAMS, ROBERT LEE",
+        lastName: "WILLIAMS",
+        firstName: "ROBERT",
+        middleName: "LEE",
+      }),
+    ]);
+    expect(result.success).toBe(true);
+
+    const profile = getVeteranProfile();
+    expect(profile.fullName).toBe("WILLIAMS, ROBERT LEE");
+    expect(profile.firstName).toBe("ROBERT");
+    expect(profile.lastName).toBe("WILLIAMS");
+    expect(profile.middleName).toBe("LEE");
+  });
+
+  it("never overwrites a manually-entered name, and surfaces a conflict instead", async () => {
+    saveVeteranProfile({
+      firstName: "Robert",
+      lastName: "Williams",
+      profileFieldSources: { firstName: "user", lastName: "user" },
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({
+        lastName: "SMITH",
+        firstName: "JOHN",
+      }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.firstName).toBe("Robert");
+    expect(profile.lastName).toBe("Williams");
+    expect(result.conflicts.map((c) => c.field)).toEqual(
+      expect.arrayContaining(["firstName", "lastName"]),
+    );
+  });
+});
+
+describe("FIX-9: overwrite semantics - never clobber a user-edited field", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills an empty field and marks its source as document", async () => {
+    await autoPopulateProfile([serviceRecordResult()]);
+    const profile = getVeteranProfile();
+    expect(profile.profileFieldSources.branch).toBe("document");
+  });
+
+  it("lets a later document refine a field that was only ever document-sourced", async () => {
+    await autoPopulateProfile([serviceRecordResult({ branch: "Army" })]);
+    await autoPopulateProfile([
+      serviceRecordResult({ branch: "Army National Guard" }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.branch).toBe("Army National Guard");
+  });
+
+  it("never overwrites a field the user manually edited, and surfaces a conflict instead", async () => {
+    // Simulate the Profile tab's save handler marking a field user-edited
+    saveVeteranProfile({
+      branch: "Marine Corps",
+      profileFieldSources: { branch: "user" },
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({ branch: "Army" }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.branch).toBe("Marine Corps");
+    expect(result.conflicts).toHaveLength(1);
+    expect(result.conflicts[0]).toMatchObject({
+      field: "branch",
+      profileValue: "Marine Corps",
+      documentValue: "Army",
+    });
+  });
+});
+
+describe("a conflict is persisted onto the profile so the UI can surface it (previously had zero consumers)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("appends the conflict to profile.pendingProfileConflicts", async () => {
+    saveVeteranProfile({
+      branch: "Marine Corps",
+      profileFieldSources: { branch: "user" },
+    });
+
+    await autoPopulateProfile([serviceRecordResult({ branch: "Army" })]);
+
+    const profile = getVeteranProfile();
+    expect(profile.pendingProfileConflicts).toHaveLength(1);
+    expect(profile.pendingProfileConflicts[0]).toMatchObject({
+      field: "branch",
+      profileValue: "Marine Corps",
+      documentValue: "Army",
+      source: "dd214.pdf",
+    });
+  });
+
+  it("accumulates conflicts across separate imports rather than overwriting the pending list", async () => {
+    saveVeteranProfile({
+      branch: "Marine Corps",
+      mos: "0311",
+      profileFieldSources: { branch: "user", mos: "user" },
+    });
+
+    await autoPopulateProfile([serviceRecordResult({ branch: "Army" })]);
+    await autoPopulateProfile([serviceRecordResult({ mos: "11B" })]);
+
+    const profile = getVeteranProfile();
+    expect(profile.pendingProfileConflicts.map((c) => c.field)).toEqual(
+      expect.arrayContaining(["branch", "mos"]),
+    );
+  });
+});
+
+describe("autoPopulateProfile: a C-File's code sheet", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the combined rating and the veteran's representative", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "cfile.pdf",
+        status: "complete",
+        extractedData: {
+          type: "c_file",
+          ratingSource: "code_sheet",
+          combinedRating: 80,
+          representative: "Disabled American Veterans",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      currentCombinedRating: 80,
+      vsoOrganization: "Disabled American Veterans",
+    });
+  });
+
+  it("ignores a C-File without a code sheet", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "cfile.pdf",
+        status: "complete",
+        extractedData: { type: "c_file", combinedRating: 30 },
+      },
+    ]);
+    expect(getVeteranProfile().currentCombinedRating).not.toBe(30);
+  });
+});
+
+describe("autoPopulateProfile: a rating decision letter", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the combined rating and effective date", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "ClaimLetter-2019-11-27.pdf",
+        status: "complete",
+        extractedData: {
+          type: "rating_decision",
+          combinedRating: 70,
+          effectiveDate: "2023-08-22",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      currentCombinedRating: 70,
+      effectiveDate: "2023-08-22",
+    });
+  });
+});
+
+// D-C (final10 QA, 2026-09-25): serviceStartDateDerived previously stopped
+// propagating at the service-period row - the top-level profile field
+// (read by MyPacket's Profile tab) never learned a serviceStartDate came
+// from an NGB-22's calculated entry date rather than a printed one.
+describe("D-C: autoPopulateProfile propagates serviceStartDateDerived onto the profile", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("marks the profile's serviceStartDate as derived when the document's was calculated", async () => {
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-05-18",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+
+    expect(getVeteranProfile().serviceStartDateDerived).toBe(true);
+  });
+
+  it("marks the profile's serviceStartDate as not derived for an ordinary printed date", async () => {
+    await autoPopulateProfile([serviceRecordResult()]);
+
+    expect(getVeteranProfile().serviceStartDateDerived).toBe(false);
+  });
+
+  it("clears the derived flag once a later, genuinely dated document refines the field", async () => {
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-05-18",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-06-01",
+        serviceStartDateDerived: false,
+      }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("1997-06-01");
+    expect(profile.serviceStartDateDerived).toBe(false);
+  });
+
+  // Regression (final10 QA correctness re-review, 2026-09-26): a
+  // conflicting document must never flag the veteran's OWN typed date as
+  // "calculated" - serviceStartDateDerived used to run through the
+  // generic per-field pass independently of serviceStartDate, so it wrote
+  // through even when serviceStartDate itself was correctly blocked as a
+  // conflict.
+  it("does not flag the veteran's own typed date as calculated when a conflicting document is blocked", async () => {
+    saveVeteranProfile({
+      serviceStartDate: "1998-05-11",
+      profileFieldSources: { serviceStartDate: "user" },
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-05-18",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("1998-05-11");
+    expect(profile.serviceStartDateDerived).toBeFalsy();
+    expect(result.conflicts.map((c) => c.field)).toContain("serviceStartDate");
+  });
+});
+
+describe("autoPopulateProfile: a claim letter", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the claim number and VA file number", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "ClaimLetter.pdf",
+        status: "complete",
+        extractedData: {
+          type: "claim_letter",
+          claimNumber: "600123456",
+          vaFileNumber: "000000000",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      claimNumber: "600123456",
+      vaFileNumber: "000000000",
+    });
+  });
+});
+
+describe("ADR-007: autoPopulateProfile never moves serviceStartDate once a period backs the entry", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("skips serviceStartDate but still fills every other field", async () => {
+    const { upsertServicePeriod, setServiceEntryDate } =
+      await import("../../utils/veteranProfile");
+    const id = upsertServicePeriod(
+      {
+        serviceStartDate: "2002-01-10",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2010-06-15",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22.pdf", confidence: 60 },
+    );
+    setServiceEntryDate({
+      date: "1998-11-01",
+      via: "muster_review",
+      periodId: id,
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({ serviceStartDate: "06/01/2010", mos: "68W" }),
+    ]);
+    expect(result.success).toBe(true);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("1998-11-01");
+    expect(profile.mos).toBe("68W");
+  });
+});

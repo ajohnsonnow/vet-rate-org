@@ -1,0 +1,1001 @@
+{
+  "source": "VA Office of General Counsel Precedent Opinions",
+  "description": "Comprehensive database of binding OGC legal interpretations",
+  "created_at": "2026-01-22T14:01:01.435228",
+  "total_opinions": 47,
+  "total_entries": 48,
+  "legal_weight": "BINDING - VA must follow these interpretations",
+  "note": "These opinions can be cited in claims, appeals, and BVA hearings",
+  "entries": [
+    {
+      "id": "ogc_overview",
+      "title": "VA OGC Precedent Opinions - Overview",
+      "content": "VA OFFICE OF GENERAL COUNSEL PRECEDENT OPINIONS\n\nWHAT ARE OGC PRECEDENT OPINIONS?\nThe VA Office of General Counsel (OGC) issues Precedent Opinions (VAOPGCPREC) that provide binding legal interpretations of VA statutes and regulations.\n\nWHY ARE THEY IMPORTANT?\n- BINDING on VA: All VA adjudicators must follow these interpretations\n- BINDING on BVA: The Board of Veterans Appeals must follow them\n- Can be cited in claims and appeals\n- Provide authoritative guidance on disputed issues\n\nHOW TO USE THEM:\n1. Find opinions relevant to your claim issue\n2. Cite them in your personal statement or appeal\n3. Use them to argue your case at hearings\n4. Reference them when requesting reconsideration\n\nCITATION FORMAT:\nVAOPGCPREC [number]-[year]\nExample: VAOPGCPREC 3-97\n\nWHERE TO FIND THEM:\n- VA.gov OGC website\n- Westlaw/LexisNexis\n- This knowledge base\n\nCOMMON TOPICS COVERED:\n- Secondary service connection\n- Clear and unmistakable error (CUE)\n- Effective dates\n- Rating criteria interpretation\n- Presumptive conditions\n- TDIU eligibility\n- Special monthly compensation",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_overview",
+        "hierarchy_level": 4,
+        "color_code": "PURPLE"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_3_97",
+      "title": "OGC Opinion: VAOPGCPREC 3-97 - Secondary Service Connection - Aggravation Standard",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 3-97\nYEAR ISSUED: 1997\nSUBJECT: Secondary Service Connection - Aggravation Standard\n\nHELD (BINDING INTERPRETATION):\nWhen a veteran's service-connected disability causes or aggravates a non-service-connected condition, secondary service connection may be established under 38 CFR 3.310. The medical evidence must show the secondary condition is proximately due to or the result of the service-connected disability. This includes both direct causation AND aggravation of a preexisting condition.\n\nKEY POINTS:\n   - Secondary service connection covers both causation and aggravation\n   - Medical nexus required showing condition is 'proximately due to' primary condition\n   - Aggravation means worsening beyond natural progression\n   - Preexisting conditions can be claimed if service-connected disability made them worse\n\nRELATED REGULATIONS:\n38 CFR 3.310\n\nPRACTICAL APPLICATION:\nFile secondary claims for any condition caused OR worsened by your service-connected disabilities\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 3-97",
+        "year": 1997,
+        "subject": "Secondary Service Connection - Aggravation Standard",
+        "related_regulations": [
+          "38 CFR 3.310"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433419"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_10_88",
+      "title": "OGC Opinion: VAOPGCPREC 10-88 - Secondary Service Connection - Medications",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 10-88\nYEAR ISSUED: 1988\nSUBJECT: Secondary Service Connection - Medications\n\nHELD (BINDING INTERPRETATION):\nSecondary service connection may be established for disabilities resulting from medication prescribed for a service-connected condition. The side effects of medication used to treat a service-connected disability are part of the disability picture.\n\nKEY POINTS:\n   - Medication side effects can be service-connected\n   - Must be medication for service-connected condition\n   - Includes both temporary and permanent effects\n   - Document all medications and their side effects\n\nRELATED REGULATIONS:\n38 CFR 3.310\n\nPRACTICAL APPLICATION:\nClaim conditions caused by medications for your SC disabilities - document all side effects\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 10-88",
+        "year": 1988,
+        "subject": "Secondary Service Connection - Medications",
+        "related_regulations": [
+          "38 CFR 3.310"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433500"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_12_99",
+      "title": "OGC Opinion: VAOPGCPREC 12-99 - Clear and Unmistakable Error (CUE) Standard",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 12-99\nYEAR ISSUED: 1999\nSUBJECT: Clear and Unmistakable Error (CUE) Standard\n\nHELD (BINDING INTERPRETATION):\nClear and Unmistakable Error (CUE) under 38 USC 5109A is a very specific and rare kind of error. It must be undebatable and of the sort that had it not been made, would have manifestly changed the outcome at the time it was made. CUE must be based on the evidence of record at the time of the prior decision. New evidence cannot be used to establish CUE.\n\nKEY POINTS:\n   - CUE is a high standard - error must be 'undebatable'\n   - Error must have 'manifestly changed the outcome'\n   - Based ONLY on evidence in the record at time of original decision\n   - NEW evidence cannot be used to establish CUE\n   - Not mere disagreement with how facts were weighed\n\nRELATED REGULATIONS:\n38 USC 5109A, 38 CFR 3.105(a)\n\nPRACTICAL APPLICATION:\nCUE claims can reopen old decisions but must show obvious error, not just different interpretation\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 12-99",
+        "year": 1999,
+        "subject": "Clear and Unmistakable Error (CUE) Standard",
+        "related_regulations": [
+          "38 USC 5109A",
+          "38 CFR 3.105(a)"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433560"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_3_2000",
+      "title": "OGC Opinion: VAOPGCPREC 3-2000 - CUE - Failure to Apply Correct Law",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 3-2000\nYEAR ISSUED: 2000\nSUBJECT: CUE - Failure to Apply Correct Law\n\nHELD (BINDING INTERPRETATION):\nFailure to correctly apply the law in effect at the time of the decision constitutes CUE if the correct application would have manifestly changed the outcome.\n\nKEY POINTS:\n   - VA's failure to apply correct law can be CUE\n   - Must use law in effect at time of original decision\n   - Outcome must have been different with correct law\n   - Common when VA ignores binding regulations\n\nRELATED REGULATIONS:\n38 CFR 3.105(a)\n\nPRACTICAL APPLICATION:\nIf VA failed to apply a regulation that existed at your decision time, consider CUE motion\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 3-2000",
+        "year": 2000,
+        "subject": "CUE - Failure to Apply Correct Law",
+        "related_regulations": [
+          "38 CFR 3.105(a)"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433619"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_27_2003",
+      "title": "OGC Opinion: VAOPGCPREC 27-2003 - Interpretation of Diagnostic Codes - Functional Loss",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 27-2003\nYEAR ISSUED: 2003\nSUBJECT: Interpretation of Diagnostic Codes - Functional Loss\n\nHELD (BINDING INTERPRETATION):\nWhen evaluating disabilities under 38 CFR Part 4, VA must consider all symptoms and their effects on the veteran's earning capacity. Diagnostic codes provide minimum criteria for specific disability ratings, but more severe symptoms warrant higher ratings even if not explicitly listed. Rating officials must consider functional loss and impairment to employment.\n\nKEY POINTS:\n   - Diagnostic codes provide MINIMUM criteria, not maximum\n   - Symptoms more severe than listed can warrant higher ratings\n   - Functional loss must be considered\n   - Impact on employment/earning capacity is key factor\n\nRELATED REGULATIONS:\n38 CFR Part 4, 38 CFR 4.1, 38 CFR 4.10\n\nPRACTICAL APPLICATION:\nArgue for higher ratings if your symptoms exceed the listed criteria, even if not matching exact language\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 27-2003",
+        "year": 2003,
+        "subject": "Interpretation of Diagnostic Codes - Functional Loss",
+        "related_regulations": [
+          "38 CFR Part 4",
+          "38 CFR 4.1",
+          "38 CFR 4.10"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433666"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_9_2004",
+      "title": "OGC Opinion: VAOPGCPREC 9-2004 - Separate Ratings for Same Joint - Arthritis and Instability",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 9-2004\nYEAR ISSUED: 2004\nSUBJECT: Separate Ratings for Same Joint - Arthritis and Instability\n\nHELD (BINDING INTERPRETATION):\nA veteran may receive separate compensable ratings for arthritis and instability of the same knee joint under Diagnostic Codes 5003/5010 (arthritis) and 5257 (instability). The conditions manifest different symptoms and do not constitute pyramiding.\n\nKEY POINTS:\n   - Same joint CAN receive multiple ratings for different manifestations\n   - Arthritis (5003) and instability (5257) can be rated separately\n   - This is NOT pyramiding - symptoms are distinct\n   - Applies to knees but principle extends to other joints\n\nRELATED REGULATIONS:\n38 CFR 4.14, 38 CFR 4.71a, DC 5003, DC 5257\n\nPRACTICAL APPLICATION:\nIf you have both arthritis AND instability in a joint, claim BOTH for separate ratings\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 9-2004",
+        "year": 2004,
+        "subject": "Separate Ratings for Same Joint - Arthritis and Instability",
+        "related_regulations": [
+          "38 CFR 4.14",
+          "38 CFR 4.71a",
+          "DC 5003",
+          "DC 5257"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433700"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_9_93",
+      "title": "OGC Opinion: VAOPGCPREC 9-93 - Multiple Mental Disorder Ratings",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 9-93\nYEAR ISSUED: 1993\nSUBJECT: Multiple Mental Disorder Ratings\n\nHELD (BINDING INTERPRETATION):\nAll psychiatric conditions are rated under the General Rating Formula for Mental Disorders. When a veteran has multiple psychiatric diagnoses, only one rating is assigned based on the overall level of occupational and social impairment.\n\nKEY POINTS:\n   - All mental disorders use same rating criteria\n   - Only ONE rating for all psychiatric conditions combined\n   - Rating based on overall impairment, not diagnosis\n   - Symptoms from all mental conditions considered together\n\nRELATED REGULATIONS:\n38 CFR 4.130, 38 CFR 4.126\n\nPRACTICAL APPLICATION:\nWhen claiming mental health conditions, focus on total symptom impact rather than specific diagnoses\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 9-93",
+        "year": 1993,
+        "subject": "Multiple Mental Disorder Ratings",
+        "related_regulations": [
+          "38 CFR 4.130",
+          "38 CFR 4.126"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433787"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_45_95",
+      "title": "OGC Opinion: VAOPGCPREC 45-95 - PTSD Stressor Verification - Combat",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 45-95\nYEAR ISSUED: 1995\nSUBJECT: PTSD Stressor Verification - Combat\n\nHELD (BINDING INTERPRETATION):\nIf the evidence establishes that the veteran engaged in combat with the enemy and the claimed stressor is consistent with the circumstances, conditions, and hardships of such service, the veteran's lay testimony alone may establish the occurrence of the stressor.\n\nKEY POINTS:\n   - Combat veterans: lay testimony alone can establish stressor\n   - No independent verification required for combat-related stressors\n   - Stressor must be 'consistent with circumstances of service'\n   - Applies when veteran 'engaged in combat with the enemy'\n\nRELATED REGULATIONS:\n38 CFR 3.304(f), 38 USC 1154(b)\n\nPRACTICAL APPLICATION:\nCombat veterans don't need 'buddy statements' or unit records to prove PTSD stressors\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 45-95",
+        "year": 1995,
+        "subject": "PTSD Stressor Verification - Combat",
+        "related_regulations": [
+          "38 CFR 3.304(f)",
+          "38 USC 1154(b)"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433823"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_12_98",
+      "title": "OGC Opinion: VAOPGCPREC 12-98 - Effective Date for Increased Rating Claims",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 12-98\nYEAR ISSUED: 1998\nSUBJECT: Effective Date for Increased Rating Claims\n\nHELD (BINDING INTERPRETATION):\nThe effective date for an increased rating is the date as of which it is factually ascertainable that an increase in disability had occurred, if the claim is received within one year from such date; otherwise, the effective date is the date of receipt of the claim.\n\nKEY POINTS:\n   - Look back ONE YEAR from claim date for effective date\n   - Must be 'factually ascertainable' that increase occurred\n   - Need medical evidence showing the increase\n   - If no evidence of earlier increase, effective date is claim date\n\nRELATED REGULATIONS:\n38 CFR 3.400(o)(2), 38 USC 5110\n\nPRACTICAL APPLICATION:\nFile for increased rating promptly, and gather evidence of symptoms from previous year to maximize backpay\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 12-98",
+        "year": 1998,
+        "subject": "Effective Date for Increased Rating Claims",
+        "related_regulations": [
+          "38 CFR 3.400(o)(2)",
+          "38 USC 5110"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433850"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_8_2003",
+      "title": "OGC Opinion: VAOPGCPREC 8-2003 - Effective Date - Liberalizing Law/Regulation",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 8-2003\nYEAR ISSUED: 2003\nSUBJECT: Effective Date - Liberalizing Law/Regulation\n\nHELD (BINDING INTERPRETATION):\nWhen a new law or regulation creates a new basis for entitlement, the effective date of the award may be no earlier than the effective date of the liberalizing law or regulation.\n\nKEY POINTS:\n   - New law creates new effective date floor\n   - Cannot get benefits before law/regulation existed\n   - PACT Act example: benefits start when law took effect\n   - Prior claims may be reconsidered under new rules\n\nRELATED REGULATIONS:\n38 CFR 3.114, 38 CFR 3.400\n\nPRACTICAL APPLICATION:\nWhen new presumptions are added (like PACT Act), effective date starts when law takes effect\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 8-2003",
+        "year": 2003,
+        "subject": "Effective Date - Liberalizing Law/Regulation",
+        "related_regulations": [
+          "38 CFR 3.114",
+          "38 CFR 3.400"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433883"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_82_90",
+      "title": "OGC Opinion: VAOPGCPREC 82-90 - Presumption of Soundness",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 82-90\nYEAR ISSUED: 1990\nSUBJECT: Presumption of Soundness\n\nHELD (BINDING INTERPRETATION):\nEvery veteran shall be taken to have been in sound condition when examined, accepted and enrolled for service, except as to defects, infirmities, or disorders noted at the time of examination. The government must rebut this presumption by clear and unmistakable evidence.\n\nKEY POINTS:\n   - Veterans presumed healthy at entry unless condition noted\n   - VA must prove preexisting condition by 'clear and unmistakable evidence'\n   - Very high burden on VA to overcome presumption\n   - If entrance exam didn't note it, presumed sound\n\nRELATED REGULATIONS:\n38 CFR 3.304(b), 38 USC 1111\n\nPRACTICAL APPLICATION:\nIf condition wasn't noted on entrance exam, argue presumption of soundness\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 82-90",
+        "year": 1990,
+        "subject": "Presumption of Soundness",
+        "related_regulations": [
+          "38 CFR 3.304(b)",
+          "38 USC 1111"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433912"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_67_90",
+      "title": "OGC Opinion: VAOPGCPREC 67-90 - Aggravation of Preexisting Condition",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 67-90\nYEAR ISSUED: 1990\nSUBJECT: Aggravation of Preexisting Condition\n\nHELD (BINDING INTERPRETATION):\nA preexisting injury or disease will be considered to have been aggravated by active service where there is an increase in disability during service, unless there is a specific finding that the increase was due to the natural progress of the disease.\n\nKEY POINTS:\n   - If condition got worse during service, presumed aggravated\n   - VA must prove it was 'natural progression' to deny\n   - Increase in disability during service is key evidence\n   - Applies even to conditions that existed before service\n\nRELATED REGULATIONS:\n38 CFR 3.306, 38 USC 1153\n\nPRACTICAL APPLICATION:\nEven preexisting conditions can be service-connected if they worsened during service\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 67-90",
+        "year": 1990,
+        "subject": "Aggravation of Preexisting Condition",
+        "related_regulations": [
+          "38 CFR 3.306",
+          "38 USC 1153"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433947"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_5_2005",
+      "title": "OGC Opinion: VAOPGCPREC 5-2005 - TDIU - Substantially Gainful Employment",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 5-2005\nYEAR ISSUED: 2005\nSUBJECT: TDIU - Substantially Gainful Employment\n\nHELD (BINDING INTERPRETATION):\nIn determining whether a veteran is entitled to TDIU, VA must determine whether the veteran is unable to secure or follow a substantially gainful occupation due to service-connected disabilities. Marginal employment is not substantially gainful employment.\n\nKEY POINTS:\n   - TDIU requires inability to maintain 'substantially gainful' employment\n   - Marginal employment (poverty level) doesn't count\n   - Protected employment doesn't count\n   - Consider education, training, and work history\n\nRELATED REGULATIONS:\n38 CFR 4.16\n\nPRACTICAL APPLICATION:\nEven if you work part-time or earn below poverty level, you may still qualify for TDIU\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 5-2005",
+        "year": 2005,
+        "subject": "TDIU - Substantially Gainful Employment",
+        "related_regulations": [
+          "38 CFR 4.16"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.433979"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_6_99",
+      "title": "OGC Opinion: VAOPGCPREC 6-99 - TDIU and 100% Schedular Rating",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 6-99\nYEAR ISSUED: 1999\nSUBJECT: TDIU and 100% Schedular Rating\n\nHELD (BINDING INTERPRETATION):\nA veteran may be entitled to TDIU even if also receiving a 100% schedular rating, if the TDIU is based on different disabilities and the effect of TDIU would be to provide Special Monthly Compensation.\n\nKEY POINTS:\n   - TDIU can provide SMC even with 100% rating\n   - Must be based on different disabilities\n   - Can result in 'TDIU plus' or SMC(S)\n   - 100% rating doesn't automatically make TDIU moot\n\nRELATED REGULATIONS:\n38 CFR 4.16, 38 CFR 3.350(i)\n\nPRACTICAL APPLICATION:\nIf you have 100% but also can't work due to OTHER disabilities, claim TDIU for potential SMC\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 6-99",
+        "year": 1999,
+        "subject": "TDIU and 100% Schedular Rating",
+        "related_regulations": [
+          "38 CFR 4.16",
+          "38 CFR 3.350(i)"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434012"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_11_95",
+      "title": "OGC Opinion: VAOPGCPREC 11-95 - VA Duty to Assist - Medical Examinations",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 11-95\nYEAR ISSUED: 1995\nSUBJECT: VA Duty to Assist - Medical Examinations\n\nHELD (BINDING INTERPRETATION):\nVA has a duty to provide a medical examination when the record contains competent evidence of a current disability, evidence of an in-service event, and an indication that the disability may be associated with service, but insufficient medical evidence to decide the claim.\n\nKEY POINTS:\n   - VA must provide exam when: current disability + in-service event + possible link\n   - Threshold is LOW - just 'may be associated'\n   - Insufficient evidence triggers duty to get exam\n   - Veteran's lay statements can satisfy low threshold\n\nRELATED REGULATIONS:\n38 USC 5103A, 38 CFR 3.159(c)(4)\n\nPRACTICAL APPLICATION:\nIf VA denies without an exam and you have evidence of all three factors, appeal on duty to assist\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 11-95",
+        "year": 1995,
+        "subject": "VA Duty to Assist - Medical Examinations",
+        "related_regulations": [
+          "38 USC 5103A",
+          "38 CFR 3.159(c)(4)"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434041"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_4_2000",
+      "title": "OGC Opinion: VAOPGCPREC 4-2000 - Herbicide Exposure - Thailand",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 4-2000\nYEAR ISSUED: 2000\nSUBJECT: Herbicide Exposure - Thailand\n\nHELD (BINDING INTERPRETATION):\nVeterans who served at certain Royal Thai Air Force bases during the Vietnam era may have been exposed to herbicides and may be entitled to the presumptions of service connection for conditions associated with herbicide exposure.\n\nKEY POINTS:\n   - Thailand veterans may qualify for Agent Orange presumptions\n   - Applies to RTAFB bases near perimeter where herbicides used\n   - Requires service during Vietnam era\n   - Same presumptive conditions as Vietnam veterans\n\nRELATED REGULATIONS:\n38 CFR 3.307, 38 CFR 3.309(e)\n\nPRACTICAL APPLICATION:\nIf you served at a Thailand AFB and have an Agent Orange presumptive condition, claim it\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 4-2000",
+        "year": 2000,
+        "subject": "Herbicide Exposure - Thailand",
+        "related_regulations": [
+          "38 CFR 3.307",
+          "38 CFR 3.309(e)"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434102"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_27_97",
+      "title": "OGC Opinion: VAOPGCPREC 27-97 - Gulf War Undiagnosed Illness - Time Limits",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 27-97\nYEAR ISSUED: 1997\nSUBJECT: Gulf War Undiagnosed Illness - Time Limits\n\nHELD (BINDING INTERPRETATION):\nA qualifying chronic disability resulting from an undiagnosed illness manifested by one or more signs or symptoms shall be service connected if it became manifest to a degree of 10% or more within the presumptive period.\n\nKEY POINTS:\n   - Gulf War illness must be 10% disabling to qualify\n   - Must manifest within presumptive period\n   - Undiagnosed illness = symptoms without known diagnosis\n   - Chronic means lasting 6 months or more\n\nRELATED REGULATIONS:\n38 CFR 3.317\n\nPRACTICAL APPLICATION:\nGulf War veterans: unexplained symptoms lasting 6+ months may qualify even without diagnosis\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 27-97",
+        "year": 1997,
+        "subject": "Gulf War Undiagnosed Illness - Time Limits",
+        "related_regulations": [
+          "38 CFR 3.317"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434152"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_23_97",
+      "title": "OGC Opinion: VAOPGCPREC 23-97 - Knee Disabilities - Range of Motion",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 23-97\nYEAR ISSUED: 1997\nSUBJECT: Knee Disabilities - Range of Motion\n\nHELD (BINDING INTERPRETATION):\nA claimant who has arthritis and instability of the knee may be rated separately under Diagnostic Codes 5003 and 5257, provided that a separate rating is based on additional disability. Limitation of motion need not be compensable under DC 5260 or 5261 to rate arthritis under DC 5003.\n\nKEY POINTS:\n   - Arthritis can be rated even if motion is only slightly limited\n   - Painful motion with arthritis warrants minimum 10%\n   - Can combine with instability rating\n   - X-ray evidence of arthritis is key\n\nRELATED REGULATIONS:\n38 CFR 4.71a, DC 5003, DC 5260, DC 5261\n\nPRACTICAL APPLICATION:\nIf you have knee arthritis with any limitation of motion and pain, you deserve at least 10%\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 23-97",
+        "year": 1997,
+        "subject": "Knee Disabilities - Range of Motion",
+        "related_regulations": [
+          "38 CFR 4.71a",
+          "DC 5003",
+          "DC 5260",
+          "DC 5261"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434216"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_9_98",
+      "title": "OGC Opinion: VAOPGCPREC 9-98 - Pain and Functional Loss - DeLuca Factors",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 9-98\nYEAR ISSUED: 1998\nSUBJECT: Pain and Functional Loss - DeLuca Factors\n\nHELD (BINDING INTERPRETATION):\nWhen evaluating disabilities of the musculoskeletal system, VA must consider functional loss due to pain, weakness, fatigability, incoordination, and pain on movement. This applies to all musculoskeletal disabilities rated on limitation of motion.\n\nKEY POINTS:\n   - Pain must be considered in rating - DeLuca v. Brown\n   - Consider loss of function during flare-ups\n   - Weakness, fatigability, incoordination are factors\n   - May warrant higher rating than strict ROM measurement\n\nRELATED REGULATIONS:\n38 CFR 4.40, 38 CFR 4.45, 38 CFR 4.59\n\nPRACTICAL APPLICATION:\nAlways report flare-ups and functional limitations at C&P exams, not just current ROM\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 9-98",
+        "year": 1998,
+        "subject": "Pain and Functional Loss - DeLuca Factors",
+        "related_regulations": [
+          "38 CFR 4.40",
+          "38 CFR 4.45",
+          "38 CFR 4.59"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434257"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_36_97",
+      "title": "OGC Opinion: VAOPGCPREC 36-97 - Peripheral Neuropathy Rating",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 36-97\nYEAR ISSUED: 1997\nSUBJECT: Peripheral Neuropathy Rating\n\nHELD (BINDING INTERPRETATION):\nPeripheral neuropathy affecting multiple extremities may be rated separately for each extremity affected. The rating should be based on the severity of neuritis, neuralgia, or paralysis of each specific nerve involved.\n\nKEY POINTS:\n   - Each extremity can receive separate rating\n   - Rate based on specific nerve affected\n   - Bilateral factor applies if both sides affected\n   - Consider sensory AND motor involvement\n\nRELATED REGULATIONS:\n38 CFR 4.124a\n\nPRACTICAL APPLICATION:\nClaim peripheral neuropathy separately for each limb affected - don't let VA combine them\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 36-97",
+        "year": 1997,
+        "subject": "Peripheral Neuropathy Rating",
+        "related_regulations": [
+          "38 CFR 4.124a"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434301"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_2_2001",
+      "title": "OGC Opinion: VAOPGCPREC 2-2001 - Special Monthly Compensation - Aid and Attendance",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 2-2001\nYEAR ISSUED: 2001\nSUBJECT: Special Monthly Compensation - Aid and Attendance\n\nHELD (BINDING INTERPRETATION):\nSpecial monthly compensation for aid and attendance is warranted when the veteran, due to service-connected disability, requires the regular aid and attendance of another person to perform personal functions required in everyday living.\n\nKEY POINTS:\n   - SMC(L) for need of aid and attendance\n   - Must be unable to dress, bathe, feed self, or toilet\n   - OR need protection from hazards/dangers\n   - OR be bedridden\n   - Higher SMC levels for more severe needs\n\nRELATED REGULATIONS:\n38 CFR 3.350, 38 CFR 3.352\n\nPRACTICAL APPLICATION:\nIf you need help with daily living due to SC conditions, claim SMC\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 2-2001",
+        "year": 2001,
+        "subject": "Special Monthly Compensation - Aid and Attendance",
+        "related_regulations": [
+          "38 CFR 3.350",
+          "38 CFR 3.352"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434333"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_1_2004",
+      "title": "OGC Opinion: VAOPGCPREC 1-2004 - SMC(S) - Housebound Status",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 1-2004\nYEAR ISSUED: 2004\nSUBJECT: SMC(S) - Housebound Status\n\nHELD (BINDING INTERPRETATION):\nA veteran may be entitled to SMC at the housebound rate if he/she has a single service-connected disability rated as total AND additional service-connected disability(ies) independently rated as 60% or more, OR is permanently housebound.\n\nKEY POINTS:\n   - SMC(S) requires: one 100% + additional 60% combined\n   - OR: one 100% + permanently housebound\n   - TDIU can satisfy the 'one 100%' requirement\n   - Additional 60% must be INDEPENDENT of the 100%\n\nRELATED REGULATIONS:\n38 CFR 3.350(i)\n\nPRACTICAL APPLICATION:\nIf you have TDIU or 100% plus 60% more, you likely qualify for SMC(S)\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 1-2004",
+        "year": 2004,
+        "subject": "SMC(S) - Housebound Status",
+        "related_regulations": [
+          "38 CFR 3.350(i)"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434366"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_28_97",
+      "title": "OGC Opinion: VAOPGCPREC 28-97 - Examination Findings - Current Disability",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 28-97\nYEAR ISSUED: 1997\nSUBJECT: Examination Findings - Current Disability\n\nHELD (BINDING INTERPRETATION):\nThe requirement of a current disability is satisfied when a claimant has a disability at the time a claim is filed or during the pendency of the claim, even if the disability resolves prior to the Secretary's adjudication.\n\nKEY POINTS:\n   - Don't need current symptoms at time of decision\n   - If you had it when you filed, that counts\n   - Condition can resolve and still be ratable\n   - Look at entire period from filing to decision\n\nRELATED REGULATIONS:\n38 CFR 3.303\n\nPRACTICAL APPLICATION:\nFile claims when you have active symptoms, even if they may improve\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 28-97",
+        "year": 1997,
+        "subject": "Examination Findings - Current Disability",
+        "related_regulations": [
+          "38 CFR 3.303"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434402"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_14_2007",
+      "title": "OGC Opinion: VAOPGCPREC 14-2007 - New and Material Evidence - What Constitutes",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 14-2007\nYEAR ISSUED: 2007\nSUBJECT: New and Material Evidence - What Constitutes\n\nHELD (BINDING INTERPRETATION):\nNew and material evidence is evidence not previously submitted that relates to an unestablished fact necessary to substantiate the claim and raises a reasonable possibility of substantiating the claim.\n\nKEY POINTS:\n   - NEW = not previously submitted to VA\n   - MATERIAL = relates to missing element\n   - Must raise 'reasonable possibility' of success\n   - Lower threshold than many veterans believe\n\nRELATED REGULATIONS:\n38 CFR 3.156\n\nPRACTICAL APPLICATION:\nTo reopen denied claim, only need new evidence that addresses why you were denied\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 14-2007",
+        "year": 2007,
+        "subject": "New and Material Evidence - What Constitutes",
+        "related_regulations": [
+          "38 CFR 3.156"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434441"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_5_2004",
+      "title": "OGC Opinion: VAOPGCPREC 5-2004 - Separate Rating - Scars",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 5-2004\nYEAR ISSUED: 2004\nSUBJECT: Separate Rating - Scars\n\nHELD (BINDING INTERPRETATION):\nA veteran may receive a separate rating for a scar resulting from a service-connected injury or surgery, in addition to the rating for the underlying condition, if the scar itself results in compensable disability.\n\nKEY POINTS:\n   - Scars can be rated separately from underlying condition\n   - Painful scars = 10% minimum\n   - Unstable scars = 10% minimum\n   - Large or disfiguring scars have own criteria\n\nRELATED REGULATIONS:\n38 CFR 4.118, DC 7800-7805\n\nPRACTICAL APPLICATION:\nIf you have surgical or injury scars that are painful or unstable, claim them separately\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 5-2004",
+        "year": 2004,
+        "subject": "Separate Rating - Scars",
+        "related_regulations": [
+          "38 CFR 4.118",
+          "DC 7800-7805"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434488"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_21_95",
+      "title": "OGC Opinion: VAOPGCPREC 21-95 - Benefits of the Doubt",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 21-95\nYEAR ISSUED: 1995\nSUBJECT: Benefits of the Doubt\n\nHELD (BINDING INTERPRETATION):\nWhen there is an approximate balance of positive and negative evidence regarding any issue material to the determination, the benefit of the doubt shall be given to the claimant.\n\nKEY POINTS:\n   - 50/50 = veteran wins\n   - Only need evidence 'at least as likely as not'\n   - VA cannot require preponderance of evidence from veteran\n   - Tie goes to the veteran\n\nRELATED REGULATIONS:\n38 USC 5107(b), 38 CFR 3.102\n\nPRACTICAL APPLICATION:\nIf evidence is evenly balanced, VA must grant your claim\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 21-95",
+        "year": 1995,
+        "subject": "Benefits of the Doubt",
+        "related_regulations": [
+          "38 USC 5107(b)",
+          "38 CFR 3.102"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434517"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_76_90",
+      "title": "OGC Opinion: VAOPGCPREC 76-90 - Continuity of Symptomatology",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 76-90\nYEAR ISSUED: 1990\nSUBJECT: Continuity of Symptomatology\n\nHELD (BINDING INTERPRETATION):\nService connection may be established for certain chronic diseases by demonstrating continuity of symptomatology from service to the present, even in the absence of medical nexus evidence.\n\nKEY POINTS:\n   - Chronic diseases can use continuity of symptoms to connect to service\n   - Don't always need nexus letter for chronic diseases\n   - Lay evidence of continuing symptoms is valid\n   - Only applies to diseases listed in 38 CFR 3.309(a)\n\nRELATED REGULATIONS:\n38 CFR 3.303(b), 38 CFR 3.309(a)\n\nPRACTICAL APPLICATION:\nFor chronic diseases, documenting ongoing symptoms since service can replace nexus\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 76-90",
+        "year": 1990,
+        "subject": "Continuity of Symptomatology",
+        "related_regulations": [
+          "38 CFR 3.303(b)",
+          "38 CFR 3.309(a)"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434554"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_2_93",
+      "title": "OGC Opinion: VAOPGCPREC 2-93 - Hearing Loss - Rating Bilateral",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 2-93\nYEAR ISSUED: 1993\nSUBJECT: Hearing Loss - Rating Bilateral\n\nHELD (BINDING INTERPRETATION):\nHearing impairment affecting both ears is rated as a single disability using Table VI and Table VII of 38 CFR 4.85. The evaluation combines the hearing acuity levels of both ears.\n\nKEY POINTS:\n   - Both ears combined for single rating\n   - Use controlled speech audiometry and puretone tests\n   - Table VI determines numeric designation\n   - Table VII determines percentage based on both designations\n\nRELATED REGULATIONS:\n38 CFR 4.85, 38 CFR 4.86\n\nPRACTICAL APPLICATION:\nHearing loss uses specific tables - check if you qualify for exceptional patterns under 4.86\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 2-93",
+        "year": 1993,
+        "subject": "Hearing Loss - Rating Bilateral",
+        "related_regulations": [
+          "38 CFR 4.85",
+          "38 CFR 4.86"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434587"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_2_2003",
+      "title": "OGC Opinion: VAOPGCPREC 2-2003 - Tinnitus - Single Rating",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 2-2003\nYEAR ISSUED: 2003\nSUBJECT: Tinnitus - Single Rating\n\nHELD (BINDING INTERPRETATION):\nUnder 38 CFR 4.87, Diagnostic Code 6260, only a single 10% evaluation is assignable for tinnitus, whether the sound is perceived in one ear or both ears.\n\nKEY POINTS:\n   - Maximum 10% for tinnitus regardless of bilateral\n   - Cannot receive separate ratings for each ear\n   - Recurrent tinnitus means periodic, not constant required\n   - Consider secondary conditions like sleep disturbance\n\nRELATED REGULATIONS:\n38 CFR 4.87, DC 6260\n\nPRACTICAL APPLICATION:\nTinnitus capped at 10%, but claim secondary conditions it causes\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 2-2003",
+        "year": 2003,
+        "subject": "Tinnitus - Single Rating",
+        "related_regulations": [
+          "38 CFR 4.87",
+          "DC 6260"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434619"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_36_97",
+      "title": "OGC Opinion: VAOPGCPREC 36-97 - Intervertebral Disc Syndrome - Rating",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 36-97\nYEAR ISSUED: 1997\nSUBJECT: Intervertebral Disc Syndrome - Rating\n\nHELD (BINDING INTERPRETATION):\nIntervertebral disc syndrome may be rated either under criteria for intervertebral disc syndrome (incapacitating episodes) OR under the General Rating Formula for Diseases of the Spine, whichever results in the higher rating.\n\nKEY POINTS:\n   - Can use EITHER incapacitating episodes OR range of motion\n   - Whichever is MORE favorable to veteran applies\n   - Incapacitating episode = bedrest prescribed by physician\n   - Can also receive separate neurological ratings\n\nRELATED REGULATIONS:\n38 CFR 4.71a, DC 5243\n\nPRACTICAL APPLICATION:\nIf you have disc disease, calculate rating both ways and argue for higher one\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 36-97",
+        "year": 1997,
+        "subject": "Intervertebral Disc Syndrome - Rating",
+        "related_regulations": [
+          "38 CFR 4.71a",
+          "DC 5243"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434653"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_36_04",
+      "title": "OGC Opinion: VAOPGCPREC 36-04 - Spine - Separate Neurological Ratings",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 36-04\nYEAR ISSUED: 2004\nSUBJECT: Spine - Separate Neurological Ratings\n\nHELD (BINDING INTERPRETATION):\nA veteran with a service-connected spine disability may receive separate evaluations for any associated objective neurological abnormalities, including radiculopathy, in addition to the orthopedic rating.\n\nKEY POINTS:\n   - Nerve involvement rated separately from spine\n   - Each affected extremity can receive its own rating\n   - Not pyramiding - different manifestations\n   - Common with sciatic nerve, femoral nerve\n\nRELATED REGULATIONS:\n38 CFR 4.71a, 38 CFR 4.124a\n\nPRACTICAL APPLICATION:\nAlways claim radiculopathy separately from your back condition\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 36-04",
+        "year": 2004,
+        "subject": "Spine - Separate Neurological Ratings",
+        "related_regulations": [
+          "38 CFR 4.71a",
+          "38 CFR 4.124a"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434695"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_6_2003",
+      "title": "OGC Opinion: VAOPGCPREC 6-2003 - Diabetes - Separate Rating for Complications",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 6-2003\nYEAR ISSUED: 2003\nSUBJECT: Diabetes - Separate Rating for Complications\n\nHELD (BINDING INTERPRETATION):\nCompensable complications of diabetes mellitus are to be evaluated separately from the underlying diabetes unless they are part of the criteria used to support a 100% rating.\n\nKEY POINTS:\n   - Each diabetic complication rated separately\n   - Peripheral neuropathy, retinopathy, nephropathy all separate\n   - Erectile dysfunction rated separately\n   - Not pyramiding to rate each complication\n\nRELATED REGULATIONS:\n38 CFR 4.119, DC 7913\n\nPRACTICAL APPLICATION:\nClaim EVERY diabetic complication separately for maximum combined rating\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 6-2003",
+        "year": 2003,
+        "subject": "Diabetes - Separate Rating for Complications",
+        "related_regulations": [
+          "38 CFR 4.119",
+          "DC 7913"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434728"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_8_98",
+      "title": "OGC Opinion: VAOPGCPREC 8-98 - Sleep Apnea - CPAP Rating",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 8-98\nYEAR ISSUED: 1998\nSUBJECT: Sleep Apnea - CPAP Rating\n\nHELD (BINDING INTERPRETATION):\nThe use of a CPAP machine for sleep apnea warrants at least a 50% evaluation under DC 6847 when the device is medically required and regularly used.\n\nKEY POINTS:\n   - CPAP required = minimum 50% rating\n   - Higher ratings for more severe manifestations\n   - Secondary conditions can add to rating\n   - Common secondary to PTSD, obesity\n\nRELATED REGULATIONS:\n38 CFR 4.97, DC 6847\n\nPRACTICAL APPLICATION:\nIf you use CPAP, you deserve at least 50% - claim secondary conditions too\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 8-98",
+        "year": 1998,
+        "subject": "Sleep Apnea - CPAP Rating",
+        "related_regulations": [
+          "38 CFR 4.97",
+          "DC 6847"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434765"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_4_93",
+      "title": "OGC Opinion: VAOPGCPREC 4-93 - Skin Conditions - Body Area Calculation",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 4-93\nYEAR ISSUED: 1993\nSUBJECT: Skin Conditions - Body Area Calculation\n\nHELD (BINDING INTERPRETATION):\nWhen evaluating skin disabilities under 38 CFR 4.118, the percentage of body area affected includes all areas where the condition has manifested, not just areas currently symptomatic at the time of examination.\n\nKEY POINTS:\n   - Consider ALL affected areas, not just current flare\n   - Intermittent conditions use worst manifestation\n   - Document percentage during flare-ups\n   - Photos of active flares are valuable evidence\n\nRELATED REGULATIONS:\n38 CFR 4.118\n\nPRACTICAL APPLICATION:\nTake photos during flare-ups to document worst manifestation\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 4-93",
+        "year": 1993,
+        "subject": "Skin Conditions - Body Area Calculation",
+        "related_regulations": [
+          "38 CFR 4.118"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434801"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_18_97",
+      "title": "OGC Opinion: VAOPGCPREC 18-97 - Heart Conditions - MET Testing",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 18-97\nYEAR ISSUED: 1997\nSUBJECT: Heart Conditions - MET Testing\n\nHELD (BINDING INTERPRETATION):\nWhen a veteran cannot perform exercise testing, an estimate of the level of activity expressed in METs that results in symptoms may be used for rating purposes.\n\nKEY POINTS:\n   - METs can be estimated if exercise test impossible\n   - Doctor can estimate based on reported symptoms\n   - Interview-based METs estimate is valid\n   - Lower METs = higher rating\n\nRELATED REGULATIONS:\n38 CFR 4.104\n\nPRACTICAL APPLICATION:\nIf you can't do treadmill test, doctor can estimate METs from your symptom reports\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 18-97",
+        "year": 1997,
+        "subject": "Heart Conditions - MET Testing",
+        "related_regulations": [
+          "38 CFR 4.104"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434832"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_11_97",
+      "title": "OGC Opinion: VAOPGCPREC 11-97 - Hypertension - Separate Rating with Heart Disease",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 11-97\nYEAR ISSUED: 1997\nSUBJECT: Hypertension - Separate Rating with Heart Disease\n\nHELD (BINDING INTERPRETATION):\nHypertension may be rated separately from heart disease when it predates the heart disease and continues to require medication, even though it is listed as a criterion for rating heart conditions.\n\nKEY POINTS:\n   - Hypertension can be rated separately from heart disease\n   - Depends on whether HTN preceded heart condition\n   - Must show HTN requires separate treatment\n   - Not automatic - depends on specific facts\n\nRELATED REGULATIONS:\n38 CFR 4.104, DC 7101\n\nPRACTICAL APPLICATION:\nIf you had hypertension before heart disease, argue for separate ratings\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 11-97",
+        "year": 1997,
+        "subject": "Hypertension - Separate Rating with Heart Disease",
+        "related_regulations": [
+          "38 CFR 4.104",
+          "DC 7101"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434858"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_6_96",
+      "title": "OGC Opinion: VAOPGCPREC 6-96 - Informal Claims",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 6-96\nYEAR ISSUED: 1996\nSUBJECT: Informal Claims\n\nHELD (BINDING INTERPRETATION):\nAny communication or action indicating an intent to apply for VA benefits may be considered an informal claim if it identifies the benefit sought.\n\nKEY POINTS:\n   - Written communication showing intent can be informal claim\n   - Identifies the benefit sought\n   - VA must assist in formalizing the claim\n   - Earlier effective dates possible with informal claims\n\nRELATED REGULATIONS:\n38 CFR 3.155\n\nPRACTICAL APPLICATION:\nLook through your records for any early communication that could be an informal claim\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 6-96",
+        "year": 1996,
+        "subject": "Informal Claims",
+        "related_regulations": [
+          "38 CFR 3.155"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434888"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_7_2003",
+      "title": "OGC Opinion: VAOPGCPREC 7-2003 - Entitlement to Earlier Effective Date",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 7-2003\nYEAR ISSUED: 2003\nSUBJECT: Entitlement to Earlier Effective Date\n\nHELD (BINDING INTERPRETATION):\nA claim for an earlier effective date may constitute a 'freestanding claim' that VA must adjudicate on the merits, provided it raises a valid theory of entitlement.\n\nKEY POINTS:\n   - Earlier effective date claims can be standalone\n   - Must have valid legal theory\n   - Common theories: informal claim, pending claim, CUE\n   - Review entire claims file for missed documents\n\nRELATED REGULATIONS:\n38 CFR 3.400\n\nPRACTICAL APPLICATION:\nAlways review your file for potential earlier effective dates\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 7-2003",
+        "year": 2003,
+        "subject": "Entitlement to Earlier Effective Date",
+        "related_regulations": [
+          "38 CFR 3.400"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434920"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_4_2000",
+      "title": "OGC Opinion: VAOPGCPREC 4-2000 - C&P Examination Adequacy",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 4-2000\nYEAR ISSUED: 2000\nSUBJECT: C&P Examination Adequacy\n\nHELD (BINDING INTERPRETATION):\nA VA medical examination must be adequate for rating purposes. An examination is adequate when it contains sufficient detail so that the Board can perform a fully informed evaluation.\n\nKEY POINTS:\n   - Exam must address all relevant rating criteria\n   - Must include all necessary tests\n   - Examiner must review claims file\n   - Inadequate exam requires new examination\n\nRELATED REGULATIONS:\n38 CFR 3.159, 38 CFR 4.2\n\nPRACTICAL APPLICATION:\nChallenge inadequate exams - request new exam if criteria weren't properly evaluated\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 4-2000",
+        "year": 2000,
+        "subject": "C&P Examination Adequacy",
+        "related_regulations": [
+          "38 CFR 3.159",
+          "38 CFR 4.2"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434952"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_20_95",
+      "title": "OGC Opinion: VAOPGCPREC 20-95 - Private Medical Evidence",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 20-95\nYEAR ISSUED: 1995\nSUBJECT: Private Medical Evidence\n\nHELD (BINDING INTERPRETATION):\nVA must give consideration to all medical evidence in the record, including private medical records and opinions. Private physicians' opinions are entitled to the same probative weight as VA examination reports.\n\nKEY POINTS:\n   - Private medical evidence has equal weight to VA evidence\n   - VA cannot simply prefer VA exams over private\n   - Must explain why one opinion preferred over another\n   - Get your own medical opinions\n\nRELATED REGULATIONS:\n38 CFR 3.303, 38 CFR 4.2\n\nPRACTICAL APPLICATION:\nYour private doctor's opinion is just as valid as VA examiner's\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 20-95",
+        "year": 1995,
+        "subject": "Private Medical Evidence",
+        "related_regulations": [
+          "38 CFR 3.303",
+          "38 CFR 4.2"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.434985"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_9_99",
+      "title": "OGC Opinion: VAOPGCPREC 9-99 - Erectile Dysfunction Rating",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 9-99\nYEAR ISSUED: 1999\nSUBJECT: Erectile Dysfunction Rating\n\nHELD (BINDING INTERPRETATION):\nLoss of erectile power without penile deformity is evaluated as 0% under DC 7522, but entitles the veteran to special monthly compensation for loss of use of a creative organ.\n\nKEY POINTS:\n   - ED without deformity = 0% schedular\n   - BUT qualifies for SMC(K)\n   - SMC(K) is additional monthly payment\n   - Can be secondary to many conditions\n\nRELATED REGULATIONS:\n38 CFR 4.115b, 38 CFR 3.350(a), DC 7522\n\nPRACTICAL APPLICATION:\nAlways claim ED for SMC(K) even though schedular rating is 0%\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 9-99",
+        "year": 1999,
+        "subject": "Erectile Dysfunction Rating",
+        "related_regulations": [
+          "38 CFR 4.115b",
+          "38 CFR 3.350(a)",
+          "DC 7522"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.435014"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_15_2003",
+      "title": "OGC Opinion: VAOPGCPREC 15-2003 - Migraine Headaches - Prostrating Attacks",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 15-2003\nYEAR ISSUED: 2003\nSUBJECT: Migraine Headaches - Prostrating Attacks\n\nHELD (BINDING INTERPRETATION):\nA prostrating attack of migraine is one that significantly impairs the veteran's ability to function for the duration of the attack. This does not require the veteran to be literally bedridden.\n\nKEY POINTS:\n   - Prostrating doesn't mean literally bedridden\n   - Significantly impairs function during attack\n   - Frequency of attacks determines rating\n   - Document frequency and severity carefully\n\nRELATED REGULATIONS:\n38 CFR 4.124a, DC 8100\n\nPRACTICAL APPLICATION:\nKeep migraine diary - any attack that significantly impairs you counts as prostrating\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 15-2003",
+        "year": 2003,
+        "subject": "Migraine Headaches - Prostrating Attacks",
+        "related_regulations": [
+          "38 CFR 4.124a",
+          "DC 8100"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.435046"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_19_97",
+      "title": "OGC Opinion: VAOPGCPREC 19-97 - Fibromyalgia Rating",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 19-97\nYEAR ISSUED: 1997\nSUBJECT: Fibromyalgia Rating\n\nHELD (BINDING INTERPRETATION):\nFibromyalgia under DC 5025 is rated based on whether symptoms are episodic (occasional) or constant/near-constant, and the need for continuous medication.\n\nKEY POINTS:\n   - Widespread musculoskeletal pain\n   - Tender points on examination\n   - Constant symptoms warrant higher rating\n   - Medication requirement is rating factor\n\nRELATED REGULATIONS:\n38 CFR 4.71a, DC 5025\n\nPRACTICAL APPLICATION:\nDocument that symptoms are constant, not just occasional\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 19-97",
+        "year": 1997,
+        "subject": "Fibromyalgia Rating",
+        "related_regulations": [
+          "38 CFR 4.71a",
+          "DC 5025"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.435074"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_10_2002",
+      "title": "OGC Opinion: VAOPGCPREC 10-2002 - Chronic Fatigue Syndrome",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 10-2002\nYEAR ISSUED: 2002\nSUBJECT: Chronic Fatigue Syndrome\n\nHELD (BINDING INTERPRETATION):\nChronic fatigue syndrome is rated under DC 6354 based on the degree to which symptoms restrict routine daily activities and the duration of incapacitating episodes.\n\nKEY POINTS:\n   - CFS has its own diagnostic code\n   - Rate based on activity restriction\n   - Incapacitating episodes factor into rating\n   - Often comorbid with Gulf War illness\n\nRELATED REGULATIONS:\n38 CFR 4.88b, DC 6354\n\nPRACTICAL APPLICATION:\nDocument how CFS restricts your daily activities\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 10-2002",
+        "year": 2002,
+        "subject": "Chronic Fatigue Syndrome",
+        "related_regulations": [
+          "38 CFR 4.88b",
+          "DC 6354"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.435106"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_9_92",
+      "title": "OGC Opinion: VAOPGCPREC 9-92 - Notice of Disagreement - Liberal Construction",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 9-92\nYEAR ISSUED: 1992\nSUBJECT: Notice of Disagreement - Liberal Construction\n\nHELD (BINDING INTERPRETATION):\nA Notice of Disagreement need not be in any particular form, and need only be a written communication from a claimant expressing disagreement with an adjudicative determination and a desire for appellate review.\n\nKEY POINTS:\n   - NOD doesn't require specific format\n   - Must be written (including email)\n   - Must express disagreement\n   - Must indicate desire for review\n\nRELATED REGULATIONS:\n38 CFR 20.201\n\nPRACTICAL APPLICATION:\nAny written disagreement can be an NOD - review your records\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 9-92",
+        "year": 1992,
+        "subject": "Notice of Disagreement - Liberal Construction",
+        "related_regulations": [
+          "38 CFR 20.201"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.435141"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_16_92",
+      "title": "OGC Opinion: VAOPGCPREC 16-92 - Board Remand - VA Duties",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 16-92\nYEAR ISSUED: 1992\nSUBJECT: Board Remand - VA Duties\n\nHELD (BINDING INTERPRETATION):\nWhen the Board remands a case, VA is required to comply with the remand instructions. The Board may return a case to the remanding body for failure to comply.\n\nKEY POINTS:\n   - VA must follow Board remand instructions\n   - Non-compliance is error\n   - Case returns to Board if not complied\n   - Document any remand violations\n\nRELATED REGULATIONS:\n38 CFR 19.9\n\nPRACTICAL APPLICATION:\nIf VA didn't follow BVA remand instructions, point this out on appeal\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 16-92",
+        "year": 1992,
+        "subject": "Board Remand - VA Duties",
+        "related_regulations": [
+          "38 CFR 19.9"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.435172"
+      }
+    },
+    {
+      "id": "ogc_vaopgcprec_86_90",
+      "title": "OGC Opinion: VAOPGCPREC 86-90 - Reserve Component Service",
+      "content": "VAOPGCPREC CITATION: VAOPGCPREC 86-90\nYEAR ISSUED: 1990\nSUBJECT: Reserve Component Service\n\nHELD (BINDING INTERPRETATION):\nActive duty for training (ACDUTRA) and inactive duty training (INACDUTRA) can be bases for service connection. For ACDUTRA, service connection may be granted for disease or injury. For INACDUTRA, service connection may be granted only for injury.\n\nKEY POINTS:\n   - ACDUTRA = disease OR injury can be service-connected\n   - INACDUTRA = only INJURY can be service-connected\n   - Weekends/annual training can qualify\n   - Need line of duty determination\n\nRELATED REGULATIONS:\n38 USC 101(24), 38 CFR 3.6\n\nPRACTICAL APPLICATION:\nGuard/Reserve injuries during duty periods can be service-connected\n\nLEGAL WEIGHT:\nThis is a BINDING precedent opinion from the VA Office of General Counsel. \nVA adjudicators and the Board of Veterans Appeals MUST follow this interpretation.\nYou can cite this opinion in your claim or appeal.",
+      "metadata": {
+        "source": "OGC_PRECEDENT_OPINION",
+        "type": "legal_opinion",
+        "citation": "VAOPGCPREC 86-90",
+        "year": 1990,
+        "subject": "Reserve Component Service",
+        "related_regulations": [
+          "38 USC 101(24)",
+          "38 CFR 3.6"
+        ],
+        "hierarchy_level": 4,
+        "color_code": "PURPLE",
+        "legal_weight": "BINDING - VA must follow this interpretation",
+        "source_disclaimer": "VA Office of General Counsel Precedent Opinion",
+        "created_at": "2026-01-22T14:01:01.435200"
+      }
+    }
+  ]
+}

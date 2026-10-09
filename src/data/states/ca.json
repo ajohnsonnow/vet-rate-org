@@ -1,0 +1,201 @@
+{
+  "state": "California",
+  "stateCode": "CA",
+  "officialSource": "https://www.calvet.ca.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "ca-property_tax_exemption-disabled-veterans-property-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veterans' Property Tax Exemption",
+      "description": "California exempts a portion of the assessed value of the principal residence of a veteran (or unmarried surviving spouse) who, due to injury or disease incurred in military service, is blind in both eyes, has lost the use of two or more limbs, or is totally disabled (rated 100% by the USDVA, or rated at 100% compensation due to inability to secure or follow substantially gainful employment). There are two exemption levels: a Basic Exemption available regardless of income, and a higher Low-Income Exemption for households below an indexed income limit. Both the exemption amounts and the income limit are compounded annually by a California CPI-based inflation factor. Discharge must have been under other than dishonorable conditions.",
+      "value": "For the 2026 lien date: Basic Exemption $180,671 off assessed value; Low-Income Exemption $271,009 if total household income does not exceed $81,131. Amounts increase annually with California CPI inflation under Rev. & Tax. Code §205.5(h)-(i).",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "California resident with property as principal place of residence",
+          "Discharge under other than dishonorable conditions",
+          "Annual re-filing required only if claiming the Low-Income Exemption; Basic Exemption stays in effect until terminated"
+        ]
+      },
+      "application": {
+        "agency": "County Assessor (local administration); California State Board of Equalization (BOE) issues statewide guidance and annual inflation-adjusted amounts",
+        "form": "BOE-261-G (Claim for Disabled Veterans' Property Tax Exemption)",
+        "url": "https://www.boe.ca.gov/proptaxes/dv_exemption.htm",
+        "documentation": [
+          "USDVA disability rating letter/notice (100% or 100% compensation rating)",
+          "Discharge documents (DD-214)",
+          "Household income documentation if claiming the Low-Income Exemption"
+        ]
+      },
+      "legalCitation": "California Revenue & Taxation Code §205.5; California Constitution Article XIII §4(a)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://boe.ca.gov/proptaxes/pdf/lta26019.pdf",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ca-state_veterans_home-veterans-home-of-california-system-calvet-vetera",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Veterans' Home of California System (CalVet Veterans Homes)",
+      "description": "California operates a Veterans' Home of California system, administered by the California Department of Veterans Affairs (CalVet), consisting of homes that provide long-term care, assisted living, adult day health, independent living, or other health care services to eligible veterans. Nonveteran spouses and domestic partners of veterans may also be admitted as members. 'Veteran' for eligibility purposes follows the federal definition at 38 U.S.C. §101(2). The CalVet program page describing individual home locations and admissions/cost-sharing details could not be independently verified in this research because calvet.ca.gov blocked all direct fetch attempts; only the statutory framework below is confirmed.",
+      "value": "Subsidized long-term care, assisted living, and independent living services for eligible veterans and their spouses/domestic partners",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": []
+      },
+      "application": {
+        "agency": "California Department of Veterans Affairs (CalVet)",
+        "form": null,
+        "url": "https://www.calvet.ca.gov/calvet-programs/veteran-homes",
+        "documentation": [
+          "DD-214 or other proof of veteran status",
+          "Proof of spousal/domestic partner relationship, if applicable"
+        ]
+      },
+      "legalCitation": "California Military and Veterans Code §1010 et seq.",
+      "authorityTier": "reference",
+      "sourceUrl": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=MVC&sectionNum=1010",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ca-education_tuition-college-fee-waiver-program-for-veterans-dependen",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "College Fee Waiver Program for Veterans' Dependents",
+      "description": "California waives mandatory systemwide tuition and fees (enrollment, registration, differential, and incidental fees) at any California Community College, California State University, or University of California campus for eligible dependents of veterans. Eligible categories include: dependents already entitled to assistance under the Military and Veterans Code's dependents' assistance program; children whose income does not exceed the state poverty level (as calculated under Rev. & Tax. Code §18501) and whose veteran parent has a service-connected disability, was killed in service, or died of a service-connected disability; dependents/surviving spouses of California National Guard members killed or permanently disabled in state active service; and Medal of Honor recipients or their children meeting income and residency conditions. The waiver does not cover books, parking, or room and board. Benefits generally cannot be granted retroactively, with a narrow exception for pending USDVA disability claims later adjudicated as service-connected.",
+      "value": "Waiver of systemwide tuition/mandatory fees at CCC, CSU, and UC campuses (does not cover books, parking, or room and board)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Dependent's household/individual income must not exceed the state poverty level for the income-limited eligibility category",
+          "Veteran-parent must have a qualifying service-connected disability, have been killed in service, or have died of a service-connected disability (specific rating threshold not confirmed in the statutory excerpt reviewed)"
+        ]
+      },
+      "application": {
+        "agency": "California Department of Veterans Affairs (CalVet), in coordination with California Community Colleges, CSU, and UC",
+        "form": null,
+        "url": "https://www.calvet.ca.gov/VetServices/Pages/College-Fee-Waiver.aspx",
+        "documentation": [
+          "Proof of veteran's service-connected disability rating or service-connected death",
+          "Proof of dependent relationship",
+          "Income documentation for income-limited eligibility categories"
+        ]
+      },
+      "legalCitation": "California Education Code §66025.3",
+      "authorityTier": "reference",
+      "sourceUrl": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=EDC&sectionNum=66025.3",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ca-hiring_preference-veterans-preference-in-state-civil-service-exami",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veterans' Preference in State Civil Service Examinations",
+      "description": "A veteran, the widow or widower of a veteran, or the spouse of a 100%-disabled veteran who passes a California state civil service entrance examination is placed in the top rank of the resulting eligibility list. This top-rank placement replaced the state's older additive-points preference system effective January 1, 2014 (AB 372). Preference does not apply to promotional examinations, stops once the individual attains permanent civil service status, and is unavailable to veterans discharged dishonorably or released under dishonorable conditions.",
+      "value": "Top-rank placement on state civil service entrance-exam eligibility lists",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Discharge other than dishonorable",
+          "Applies only to open/entrance exams, not promotional exams",
+          "Preference ends upon attaining permanent civil service status"
+        ]
+      },
+      "application": {
+        "agency": "California Department of Human Resources (CalHR)",
+        "form": "CalHR 1093 (Veterans' Preference for Examinations)",
+        "url": "https://calcareers.ca.gov/CalHRPublic/Landing/Jobs/VeteransInformation.aspx",
+        "documentation": ["DD-214 (Member 4 copy)", "Completed CalHR 1093 form"]
+      },
+      "legalCitation": "California Government Code §§18971-18979 (Article 4, Veterans' Preference), specifically §18973.1",
+      "authorityTier": "reference",
+      "sourceUrl": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=18973.1",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ca-license_plate-disabled-veteran-dv-license-plates",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran (DV) License Plates",
+      "description": "California issues Disabled Veteran (DV) license plates to veterans who were made permanently disabled by an injury or disease incurred while on active service, where the veteran (a) has a disability rated at 100% by the U.S. Department of Veterans Affairs that substantially impairs or interferes with mobility, (b) is unable to move without an assistive device, (c) has lost the use of one or more limbs, or (d) is permanently blind as defined in California Welfare & Institutions Code §19153. DV plates exempt the veteran from vehicle registration and license fees, limited to one vehicle (passenger car, motorcycle, or commercial vehicle under 8,000 lbs).",
+      "value": "Exemption from vehicle registration and license fees for one qualifying vehicle",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Permanent disability from injury/disease incurred during active military service",
+          "Limited to one exempt vehicle per veteran"
+        ]
+      },
+      "application": {
+        "agency": "California Department of Motor Vehicles (DMV)",
+        "form": "REG 256V (Certification for Disabled Veterans License Plates)",
+        "url": "https://www.dmv.ca.gov/portal/vehicle-registration/license-plates-decals-and-placards/disabled-veteran-dv-license-plates/",
+        "documentation": [
+          "REG 256V, certified by a qualifying licensed medical professional, a County Veterans Service Officer, or an authorized VA representative"
+        ]
+      },
+      "legalCitation": "California Vehicle Code §5007 (see also §§4461, 4463, 9105, 21458, 22511.3, 22511.5, 22511.56, 22511.57)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.dmv.ca.gov/portal/vehicle-registration/license-plates-decals-and-placards/disabled-veteran-dv-license-plates/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ca-state_va_healthcare-veterans-home-of-california-skilled-nursing-medi",
+      "benefitType": "state_va_healthcare",
+      "category": "Healthcare",
+      "name": "Veterans' Home of California – Skilled Nursing & Medical Care Network",
+      "description": "Within the statewide Veterans' Home of California system operated by CalVet, homes are authorized to provide skilled nursing and other health care services (in addition to independent living, assisted living, and adult day health) to eligible veterans and their nonveteran spouses or domestic partners. This is the same statutory home system as the state_veterans_home entry above, listed separately to capture its clinical/medical-care function; CalVet's own descriptions of specific skilled-nursing capacity per home could not be verified because calvet.ca.gov blocked direct fetches during this research.",
+      "value": "Access to skilled nursing and other health care services within the state veterans' home system",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": []
+      },
+      "application": {
+        "agency": "California Department of Veterans Affairs (CalVet)",
+        "form": null,
+        "url": "https://www.calvet.ca.gov/calvet-programs/veteran-homes",
+        "documentation": [
+          "DD-214 or other proof of veteran status",
+          "Proof of spousal/domestic partner relationship, if applicable"
+        ]
+      },
+      "legalCitation": "California Military and Veterans Code §1010",
+      "authorityTier": "reference",
+      "sourceUrl": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=MVC&sectionNum=1010",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

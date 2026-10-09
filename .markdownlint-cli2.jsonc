@@ -1,0 +1,18 @@
+// Rules live in .markdownlint.json; this file only scopes which files the
+// CLI, the CI action and the VS Code extension lint. Keep in step with
+// .markdownlintignore.
+{
+  "gitignore": true,
+  "ignores": [
+    "LICENSE",
+    "node_modules/**",
+    "dist/**",
+    "dist-supplylocker/**",
+    ".venv/**",
+    ".claude-tools/**",
+    "archive/**",
+    "audit/**",
+    "llm-compiler/**",
+    "test-results/**"
+  ]
+}

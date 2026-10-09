@@ -1,0 +1,23 @@
+rules:
+  - id: local.dom-xss-safehtml-sanitizer
+    severity: INFO
+    message: >
+      safeHtml tagged template is a recognized DOM-XSS sanitizer. Assignments
+      of the form `element.innerHTML = String(safeHtml`...`)` are safe because
+      safeHtml escapes every interpolated value via escapeHtml().
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [browser]
+      cwe: "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      references:
+        - https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html
+    # Mark the safeHtml tagged template call itself as a sanitized sink.
+    # The pattern-not-inside clause ensures that raw innerHTML assignments
+    # without safeHtml are NOT suppressed by this rule (they remain flagged by
+    # the p/javascript or p/owasp-top-ten packs).
+    patterns:
+      - pattern: |
+          $EL.innerHTML = String(safeHtml`...`)
+      - pattern-not-inside: |
+          $EL.innerHTML = $UNSAFE

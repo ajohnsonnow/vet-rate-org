@@ -1,0 +1,1971 @@
+{
+  "source": "VA Presumptive Conditions Database",
+  "description": "Comprehensive database of VA presumptive service-connected conditions",
+  "created_at": "2026-01-22T13:58:35.303323",
+  "categories": [
+    "PACT Act (Burn Pits)",
+    "Agent Orange",
+    "Gulf War",
+    "Radiation Exposure",
+    "Camp Lejeune",
+    "Chronic Diseases",
+    "Former POW"
+  ],
+  "total_entries": 140,
+  "note": "Presumptive conditions do NOT require nexus letters - VA assumes service connection",
+  "entries": [
+    {
+      "id": "pact_act_overview",
+      "title": "PACT Act - Presumptive Conditions Overview",
+      "content": "The PACT Act (Sergeant First Class Heath Robinson Honoring our Promise to Address Comprehensive Toxics Act) of 2022 is the largest expansion of VA benefits in decades.\n\nKEY PROVISIONS:\n- Expands VA health care eligibility to Veterans exposed to burn pits and other toxic substances\n- Adds 23+ presumptive conditions for burn pit exposure\n- Extends the period to enroll in VA health care for combat Veterans\n- Creates a framework for future presumptive conditions\n- Covers Veterans who served in Gulf War, Afghanistan, Iraq, and other locations\n\nWHO QUALIFIES:\n- Served in Afghanistan, Iraq, or certain other locations after August 2, 1990\n- Were exposed to burn pits or airborne hazards during service\n- Have been diagnosed with a covered condition\n\nEFFECTIVE DATES:\n- August 10, 2022: Initial provisions\n- October 1, 2022: Expanded presumptive conditions\n- 2026: Screening requirements fully implemented\n\nNO NEXUS LETTER REQUIRED for presumptive conditions - VA assumes service connection if you meet the criteria.",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_overview",
+        "category": "PACT Act",
+        "effective_date": "2022-08-10",
+        "url": "https://www.va.gov/resources/the-pact-act-and-your-va-benefits/",
+        "legal_weight": "STATUTORY - Public Law 117-168",
+        "source_disclaimer": "Official PACT Act presumptive conditions"
+      }
+    },
+    {
+      "id": "pact_asthma_diagnosed_after_service",
+      "title": "PACT Act Presumptive: Asthma diagnosed after service",
+      "content": "Asthma diagnosed after service is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Asthma diagnosed after service\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Asthma diagnosed after service\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Asthma diagnosed after service",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_head_cancer_any_type",
+      "title": "PACT Act Presumptive: Head cancer (any type)",
+      "content": "Head cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Head cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Head cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Head cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_neck_cancer_any_type",
+      "title": "PACT Act Presumptive: Neck cancer (any type)",
+      "content": "Neck cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Neck cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Neck cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Neck cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_respiratory_cancer_any_type",
+      "title": "PACT Act Presumptive: Respiratory cancer (any type)",
+      "content": "Respiratory cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Respiratory cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Respiratory cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Respiratory cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_gastrointestinal_cancer_any_type",
+      "title": "PACT Act Presumptive: Gastrointestinal cancer (any type)",
+      "content": "Gastrointestinal cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Gastrointestinal cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Gastrointestinal cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Gastrointestinal cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_reproductive_cancer_any_type",
+      "title": "PACT Act Presumptive: Reproductive cancer (any type)",
+      "content": "Reproductive cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Reproductive cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Reproductive cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Reproductive cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_lymphoma_cancer_any_type",
+      "title": "PACT Act Presumptive: Lymphoma cancer (any type)",
+      "content": "Lymphoma cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Lymphoma cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Lymphoma cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Lymphoma cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_lymphomatic_cancer_any_type",
+      "title": "PACT Act Presumptive: Lymphomatic cancer (any type)",
+      "content": "Lymphomatic cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Lymphomatic cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Lymphomatic cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Lymphomatic cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_kidney_cancer_any_type",
+      "title": "PACT Act Presumptive: Kidney cancer (any type)",
+      "content": "Kidney cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Kidney cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Kidney cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Kidney cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_brain_cancer_any_type",
+      "title": "PACT Act Presumptive: Brain cancer (any type)",
+      "content": "Brain cancer (any type) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Brain cancer (any type)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Brain cancer (any type)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Brain cancer (any type)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_melanoma",
+      "title": "PACT Act Presumptive: Melanoma",
+      "content": "Melanoma is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Melanoma\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Melanoma\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Melanoma",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_pancreatic_cancer",
+      "title": "PACT Act Presumptive: Pancreatic cancer",
+      "content": "Pancreatic cancer is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Pancreatic cancer\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Pancreatic cancer\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Pancreatic cancer",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_chronic_bronchitis",
+      "title": "PACT Act Presumptive: Chronic bronchitis",
+      "content": "Chronic bronchitis is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Chronic bronchitis\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Chronic bronchitis\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Chronic bronchitis",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_copd_chronic_obstructive_pulmonary_disease",
+      "title": "PACT Act Presumptive: COPD (Chronic Obstructive Pulmonary Disease)",
+      "content": "COPD (Chronic Obstructive Pulmonary Disease) is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with COPD (Chronic Obstructive Pulmonary Disease)\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of COPD (Chronic Obstructive Pulmonary Disease)\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "COPD (Chronic Obstructive Pulmonary Disease)",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_constrictive_bronchiolitis_or_obliterative_bronchiolitis",
+      "title": "PACT Act Presumptive: Constrictive bronchiolitis or obliterative bronchiolitis",
+      "content": "Constrictive bronchiolitis or obliterative bronchiolitis is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Constrictive bronchiolitis or obliterative bronchiolitis\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Constrictive bronchiolitis or obliterative bronchiolitis\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Constrictive bronchiolitis or obliterative bronchiolitis",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_emphysema",
+      "title": "PACT Act Presumptive: Emphysema",
+      "content": "Emphysema is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Emphysema\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Emphysema\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Emphysema",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_granulomatous_disease",
+      "title": "PACT Act Presumptive: Granulomatous disease",
+      "content": "Granulomatous disease is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Granulomatous disease\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Granulomatous disease\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Granulomatous disease",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_interstitial_lung_disease",
+      "title": "PACT Act Presumptive: Interstitial lung disease",
+      "content": "Interstitial lung disease is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Interstitial lung disease\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Interstitial lung disease\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Interstitial lung disease",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_pleuritis",
+      "title": "PACT Act Presumptive: Pleuritis",
+      "content": "Pleuritis is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Pleuritis\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Pleuritis\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Pleuritis",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_pneumonitis",
+      "title": "PACT Act Presumptive: Pneumonitis",
+      "content": "Pneumonitis is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Pneumonitis\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Pneumonitis\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Pneumonitis",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_pulmonary_fibrosis",
+      "title": "PACT Act Presumptive: Pulmonary fibrosis",
+      "content": "Pulmonary fibrosis is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Pulmonary fibrosis\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Pulmonary fibrosis\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Pulmonary fibrosis",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_sarcoidosis",
+      "title": "PACT Act Presumptive: Sarcoidosis",
+      "content": "Sarcoidosis is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Sarcoidosis\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Sarcoidosis\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Sarcoidosis",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_chronic_rhinitis",
+      "title": "PACT Act Presumptive: Chronic rhinitis",
+      "content": "Chronic rhinitis is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Chronic rhinitis\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Chronic rhinitis\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Chronic rhinitis",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_chronic_sinusitis",
+      "title": "PACT Act Presumptive: Chronic sinusitis",
+      "content": "Chronic sinusitis is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Chronic sinusitis\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Chronic sinusitis\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Chronic sinusitis",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_glioblastoma",
+      "title": "PACT Act Presumptive: Glioblastoma",
+      "content": "Glioblastoma is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Glioblastoma\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Glioblastoma\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Glioblastoma",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_squamous_cell_carcinoma_of_the_larynx",
+      "title": "PACT Act Presumptive: Squamous cell carcinoma of the larynx",
+      "content": "Squamous cell carcinoma of the larynx is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Squamous cell carcinoma of the larynx\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Squamous cell carcinoma of the larynx\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Squamous cell carcinoma of the larynx",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "pact_squamous_cell_carcinoma_of_the_trachea",
+      "title": "PACT Act Presumptive: Squamous cell carcinoma of the trachea",
+      "content": "Squamous cell carcinoma of the trachea is a PRESUMPTIVE condition under the PACT Act.\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in a covered location (Afghanistan, Iraq, Gulf War theater, etc.)\n- Served after August 2, 1990\n- Diagnosed with Squamous cell carcinoma of the trachea\n\nNO NEXUS LETTER REQUIRED - VA presumes this condition is service-connected for eligible Veterans.\n\nCOVERED LOCATIONS:\n- Afghanistan\n- Djibouti\n- Egypt\n- Jordan\n- Lebanon\n- Syria\n- Yemen\n- Uzbekistan\n- Gulf War locations\n- Any location where burn pits were used\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Indicate service in covered location\n3. Provide medical diagnosis of Squamous cell carcinoma of the trachea\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "PACT_ACT_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "PACT Act - Burn Pit",
+        "condition_name": "Squamous cell carcinoma of the trachea",
+        "nexus_required": false,
+        "effective_date": "2022-08-10",
+        "legal_reference": "Public Law 117-168"
+      }
+    },
+    {
+      "id": "agent_orange_overview",
+      "title": "Agent Orange - Presumptive Conditions Overview",
+      "content": "Agent Orange was an herbicide used during the Vietnam War. Veterans exposed to Agent Orange may be eligible for disability compensation for certain conditions.\n\nWHO QUALIFIES:\n- Served in Vietnam between January 9, 1962 and May 7, 1975\n- Served in Thailand at U.S. military bases anytime between January 9, 1962 and June 30, 1976\n- Served in Korea in/near the DMZ between September 1, 1967 and August 31, 1971\n- Was aboard U.S. Navy/Coast Guard ship operating on inland waterways of Vietnam\n- Was aboard ship operating within 12 nautical miles of Vietnam shore (Blue Water Navy)\n- Served on C-123 aircraft known to have been used to spray Agent Orange during Vietnam War\n\nALL LISTED CONDITIONS ARE PRESUMPTIVE - No nexus letter required if you served in covered locations.\n\nSPECIAL NOTE: Children of Vietnam Veterans with spina bifida may also qualify for benefits.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_overview",
+        "category": "Agent Orange",
+        "legal_reference": "38 CFR 3.307, 3.309",
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/"
+      }
+    },
+    {
+      "id": "ao_al_amyloidosis",
+      "title": "Agent Orange Presumptive: AL Amyloidosis",
+      "content": "AL Amyloidosis is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A rare disease caused when an abnormal protein, amyloid, enters tissues or organs\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with AL Amyloidosis\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "AL Amyloidosis",
+        "description": "A rare disease caused when an abnormal protein, amyloid, enters tissues or organs",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_bladder_cancer",
+      "title": "Agent Orange Presumptive: Bladder Cancer",
+      "content": "Bladder Cancer is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: Cancer of the bladder\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Bladder Cancer\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Bladder Cancer",
+        "description": "Cancer of the bladder",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_chronic_b-cell_leukemias",
+      "title": "Agent Orange Presumptive: Chronic B-cell Leukemias",
+      "content": "Chronic B-cell Leukemias is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A type of cancer which affects white blood cells\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Chronic B-cell Leukemias\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Chronic B-cell Leukemias",
+        "description": "A type of cancer which affects white blood cells",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_chloracne",
+      "title": "Agent Orange Presumptive: Chloracne",
+      "content": "Chloracne is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A skin condition that occurs soon after exposure to chemicals and looks like common forms of acne\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Chloracne\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Chloracne",
+        "description": "A skin condition that occurs soon after exposure to chemicals and looks like common forms of acne",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_diabetes_mellitus_type_2",
+      "title": "Agent Orange Presumptive: Diabetes Mellitus Type 2",
+      "content": "Diabetes Mellitus Type 2 is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A disease characterized by high blood sugar levels resulting from the body's inability to respond properly to the hormone insulin\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Diabetes Mellitus Type 2\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Diabetes Mellitus Type 2",
+        "description": "A disease characterized by high blood sugar levels resulting from the body's inability to respond properly to the hormone insulin",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_hodgkin's_disease",
+      "title": "Agent Orange Presumptive: Hodgkin's Disease",
+      "content": "Hodgkin's Disease is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A malignant lymphoma (cancer) characterized by progressive enlargement of the lymph nodes, liver, and spleen\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Hodgkin's Disease\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Hodgkin's Disease",
+        "description": "A malignant lymphoma (cancer) characterized by progressive enlargement of the lymph nodes, liver, and spleen",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_hypertension",
+      "title": "Agent Orange Presumptive: Hypertension",
+      "content": "Hypertension is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: High blood pressure (added 2021)\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Hypertension\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Hypertension",
+        "description": "High blood pressure (added 2021)",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_hypothyroidism",
+      "title": "Agent Orange Presumptive: Hypothyroidism",
+      "content": "Hypothyroidism is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: Condition where thyroid doesn't produce enough hormones\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Hypothyroidism\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Hypothyroidism",
+        "description": "Condition where thyroid doesn't produce enough hormones",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_ischemic_heart_disease",
+      "title": "Agent Orange Presumptive: Ischemic Heart Disease",
+      "content": "Ischemic Heart Disease is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A disease characterized by a reduced supply of blood to the heart\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Ischemic Heart Disease\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Ischemic Heart Disease",
+        "description": "A disease characterized by a reduced supply of blood to the heart",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_monoclonal_gammopathy_of_undetermined_significance_mgus",
+      "title": "Agent Orange Presumptive: Monoclonal Gammopathy of Undetermined Significance (MGUS)",
+      "content": "Monoclonal Gammopathy of Undetermined Significance (MGUS) is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A condition in which an abnormal protein is found in the blood\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Monoclonal Gammopathy of Undetermined Significance (MGUS)\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Monoclonal Gammopathy of Undetermined Significance (MGUS)",
+        "description": "A condition in which an abnormal protein is found in the blood",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_multiple_myeloma",
+      "title": "Agent Orange Presumptive: Multiple Myeloma",
+      "content": "Multiple Myeloma is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A cancer of plasma cells, a type of white blood cell\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Multiple Myeloma\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Multiple Myeloma",
+        "description": "A cancer of plasma cells, a type of white blood cell",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_non-hodgkin's_lymphoma",
+      "title": "Agent Orange Presumptive: Non-Hodgkin's Lymphoma",
+      "content": "Non-Hodgkin's Lymphoma is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A group of cancers that affect the lymph glands and other lymphatic tissue\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Non-Hodgkin's Lymphoma\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Non-Hodgkin's Lymphoma",
+        "description": "A group of cancers that affect the lymph glands and other lymphatic tissue",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_parkinson's_disease",
+      "title": "Agent Orange Presumptive: Parkinson's Disease",
+      "content": "Parkinson's Disease is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A progressive disorder of the nervous system that affects movement\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Parkinson's Disease\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Parkinson's Disease",
+        "description": "A progressive disorder of the nervous system that affects movement",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_parkinsonism",
+      "title": "Agent Orange Presumptive: Parkinsonism",
+      "content": "Parkinsonism is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: Any condition that causes a combination of movement abnormalities seen in Parkinson's disease\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Parkinsonism\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Parkinsonism",
+        "description": "Any condition that causes a combination of movement abnormalities seen in Parkinson's disease",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_peripheral_neuropathy_early-onset",
+      "title": "Agent Orange Presumptive: Peripheral Neuropathy, Early-Onset",
+      "content": "Peripheral Neuropathy, Early-Onset is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A nervous system condition that causes numbness, tingling, and motor weakness\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Peripheral Neuropathy, Early-Onset\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Peripheral Neuropathy, Early-Onset",
+        "description": "A nervous system condition that causes numbness, tingling, and motor weakness",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_porphyria_cutanea_tarda",
+      "title": "Agent Orange Presumptive: Porphyria Cutanea Tarda",
+      "content": "Porphyria Cutanea Tarda is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A disorder characterized by liver dysfunction and by thinning and blistering of the skin\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Porphyria Cutanea Tarda\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Porphyria Cutanea Tarda",
+        "description": "A disorder characterized by liver dysfunction and by thinning and blistering of the skin",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_prostate_cancer",
+      "title": "Agent Orange Presumptive: Prostate Cancer",
+      "content": "Prostate Cancer is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: Cancer of the prostate\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Prostate Cancer\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Prostate Cancer",
+        "description": "Cancer of the prostate",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_respiratory_cancers",
+      "title": "Agent Orange Presumptive: Respiratory Cancers",
+      "content": "Respiratory Cancers is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: Cancers of the lung, larynx, trachea, and bronchus\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Respiratory Cancers\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Respiratory Cancers",
+        "description": "Cancers of the lung, larynx, trachea, and bronchus",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "ao_soft_tissue_sarcomas",
+      "title": "Agent Orange Presumptive: Soft Tissue Sarcomas",
+      "content": "Soft Tissue Sarcomas is a PRESUMPTIVE condition for Agent Orange exposure.\n\nDESCRIPTION: A group of different types of cancers in body tissues such as muscle, fat, blood vessels\n\nSERVICE CONNECTION REQUIREMENT:\n- Served in Vietnam, Thailand (at bases), Korea DMZ, or Blue Water Navy\n- During the covered time periods\n- Diagnosed with Soft Tissue Sarcomas\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nCOVERED SERVICE PERIODS:\n- Vietnam: January 9, 1962 - May 7, 1975\n- Thailand: January 9, 1962 - June 30, 1976\n- Korea DMZ: September 1, 1967 - August 31, 1971\n- Blue Water Navy: January 9, 1962 - May 7, 1975\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of qualifying service\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Agent Orange",
+        "condition_name": "Soft Tissue Sarcomas",
+        "description": "A group of different types of cancers in body tissues such as muscle, fat, blood vessels",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(e)"
+      }
+    },
+    {
+      "id": "gulf_war_undiagnosed_illness",
+      "title": "Gulf War Syndrome - Undiagnosed Illness",
+      "content": "Gulf War Veterans may be entitled to disability compensation for chronic undiagnosed illnesses.\n\nQUALIFYING CONDITIONS:\nChronic symptoms lasting 6+ months that cannot be attributed to a known diagnosis, including:\n- Fatigue\n- Skin conditions\n- Headaches\n- Muscle pain\n- Joint pain\n- Neurological symptoms\n- Neuropsychological symptoms\n- Respiratory symptoms\n- Sleep disturbances\n- Gastrointestinal symptoms\n- Cardiovascular symptoms\n- Abnormal weight loss\n- Menstrual disorders\n\nQUALIFYING SERVICE:\n- Served in Southwest Asia theater of operations (Gulf War)\n- Active duty on or after August 2, 1990\n- Symptoms manifest during active duty or by December 31, 2026\n\nLOCATIONS COVERED:\n- Iraq\n- Kuwait\n- Saudi Arabia\n- Bahrain\n- Qatar\n- United Arab Emirates\n- Oman\n- Gulf of Aden\n- Gulf of Oman\n- Persian Gulf\n- Red Sea\n- Airspace above these locations\n\nNO SPECIFIC DIAGNOSIS REQUIRED - This is specifically for symptoms that CANNOT be diagnosed.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War",
+        "legal_reference": "38 CFR 3.317",
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/gulf-war-illness-southwest-asia/",
+        "deadline": "2026-12-31"
+      }
+    },
+    {
+      "id": "gulf_war_chronic_multisymptom",
+      "title": "Gulf War - Chronic Multi-Symptom Illness",
+      "content": "Gulf War Veterans may qualify for presumptive service connection for Chronic Multi-Symptom Illness (CMSI).\n\nQUALIFYING CONDITIONS:\n- Chronic Fatigue Syndrome (CFS)\n- Fibromyalgia\n- Functional Gastrointestinal Disorders (including IBS)\n- Any undiagnosed illness with multiple symptoms\n\nCRITERIA FOR CMSI:\n1. Symptoms must have existed for 6+ months\n2. Must have at least 2 of the following characteristics:\n   - Fatigue\n   - Pain\n   - Cognitive dysfunction\n3. Cannot be attributed to another diagnosis\n\nQUALIFYING SERVICE:\nSame as Gulf War Undiagnosed Illness - service in Southwest Asia on/after August 2, 1990.\n\nKEY BENEFIT:\nNo nexus letter required if diagnosed with CFS, Fibromyalgia, or IBS and you served in the Gulf War theater.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War",
+        "conditions": [
+          "Chronic Fatigue Syndrome",
+          "Fibromyalgia",
+          "IBS",
+          "Functional GI Disorders"
+        ],
+        "legal_reference": "38 CFR 3.317"
+      }
+    },
+    {
+      "id": "gw_brucellosis",
+      "title": "Gulf War Presumptive: Brucellosis",
+      "content": "Brucellosis is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "Brucellosis",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "gw_campylobacter_jejuni",
+      "title": "Gulf War Presumptive: Campylobacter jejuni",
+      "content": "Campylobacter jejuni is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "Campylobacter jejuni",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "gw_coxiella_burnetii_q_fever",
+      "title": "Gulf War Presumptive: Coxiella burnetii (Q fever)",
+      "content": "Coxiella burnetii (Q fever) is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "Coxiella burnetii (Q fever)",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "gw_malaria",
+      "title": "Gulf War Presumptive: Malaria",
+      "content": "Malaria is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "Malaria",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "gw_mycobacterium_tuberculosis",
+      "title": "Gulf War Presumptive: Mycobacterium tuberculosis",
+      "content": "Mycobacterium tuberculosis is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "Mycobacterium tuberculosis",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "gw_nontyphoid_salmonella",
+      "title": "Gulf War Presumptive: Nontyphoid Salmonella",
+      "content": "Nontyphoid Salmonella is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "Nontyphoid Salmonella",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "gw_shigella",
+      "title": "Gulf War Presumptive: Shigella",
+      "content": "Shigella is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "Shigella",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "gw_visceral_leishmaniasis",
+      "title": "Gulf War Presumptive: Visceral leishmaniasis",
+      "content": "Visceral leishmaniasis is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "Visceral leishmaniasis",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "gw_west_nile_virus",
+      "title": "Gulf War Presumptive: West Nile virus",
+      "content": "West Nile virus is a PRESUMPTIVE infectious disease for Gulf War Veterans.\n\nSERVICE CONNECTION:\n- Must have served in Southwest Asia theater\n- On or after August 2, 1990\n- Disease manifested during active duty or within required time period\n\nNO NEXUS LETTER REQUIRED for Gulf War Veterans with this diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Gulf War - Infectious Disease",
+        "condition_name": "West Nile virus",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.317(c)"
+      }
+    },
+    {
+      "id": "radiation_overview",
+      "title": "Radiation Exposure - Presumptive Conditions Overview",
+      "content": "Veterans exposed to ionizing radiation during service may be eligible for presumptive service connection.\n\nQUALIFYING ACTIVITIES:\n- Participated in atmospheric nuclear tests (1945-1962)\n- Occupation of Hiroshima or Nagasaki, Japan (through July 1, 1946)\n- POW in Japan (during WWII)\n- Served at gaseous diffusion plants (Paducah, KY; Portsmouth, OH; Oak Ridge, TN)\n- Participated in underground nuclear tests at Amchitka Island, Alaska\n- Served at cleanup of Enewetak Atoll\n\nPROJECT 112/SHAD:\nVeterans who participated in Projects 112/SHAD (chemical and biological warfare testing) may also qualify.\n\nRADIOGENIC DISEASES:\n21 specific cancers are presumptive for radiation-exposed Veterans. No nexus letter required if you have qualifying service and a covered diagnosis.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_overview",
+        "category": "Radiation Exposure",
+        "legal_reference": "38 CFR 3.309(d), 3.311",
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/ionizing-radiation/"
+      }
+    },
+    {
+      "id": "rad_leukemia_other_than_chronic_lymphocytic_leukemia",
+      "title": "Radiation Presumptive: Leukemia (other than chronic lymphocytic leukemia)",
+      "content": "Leukemia (other than chronic lymphocytic leukemia) is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Leukemia (other than chronic lymphocytic leukemia)\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Leukemia (other than chronic lymphocytic leukemia)\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Leukemia (other than chronic lymphocytic leukemia)",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_thyroid",
+      "title": "Radiation Presumptive: Cancer of the thyroid",
+      "content": "Cancer of the thyroid is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the thyroid\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the thyroid\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the thyroid",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_breast",
+      "title": "Radiation Presumptive: Cancer of the breast",
+      "content": "Cancer of the breast is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the breast\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the breast\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the breast",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_pharynx",
+      "title": "Radiation Presumptive: Cancer of the pharynx",
+      "content": "Cancer of the pharynx is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the pharynx\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the pharynx\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the pharynx",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_esophagus",
+      "title": "Radiation Presumptive: Cancer of the esophagus",
+      "content": "Cancer of the esophagus is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the esophagus\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the esophagus\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the esophagus",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_stomach",
+      "title": "Radiation Presumptive: Cancer of the stomach",
+      "content": "Cancer of the stomach is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the stomach\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the stomach\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the stomach",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_small_intestine",
+      "title": "Radiation Presumptive: Cancer of the small intestine",
+      "content": "Cancer of the small intestine is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the small intestine\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the small intestine\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the small intestine",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_pancreas",
+      "title": "Radiation Presumptive: Cancer of the pancreas",
+      "content": "Cancer of the pancreas is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the pancreas\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the pancreas\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the pancreas",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_multiple_myeloma",
+      "title": "Radiation Presumptive: Multiple myeloma",
+      "content": "Multiple myeloma is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Multiple myeloma\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Multiple myeloma\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Multiple myeloma",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_lymphomas_except_hodgkin's_disease",
+      "title": "Radiation Presumptive: Lymphomas (except Hodgkin's disease)",
+      "content": "Lymphomas (except Hodgkin's disease) is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Lymphomas (except Hodgkin's disease)\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Lymphomas (except Hodgkin's disease)\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Lymphomas (except Hodgkin's disease)",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_bile_ducts",
+      "title": "Radiation Presumptive: Cancer of the bile ducts",
+      "content": "Cancer of the bile ducts is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the bile ducts\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the bile ducts\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the bile ducts",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_gall_bladder",
+      "title": "Radiation Presumptive: Cancer of the gall bladder",
+      "content": "Cancer of the gall bladder is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the gall bladder\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the gall bladder\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the gall bladder",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_primary_liver_cancer",
+      "title": "Radiation Presumptive: Primary liver cancer",
+      "content": "Primary liver cancer is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Primary liver cancer\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Primary liver cancer\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Primary liver cancer",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_salivary_gland",
+      "title": "Radiation Presumptive: Cancer of the salivary gland",
+      "content": "Cancer of the salivary gland is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the salivary gland\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the salivary gland\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the salivary gland",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_urinary_tract",
+      "title": "Radiation Presumptive: Cancer of the urinary tract",
+      "content": "Cancer of the urinary tract is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the urinary tract\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the urinary tract\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the urinary tract",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_bronchiolo-alveolar_carcinoma",
+      "title": "Radiation Presumptive: Bronchiolo-alveolar carcinoma",
+      "content": "Bronchiolo-alveolar carcinoma is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Bronchiolo-alveolar carcinoma\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Bronchiolo-alveolar carcinoma\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Bronchiolo-alveolar carcinoma",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_bone",
+      "title": "Radiation Presumptive: Cancer of the bone",
+      "content": "Cancer of the bone is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the bone\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the bone\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the bone",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_brain",
+      "title": "Radiation Presumptive: Cancer of the brain",
+      "content": "Cancer of the brain is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the brain\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the brain\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the brain",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_colon",
+      "title": "Radiation Presumptive: Cancer of the colon",
+      "content": "Cancer of the colon is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the colon\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the colon\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the colon",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_lung",
+      "title": "Radiation Presumptive: Cancer of the lung",
+      "content": "Cancer of the lung is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the lung\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the lung\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the lung",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "rad_cancer_of_the_ovary",
+      "title": "Radiation Presumptive: Cancer of the ovary",
+      "content": "Cancer of the ovary is a PRESUMPTIVE radiogenic disease for radiation-exposed Veterans.\n\nSERVICE CONNECTION:\n- Must have participated in a radiation-risk activity\n- Diagnosed with Cancer of the ovary\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nRADIATION-RISK ACTIVITIES:\n- Atmospheric nuclear testing (1945-1962)\n- Hiroshima/Nagasaki occupation (through July 1, 1946)\n- Underground nuclear tests at Amchitka Island, Alaska\n- Enewetak Atoll cleanup\n- Gaseous diffusion plants\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of radiation-risk activity\n3. Provide medical diagnosis of Cancer of the ovary\n4. No nexus letter required",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Radiation Exposure",
+        "condition_name": "Cancer of the ovary",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(d)"
+      }
+    },
+    {
+      "id": "camp_lejeune_overview",
+      "title": "Camp Lejeune - Water Contamination Presumptive Conditions",
+      "content": "Veterans and family members who lived or worked at Marine Corps Base Camp Lejeune for at least 30 cumulative days between August 1, 1953 and December 31, 1987 may be eligible for disability compensation.\n\nCONTAMINATION DETAILS:\nThe water supply at Camp Lejeune was contaminated with industrial solvents, benzene, and other chemicals. Contaminants included:\n- Trichloroethylene (TCE)\n- Perchloroethylene (PCE)\n- Benzene\n- Vinyl chloride\n\nWHO QUALIFIES:\n- Served at Camp Lejeune for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with a covered condition\n\nCOVERED FAMILY MEMBERS:\nFamily members who resided at Camp Lejeune during this period may also qualify for health care benefits.\n\nPACT ACT ADDITION:\nThe PACT Act (2022) expanded benefits for Camp Lejeune Veterans.\n\nCAMP LEJEUNE JUSTICE ACT (2022):\nAllows Veterans and family members to file federal claims for harm caused by contaminated water.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_overview",
+        "category": "Camp Lejeune",
+        "legal_reference": "38 CFR 3.307(a)(7), 3.309(f)",
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/camp-lejeune-water-contamination/",
+        "qualifying_dates": "August 1, 1953 - December 31, 1987",
+        "minimum_exposure": "30 cumulative days"
+      }
+    },
+    {
+      "id": "cl_adult_leukemia",
+      "title": "Camp Lejeune Presumptive: Adult Leukemia",
+      "content": "Adult Leukemia is a PRESUMPTIVE condition for Camp Lejeune Veterans.\n\nDESCRIPTION: Cancer of blood-forming tissues\n\nSERVICE CONNECTION REQUIREMENT:\n- Served at Camp Lejeune, NC for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with Adult Leukemia\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of service at Camp Lejeune during covered period\n3. Provide medical diagnosis of Adult Leukemia\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Camp Lejeune",
+        "condition_name": "Adult Leukemia",
+        "description": "Cancer of blood-forming tissues",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(f)"
+      }
+    },
+    {
+      "id": "cl_aplastic_anemia_and_other_myelodysplastic_syndromes",
+      "title": "Camp Lejeune Presumptive: Aplastic Anemia and Other Myelodysplastic Syndromes",
+      "content": "Aplastic Anemia and Other Myelodysplastic Syndromes is a PRESUMPTIVE condition for Camp Lejeune Veterans.\n\nDESCRIPTION: Conditions affecting blood cell production\n\nSERVICE CONNECTION REQUIREMENT:\n- Served at Camp Lejeune, NC for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with Aplastic Anemia and Other Myelodysplastic Syndromes\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of service at Camp Lejeune during covered period\n3. Provide medical diagnosis of Aplastic Anemia and Other Myelodysplastic Syndromes\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Camp Lejeune",
+        "condition_name": "Aplastic Anemia and Other Myelodysplastic Syndromes",
+        "description": "Conditions affecting blood cell production",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(f)"
+      }
+    },
+    {
+      "id": "cl_bladder_cancer",
+      "title": "Camp Lejeune Presumptive: Bladder Cancer",
+      "content": "Bladder Cancer is a PRESUMPTIVE condition for Camp Lejeune Veterans.\n\nDESCRIPTION: Cancer of the bladder\n\nSERVICE CONNECTION REQUIREMENT:\n- Served at Camp Lejeune, NC for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with Bladder Cancer\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of service at Camp Lejeune during covered period\n3. Provide medical diagnosis of Bladder Cancer\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Camp Lejeune",
+        "condition_name": "Bladder Cancer",
+        "description": "Cancer of the bladder",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(f)"
+      }
+    },
+    {
+      "id": "cl_kidney_cancer",
+      "title": "Camp Lejeune Presumptive: Kidney Cancer",
+      "content": "Kidney Cancer is a PRESUMPTIVE condition for Camp Lejeune Veterans.\n\nDESCRIPTION: Cancer of the kidney\n\nSERVICE CONNECTION REQUIREMENT:\n- Served at Camp Lejeune, NC for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with Kidney Cancer\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of service at Camp Lejeune during covered period\n3. Provide medical diagnosis of Kidney Cancer\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Camp Lejeune",
+        "condition_name": "Kidney Cancer",
+        "description": "Cancer of the kidney",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(f)"
+      }
+    },
+    {
+      "id": "cl_liver_cancer",
+      "title": "Camp Lejeune Presumptive: Liver Cancer",
+      "content": "Liver Cancer is a PRESUMPTIVE condition for Camp Lejeune Veterans.\n\nDESCRIPTION: Cancer of the liver\n\nSERVICE CONNECTION REQUIREMENT:\n- Served at Camp Lejeune, NC for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with Liver Cancer\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of service at Camp Lejeune during covered period\n3. Provide medical diagnosis of Liver Cancer\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Camp Lejeune",
+        "condition_name": "Liver Cancer",
+        "description": "Cancer of the liver",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(f)"
+      }
+    },
+    {
+      "id": "cl_multiple_myeloma",
+      "title": "Camp Lejeune Presumptive: Multiple Myeloma",
+      "content": "Multiple Myeloma is a PRESUMPTIVE condition for Camp Lejeune Veterans.\n\nDESCRIPTION: Cancer of plasma cells\n\nSERVICE CONNECTION REQUIREMENT:\n- Served at Camp Lejeune, NC for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with Multiple Myeloma\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of service at Camp Lejeune during covered period\n3. Provide medical diagnosis of Multiple Myeloma\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Camp Lejeune",
+        "condition_name": "Multiple Myeloma",
+        "description": "Cancer of plasma cells",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(f)"
+      }
+    },
+    {
+      "id": "cl_non_hodgkin's_lymphoma",
+      "title": "Camp Lejeune Presumptive: Non-Hodgkin's Lymphoma",
+      "content": "Non-Hodgkin's Lymphoma is a PRESUMPTIVE condition for Camp Lejeune Veterans.\n\nDESCRIPTION: Cancer affecting the lymphatic system\n\nSERVICE CONNECTION REQUIREMENT:\n- Served at Camp Lejeune, NC for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with Non-Hodgkin's Lymphoma\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of service at Camp Lejeune during covered period\n3. Provide medical diagnosis of Non-Hodgkin's Lymphoma\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Camp Lejeune",
+        "condition_name": "Non-Hodgkin's Lymphoma",
+        "description": "Cancer affecting the lymphatic system",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(f)"
+      }
+    },
+    {
+      "id": "cl_parkinson's_disease",
+      "title": "Camp Lejeune Presumptive: Parkinson's Disease",
+      "content": "Parkinson's Disease is a PRESUMPTIVE condition for Camp Lejeune Veterans.\n\nDESCRIPTION: Progressive nervous system disorder\n\nSERVICE CONNECTION REQUIREMENT:\n- Served at Camp Lejeune, NC for 30+ cumulative days\n- Between August 1, 1953 and December 31, 1987\n- Diagnosed with Parkinson's Disease\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of service at Camp Lejeune during covered period\n3. Provide medical diagnosis of Parkinson's Disease\n4. No nexus letter needed - condition is presumptive",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Camp Lejeune",
+        "condition_name": "Parkinson's Disease",
+        "description": "Progressive nervous system disorder",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(f)"
+      }
+    },
+    {
+      "id": "chronic_disease_overview",
+      "title": "Chronic Diseases - 1 Year Presumptive Period",
+      "content": "Certain chronic diseases are presumptively service-connected if they manifest to a degree of 10% or more within ONE YEAR of discharge from active duty.\n\nKEY BENEFIT:\nIf a listed chronic disease appears within 1 year after you leave the military, VA will presume it is connected to your service - even if you have no documentation of the condition during service.\n\nNO NEXUS LETTER REQUIRED if:\n1. You had active military service\n2. The chronic disease manifested within 1 year of discharge\n3. The condition is rated at least 10% disabling\n\nIMPORTANT:\n- The 1-year period starts from date of discharge\n- Medical evidence must show the condition existed within that year\n- The condition must be at least 10% disabling when it first appeared\n\nEXCEPTIONS:\n- Leprosy (Hansen's disease): 3 years\n- Tuberculosis: 3 years\n- Multiple Sclerosis: 7 years\n- ALS: No time limit (any time after service)",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_overview",
+        "category": "Chronic Disease",
+        "legal_reference": "38 CFR 3.307(a)(3), 3.309(a)",
+        "presumptive_period": "1 year"
+      }
+    },
+    {
+      "id": "chronic_arthritis",
+      "title": "Chronic Disease Presumptive: Arthritis",
+      "content": "Arthritis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Joint inflammation and degeneration\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Arthritis",
+        "description": "Joint inflammation and degeneration",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_diabetes_mellitus",
+      "title": "Chronic Disease Presumptive: Diabetes mellitus",
+      "content": "Diabetes mellitus is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Blood sugar regulation disorder\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Diabetes mellitus",
+        "description": "Blood sugar regulation disorder",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_epilepsies",
+      "title": "Chronic Disease Presumptive: Epilepsies",
+      "content": "Epilepsies is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Seizure disorders\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Epilepsies",
+        "description": "Seizure disorders",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_hansen's_disease_leprosy",
+      "title": "Chronic Disease Presumptive: Hansen's disease (leprosy)",
+      "content": "Hansen's disease (leprosy) is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Bacterial infection\n\nPRESUMPTIVE PERIOD: 3 years from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 3 years of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 3 years\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Hansen's disease (leprosy)",
+        "description": "Bacterial infection",
+        "presumptive_period": "3 years",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_arteriosclerosis",
+      "title": "Chronic Disease Presumptive: Arteriosclerosis",
+      "content": "Arteriosclerosis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Hardening of the arteries\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Arteriosclerosis",
+        "description": "Hardening of the arteries",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_cardiovascular_renal_disease",
+      "title": "Chronic Disease Presumptive: Cardiovascular-renal disease",
+      "content": "Cardiovascular-renal disease is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Heart and kidney disease\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Cardiovascular-renal disease",
+        "description": "Heart and kidney disease",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_endocarditis",
+      "title": "Chronic Disease Presumptive: Endocarditis",
+      "content": "Endocarditis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Infection of the heart lining\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Endocarditis",
+        "description": "Infection of the heart lining",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_myocarditis",
+      "title": "Chronic Disease Presumptive: Myocarditis",
+      "content": "Myocarditis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Inflammation of heart muscle\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Myocarditis",
+        "description": "Inflammation of heart muscle",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_nephritis",
+      "title": "Chronic Disease Presumptive: Nephritis",
+      "content": "Nephritis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Kidney inflammation\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Nephritis",
+        "description": "Kidney inflammation",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_organic_diseases_of_the_nervous_system",
+      "title": "Chronic Disease Presumptive: Organic diseases of the nervous system",
+      "content": "Organic diseases of the nervous system is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Neurological conditions\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Organic diseases of the nervous system",
+        "description": "Neurological conditions",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_psychoses",
+      "title": "Chronic Disease Presumptive: Psychoses",
+      "content": "Psychoses is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Severe mental disorders\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Psychoses",
+        "description": "Severe mental disorders",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_multiple_sclerosis",
+      "title": "Chronic Disease Presumptive: Multiple sclerosis",
+      "content": "Multiple sclerosis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Autoimmune disease affecting nerves\n\nPRESUMPTIVE PERIOD: 7 years from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 7 years of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 7 years\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Multiple sclerosis",
+        "description": "Autoimmune disease affecting nerves",
+        "presumptive_period": "7 years",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_amyotrophic_lateral_sclerosis_als",
+      "title": "Chronic Disease Presumptive: Amyotrophic lateral sclerosis (ALS)",
+      "content": "Amyotrophic lateral sclerosis (ALS) is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Motor neuron disease\n\nPRESUMPTIVE PERIOD: No time limit from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within No time limit of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within No time limit\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Amyotrophic lateral sclerosis (ALS)",
+        "description": "Motor neuron disease",
+        "presumptive_period": "No time limit",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_ulcers_peptic",
+      "title": "Chronic Disease Presumptive: Ulcers (peptic)",
+      "content": "Ulcers (peptic) is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Stomach/intestinal ulcers\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Ulcers (peptic)",
+        "description": "Stomach/intestinal ulcers",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_cirrhosis_of_the_liver",
+      "title": "Chronic Disease Presumptive: Cirrhosis of the liver",
+      "content": "Cirrhosis of the liver is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Liver scarring\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Cirrhosis of the liver",
+        "description": "Liver scarring",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_leukemia",
+      "title": "Chronic Disease Presumptive: Leukemia",
+      "content": "Leukemia is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Blood cancer\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Leukemia",
+        "description": "Blood cancer",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_malignant_tumors",
+      "title": "Chronic Disease Presumptive: Malignant tumors",
+      "content": "Malignant tumors is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Cancer\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Malignant tumors",
+        "description": "Cancer",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_hodgkin's_disease",
+      "title": "Chronic Disease Presumptive: Hodgkin's disease",
+      "content": "Hodgkin's disease is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Lymphatic cancer\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Hodgkin's disease",
+        "description": "Lymphatic cancer",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_addison's_disease",
+      "title": "Chronic Disease Presumptive: Addison's disease",
+      "content": "Addison's disease is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Adrenal insufficiency\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Addison's disease",
+        "description": "Adrenal insufficiency",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_graves'_disease",
+      "title": "Chronic Disease Presumptive: Graves' disease",
+      "content": "Graves' disease is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Hyperthyroidism\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Graves' disease",
+        "description": "Hyperthyroidism",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_myasthenia_gravis",
+      "title": "Chronic Disease Presumptive: Myasthenia gravis",
+      "content": "Myasthenia gravis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Muscle weakness disease\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Myasthenia gravis",
+        "description": "Muscle weakness disease",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_anemia_primary",
+      "title": "Chronic Disease Presumptive: Anemia (primary)",
+      "content": "Anemia (primary) is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Blood disorders\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Anemia (primary)",
+        "description": "Blood disorders",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_lupus_erythematosus_systemic",
+      "title": "Chronic Disease Presumptive: Lupus erythematosus (systemic)",
+      "content": "Lupus erythematosus (systemic) is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Autoimmune disease\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Lupus erythematosus (systemic)",
+        "description": "Autoimmune disease",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_brain_hemorrhage/thrombosis",
+      "title": "Chronic Disease Presumptive: Brain hemorrhage/thrombosis",
+      "content": "Brain hemorrhage/thrombosis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Stroke\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Brain hemorrhage/thrombosis",
+        "description": "Stroke",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_calculi_of_the_kidney_bladder_or_gallbladder",
+      "title": "Chronic Disease Presumptive: Calculi of the kidney, bladder, or gallbladder",
+      "content": "Calculi of the kidney, bladder, or gallbladder is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Stones\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Calculi of the kidney, bladder, or gallbladder",
+        "description": "Stones",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_bronchiectasis",
+      "title": "Chronic Disease Presumptive: Bronchiectasis",
+      "content": "Bronchiectasis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Chronic lung condition\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Bronchiectasis",
+        "description": "Chronic lung condition",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_atrophy_progressive_muscular",
+      "title": "Chronic Disease Presumptive: Atrophy, progressive muscular",
+      "content": "Atrophy, progressive muscular is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Muscle wasting\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Atrophy, progressive muscular",
+        "description": "Muscle wasting",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_sarcoidosis",
+      "title": "Chronic Disease Presumptive: Sarcoidosis",
+      "content": "Sarcoidosis is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Inflammatory disease\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Sarcoidosis",
+        "description": "Inflammatory disease",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "chronic_scleroderma",
+      "title": "Chronic Disease Presumptive: Scleroderma",
+      "content": "Scleroderma is a PRESUMPTIVE chronic disease under 38 CFR 3.309(a).\n\nDESCRIPTION: Connective tissue disease\n\nPRESUMPTIVE PERIOD: 1 year from date of discharge\n\nSERVICE CONNECTION REQUIREMENT:\n- Active military service\n- Condition manifested within 1 year of discharge\n- Condition rated at least 10% disabling at manifestation\n\nNO NEXUS LETTER REQUIRED if criteria are met.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide medical evidence showing condition appeared within 1 year\n3. No nexus letter needed - chronic disease presumption applies",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Chronic Disease",
+        "condition_name": "Scleroderma",
+        "description": "Connective tissue disease",
+        "presumptive_period": "1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(a)"
+      }
+    },
+    {
+      "id": "pow_overview",
+      "title": "Former POW - Presumptive Conditions Overview",
+      "content": "Former Prisoners of War (POWs) are entitled to special presumptions for certain conditions that are commonly associated with captivity.\n\nQUALIFYING SERVICE:\n- Held as a prisoner of war during wartime service\n- Certain conditions require 30+ days of captivity\n\nBENEFITS:\n- Many conditions are presumptive with NO time limit\n- Some conditions require the condition to be 10% disabling\n- Mental health conditions are presumptive at any time\n\nSPECIAL PROVISIONS:\n- POWs receive priority processing of claims\n- Many conditions have lower evidentiary requirements\n- Physical trauma from captivity is presumed\n\nNO NEXUS LETTER REQUIRED for listed conditions.\n\nIMPORTANT: Former POWs should contact VA immediately upon diagnosis of any condition - the presumptions are very favorable.",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_overview",
+        "category": "Former POW",
+        "legal_reference": "38 CFR 3.309(c)",
+        "url": "https://www.va.gov/disability/eligibility/former-pows/"
+      }
+    },
+    {
+      "id": "pow_psychosis",
+      "title": "Former POW Presumptive: Psychosis",
+      "content": "Psychosis is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any time after POW experience\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Psychosis\n- Meets rating/timing criteria: Any time after POW experience\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Psychosis",
+        "criteria": "Any time after POW experience",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_anxiety_disorder",
+      "title": "Former POW Presumptive: Anxiety disorder",
+      "content": "Anxiety disorder is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any time after POW experience\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Anxiety disorder\n- Meets rating/timing criteria: Any time after POW experience\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Anxiety disorder",
+        "criteria": "Any time after POW experience",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_dysthymic_disorder",
+      "title": "Former POW Presumptive: Dysthymic disorder",
+      "content": "Dysthymic disorder is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any time after POW experience\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Dysthymic disorder\n- Meets rating/timing criteria: Any time after POW experience\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Dysthymic disorder",
+        "criteria": "Any time after POW experience",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_ptsd",
+      "title": "Former POW Presumptive: PTSD",
+      "content": "PTSD is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any time after POW experience\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with PTSD\n- Meets rating/timing criteria: Any time after POW experience\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "PTSD",
+        "criteria": "Any time after POW experience",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_avitaminosis",
+      "title": "Former POW Presumptive: Avitaminosis",
+      "content": "Avitaminosis is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any degree at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Avitaminosis\n- Meets rating/timing criteria: Any degree at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Avitaminosis",
+        "criteria": "Any degree at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_beriberi_including_beriberi_heart_disease",
+      "title": "Former POW Presumptive: Beriberi (including beriberi heart disease)",
+      "content": "Beriberi (including beriberi heart disease) is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any degree at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Beriberi (including beriberi heart disease)\n- Meets rating/timing criteria: Any degree at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Beriberi (including beriberi heart disease)",
+        "criteria": "Any degree at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_chronic_dysentery",
+      "title": "Former POW Presumptive: Chronic dysentery",
+      "content": "Chronic dysentery is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any degree at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Chronic dysentery\n- Meets rating/timing criteria: Any degree at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Chronic dysentery",
+        "criteria": "Any degree at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_helminthiasis",
+      "title": "Former POW Presumptive: Helminthiasis",
+      "content": "Helminthiasis is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any degree at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Helminthiasis\n- Meets rating/timing criteria: Any degree at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Helminthiasis",
+        "criteria": "Any degree at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_malnutrition_including_optic_atrophy",
+      "title": "Former POW Presumptive: Malnutrition (including optic atrophy)",
+      "content": "Malnutrition (including optic atrophy) is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any degree at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Malnutrition (including optic atrophy)\n- Meets rating/timing criteria: Any degree at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Malnutrition (including optic atrophy)",
+        "criteria": "Any degree at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_pellagra",
+      "title": "Former POW Presumptive: Pellagra",
+      "content": "Pellagra is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any degree at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Pellagra\n- Meets rating/timing criteria: Any degree at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Pellagra",
+        "criteria": "Any degree at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_any_other_nutritional_deficiency",
+      "title": "Former POW Presumptive: Any other nutritional deficiency",
+      "content": "Any other nutritional deficiency is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: Any degree at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Any other nutritional deficiency\n- Meets rating/timing criteria: Any degree at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Any other nutritional deficiency",
+        "criteria": "Any degree at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_cirrhosis_of_the_liver",
+      "title": "Former POW Presumptive: Cirrhosis of the liver",
+      "content": "Cirrhosis of the liver is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: 10% within 1 year\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Cirrhosis of the liver\n- Meets rating/timing criteria: 10% within 1 year\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Cirrhosis of the liver",
+        "criteria": "10% within 1 year",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_irritable_bowel_syndrome",
+      "title": "Former POW Presumptive: Irritable bowel syndrome",
+      "content": "Irritable bowel syndrome is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: 10% at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Irritable bowel syndrome\n- Meets rating/timing criteria: 10% at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Irritable bowel syndrome",
+        "criteria": "10% at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_peptic_ulcer_disease",
+      "title": "Former POW Presumptive: Peptic ulcer disease",
+      "content": "Peptic ulcer disease is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: 10% at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Peptic ulcer disease\n- Meets rating/timing criteria: 10% at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Peptic ulcer disease",
+        "criteria": "10% at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_peripheral_neuropathy",
+      "title": "Former POW Presumptive: Peripheral neuropathy",
+      "content": "Peripheral neuropathy is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: 10% at any time\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Peripheral neuropathy\n- Meets rating/timing criteria: 10% at any time\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Peripheral neuropathy",
+        "criteria": "10% at any time",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_atherosclerotic_heart_disease",
+      "title": "Former POW Presumptive: Atherosclerotic heart disease",
+      "content": "Atherosclerotic heart disease is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: 10% at any time if POW 30+ days\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Atherosclerotic heart disease\n- Meets rating/timing criteria: 10% at any time if POW 30+ days\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Atherosclerotic heart disease",
+        "criteria": "10% at any time if POW 30+ days",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_hypertensive_vascular_disease",
+      "title": "Former POW Presumptive: Hypertensive vascular disease",
+      "content": "Hypertensive vascular disease is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: 10% at any time if POW 30+ days\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Hypertensive vascular disease\n- Meets rating/timing criteria: 10% at any time if POW 30+ days\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Hypertensive vascular disease",
+        "criteria": "10% at any time if POW 30+ days",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_stroke_and_complications",
+      "title": "Former POW Presumptive: Stroke and complications",
+      "content": "Stroke and complications is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: 10% at any time if POW 30+ days\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Stroke and complications\n- Meets rating/timing criteria: 10% at any time if POW 30+ days\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Stroke and complications",
+        "criteria": "10% at any time if POW 30+ days",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    },
+    {
+      "id": "pow_osteoporosis",
+      "title": "Former POW Presumptive: Osteoporosis",
+      "content": "Osteoporosis is a PRESUMPTIVE condition for Former Prisoners of War.\n\nCRITERIA: 10% at any time if POW 30+ days\n\nSERVICE CONNECTION REQUIREMENT:\n- Former POW status\n- Diagnosed with Osteoporosis\n- Meets rating/timing criteria: 10% at any time if POW 30+ days\n\nNO NEXUS LETTER REQUIRED - VA presumes service connection.\n\nHOW TO FILE:\n1. File VA Form 21-526EZ\n2. Provide evidence of POW status\n3. Provide medical diagnosis\n4. No nexus letter needed",
+      "metadata": {
+        "source": "VA_OFFICIAL",
+        "type": "presumptive_condition",
+        "category": "Former POW",
+        "condition_name": "Osteoporosis",
+        "criteria": "10% at any time if POW 30+ days",
+        "nexus_required": false,
+        "legal_reference": "38 CFR 3.309(c)"
+      }
+    }
+  ]
+}

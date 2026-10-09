@@ -1,0 +1,7081 @@
+/**
+ * Vet-Rate.org - Mass Document Processor (Muster Call System)
+ * Copyright (c) 2024-2026 Anthony Johnson
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * Handles large-scale document ingestion for veteran claim files:
+ * - Multiple DD214s
+ * - VA Rating Decisions
+ * - Claim Letters (32+ files, 10+ MB)
+ * - C-Files (320+ MB medical records)
+ * - Poor-quality scanned documents
+ *
+ * Processing Pipeline:
+ * 1. File validation & size checking
+ * 2. Parallel document loading (Web Workers)
+ * 3. Text extraction (PDF/DOCX/OCR)
+ * 4. Document classification
+ * 5. Data extraction & parsing
+ * 6. Profile auto-population
+ * 7. LLM analysis & recommendations
+ * 8. Comprehensive report generation
+ *
+ * All processing is 100% client-side for maximum privacy.
+ */
+
+import { logger } from "./logger";
+import { analyzeDocument, isFileSupported } from "./documentAnalyzer";
+import { processLargePDF } from "./pdfExtractor";
+import { formatFileSize } from "./ocr";
+import { withStoredReadingNotes } from "./readingNotices";
+import { scanDocumentForCrisis } from "./crisisInterceptor";
+import { untrustedSection } from "./aiSystemPrompts";
+import {
+  classifyDocument,
+  classifyDocumentBatch,
+  getDocumentTypeLabel,
+  DOCUMENT_TYPES,
+} from "./documentClassifier";
+import {
+  parseDD214Text,
+  DEVICES,
+  STATE_AWARD_CODES,
+  STATE_NAME_TO_CODE,
+} from "./ribbonRackData";
+import {
+  updateVeteranProfile,
+  getVeteranProfile,
+  getServiceHistory,
+  saveDD214Data,
+  addAward,
+  addDeployment,
+  updateDeployment,
+  upsertServicePeriod,
+  hasPeriodBackedServiceEntry,
+  getMyRatings,
+  saveMyRatings,
+} from "./veteranProfile";
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getDocumentAIRouting,
+  reloadSwarmEngine,
+} from "./unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "./aiDataClassPolicy";
+import {
+  deriveCombatService,
+  isCombatDecoration,
+  mergeCombatService,
+} from "./combatService";
+import {
+  addDocumentToVKB,
+  loadVKB,
+  saveVKB,
+  mergeDD214IntoVKB,
+  mergeDD214Deployments,
+  mergeDD214EvidenceTimeline,
+  mergeRatingDecisionIntoVKB,
+  resetVKBConnection,
+} from "./veteranKnowledgeBase";
+import {
+  withStepTimeout,
+  withStallTimeout,
+  StepTimeoutError,
+} from "./boundedStep";
+import { describePersistIncomplete } from "./persistIncompleteMessage";
+import {
+  classifyDocumentFailure,
+  FAILURE_KINDS,
+  failureLogCode,
+  forLog,
+  PlainDocumentError,
+  deliberateMessageFor,
+} from "./fileReadFailure";
+import { describeFailureKind } from "./readFailureMessage";
+import { convergeTimelineStoreWithVKB } from "./timelineStoreSync";
+import {
+  dropSupersededConditions,
+  findRatedConditionMatch,
+  isOlderDecision,
+  isSupersededName,
+  normalizeConditionName,
+  primaryConditionKey,
+} from "./conditionName";
+import {
+  saveDocumentToPacket,
+  resetPacketConnection,
+  PACKET_DOC_TYPES,
+} from "./myPacketManager";
+import {
+  formatLocalDate,
+  isSameDate,
+  isSameServicePeriod,
+  parseExplicitDate,
+  isDesignatedCombatZone,
+  subtractDuration,
+} from "./dateUtils";
+// ============================================================
+// C-FILE ANALYZER INTEGRATION (v1.18.3)
+// Import JSON repair utility for handling truncated AI responses
+// ============================================================
+import {
+  attemptJSONRepair,
+  enforceValidDiagnosticCodes,
+} from "./cfileAnalyzer";
+// ============================================================
+// FLORENCE-2 VISION AI SERVICE (v1.16.2)
+// Fallback for poor OCR quality on scanned/aged documents
+// ============================================================
+import { florenceOCRService, isWebGPUSupported } from "./florenceOCRService";
+// ============================================================
+// NEW DOCUMENT INTELLIGENCE PARSERS (v1.16.0)
+// Enhanced VA document understanding with "Header-First Extraction"
+// ============================================================
+import {
+  parseDecisionLetter,
+  parseDBQReport,
+  extractBigThree,
+} from "./vaDocumentParser";
+import {
+  parseRatingCodeSheetsChunked,
+  latestFromSheets,
+  recordEventsFromSheets,
+  scanLooseRatingLinesChunked,
+} from "./vaCodeSheet";
+import {
+  segmentCFileChunked,
+  quickScanCFileChunked,
+  buildInventoryFromSegmentation,
+} from "./cFileSegmentation";
+import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder";
+import { createTimeSlicer, yieldToMainThread } from "./mainThreadScheduler";
+import { sideFromName } from "./vaCalculator";
+
+// Vision AI confidence threshold - below this, try vision fallback
+const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
+// Florence-2's own DD214 field parse must reach this before its text is
+// allowed to replace OCR text for a service record (real garbage scored 4-11)
+const VISION_MIN_FIELD_CONFIDENCE = 40;
+const VISION_INIT_TIMEOUT_MS = 180_000;
+const VISION_PROCESS_TIMEOUT_MS = 150_000;
+let visionInitialized = false;
+let visionInitializing = false;
+let visionUnavailable = false;
+
+/**
+ * Adaptive ETA: rolling average of pages/sec over the most recent extraction
+ * batches. Static formulas drift badly on a 313MB C-File where per-page cost
+ * varies between text-layer and scanned sections.
+ */
+const createEtaTracker = (windowSize = 5) => {
+  const samples = [];
+  let lastPages = 0;
+  let lastTime = Date.now();
+
+  const rate = () => {
+    let pages = 0;
+    let ms = 0;
+    for (const s of samples) {
+      pages += s.pages;
+      ms += s.ms;
+    }
+    if (pages === 0 || ms === 0) return null;
+    return (pages / ms) * 1000;
+  };
+
+  return {
+    sample(processedPages) {
+      const now = Date.now();
+      const pages = processedPages - lastPages;
+      const ms = now - lastTime;
+      lastPages = processedPages;
+      lastTime = now;
+      if (pages > 0 && ms > 0) {
+        samples.push({ pages, ms });
+        if (samples.length > windowSize) samples.shift();
+      }
+    },
+    pagesPerSecond: rate,
+    etaSeconds(remainingPages) {
+      const r = rate();
+      if (!r || remainingPages <= 0) return null;
+      return Math.ceil(remainingPages / r);
+    },
+  };
+};
+
+// Console output is for field names and counts only: every value here is the
+// veteran's own (name, file number, SSN, dates, diagnoses).
+function presentFieldNames(obj) {
+  return Object.entries(obj || {})
+    .filter(
+      ([, v]) =>
+        v !== null &&
+        v !== undefined &&
+        v !== "" &&
+        !(Array.isArray(v) && v.length === 0),
+    )
+    .map(([key]) => key);
+}
+
+// Re-export formatFileSize for convenience
+export { formatFileSize };
+
+// ============================================================
+// C-FILE AI ANALYSIS HELPER (v1.18.3)
+// Uses AI to extract potential claims from C-File text
+// Includes JSON repair for truncated responses
+// ============================================================
+
+// Strips the ```json fencing a local model sometimes wraps its response in,
+// then parses - falling back to attemptJSONRepair for a truncated response.
+function _parseAIAnalysisContent(content) {
+  let cleanContent = content.trim();
+  if (cleanContent.startsWith("```json")) cleanContent = cleanContent.slice(7);
+  if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+  if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
+  cleanContent = cleanContent.trim();
+
+  try {
+    return JSON.parse(cleanContent);
+  } catch {
+    console.warn("⚠️ JSON parse failed, attempting repair...");
+    const repaired = attemptJSONRepair(cleanContent);
+    if (repaired) {
+      // eslint-disable-next-line no-console
+      console.log("✅ Successfully repaired truncated AI response");
+    }
+    return repaired;
+  }
+}
+
+/**
+ * Analyze C-File text with AI to extract potential claims
+ * Uses compact prompt and JSON repair for Local AI compatibility
+ * @param {string} text - C-File text (max 50K chars recommended)
+ * @param {Object} [options]
+ * @param {number} [options.timeoutMs] - forwarded to generateAI's own
+ *   timeout race, so a retry can give a contended engine longer to respond
+ * @returns {Promise<Object|null>} Analysis results, or null if the AI
+ *   genuinely found nothing to report (no throw)
+ * @throws when the AI call itself fails (timeout, engine error) or the
+ *   engine is gone - the caller (_runCFileAIAnalysis) decides whether to
+ *   retry and how to surface that to the veteran; this never swallows that
+ *   distinction. A vanished engine used to come back as a silent null.
+ */
+const analyzeCFileWithAI = async (text, { timeoutMs } = {}) => {
+  if (!isAnyAIAvailable()) {
+    throw new PlainDocumentError("The on-device AI engine is not available.");
+  }
+
+  // eslint-disable-next-line no-console
+  console.log("🤖 Starting AI-enhanced C-File analysis...");
+
+  // Compact prompt for local AI compatibility
+  const systemPrompt = `You are a VA Claims Auditor. Analyze C-File text and extract claims evidence.
+
+OUTPUT FORMAT: Valid JSON only. Structure:
+{
+  "potential_claims": [{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","missing_element":""}],
+  "exposures": [{"type":"","timeframe":""}],
+  "mentalHealth": {"indicators":[],"diagnoses":[]},
+  "actionItems": [""]
+}
+
+RULES: Only include findings present in text. Be concise.`;
+
+  // PI-02: spotlight the untrusted C-file excerpt (treat-as-data delimiters).
+  const userPrompt = `Analyze this C-File excerpt and return ONLY JSON:\n\n${untrustedSection("C-FILE EXCERPT", text.substring(0, 15000))}`;
+
+  // AIS-05: non-blocking crisis scan over the raw C-File excerpt.
+  scanDocumentForCrisis(text);
+
+  const response = await generateAI(userPrompt, {
+    dataClass: AI_DATA_CLASS.DOCUMENT,
+    toolId: "cfile-analyzer",
+    systemPrompt,
+    temperature: 0.2,
+    maxTokens: 2048,
+    expectJSON: true,
+    skipCrisisCheck: true,
+    skipHallucinationCheck: true,
+    toolContext: "Muster Call C-File Analysis",
+    ...(timeoutMs ? { timeout: timeoutMs } : {}),
+  });
+
+  const content = response?.text || response;
+  if (!content) return null;
+
+  const result = _parseAIAnalysisContent(content);
+  if (!result) return null;
+
+  const rejectedCodes = enforceValidDiagnosticCodes(result);
+  logger.info(
+    `✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`,
+  );
+  return {
+    ...result,
+    analyzedAt: new Date().toISOString(),
+    aiPowered: true,
+    ...(rejectedCodes.length > 0 && { rejectedDiagnosticCodes: rejectedCodes }),
+  };
+};
+
+/**
+ * Processing states for UI feedback
+ */
+export const PROCESSING_STATES = {
+  IDLE: "idle",
+  VALIDATING: "validating",
+  LOADING: "loading",
+  EXTRACTING: "extracting",
+  CLASSIFYING: "classifying",
+  ANALYZING: "analyzing",
+  POPULATING: "populating",
+  COMPLETE: "complete",
+  ERROR: "error",
+};
+
+/**
+ * File size limits (can be adjusted based on browser memory)
+ * NO SINGLE FILE LIMIT - C-Files and medical records can be massive
+ */
+const SIZE_LIMITS = {
+  MAX_SINGLE_FILE: Infinity, // NO LIMIT - handle any file size
+  MAX_TOTAL_SIZE: 2 * 1024 * 1024 * 1024, // 2 GB total batch
+  WARN_THRESHOLD: 100 * 1024 * 1024, // Warn at 100 MB (informational only)
+};
+
+/**
+ * Validate file batch before processing
+ */
+export const validateFilesBatch = (files) => {
+  const results = {
+    valid: [],
+    invalid: [],
+    warnings: [],
+    totalSize: 0,
+    errors: [],
+  };
+
+  if (!files || files.length === 0) {
+    results.errors.push("No files provided");
+    return results;
+  }
+
+  for (const file of files) {
+    const fileSize = file.size || 0;
+    results.totalSize += fileSize;
+
+    // Check file type support
+    if (!isFileSupported(file)) {
+      results.invalid.push({
+        file,
+        reason: "Unsupported file type. Please use PDF, DOCX, or TXT files.",
+      });
+      continue;
+    }
+
+    // Check individual file size
+    if (fileSize > SIZE_LIMITS.MAX_SINGLE_FILE) {
+      results.invalid.push({
+        file,
+        reason: `File too large (${formatFileSize(fileSize)}). Maximum ${formatFileSize(SIZE_LIMITS.MAX_SINGLE_FILE)} per file.`,
+      });
+      continue;
+    }
+
+    // Warn on large files
+    if (fileSize > SIZE_LIMITS.WARN_THRESHOLD) {
+      results.warnings.push({
+        file,
+        message: `Large file (${formatFileSize(fileSize)}) may take several minutes to process.`,
+      });
+    }
+
+    results.valid.push(file);
+  }
+
+  // Check total size
+  if (results.totalSize > SIZE_LIMITS.MAX_TOTAL_SIZE) {
+    results.errors.push(
+      `Total size (${formatFileSize(results.totalSize)}) exceeds limit of ${formatFileSize(SIZE_LIMITS.MAX_TOTAL_SIZE)}. Please split into smaller batches.`,
+    );
+  }
+
+  return results;
+};
+
+// Common boilerplate words/phrases that appear on virtually every real DD214.
+// Used as a dictionary sanity check against Florence-2 hallucinated output.
+const DD214_EXPECTED_TERMS = [
+  "discharge",
+  "active duty",
+  "armed forces",
+  "service",
+  "separation",
+  "united states",
+  "grade",
+  "rank",
+  "military",
+  "certificate",
+];
+
+// Florence-2 can degenerate into a repetition loop on faded/old scans -
+// producing output that's long enough to pass a naive length check but is
+// garbage (e.g. "3.4 BATH ROOM 3.5BATHROOM 3.4BATH ROAD"). Detect a repeated
+// word-root appearing implausibly often relative to total word count.
+function hasRepetitionLoop(text) {
+  const words = text.toLowerCase().match(/[a-z]{4,}/g) || [];
+  if (words.length === 0) return false;
+
+  const counts = {};
+  words.forEach((w) => {
+    counts[w] = (counts[w] || 0) + 1;
+  });
+  const maxRepeats = Math.max(...Object.values(counts));
+  // Calibrated on real output: legitimate OCR of a dense DD214 peaks at a
+  // 0.051 repeat ratio ("service"); Florence-2's loop text reached 0.098.
+  return maxRepeats >= 5 && maxRepeats / words.length > 0.08;
+}
+
+// Dictionary sanity check for the DD214-specific vision path: a real
+// extraction almost always contains at least one boilerplate term, so its
+// total absence (combined with a repetition loop) signals hallucinated text.
+function isGarbledVisionText(text) {
+  if (!text) return true;
+  if (hasRepetitionLoop(text)) return true;
+
+  const lower = text.toLowerCase();
+  const hasExpectedTerm = DD214_EXPECTED_TERMS.some((term) =>
+    lower.includes(term),
+  );
+  return !hasExpectedTerm;
+}
+
+// The streamed read of a file over 50 MB opens its own IndexedDB and awaits
+// each page's text, none of which can be cancelled, and honest work on a
+// 300 MB file takes minutes. So it is bounded by silence, not by a deadline:
+// every page reports progress, and a read that goes quiet this long has hung.
+const LARGE_PDF_STALL_MS = 180_000;
+const LARGE_PDF_STALLED_MESSAGE =
+  "Reading this very large PDF stopped making progress, so the import ended " +
+  "instead of waiting forever. Nothing from it was saved. Close other " +
+  "Vet-Rate tabs and import the file again.";
+
+async function _readLargePdfBounded(start) {
+  try {
+    return await withStallTimeout(start, "large PDF read", LARGE_PDF_STALL_MS);
+  } catch (err) {
+    if (err instanceof StepTimeoutError) {
+      console.warn("Large PDF read went quiet and was given up on.");
+      throw new PlainDocumentError(
+        LARGE_PDF_STALLED_MESSAGE,
+        FAILURE_KINDS.TIMEOUT,
+        { cause: err },
+      );
+    }
+    throw err;
+  }
+}
+
+async function _extractLargePdfText(file, onProgress, options) {
+  logger.info(
+    `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) - using streaming extraction...`,
+  );
+  const etaTracker = createEtaTracker();
+  const largeResult = await _readLargePdfBounded((progressed) =>
+    processLargePDF(file, {
+      batchSize: 20,
+      onProgress: (cur, total, pct) => {
+        progressed();
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 25 + pct * 0.4, // maps 0-100% → 25-65% of overall progress
+          stage: "platoon_sergeant",
+          message: `Streaming page ${cur}/${total} (${pct}%)...`,
+          currentPage: cur,
+          totalPages: total,
+          etaSeconds: etaTracker.etaSeconds(total - cur),
+          pagesPerSecond: etaTracker.pagesPerSecond(),
+        });
+      },
+      onBatch: (batch) => {
+        progressed();
+        etaTracker.sample(batch.processedSoFar);
+        // Forward per-batch updates for responsive UI on very large files
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 25 + batch.pct * 0.4,
+          stage: "platoon_sergeant",
+          message: `Pages ${batch.startPage}-${batch.endPage} of ${batch.totalPages} extracted`,
+          currentPage: batch.processedSoFar,
+          totalPages: batch.totalPages,
+          etaSeconds: etaTracker.etaSeconds(
+            batch.totalPages - batch.processedSoFar,
+          ),
+          pagesPerSecond: etaTracker.pagesPerSecond(),
+        });
+      },
+    }),
+  );
+  return {
+    text: largeResult.text,
+    pageCount: largeResult.pageCount,
+    method: largeResult.method,
+    fileType: "PDF",
+    ocrUsed: false,
+    hasScannedSections: largeResult.hasScannedSections,
+    scannedPageRanges: largeResult.scannedPageRanges || [],
+    pagesWithText: largeResult.pagesWithText,
+    pagesEmpty: largeResult.pagesEmpty,
+    ...largePdfCoverage(largeResult, {
+      readAllRequested: Boolean(options?.readAllPages),
+    }),
+  };
+}
+
+async function _extractDocumentText(file, onProgress, options) {
+  onProgress?.({
+    filename: file.name,
+    state: PROCESSING_STATES.EXTRACTING,
+    progress: 25,
+    stage: "platoon_sergeant",
+  });
+
+  const isLargePDF =
+    file.name.toLowerCase().endsWith(".pdf") && file.size > 50 * 1024 * 1024;
+  if (isLargePDF) return _extractLargePdfText(file, onProgress, options);
+
+  return analyzeDocument(
+    file,
+    (state) => {
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 25 + (state.progress || 0) * 0.4, // 25-65%
+        ocrState: state.message || state.state,
+        currentPage: state.currentPage,
+        totalPages: state.totalPages,
+        quality: state.quality,
+        confidence: state.confidence,
+        stage: "platoon_sergeant",
+      });
+    },
+    options,
+  );
+}
+
+async function _applyVisionFallbackIfNeeded(
+  file,
+  onProgress,
+  result,
+  isPDF,
+  extractionResult,
+  looksLikeDD214 = false,
+) {
+  // Store OCR confidence for fallback decision. A missing value means the
+  // extractor did not report one, which is not the same as 0% - reading it as
+  // 0 sent every scan through the vision model (D21-6).
+  const ocrConfidence = Number.isFinite(extractionResult.confidence)
+    ? extractionResult.confidence
+    : null;
+  result.confidence = ocrConfidence;
+
+  // Vision fallback only for a PDF whose OCR genuinely read poorly
+  const shouldTryVisionFallback =
+    isPDF &&
+    ocrConfidence !== null &&
+    ocrConfidence < VISION_FALLBACK_THRESHOLD &&
+    !visionUnavailable &&
+    isWebGPUSupported() &&
+    extractionResult.ocrUsed;
+
+  if (shouldTryVisionFallback) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `👁️ OCR confidence ${ocrConfidence}% < ${VISION_FALLBACK_THRESHOLD}% threshold, trying Florence-2 Vision...`,
+    );
+
+    onProgress?.({
+      filename: file.name,
+      state: PROCESSING_STATES.EXTRACTING,
+      progress: 65,
+      stage: "vision_fallback",
+      message: "🔬 Low OCR quality detected - engaging Vision AI...",
+    });
+
+    extractionResult = await _runVisionFallback(
+      file,
+      result,
+      extractionResult,
+      looksLikeDD214,
+      ocrConfidence,
+    );
+  }
+
+  return extractionResult;
+}
+
+// A vision model that cannot load or answer in time is switched off for the
+// rest of the session (and its worker torn down): every later scan would pay
+// the same wait, and a worker wedged on the GPU is what froze a tab (D21-6).
+function _switchVisionOff() {
+  visionUnavailable = true;
+  visionInitialized = false;
+  try {
+    florenceOCRService.shutdown?.();
+  } catch (shutdownErr) {
+    console.warn("⚠️ Vision worker teardown failed:", shutdownErr?.message);
+  }
+}
+
+async function _ensureVisionReady() {
+  if (!visionInitialized && !visionInitializing) {
+    visionInitializing = true;
+    try {
+      visionInitialized = await withStepTimeout(
+        () => florenceOCRService.initialize(),
+        "vision model load",
+        VISION_INIT_TIMEOUT_MS,
+      );
+    } catch (initErr) {
+      if (initErr instanceof StepTimeoutError) _switchVisionOff();
+      throw initErr;
+    } finally {
+      visionInitializing = false;
+    }
+  }
+  return visionInitialized;
+}
+
+const _runBoundedVisionRead = async (file, looksLikeDD214) => {
+  try {
+    return await withStepTimeout(
+      () =>
+        florenceOCRService.processDocument(file, {
+          pageNumber: 1,
+          parseDD214: looksLikeDD214,
+        }),
+      "vision read",
+      VISION_PROCESS_TIMEOUT_MS,
+    );
+  } catch (readErr) {
+    if (readErr instanceof StepTimeoutError) _switchVisionOff();
+    throw readErr;
+  }
+};
+
+// For a service record Florence must beat a field-level bar, not just a
+// length/loop check: on real scans its garbage passed both text heuristics
+// while its own parse of that garbage scored 4-11/100.
+function _judgeVisionOutput(visionResult, extractionResult, looksLikeDD214) {
+  const visionText = visionResult.text || "";
+  const fieldConfidence =
+    visionResult.parsedData?.fields?.overallConfidence ?? null;
+  const longEnough =
+    visionText.trim().length > extractionResult.text.trim().length * 0.5;
+  const confidentEnough = looksLikeDD214
+    ? fieldConfidence !== null && fieldConfidence >= VISION_MIN_FIELD_CONFIDENCE
+    : true;
+  const garbled = isGarbledVisionText(visionText);
+  return {
+    visionText,
+    fieldConfidence,
+    garbled,
+    accepted: longEnough && !garbled && confidentEnough,
+  };
+}
+
+async function _runVisionFallback(
+  file,
+  result,
+  extractionResult,
+  looksLikeDD214,
+  ocrConfidence,
+) {
+  try {
+    if (!(await _ensureVisionReady())) return extractionResult;
+
+    // Hand the main thread back before and after the vision call so a click
+    // (Quick Exit, the panic key) is never queued behind it.
+    await yieldToMainThread();
+    const visionResult = await _runBoundedVisionRead(file, looksLikeDD214);
+    await yieldToMainThread();
+    const { visionText, fieldConfidence, garbled, accepted } =
+      _judgeVisionOutput(visionResult, extractionResult, looksLikeDD214);
+
+    if (!accepted) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `ℹ️ Florence output rejected (field confidence ${fieldConfidence ?? "n/a"}, garbled ${garbled}) - keeping OCR text at ${ocrConfidence}%`,
+      );
+      return extractionResult;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Florence Vision extracted ${visionText.length} chars (OCR got ${extractionResult.text.length})`,
+    );
+    result.visionUsed = true;
+    return {
+      ...extractionResult,
+      text: visionText,
+      method: "vision_florence",
+      confidence: looksLikeDD214 ? fieldConfidence : 85,
+      visionUsed: true,
+      visionParsedData: looksLikeDD214 ? visionResult.parsedData : null,
+    };
+  } catch (visionError) {
+    console.warn("⚠️ Vision fallback failed:", visionError.message);
+    return extractionResult;
+  }
+}
+
+const runStandardDocumentExtraction = async (
+  file,
+  onProgress,
+  result,
+  isPDF,
+  looksLikeDD214 = false,
+  options = {},
+) => {
+  let extractionResult = await _extractDocumentText(file, onProgress, options);
+  extractionResult = await _applyVisionFallbackIfNeeded(
+    file,
+    onProgress,
+    result,
+    isPDF,
+    extractionResult,
+    looksLikeDD214,
+  );
+  return extractionResult;
+};
+
+// A store that answers {success:false} (its write was refused or aborted, most
+// often because the device is full) has not saved anything. Persisting turns
+// that answer into this error so the step is reported instead of passing.
+class StorageSaveFailedError extends Error {
+  constructor(saveResult) {
+    super(saveResult?.error || "The save did not complete.");
+    this.name = "StorageSaveFailedError";
+    this.quotaExceeded = saveResult?.quotaExceeded === true;
+  }
+}
+
+const requireSaved = (saveResult) => {
+  if (saveResult?.success === false)
+    throw new StorageSaveFailedError(saveResult);
+  return saveResult;
+};
+
+// A merge step that fails for any other reason stays non-fatal: the document
+// itself is already filed. A save the store refused is not non-fatal.
+const warnNonFatalStep = (label, err) => {
+  if (err instanceof StorageSaveFailedError) throw err;
+  console.warn(`${label} failed for this document (non-fatal):`, err.message);
+};
+
+const storeDocumentInVKB = async (file, result) => {
+  const vkbResult = await addDocumentToVKB({
+    fileName: file.name,
+    fileSize: file.size,
+    pageCount: result.pageCount || 1,
+    classification: result.classification.type,
+    extractedText: result.text,
+    extractedData: withStoredReadingNotes(result),
+    ocrUsed: result.ocrUsed || false,
+    method: result.method || "text",
+  });
+  requireSaved(vkbResult);
+
+  if (vkbResult.success) {
+    result.vkbDocumentId = vkbResult.documentId;
+    // eslint-disable-next-line no-console
+    console.log(`✅ Stored this document in VKB as ${vkbResult.documentId}`);
+
+    if (vkbResult.storageWarning) {
+      console.warn(`⚠️ ${vkbResult.storageWarning}`);
+      result.storageWarning = vkbResult.storageWarning;
+    }
+  }
+};
+
+// classifyDocument() (documentClassifier.js) always returns one of the
+// uppercase DOCUMENT_TYPES enum values, never the lowercase/snake_case labels
+// below - those are dead keys kept only because some other caller may still
+// pass them directly. Without the DOCUMENT_TYPES-keyed entries, every
+// classification except the DD214 family (whose enum values happen to equal
+// their own uppercase strings) fell through to PACKET_DOC_TYPES.OTHER.
+const CLASS_TO_PACKET_TYPE = {
+  DD214: PACKET_DOC_TYPES.DD214,
+  service_record: PACKET_DOC_TYPES.DD214,
+  NGB22: PACKET_DOC_TYPES.NGB22,
+  DD256: PACKET_DOC_TYPES.DD256,
+  DD257: PACKET_DOC_TYPES.DD257,
+  rating_decision: PACKET_DOC_TYPES.RATING_DECISION,
+  claim_letter: PACKET_DOC_TYPES.CLAIM_LETTER,
+  c_file: PACKET_DOC_TYPES.C_FILE,
+  blue_button: PACKET_DOC_TYPES.BLUE_BUTTON,
+  medical_record: PACKET_DOC_TYPES.MEDICAL_RECORD,
+  dbq: PACKET_DOC_TYPES.DBQ,
+  nexus_letter: PACKET_DOC_TYPES.NEXUS_LETTER,
+  personal_statement: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+  buddy_statement: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+  va_decision: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+  [DOCUMENT_TYPES.DD215]: PACKET_DOC_TYPES.DD215,
+  [DOCUMENT_TYPES.RATING_DECISION]: PACKET_DOC_TYPES.RATING_DECISION,
+  [DOCUMENT_TYPES.CLAIM_LETTER]: PACKET_DOC_TYPES.CLAIM_LETTER,
+  [DOCUMENT_TYPES.C_FILE_MEDICAL]: PACKET_DOC_TYPES.C_FILE,
+  [DOCUMENT_TYPES.BLUE_BUTTON]: PACKET_DOC_TYPES.BLUE_BUTTON,
+  [DOCUMENT_TYPES.MEDICAL_RECORD]: PACKET_DOC_TYPES.MEDICAL_RECORD,
+  [DOCUMENT_TYPES.DBQ]: PACKET_DOC_TYPES.DBQ,
+  [DOCUMENT_TYPES.NEXUS_LETTER]: PACKET_DOC_TYPES.NEXUS_LETTER,
+  [DOCUMENT_TYPES.PERSONAL_STATEMENT]: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+  [DOCUMENT_TYPES.VA_CORRESPONDENCE]: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+  [DOCUMENT_TYPES.EXAM_REPORT]: PACKET_DOC_TYPES.EXAM_REPORT,
+};
+
+const archiveDocumentInPacket = async (file, result) => {
+  let saved;
+  try {
+    const packetType =
+      CLASS_TO_PACKET_TYPE[result.classification.type] ||
+      PACKET_DOC_TYPES.OTHER;
+
+    saved = await saveDocumentToPacket({
+      fileName: file.name,
+      classification: packetType,
+      rawText: result.text || "",
+      extractedData: withStoredReadingNotes(result) || {},
+      pageCount: result.pageCount || 1,
+      fileSize: file.size || 0,
+      ocrMethod: result.method || "text",
+      ocrConfidence: result.classification?.confidence || 0,
+      tags: [
+        result.classification?.type,
+        result.classification?.subtype,
+      ].filter(Boolean),
+    });
+  } catch (packetErr) {
+    warnNonFatalStep("My Packet save", packetErr);
+    return;
+  }
+  requireSaved(saved);
+  logger.info(`📁 Archived this document in My Packet`);
+};
+
+// Box 12b (NET ACTIVE SERVICE THIS PERIOD) is stored as a formatted string by
+// parseServiceRecord (e.g. "4 years, 2 months, 15 days"). DD214DataGridB in
+// MyPacket.jsx renders numeric yearsService/monthsService, so reconstitute
+// them here instead of dropping the already-extracted value.
+const _parseServiceTimeString = (str) => {
+  if (!str) return { years: null, months: null, days: null };
+  // years/months/days are always 1-3 digits in practice; bounding the
+  // quantifier (was \d+) avoids a genuine slow path confirmed via
+  // adversarial timing test (13s+ on 50k-digit input) without changing
+  // behavior on any real extracted service-time string.
+  const match =
+    /(\d{1,3})\s*years?,\s*(\d{1,3})\s*months?(?:,\s*(\d{1,3})\s*days?)?/i.exec(
+      str,
+    );
+  if (!match) return { years: null, months: null, days: null };
+  return {
+    years: Number.parseInt(match[1], 10),
+    months: Number.parseInt(match[2], 10),
+    days: match[3] ? Number.parseInt(match[3], 10) : null,
+  };
+};
+
+// Field builders below are split out of buildDD214ProfileUpdate purely to
+// keep that function's cyclomatic complexity under the repo's lint ceiling
+// - every branch here is a field default, no new behavior.
+function _buildDD214IdentityFields(d) {
+  return {
+    fullName: d.veteranName || null,
+    // FIX-19: which form type actually supplied fullName - the merged
+    // record could come from a DD214, NGB22, DD256, or DD257, and the
+    // Service tab's Name card used to hardcode "DD-214, Block 1" regardless
+    // of which one actually won the confidence merge. Only set when this
+    // extraction actually found a name, so it merges through
+    // _mergeDD214Record's existing per-field confidence/emptiness rules in
+    // lockstep with fullName itself (same empty/non-empty state on every
+    // merge event) rather than needing its own bespoke tracking.
+    fullNameSourceForm: d.veteranName ? d.formType || null : null,
+    lastName: d.lastName || null,
+    firstName: d.firstName || null,
+    middleName: d.middleName || null,
+    dateOfBirth: d.dateOfBirth || null,
+    branch: d.branch || null,
+    component: d.component || null,
+    rank: d.rank || null,
+    payGrade: d.payGrade || null,
+    mos: d.mos || null,
+    mosTitle: d.mosTitle || null,
+    entryDate: d.serviceStartDate || null,
+    entryDateDerived: !!d.serviceStartDateDerived,
+    separationDate: d.serviceEndDate || null,
+    placeOfEntry: d.placeOfEntry || null,
+    placeOfEntryLowConfidence: !!d.placeOfEntryLowConfidence,
+  };
+}
+
+function _buildDD214ServiceAndSeparationFields(d, result, serviceTime) {
+  return {
+    netActiveService: d.totalActiveService || null,
+    totalPriorActiveService: d.totalPriorActiveService || null,
+    totalPriorInactiveService: d.totalPriorInactiveService || null,
+    yearsService: serviceTime.years,
+    monthsService: serviceTime.months,
+    daysService: serviceTime.days,
+    militaryEducation: d.militaryEducation ? [d.militaryEducation] : [],
+    separationType: d.separationType || null,
+    characterOfService: d.dischargeType || null,
+    separationAuthority: d.separationAuthority || null,
+    separationCode: d.spdCode || null,
+    reentryCode: d.reentryCode || null,
+    narrativeReason: d.narrativeReason || null,
+    // Tri-state: true/false when actually known, null when not extracted -
+    // `!!` used to coerce "not extracted" into a definite "no".
+    foreignService: d.foreignService ?? null,
+    combatService: d.combatService || null,
+    extractedText: (result.text || "").substring(0, 10000),
+    confidence: result.classification?.confidence ?? 0,
+    additionalPeriods: Array.isArray(d.additionalPeriods)
+      ? d.additionalPeriods
+      : [],
+  };
+}
+
+// Maps parseServiceRecord()/buildVisionParsedServiceRecord() field names
+// (musterCallProcessor's own DD214 extraction) onto the field names
+// saveDD214Data() (veteranProfile.js) expects. The two never agreed on names
+// because saveDD214Data's other two callers (MyPacket.jsx, DD214Analyzer.jsx)
+// feed it AI/regex output from a separate extractor (dd214FieldExtractor.js)
+// that already uses saveDD214Data's names. remarks has no saveDD214Data
+// target and is intentionally left unmapped rather than invented.
+// deployments likewise has no saveDD214Data target - it's written by its
+// own saveDeploymentsToProfile (addDeployment), the same store the
+// Service tab's own deployments list reads, not through this record.
+// placeOfEntry has no saveDD214Data target either, but FIX-15 forwards it
+// here anyway for the period-scoped servicePeriods[] write in
+// saveServiceRecordToProfile below.
+export const buildDD214ProfileUpdate = (result) => {
+  const d = result.extractedData || {};
+  const serviceTime = _parseServiceTimeString(d.totalActiveService);
+  return {
+    ..._buildDD214IdentityFields(d),
+    ..._buildDD214ServiceAndSeparationFields(d, result, serviceTime),
+  };
+};
+
+const _isEmptyDD214Value = (value) => {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") return value === "";
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+};
+
+// D-C: whether `newVal` should win a DD214 field merge - same fill-if-
+// empty/confidence-high-water-mark rule _mergeDD214Record applies to every
+// other field, split out so entryDate and entryDateDerived (below) can
+// resolve as one unit instead of two independent per-key decisions.
+function _dd214FieldKeepsNew(
+  oldVal,
+  newVal,
+  candidateConfidence,
+  existingConfidence,
+) {
+  if (_isEmptyDD214Value(oldVal)) return true;
+  if (_isEmptyDD214Value(newVal)) return false;
+  return candidateConfidence >= existingConfidence;
+}
+
+// Merges a newly-extracted DD214 record onto whatever is already stored in
+// the Service tab. Confidence is tracked at the record level (a single
+// high-water mark via Math.max below, not per field): a field is only
+// overwritten when the incoming extraction's confidence is >= the stored
+// record's overall confidence, or when the existing field is empty - so a
+// low-confidence re-scan can fill gaps but can't blank out or replace data
+// from a higher-confidence scan. A field gap-filled by a low-confidence scan
+// is thereafter protected by the record's higher watermark. `existing`/
+// `candidate` field names always match: both flow through the same
+// _sanitizeDd214Data() whitelist (veteranProfile.js) that saveDD214Data uses.
+const _mergeDD214Record = (existing, candidate) => {
+  if (!existing) return candidate;
+  const existingConfidence = existing.confidence || 0;
+  const candidateConfidence = candidate.confidence || 0;
+  const keys = new Set([...Object.keys(existing), ...Object.keys(candidate)]);
+  const merged = {};
+  keys.forEach((key) => {
+    const newVal = candidate[key];
+    const oldVal = existing[key];
+    // Combat is established once and never retracted by a later document.
+    // A veteran's DD214 set routinely spans four pages where only one
+    // carries Block 13; under the confidence rule below, a page listing no
+    // decorations would overwrite the page that listed the Combat Action
+    // Badge, and which page won would depend on OCR confidence ordering.
+    if (key === "combatService") {
+      merged[key] = mergeCombatService(oldVal, newVal);
+      return;
+    }
+    // D-C (final10 QA correctness re-review, 2026-09-26): entryDateDerived
+    // describes entryDate itself, not an independent fact - merging each
+    // key on its own let one document's real (false) entryDateDerived
+    // "win" this key while a DIFFERENT document's entryDate won that key,
+    // mislabeling a calculated NGB-22 date as printed (or vice versa).
+    // Resolved together: whichever side's entryDate is kept, its own
+    // entryDateDerived comes with it.
+    if (key === "entryDateDerived") return;
+    if (key === "entryDate") {
+      const keepNew = _dd214FieldKeepsNew(
+        oldVal,
+        newVal,
+        candidateConfidence,
+        existingConfidence,
+      );
+      merged.entryDate = keepNew ? newVal : oldVal;
+      merged.entryDateDerived = keepNew
+        ? !!candidate.entryDateDerived
+        : !!existing.entryDateDerived;
+      return;
+    }
+    const keepNew = _dd214FieldKeepsNew(
+      oldVal,
+      newVal,
+      candidateConfidence,
+      existingConfidence,
+    );
+    merged[key] = keepNew ? newVal : oldVal;
+  });
+  merged.confidence = Math.max(existingConfidence, candidateConfidence);
+  return merged;
+};
+
+// The canonical service period shape (C1 multi-period model) mandates
+// "YYYY-MM-DD" dates, but parseServiceRecord's own box extractors
+// (_normalizeDateMatch) emit MM/DD/YYYY - normalize at this write boundary
+// rather than touching the parser.
+// N7 (final8 QA, 2026-09-24): used to fall back to `Date.parse`, which is
+// lenient enough to accept "SINAI 12" as a real (wrong) date. Delegates to
+// dateUtils.parseExplicitDate, which only accepts the explicit formats
+// this file's own parsers emit and returns null for anything else -
+// shared with the VKB's own _toIsoDate (veteranKnowledgeBase.js) so both
+// close the same gap from one implementation.
+const _toISODateString = (dateStr) => parseExplicitDate(dateStr);
+
+// Writes extracted DD214 fields to the Service tab's storage key
+// (SERVICE_HISTORY_KEY via saveDD214Data) - kept as-is, still the write
+// target for person-scoped fields and everything currently displayed from
+// dd214Data. C1: ADDITIVELY also writes the period-scoped subset of the
+// same extraction into the canonical serviceHistory.servicePeriods[]
+// array (upsertServicePeriod, keyed by (serviceStartDate, serviceEndDate)
+// so genuinely different enlistment periods never collide - FIX-11).
+// This does not change saveDD214Data's existing merge behavior at all.
+// Split out of saveServiceRecordToProfile purely to keep that function's
+// cyclomatic complexity under the repo's lint ceiling - same behavior, same
+// upsertServicePeriod call, just its own named step.
+function _savePrimaryServicePeriod(file, result, candidate) {
+  try {
+    upsertServicePeriod(
+      {
+        serviceStartDate: _toISODateString(candidate.entryDate),
+        serviceEndDate: _toISODateString(candidate.separationDate),
+        serviceStartDateDerived: !!candidate.entryDateDerived,
+        branch: candidate.branch || "",
+        component: candidate.component || "",
+        formType: result.extractedData.formType || "DD214",
+        rank: candidate.rank || "",
+        payGrade: candidate.payGrade || "",
+        mos: candidate.mos || "",
+        mosTitle: candidate.mosTitle || "",
+        characterOfService: candidate.characterOfService || "",
+        separationType: candidate.separationType || "",
+        separationAuthority: candidate.separationAuthority || "",
+        separationCode: candidate.separationCode || "",
+        reentryCode: candidate.reentryCode || "",
+        narrativeReason: candidate.narrativeReason || "",
+        netActiveService: candidate.netActiveService || "",
+        yearsService: candidate.yearsService,
+        monthsService: candidate.monthsService,
+        daysService: candidate.daysService,
+        foreignService: candidate.foreignService ?? null,
+        militaryEducation: candidate.militaryEducation?.[0] || "",
+        placeOfEntry: candidate.placeOfEntry || "",
+        placeOfEntryLowConfidence: !!candidate.placeOfEntryLowConfidence,
+      },
+      { sourceDocument: file.name, confidence: candidate.confidence },
+    );
+    logger.info(`✅ Saved service period for this document`);
+  } catch (periodErr) {
+    console.warn(
+      `Service period save failed for this document (non-fatal):`,
+      periodErr.message,
+    );
+  }
+}
+
+// D-2 (final7 QA, 2026-09-24): candidate.separationDate is only extracted
+// from Box 12b, which an NGB-22 (unlike a DD214) doesn't always carry -
+// when it's missing, no additionalPeriod's end date could ever equal it,
+// so the rank never attached to any of them even when exactly one Active
+// Duty period unambiguously deserved it. D-2 fell back to "the latest
+// Active Duty period this same document describes" as a terminal-period
+// proxy whenever separationDate was absent.
+//
+// D11-4 (final11 QA, 2026-09-27): that fallback is still a guess. Without
+// an extracted separation date, nothing on the document proves its rank
+// field applies to that particular window at all - a lone Active Duty
+// period is still a period that may have been served years earlier, at a
+// lower rank, than whatever rank the document's own (undated) separation
+// reflects. Removed: a Box-18 window now gets a rank only via a proven
+// link (its own DD214, or this NGB-22's own separation date, extracted AND
+// equal to that window's own end date).
+//
+// Observation 1 (final10 QA, 2026-09-25) computed the terminal-AD fallback
+// unconditionally, reasoning a present separationDate that POST-DATES the
+// terminal AD window (routine for a Guard member, whose overall discharge
+// is years after their last individual activation) meant the fallback
+// should still apply. Reverted in final10 QA's correctness re-review
+// (2026-09-26): that stamps the NGB-22's rank AS OF ITS OWN SEPARATION onto
+// whichever window merely happens to be chronologically last among this
+// document's own listed windows - years before the veteran actually held
+// that rank, with nothing on the document proving they held it that early.
+// No rank on that window (until a real DD214 for it supplies one) is the
+// honest result, not a guessed one.
+
+// FIX-15: NGB-22 Box 18's granular IADT/AD date ranges (see
+// _extractNGB22PeriodDates) each become their own servicePeriods[] entry,
+// additive to the single Box 12a/12b period saved by
+// _savePrimaryServicePeriod (called right after this, same import). Box-18
+// window demotion fix (final15 QA review): a window range that happens to
+// match THIS SAME IMPORT's own primary-period dates is flagged via
+// `mayCollideWithOwnPrimary` - veteranProfile.js's `_isOwnSiblingWindow`
+// uses it to bar that specific window from merging into whatever
+// PRE-EXISTING (possibly non-window) row already occupies that date key, so
+// a coinciding window can never demote an earlier import's primary
+// enlistment period, in either import order.
+function _saveNGB22AdditionalPeriods(file, candidate) {
+  if (!Array.isArray(candidate.additionalPeriods)) return;
+  const separationDate = _toISODateString(candidate.separationDate);
+  const primaryStart = _toISODateString(candidate.entryDate);
+  const primaryEnd = separationDate;
+  candidate.additionalPeriods.forEach((period) => {
+    try {
+      const periodStartDate = _toISODateString(period.serviceStartDate);
+      const periodEndDate = _toISODateString(period.serviceEndDate);
+      // The NGB-22's own rank field is only known to apply at the end of
+      // the actual Active Duty stretch this document's own separation date
+      // proves it was issued for - an earlier IADT window, or an AD window
+      // that isn't the one ending on this document's own separation date,
+      // may have been served at a different rank, so only the matching AD
+      // period gets it. No separation date extracted means no proof at
+      // all, so no window gets the rank via this path.
+      const isTerminalADPeriod =
+        !!separationDate &&
+        period.component === "Active Duty" &&
+        !!periodEndDate &&
+        periodEndDate === separationDate;
+      const rank = isTerminalADPeriod ? candidate.rank || "" : undefined;
+      // D16-2 (final16 QA re-review, 2026-09-29): exact equality alone
+      // missed a window whose OWN dating is a few days off its document's
+      // own primary (report date vs entry date, an OCR digit miss) - too
+      // narrow to catch what veteranProfile.js's pass 2 will now cross-
+      // scope-match with the SAME isSameServicePeriod tolerance. Without
+      // this, that near-coinciding window was free to merge into whatever
+      // OTHER document's row already sat at the primary's exact dates,
+      // flip that row's periodScope to "window" (N9c), and then let the
+      // primary itself collide with and demote into its own now-window-
+      // scoped sibling. Widening this check to the same tolerance closes
+      // that gap the same way the exact-coincidence case already does.
+      const mayCollideWithOwnPrimary =
+        !!primaryStart &&
+        !!primaryEnd &&
+        isSameServicePeriod(
+          periodStartDate,
+          periodEndDate,
+          primaryStart,
+          primaryEnd,
+        );
+      upsertServicePeriod(
+        {
+          serviceStartDate: periodStartDate,
+          serviceEndDate: periodEndDate,
+          branch: candidate.branch || "",
+          component: period.component,
+          formType: "NGB22",
+          sourceDocument: file.name,
+          rank,
+          notes:
+            "Date range from NGB-22 Box 18 remarks (no location listed on the document).",
+          // N9c (final9 QA, 2026-09-25): a training/activation window, not
+          // the document's own enlistment-level record - the undated
+          // primary row this same document produces must never merge into
+          // one of its own sub-periods (see veteranProfile.js's
+          // _hasProvenLink).
+          periodScope: "window",
+        },
+        {
+          sourceDocument: file.name,
+          confidence: candidate.confidence,
+          mayCollideWithOwnPrimary,
+        },
+      );
+    } catch (periodErr) {
+      console.warn(
+        `NGB-22 Box 18 period save failed for this document (non-fatal):`,
+        periodErr.message,
+      );
+    }
+  });
+}
+
+// ADR-007: periods now upsert BEFORE the dd214Data merge (reversed from the
+// original order) - so a new document's printed/calculated start is
+// already known to servicePeriods[] (and saveServiceHistory's own
+// preservation guard) by the time saveDD214Data below runs, instead of the
+// other way around.
+export const saveServiceRecordToProfile = (file, result) => {
+  if (result.extractedData?.type !== "service_record") return;
+  const candidate = buildDD214ProfileUpdate(result);
+
+  // N8 (final8 QA, 2026-09-24): the Box 18 additional periods run first so
+  // that when the primary Box 12a/12b row can't be dated (a real gap on
+  // some NGB-22 scans), it upserts as the LAST call for this document -
+  // by then every dated period Box 18 produced already exists, so
+  // veteranProfile's own proven-link ambiguity check (shared with N8's
+  // retroactive absorption) correctly sees an NGB-22 with more than one
+  // dated period as ambiguous and leaves the undated row in
+  // unmatchedServiceRecords, instead of guessing it onto whichever of two
+  // real periods happened to be created first.
+  _saveNGB22AdditionalPeriods(file, candidate);
+  _savePrimaryServicePeriod(file, result, candidate);
+
+  try {
+    const existing = getServiceHistory().dd214Data;
+    saveDD214Data(_mergeDD214Record(existing, candidate));
+    logger.info(`✅ Saved DD214 data to Service tab for this document`);
+  } catch (dd214Err) {
+    console.warn(
+      `Service history save failed for this document (non-fatal):`,
+      dd214Err.message,
+    );
+  }
+};
+
+// result.extractedData.awards reaches this in one of two shapes depending on
+// which extraction path produced it: ribbonRackData.parseDD214Text() output
+// (regex path, via _extractAwardsFromBlock13/_extractAwardsFallback inside
+// parseServiceRecord below - { award, matchedText, devices, quantity }), or
+// dd214VisionParser.extractAwards() output (Florence vision path, via
+// buildVisionParsedServiceRecord above - { name, abbreviation, isCombat,
+// count }). They never share a shape because the vision path's own parser
+// runs before ribbonRackData.parseDD214Text ever sees the vision-extracted
+// text. Both get normalized to addAward()'s input shape here.
+// FIX-4: devices must stay structured {type, position} objects end-to-end
+// - VisualRibbon.jsx switches on device.type and can't render a flattened
+// display-name string. This previously flattened via DEVICES[d.type]?.name
+// right here, which is why devices extracted correctly by
+// ribbonRackData.detectDevices() never actually rendered on the Ribbon
+// Rack: by the time addAward() saw them, they were already strings with
+// nowhere structured to go.
+const _normalizeExtractedAward = (item) => {
+  if (item.award) {
+    // A "V"/"C" device is only one of the ways an award establishes combat.
+    // Keying isCombat off devices alone recorded the Combat Action Badge -
+    // the decoration whose entire purpose is to certify combat, and which
+    // carries no device - as isCombat: false, in both the Ribbon Rack and
+    // vkb.serviceHistory.awards. combatService.js holds VA's own list.
+    const isCombat = isCombatDecoration(item);
+    // matchedText is whichever token (full name OR alias) actually appeared
+    // in the source document -- a DD214 that spells the award out in full
+    // (rather than abbreviating it) makes matchedText equal the full name,
+    // which would otherwise leave the real name sitting in this field too.
+    // MASTER_AWARDS' first alias is reliably the true abbreviation (verified
+    // against ribbon_manifest.json: 88/89 entries), so fall back to it.
+    const matchedFullName =
+      (item.matchedText || "").toUpperCase() ===
+      (item.award.name || "").toUpperCase();
+    return {
+      name: item.award.name,
+      abbreviation:
+        (!matchedFullName && item.matchedText) || item.award.aliases?.[0] || "",
+      isCombat,
+      devices: item.devices || [],
+    };
+  }
+  return {
+    name: item.name,
+    abbreviation: item.abbreviation || "",
+    isCombat: !!item.isCombat || isCombatDecoration(item),
+    devices: [],
+  };
+};
+
+// Routes awards already found by parseServiceRecord/parseDD214Document
+// (result.extractedData.awards) through addAward()'s dedup so the Ribbon
+// Rack (RibbonRackSection in MyPacket.jsx) gets populated from Muster Call
+// batch imports, not just the single-document DD214Analyzer.jsx upload flow.
+// addAward() itself is what prevents the same medal appearing once per
+// source document when a veteran's corpus has several overlapping DD214s.
+const saveAwardsToProfile = (file, result) => {
+  const awards = result.extractedData?.awards;
+  if (!Array.isArray(awards) || awards.length === 0) return;
+  try {
+    awards.forEach((item) => {
+      const normalized = _normalizeExtractedAward(item);
+      if (!normalized.name) return;
+      // Human-readable device summary for `notes` - devices themselves go
+      // through as structured data via the `devices` key below.
+      const deviceLabels = normalized.devices.map(
+        (d) => DEVICES[d.type]?.name || d.type,
+      );
+      addAward({
+        name: normalized.name,
+        abbreviation: normalized.abbreviation,
+        dateReceived: null,
+        notes: deviceLabels.join(", "),
+        isCombat: normalized.isCombat,
+        devices: normalized.devices,
+      });
+    });
+    logger.info(
+      `✅ Saved ${awards.length} award(s) to Ribbon Rack for this document`,
+    );
+  } catch (awardErr) {
+    console.warn(
+      `Award save failed for this document (non-fatal):`,
+      awardErr.message,
+    );
+  }
+};
+
+// "AFGHANISTAN" -> "Afghanistan": veteranProfile.js's addDeployment stores
+// theater/location as free text rendered as-is by the Service tab, and
+// every other theater already on record there (Vietnam, Korea, Gulf War...)
+// is Title Case, not shouting-case straight from the OCR-corrected text.
+const _toTitleCase = (str) =>
+  str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+// buildDD214ProfileUpdate has no saveDD214Data target for deployments (see
+// that comment) because a deployment isn't a single-record field like the
+// rest of dd214Data - it's its own list, exactly like awards. Without this,
+// _extractNarrativeAndDeploymentLocations's own result never reached
+// localStorage at all, so the Service tab's Deployments card stayed on "No
+// deployments added yet" no matter how many documents Muster Call ingested.
+// addDeployment is the same write target the Service tab's own manual "Add
+// Deployment" form uses, so a document-ingested deployment now shows up
+// identically to one the veteran typed in by hand.
+// FIX (S46 QA, item 3): the old dedupe keyed on location + exact startDate,
+// so a bare/undated mention of a location already saved WITH dates (a
+// different document's copy that didn't carry Box 18's FROM/TO range, or a
+// C-File's repeated scans of the same DD214) never matched and was saved
+// as a second, dateless entry for the same place. A location match is now
+// enough when either side has no date - it's either a repeat of an
+// already-dated tour (nothing to add) or fills the existing entry's still-
+// missing dates - while a genuinely different startDate for the same
+// location still creates a new entry (a real second tour).
+export const saveDeploymentsToProfile = (file, result) => {
+  const deployments = result.extractedData?.deployments;
+  if (!Array.isArray(deployments) || deployments.length === 0) return;
+  try {
+    const existing = getServiceHistory().deployments || [];
+    deployments.forEach((dep) => {
+      if (!dep.location) return;
+      const depStartIso = _toISODateString(dep.startDate);
+      // A start date a few days off the one already on file (report date
+      // vs entry date, two different scans of the same tour) is still the
+      // same tour, not a second one - same tolerance isSameServicePeriod
+      // uses for the analogous service-period case.
+      const match = existing.find(
+        (d) =>
+          (d.location || "").toUpperCase() === dep.location.toUpperCase() &&
+          (!d.startDate ||
+            !depStartIso ||
+            isSameDate(d.startDate, depStartIso)),
+      );
+      if (match) {
+        const updates = {};
+        if (!match.startDate && depStartIso) updates.startDate = depStartIso;
+        if (!match.endDate && dep.endDate) {
+          updates.endDate = _toISODateString(dep.endDate);
+        }
+        // Recomputed every time (not just OR'd in) so a stale `true` from
+        // before this designation table existed - or from a location that
+        // later loses its sourced designation - gets corrected on
+        // re-import instead of persisting forever.
+        const resolvedStartDate = updates.startDate || match.startDate;
+        const recomputedCombat = isDesignatedCombatZone(
+          dep.location.toUpperCase(),
+          resolvedStartDate,
+        );
+        if (recomputedCombat !== match.combat)
+          updates.combat = recomputedCombat;
+        if (Object.keys(updates).length > 0) {
+          updateDeployment(match.id, updates);
+          Object.assign(match, updates);
+        }
+        return;
+      }
+      const theater = _toTitleCase(dep.location);
+      const newId = addDeployment({
+        theater,
+        location: theater,
+        startDate: depStartIso,
+        endDate: _toISODateString(dep.endDate),
+        combat: !!dep.combatZone,
+      });
+      existing.push({
+        id: newId,
+        location: theater,
+        startDate: depStartIso,
+        combat: !!dep.combatZone,
+      });
+    });
+    logger.info(
+      `✅ Saved ${deployments.length} deployment(s) to Service tab for this document`,
+    );
+  } catch (deploymentErr) {
+    console.warn(
+      `Deployment save failed for this document (non-fatal):`,
+      deploymentErr.message,
+    );
+  }
+};
+
+// Adapts musterCallProcessor's own extractedData field names
+// (buildDD214ProfileUpdate above) onto the dd214Data shape
+// veteranKnowledgeBase.mergeDD214IntoVKB expects, which differs in a couple
+// of field names (netActiveServiceTime vs netActiveService, spnCode vs
+// separationCode) because mergeDD214IntoVKB's other two callers
+// (DD214Analyzer.jsx, IntelligenceBriefing.jsx) feed it output from a
+// separate extractor (dd214FieldExtractor.js) that already uses those names.
+const buildVKBDD214Data = (result) => {
+  const candidate = buildDD214ProfileUpdate(result);
+  const d = result.extractedData || {};
+  const awards = (Array.isArray(d.awards) ? d.awards : []).map((item) => {
+    const normalized = _normalizeExtractedAward(item);
+    return {
+      name: normalized.name,
+      date: null,
+      isCombat: normalized.isCombat,
+      devices: normalized.devices,
+    };
+  });
+  // d.deployments is already { location, startDate, endDate, combatZone }
+  // (see _pushDeployment) - the same shape mergeDD214Deployments expects,
+  // so no remapping needed here beyond the date format: _pushDeployment's
+  // dates are MM/DD/YYYY (FIX-15's convention), but vkb.serviceHistory.
+  // deployments and the evidence timeline both expect ISO YYYY-MM-DD like
+  // every other stored date - converted here rather than at
+  // veteranKnowledgeBase.js's merge boundary alone so this producer is
+  // correct even if a future caller there forgets to normalize.
+  const deployments = Array.isArray(d.deployments)
+    ? d.deployments.map((dep) => ({
+        ...dep,
+        startDate: _toISODateString(dep.startDate),
+        endDate: _toISODateString(dep.endDate),
+      }))
+    : [];
+
+  return {
+    ...candidate,
+    // D-C: buildDD214ProfileUpdate's own candidate never carries formType
+    // (veteranKnowledgeBase.js's _serviceEntryTimelineEvent needs it to
+    // tell an NGB-22's own enlistment record apart from any other document
+    // for the same, possibly Guard/Reserve, veteran).
+    formType: d.formType || null,
+    netActiveServiceTime: candidate.netActiveService,
+    spnCode: candidate.separationCode,
+    education: candidate.militaryEducation?.[0] || null,
+    awards,
+    deployments,
+    pageCount: result.pageCount || 1,
+  };
+};
+
+// Populates vkb.serviceHistory.awards/deployments/mos/combatService (the
+// richer VKB schema every AI tool reads via getVeteranAIContext() /
+// generateLLMContext()) from the same batch-processed DD214/NGB22 data that
+// saveServiceRecordToProfile writes to the Service tab above. Without this,
+// documents ingested via Muster Call never reached vkb.serviceHistory at all
+// - only the manual DD214Analyzer.jsx upload (mergeDD214IntoVKB) and
+// IntelligenceBriefing.jsx review screen (mergeMusterCallIntoVKB) did.
+// mergeDD214IntoVKB's own mergeDD214Awards has a separate fuzzy-match dedup
+// against vkb.serviceHistory.awards - a different array in a different store
+// (IndexedDB VKB) than addAward()'s history.awards (veteranProfile.js
+// localStorage) - so both need to independently end up deduped; neither
+// dedup is aware of the other. This reuses the same loadVKB()/saveVKB()
+// lost-update race already disclosed on appendMusterCallTimelineEntry below,
+// not a new one.
+const mergeServiceRecordIntoVKB = async (file, result) => {
+  if (result.extractedData?.type !== "service_record") return;
+  try {
+    const vkb = await loadVKB();
+    const dd214Data = buildVKBDD214Data(result);
+    mergeDD214IntoVKB(vkb, dd214Data, { fileName: file.name });
+    requireSaved(await saveVKB(vkb));
+    logger.info(`✅ Merged DD214 data into VKB for this document`);
+  } catch (vkbErr) {
+    warnNonFatalStep("VKB merge", vkbErr);
+  }
+};
+
+// buildSegmentedCFileResult's own deployment extraction (see
+// _extractCFileDeployments) has no VKB merge target of its own -
+// mergeServiceRecordIntoVKB above only fires for type: "service_record"
+// (a directly-uploaded DD214/NGB22), so a C-File's deployments reached the
+// Service tab (saveDeploymentsToProfile, which is type-agnostic) but never
+// vkb.serviceHistory.deployments or the evidence timeline. Calls
+// mergeDD214Deployments AND mergeDD214EvidenceTimeline directly rather
+// than the full mergeDD214IntoVKB pipeline: the C-File is already filed
+// as its own "c_file" document via addDocumentToVKB/routeDocumentToVKB,
+// so running mergeDD214IntoVKB's mergeDD214Documentation step here as
+// well filed it a SECOND time as a fabricated DD-214 - inflating
+// vkb.metadata.documentCount and the "DD-214s: N" tally by one per C-File
+// import (S46 QA follow-up, item 5).
+// N2 (final8 QA, 2026-09-24): this used to call mergeDD214Deployments
+// alone, so a C-File-only tour reached vkb.serviceHistory.deployments but
+// never the Evidence Timeline - mergeDD214EvidenceTimeline is the only
+// other step that reads `deployments`, and it doesn't touch
+// vkb.documentation.dd214s, so adding it doesn't reintroduce the
+// double-filing bug the comment above already fixed.
+const mergeCFileDeploymentsIntoVKB = async (file, result) => {
+  if (result.extractedData?.type !== "c_file") return;
+  const deployments = result.extractedData?.deployments;
+  if (!Array.isArray(deployments) || deployments.length === 0) return;
+  try {
+    const vkb = await loadVKB();
+    const dd214Data = {
+      deployments: deployments.map((dep) => ({
+        ...dep,
+        startDate: _toISODateString(dep.startDate),
+        endDate: _toISODateString(dep.endDate),
+      })),
+    };
+    mergeDD214Deployments(vkb, dd214Data, { fileName: file.name });
+    mergeDD214EvidenceTimeline(vkb, dd214Data, { fileName: file.name });
+    requireSaved(await saveVKB(vkb));
+    logger.info(`✅ Merged C-File deployments into VKB for this document`);
+  } catch (vkbErr) {
+    warnNonFatalStep("VKB merge", vkbErr);
+  }
+};
+
+// Picks the most relevant date already surfaced by this document's own
+// extraction/classification for its timeline entry; falls back to the
+// processing date only if nothing usable was extracted.
+// VA correspondence dates its letterhead in prose ("<Month> <day>, <year>"),
+// not the "CLAIM DATE: <MM/DD/YYYY>" literal parseClaimLetter looks for, so a
+// claim-letter corpus can yield no extracted date at all and every entry
+// collapses onto the import date - a timeline that can't show continuity of
+// symptoms. Exports commonly carry the date in the filename (a word followed
+// by a hyphenated date), so it is used ahead of the processing-date fallback.
+const _filenameDate = (fileName) => {
+  const match = /(\d{4})[-_](\d{1,2})[-_](\d{1,2})/.exec(fileName || "");
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const iso = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  return Number.isNaN(Date.parse(iso)) ? null : iso;
+};
+
+// FIX-5: picks the most relevant date already surfaced by this document's
+// own extraction/classification, then the filename, and only as an
+// absolute last resort reports no real date at all instead of fabricating
+// "today". Returns { date, dateIsProcessingDate } - date is null when
+// nothing real was found.
+export const resolveTimelineDate = (result, fileName) => {
+  const d = result.extractedData || {};
+  const extracted =
+    d.serviceEndDate ||
+    d.serviceStartDate ||
+    d.decisionDate ||
+    d.effectiveDate ||
+    d.examDate ||
+    d.claimDate ||
+    d.dateOfService ||
+    _filenameDate(fileName) ||
+    null;
+  // EvidenceTimeline renders through formatLocalDate, which only reads
+  // YYYY-MM-DD; letters and DD214s give "July 12, 2015" or "05/30/2015".
+  if (extracted) {
+    return {
+      date: _toIsoDay(extracted) ?? extracted,
+      dateIsProcessingDate: false,
+    };
+  }
+  return { date: null, dateIsProcessingDate: true };
+};
+
+// Appends one minimal read-only timeline entry per successfully processed
+// document, for the Timeline tab's VkbTimelineSection (which reads
+// vkb.evidenceTimeline). Uses the same loadVKB()/saveVKB() read-modify-write
+// pair addDocumentToVKB already uses. Batch processing (processMusterCallBatch)
+// runs up to maxConcurrent documents in parallel, and loadVKB() returns a
+// deep copy per call, so concurrent calls to this function race on the same
+// lost-update pattern addDocumentToVKB already has - this doesn't add a new
+// kind of race, just a second call site exposed to the pre-existing one.
+// FIX-5: uses the same 5-field shape mergeDD214EvidenceTimeline
+// (veteranKnowledgeBase.js) already uses - {date, eventType, description,
+// source, significance} - instead of a different 3-field shape.
+// FIX-12: pure identity check, factored out so it's unit-testable without
+// IndexedDB (appendMusterCallTimelineEntry itself requires loadVKB/saveVKB,
+// which aren't available under jsdom - see musterCallProcessor timeline
+// dedup tests). Same spirit as addDocumentToVKB's FIX-6 (fileName+fileSize
+// identity), but the "document_import" timeline shape has no fileName/
+// fileSize fields of its own; description is built deterministically from
+// the same label + file.name every time a given document is re-imported, so
+// (eventType, source, description) is this shape's stable identity key.
+export const findDuplicateTimelineEntry = (evidenceTimeline, description) =>
+  evidenceTimeline.find(
+    (e) =>
+      e.eventType === "document_import" &&
+      e.source === "Muster Call" &&
+      e.description === description,
+  );
+
+const appendMusterCallTimelineEntry = async (file, result) => {
+  try {
+    const vkb = await loadVKB();
+    if (!Array.isArray(vkb.evidenceTimeline)) {
+      vkb.evidenceTimeline = [];
+    }
+    const label =
+      getDocumentTypeLabel(result.classification?.type) ||
+      result.classification?.type ||
+      "Document";
+    const description = `${label}: ${file.name}`;
+    const { date, dateIsProcessingDate } = resolveTimelineDate(
+      result,
+      file.name,
+    );
+    // D-4: new Date().toISOString() reports the UTC calendar day, which is
+    // already tomorrow for an evening import anywhere west of UTC.
+    // _toIsoDay(new Date()) reads getFullYear/Month/Date() - local time.
+    const importedDate = dateIsProcessingDate
+      ? _toIsoDay(new Date())
+      : undefined;
+
+    // Without this, every re-import appended a brand-new "document_import"
+    // entry instead of updating the existing one.
+    const existing = findDuplicateTimelineEntry(
+      vkb.evidenceTimeline,
+      description,
+    );
+    if (existing) {
+      existing.date = date;
+      existing.dateIsProcessingDate = dateIsProcessingDate;
+      existing.importedDate = importedDate;
+    } else {
+      vkb.evidenceTimeline.push({
+        date,
+        dateIsProcessingDate,
+        importedDate,
+        eventType: "document_import",
+        description,
+        source: "Muster Call",
+        significance: "",
+      });
+    }
+    requireSaved(await saveVKB(vkb));
+  } catch (timelineErr) {
+    warnNonFatalStep("Evidence timeline update", timelineErr);
+  }
+};
+
+const classifyAndParseDocument = async (
+  file,
+  onProgress,
+  result,
+  extractionResult,
+) => {
+  // Step 2: Classify document (SecOps Intelligence Briefing - Part 1)
+  onProgress?.({
+    filename: file.name,
+    state: PROCESSING_STATES.CLASSIFYING,
+    progress: 75,
+    stage: "intel_classify",
+  });
+
+  result.classification = classifyDocument(result.text, file.name, {
+    pageCount: result.pageCount,
+  });
+
+  // Step 3: Parse based on classification (SecOps Intelligence Briefing - Part 2)
+  onProgress?.({
+    filename: file.name,
+    state: PROCESSING_STATES.ANALYZING,
+    progress: 85,
+    stage: "intel_extract",
+    docType: result.classification.type,
+    confidence: result.classification.confidence,
+  });
+
+  // Parsing is enrichment on top of a successful extraction, and it runs
+  // BEFORE storeDocumentInVKB/archiveDocumentInPacket in processSingleDocument.
+  // Letting a parser throw therefore loses the whole document - the veteran's
+  // file never reaches the VKB or My Packet at all. Observed on a very large
+  // C-File once page-count classification correctly routed it to
+  // parseCFileDocument, which threw where parseClaimLetter had not. Degrade to
+  // raw text and record the failure loudly instead of dropping the document.
+  try {
+    result.extractedData = await parseDocumentByType(
+      result.text,
+      result.classification.type,
+      file.name,
+      extractionResult.visionParsedData, // Pass vision-parsed data if available
+      extractionResult.letterheadText,
+    );
+  } catch (parseErr) {
+    console.error(
+      `Parser failed for this document (${result.classification.type}); storing raw text so the document is not lost:`,
+      parseErr?.message,
+    );
+    result.extractedData = {
+      raw: result.text.substring(0, 1000),
+      parseError:
+        parseErr?.message || String(parseErr) || "unknown parse error",
+      parseFailedType: result.classification.type,
+    };
+  }
+};
+
+// A rating decision, or a claim letter that turned out to carry per-issue
+// decisions (the classifier's decision-letter override normally promotes
+// those, but the extracted data is what matters here, not the label).
+const hasRatingDecisions = (result) => {
+  const d = result.extractedData;
+  return (
+    d?.type === "rating_decision" ||
+    d?.ratingSource === "code_sheet" ||
+    (Array.isArray(d?.decisions) && d.decisions.length > 0)
+  );
+};
+
+const _sideFromConditionName = (name) => sideFromName(name);
+
+// Letters write effective dates as prose ("August 22, 2023", "Jun 30,
+// 2007"); everything that renders a saved rating runs it through
+// dateUtils.formatLocalDate, which takes the first 10 characters and appends
+// "T00:00:00" - so a prose date reached the Ratings tab as "Invalid Date".
+// Store the calendar day in the YYYY-MM-DD form that contract expects.
+// Exported (like resolveTimelineDate/findDuplicateTimelineEntry above) so
+// its local-vs-UTC calendar-day behavior is unit-testable without
+// IndexedDB - see D-4's "imported" fallback date fix, below.
+export const _toIsoDay = (value) => {
+  if (!value) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
+};
+
+// Returns true when the saved row changed. An older letter never overwrites
+// a newer decision, and a renamed condition takes the newer name.
+const _applyNewerRating = (row, name, pct, effectiveDate) => {
+  if (
+    isOlderDecision(effectiveDate, row.effectiveDate) ||
+    isSupersededName(row.name, name)
+  ) {
+    return false;
+  }
+  let changed = false;
+  if (normalizeConditionName(row.name) !== normalizeConditionName(name)) {
+    row.name = name;
+    row.side = _sideFromConditionName(name);
+    changed = true;
+  }
+  if (row.rating !== pct) {
+    row.rating = pct;
+    changed = true;
+  }
+  if (effectiveDate && row.effectiveDate !== effectiveDate) {
+    row.effectiveDate = effectiveDate;
+    changed = true;
+  }
+  return changed;
+};
+
+// Rated conditions from a decision letter become the veteran's saved ratings
+// - getMyRatings() is what the My Packet Ratings tab, Pathfinder, Secondary
+// Scout and the calculators all read. Upsert by normalized condition name so
+// a later letter's increase replaces the earlier percentage instead of
+// duplicating the row.
+const saveRatingDecisionToProfile = (file, result) => {
+  if (!hasRatingDecisions(result)) return;
+  const rated = Array.isArray(result.extractedData.conditions)
+    ? result.extractedData.conditions
+    : [];
+  if (rated.length === 0) return;
+  try {
+    const ratings = getMyRatings();
+    let changed = false;
+    for (const c of rated) {
+      const name = c.name || c.condition;
+      const pct = Number(c.rating ?? c.ratedPercentage);
+      if (!name || !Number.isFinite(pct)) continue;
+      const effectiveDate = _toIsoDay(c.effectiveDate);
+      const existing = findRatedConditionMatch(ratings, name, (r) => r.name);
+      if (existing) {
+        changed =
+          _applyNewerRating(existing, name, pct, effectiveDate) || changed;
+      } else {
+        ratings.push({
+          name,
+          rating: pct,
+          effectiveDate,
+          bodyPart: "other",
+          side: _sideFromConditionName(name),
+        });
+        changed = true;
+      }
+    }
+    if (dropSupersededConditions(ratings, (r) => r.name) > 0) changed = true;
+    if (changed) saveMyRatings(ratings);
+    logger.info(
+      `✅ Saved ${rated.length} rated condition(s) from this document to My Ratings`,
+    );
+  } catch (ratingErr) {
+    console.warn(
+      `Ratings save failed for this document (non-fatal):`,
+      ratingErr.message,
+    );
+  }
+};
+
+// VA's code sheet is the one record of every active-duty period with its
+// character of discharge, and its dates settle what a scanned form's OCR
+// could not read.
+export const saveCodeSheetServicePeriodsToProfile = (file, result) => {
+  const periods = result.extractedData?.servicePeriods;
+  if (result.extractedData?.ratingSource !== "code_sheet") return;
+  for (const p of periods || []) {
+    upsertServicePeriod(
+      {
+        serviceStartDate: p.entryDate,
+        serviceEndDate: p.separationDate,
+        branch: p.branch,
+        characterOfService: p.characterOfDischarge,
+        // Explicit "Code Sheet" formType, at the same 100/authoritative
+        // confidence that already wins the date fields below: without it,
+        // upserting onto an existing NGB-22-sourced period left that
+        // period's stale formType: "NGB22" in place (SERVICE_PERIOD_MERGE_
+        // FIELDS only overwrites a field when the incoming value is
+        // truthy), so the UI kept labelling VA's own authoritative record
+        // "(NGB22)".
+        formType: "Code Sheet",
+        sourceDocument: file.name,
+      },
+      { sourceDocument: file.name, confidence: 100, authoritativeDates: true },
+    );
+  }
+};
+
+const mergeRatingDecisionIntoVKBForFile = async (file, result) => {
+  if (!hasRatingDecisions(result)) return;
+  try {
+    const vkb = await loadVKB();
+    mergeRatingDecisionIntoVKB(vkb, result.extractedData, {
+      fileName: file.name,
+    });
+    requireSaved(await saveVKB(vkb));
+    logger.info(`✅ Merged rating decision into VKB for this document`);
+  } catch (vkbErr) {
+    warnNonFatalStep("VKB rating-decision merge", vkbErr);
+  }
+};
+
+// Every write here is keyed by (fileName, fileSize) or an equivalent
+// identity (addDocumentToVKB, saveDocumentToPacket, findDuplicateTimelineEntry,
+// mergeDD214IntoVKB's per-fileName guard, addAward's own dedup) and updates
+// the existing record in place rather than duplicating it. That makes this
+// safe to call twice for the same document: once on initial extraction, and
+// again from the verification screen's "Verify & Save" with corrected
+// field values, so a veteran's corrections actually reach the stores every
+// AI tool reads from instead of being silently discarded.
+//
+// Every step that waits on IndexedDB is bounded: a transaction that never
+// completes (blocked upgrade, contention across tabs) used to freeze the
+// import at 85% with no message. When a storage step runs out of time the
+// stores are given a fresh connection, the remaining storage steps are held
+// back (they would only queue behind the same stuck connection), the steps
+// that need no storage (profile, ratings, awards) still run, and the whole
+// call then fails with DocumentPersistIncompleteError so the caller can say
+// so plainly and offer a Retry - which is safe because every write is keyed.
+const PERSIST_STEP_TIMEOUT_MS = 60_000;
+
+export class DocumentPersistIncompleteError extends Error {
+  constructor(steps, { quotaExceeded = false, message } = {}) {
+    super(message || "Saving this document did not finish.");
+    this.name = "DocumentPersistIncompleteError";
+    this.steps = steps;
+    this.quotaExceeded = quotaExceeded;
+  }
+}
+
+export { describePersistIncomplete };
+
+// A save the store refused (a full device) does not stall the connection, so
+// the other steps still run and are each reported if they fail the same way.
+function _createStorageStepRunner(stepTimeoutMs) {
+  const incomplete = [];
+  const outcome = { quotaExceeded: false };
+  let stalled = false;
+  const run = async (step, start) => {
+    if (stalled) {
+      incomplete.push(step);
+      return;
+    }
+    try {
+      await withStepTimeout(start, step, stepTimeoutMs);
+    } catch (err) {
+      if (err instanceof StorageSaveFailedError) {
+        incomplete.push(step);
+        outcome.quotaExceeded ||= err.quotaExceeded;
+        return;
+      }
+      if (!(err instanceof StepTimeoutError)) throw err;
+      stalled = true;
+      incomplete.push(step);
+      resetVKBConnection();
+      resetPacketConnection();
+      console.warn(
+        `Saving step "${step}" timed out; later storage steps are held for a retry.`,
+      );
+    }
+  };
+  return { run, incomplete, outcome };
+}
+
+// The local timeline copy converges after the knowledge base is complete, and
+// only when the copy already exists (an empty one is filled by the timeline's
+// own first open, which tells the veteran what it filled in).
+const convergeTimelineStoreAfterImport = async () => {
+  try {
+    await convergeTimelineStoreWithVKB({ onlyIfStoreHasEvents: true });
+  } catch (err) {
+    console.warn(
+      "Timeline copy could not be completed (non-fatal):",
+      err?.message,
+    );
+  }
+};
+
+// Direct identifiers a parsed service record carries. A tool that has no review
+// step of its own for them (or defers its writes until one) removes them here
+// before anything is stored.
+const FORMATION_IDENTIFIER_KEYS = [
+  "veteranName",
+  "lastName",
+  "firstName",
+  "middleName",
+  "dateOfBirth",
+  "vaFileNumber",
+  "claimNumber",
+];
+
+export const stripIdentifiersFromFormationResult = (result) => {
+  if (!result?.extractedData) return result;
+  const extractedData = { ...result.extractedData };
+  FORMATION_IDENTIFIER_KEYS.forEach((key) => delete extractedData[key]);
+  return { ...result, extractedData };
+};
+
+export const persistFormationDocument = async (
+  file,
+  result,
+  { stepTimeoutMs = PERSIST_STEP_TIMEOUT_MS } = {},
+) => {
+  const { run, incomplete, outcome } = _createStorageStepRunner(stepTimeoutMs);
+  await run("knowledge base", () => storeDocumentInVKB(file, result));
+  await run("my packet", () => archiveDocumentInPacket(file, result));
+  saveServiceRecordToProfile(file, result);
+  saveAwardsToProfile(file, result);
+  saveDeploymentsToProfile(file, result);
+  saveRatingDecisionToProfile(file, result);
+  saveCodeSheetServicePeriodsToProfile(file, result);
+  await run("timeline entry", () =>
+    appendMusterCallTimelineEntry(file, result),
+  );
+  await run("service record merge", () =>
+    mergeServiceRecordIntoVKB(file, result),
+  );
+  await run("deployments merge", () =>
+    mergeCFileDeploymentsIntoVKB(file, result),
+  );
+  await run("rating merge", () =>
+    mergeRatingDecisionIntoVKBForFile(file, result),
+  );
+  await run("timeline copy", convergeTimelineStoreAfterImport);
+  if (incomplete.length > 0) {
+    throw new DocumentPersistIncompleteError(incomplete, {
+      quotaExceeded: outcome.quotaExceeded,
+    });
+  }
+};
+
+// Page coverage the extractor reported (how many pages were read, OCR'd,
+// blank or not read at all) - carried on the result so Muster Call and the
+// C-File Analyzer can tell the veteran instead of the note dying here.
+const pickPageCoverage = (extraction) => ({
+  pagesRead: extraction.pagesRead ?? null,
+  pagesOCRd: extraction.pagesOCRd ?? null,
+  pagesBlank: extraction.pagesBlank || [],
+  pagesSkipped: extraction.pagesSkipped || [],
+  pagesFailed: extraction.pagesFailed || [],
+  coverageNote: extraction.coverageNote || null,
+});
+
+const MAX_RANGES_IN_NOTE = 8;
+
+const describeEmptyRanges = (ranges) => {
+  const shown = ranges
+    .slice(0, MAX_RANGES_IN_NOTE)
+    .map(({ start, end }) => (start === end ? `${start}` : `${start}-${end}`));
+  const more = ranges.length - shown.length;
+  if (shown.length === 0) return "";
+  const extra = more > 0 ? " and " + more + " more range(s)" : "";
+  return " (pages " + shown.join(", ") + extra + ")";
+};
+
+// Very large files are streamed for typed text only (no OCR), so every page
+// with no text layer was not read. Report it the way the small-file path does.
+// Reading scanned pages needs the whole file in memory plus a full-size render
+// of each page, which is exactly what streaming a file this large avoids, so
+// the note says so rather than reporting scanned pages as read, and says that
+// a request to read every scanned page could not be honoured here.
+const largePdfCoverage = (largeResult, { readAllRequested = false } = {}) => {
+  const emptyRanges = largeResult.scannedPageRanges || [];
+  const emptyCount = largeResult.pagesEmpty || 0;
+  const total = largeResult.pageCount || 0;
+  const pagesSkipped = emptyRanges.flatMap(({ start, end }) =>
+    Array.from({ length: end - start + 1 }, (_, i) => start + i),
+  );
+  let coverageNote = `Read all ${total} page(s).`;
+  if (emptyCount > 0) {
+    coverageNote =
+      `Read ${total - emptyCount} of ${total} page(s). ${emptyCount} page(s)` +
+      `${describeEmptyRanges(emptyRanges)} had little or no typed text and were not read with OCR, ` +
+      "because files this large are read for typed text only.";
+    if (readAllRequested) {
+      coverageNote +=
+        " The option to read every scanned page does not apply to files this large.";
+    }
+  }
+  return {
+    pagesRead: total - emptyCount,
+    pagesOCRd: 0,
+    pagesBlank: [],
+    pagesSkipped,
+    pagesFailed: [],
+    coverageNote,
+  };
+};
+
+const _failureMessage = (result, error, { persistIncomplete, kind }) => {
+  if (persistIncomplete) {
+    return describePersistIncomplete(result.filename, "Retry", error);
+  }
+  if (error instanceof PlainDocumentError) return error.message;
+  return deliberateMessageFor(error) ?? describeFailureKind(kind);
+};
+
+const _markDocumentFailed = (result, error, onProgress) => {
+  const persistIncomplete = error instanceof DocumentPersistIncompleteError;
+  const kind = classifyDocumentFailure(error);
+  console.error(
+    `Error processing this document:`,
+    persistIncomplete ? "saving did not finish" : failureLogCode(kind),
+  );
+  const message = _failureMessage(result, error, { persistIncomplete, kind });
+  result.status = "error";
+  result.error = message;
+  result.failureKind = kind;
+  const deliberate = deliberateMessageFor(error);
+  if (deliberate) {
+    result.plainMessage = deliberate;
+    result.plainComplete = true;
+  } else if (error instanceof PlainDocumentError) {
+    result.plainMessage = error.message;
+  }
+  result.readFailed = kind === FAILURE_KINDS.READ;
+  result.persistIncomplete = persistIncomplete;
+  result.persistQuotaExceeded = persistIncomplete && error.quotaExceeded;
+  onProgress?.({
+    filename: result.filename,
+    state: PROCESSING_STATES.ERROR,
+    error: message,
+    stage: "error",
+  });
+};
+
+const processSingleDocument = async (file, onProgress, options = {}) => {
+  const result = {
+    filename: file.name,
+    size: file.size,
+    status: "processing",
+    text: null,
+    classification: null,
+    extractedData: null,
+    error: null,
+    processingTime: 0,
+    pageCount: 0,
+    method: null,
+    ocrUsed: false,
+    visionUsed: false, // Track if Florence vision was used
+    quality: null,
+    confidence: null,
+    pagesRead: null,
+    pagesOCRd: null,
+    pagesBlank: [],
+    pagesSkipped: [],
+    pagesFailed: [],
+    coverageNote: null,
+  };
+
+  const startTime = Date.now();
+  _noteOnDeviceEngineReady();
+
+  try {
+    // ============================================================
+    // DD214 VISION-FIRST STRATEGY (v1.16.3)
+    // For DD214s: Use Florence-2 Vision AI as PRIMARY extraction
+    // For other docs: Use OCR with vision fallback
+    // ============================================================
+    const isPDF = file.name.toLowerCase().endsWith(".pdf");
+    const looksLikeDD214 =
+      /dd[-_]?214|service.?record|discharge|dd256|dd257|ngb22/i.test(file.name);
+
+    // OCR first for every document, service records included. The former
+    // vision-first DD214 strategy was measured against five real scans:
+    // Florence-2 self-reported field confidence of 4-11/100 and hallucinated
+    // token loops on four of them (the garbage propagated as the veteran's
+    // name), while the Tesseract ensemble read name, branch, rank, MOS and
+    // the awards block at 83-89%. Florence stays available as the
+    // low-confidence fallback inside the standard path, gated on its own
+    // parsed field confidence.
+    const extractionResult = await runStandardDocumentExtraction(
+      file,
+      onProgress,
+      result,
+      isPDF,
+      looksLikeDD214,
+      options,
+    );
+
+    // analyzeDocument throws on error, no need to check .success
+    if (!extractionResult.text || extractionResult.text.trim().length === 0) {
+      throw new PlainDocumentError("No text could be extracted from document");
+    }
+
+    result.text = extractionResult.text;
+    result.pageCount = extractionResult.pageCount || 1;
+    result.method = extractionResult.method || "text";
+    result.ocrUsed = extractionResult.ocrUsed || false;
+    Object.assign(result, pickPageCoverage(extractionResult));
+
+    await classifyAndParseDocument(file, onProgress, result, extractionResult);
+
+    // Steps 4-6: store to VKB, My Packet, Service tab, Ribbon Rack, and the
+    // evidence timeline.
+    if (options.omitIdentifiers) {
+      result.extractedData =
+        stripIdentifiersFromFormationResult(result).extractedData;
+    }
+    // deferPersist: the caller shows its own confirmation step and writes
+    // (persistFormationDocument) only after the veteran confirms it.
+    if (!options.deferPersist) await persistFormationDocument(file, result);
+
+    result.status = "complete";
+    onProgress?.({
+      filename: file.name,
+      state: PROCESSING_STATES.COMPLETE,
+      progress: 100,
+      stage: "complete",
+      result: {
+        classification: result.classification,
+        extractedData: result.extractedData,
+        pageCount: result.pageCount,
+        method: result.method,
+        ocrUsed: result.ocrUsed,
+      },
+    });
+  } catch (error) {
+    _markDocumentFailed(result, error, onProgress);
+  }
+
+  result.processingTime = Date.now() - startTime;
+  return result;
+};
+
+const finishFormationResult = async (result, { deferPersist = false } = {}) => {
+  // FIX-9 (root cause 2): this single-document path never called
+  // autoPopulateProfile at all - only the Muster Call batch path
+  // (useLegacyBatchProcessing.js) did. Profile auto-fill must work here
+  // too.
+  let profilePopulateResult = null;
+  if (result.status === "complete" && result.extractedData && !deferPersist) {
+    try {
+      profilePopulateResult = await autoPopulateProfile([result]);
+    } catch (populateErr) {
+      console.warn(
+        `Profile auto-populate failed for this document (non-fatal):`,
+        populateErr.message,
+      );
+    }
+  }
+
+  // Return result ready for intelligence briefing
+  return {
+    ...result,
+    readyForReview: result.status === "complete",
+    requiresVerification: true,
+    vkbSaved: !!result.vkbDocumentId,
+    profilePopulateResult,
+  };
+};
+
+/**
+ * Process single document for formation workflow
+ * Returns enhanced result object for user verification
+ */
+export const processFormationDocument = async (
+  file,
+  onProgress,
+  { returnIncompleteSave = false, ...extractionOptions } = {},
+) => {
+  logger.info(`🎖️ Platoon Sergeant inspecting: this document`);
+
+  // Use enhanced single document processor
+  const result = await processSingleDocument(
+    file,
+    onProgress,
+    extractionOptions,
+  );
+  if (result.persistIncomplete && !returnIncompleteSave) {
+    throw new DocumentPersistIncompleteError([], {
+      quotaExceeded: result.persistQuotaExceeded,
+      message: describePersistIncomplete(result.filename, null, {
+        quotaExceeded: result.persistQuotaExceeded,
+      }),
+    });
+  }
+  return finishFormationResult(result, {
+    deferPersist: extractionOptions.deferPersist,
+  });
+};
+
+/**
+ * Finish a formation document whose saving did not complete: runs the same
+ * keyed, idempotent persist again with what was already read (no second
+ * read of the file) and, when it now completes, hands back the same shape
+ * processFormationDocument does so the review screen can take over.
+ */
+export const retryFormationDocumentPersist = async (failed) => {
+  const pseudoFile = { name: failed.filename, size: failed.size };
+  const result = {
+    ...failed,
+    status: "processing",
+    error: null,
+    persistIncomplete: false,
+    persistQuotaExceeded: false,
+  };
+  try {
+    await persistFormationDocument(pseudoFile, result);
+  } catch (err) {
+    if (!(err instanceof DocumentPersistIncompleteError)) throw err;
+    return {
+      ...failed,
+      status: "error",
+      persistIncomplete: true,
+      persistQuotaExceeded: err.quotaExceeded,
+      error: describePersistIncomplete(failed.filename, "Retry", err),
+      readyForReview: false,
+    };
+  }
+  result.status = "complete";
+  return finishFormationResult(result);
+};
+
+/**
+ * Detect and split multiple DD214s from a multi-page document
+ * Each DD214 typically starts with "CERTIFICATE OF RELEASE OR DISCHARGE"
+ * Returns array of text segments, one per DD214
+ */
+const splitMultipleDD214s = (text) => {
+  // Split by page markers first
+  const pagePattern = /---\s{0,10}PAGE\s{1,10}(\d{1,6}).{0,200}?---/gi;
+
+  // Find all page boundaries
+  const pageMatches = [...text.matchAll(pagePattern)];
+
+  if (pageMatches.length === 0) {
+    // No page markers, return as single document
+    return [{ text, pages: "1", startPage: 1 }];
+  }
+
+  // Group pages by DD214 (look for "CERTIFICATE OF RELEASE" to start a new one)
+  const dd214Segments = [];
+  let currentSegment = "";
+  let segmentPageStart = 1;
+
+  for (let i = 0; i < pageMatches.length; i++) {
+    const pageNum = Number.parseInt(pageMatches[i][1]);
+    const pageStart = pageMatches[i].index;
+    const pageEnd = pageMatches[i + 1]?.index || text.length;
+    const pageText = text.substring(pageStart, pageEnd);
+
+    // Check if this page starts a new DD214
+    const isNewDD214 =
+      /CERTIFICATE\s+OF\s+RELEASE\s+OR\s+DISCHARGE/i.test(pageText) &&
+      pageText.indexOf("CERTIFICATE OF RELEASE") < 200; // Near start of page
+
+    if (isNewDD214 && currentSegment.length > 0) {
+      // Save previous segment
+      dd214Segments.push({
+        text: currentSegment.trim(),
+        pages: `${segmentPageStart}-${pageNum - 1}`,
+        startPage: segmentPageStart,
+      });
+      currentSegment = pageText;
+      segmentPageStart = pageNum;
+    } else {
+      currentSegment += pageText;
+    }
+  }
+
+  // Add final segment
+  if (currentSegment.length > 0) {
+    dd214Segments.push({
+      text: currentSegment.trim(),
+      pages:
+        segmentPageStart === pageMatches.length
+          ? `${segmentPageStart}`
+          : `${segmentPageStart}-${pageMatches.length}`,
+      startPage: segmentPageStart,
+    });
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`📄 Detected ${dd214Segments.length} DD214(s) in document`);
+  return dd214Segments;
+};
+
+/**
+ * Extract a quick name from DD214 text segment for matching purposes
+ * Returns last name only (most reliable for filename matching)
+ */
+const extractQuickName = (text) => {
+  // Clean the text first
+  // eslint-disable-next-line sonarjs/slow-regex -- {0,300} bounds backtracking to O(300n); measured 4ms at 100k unmatched "(" (was 9s unbounded)
+  const cleanedText = text
+    .replace(/\([^)]{0,300}\)/g, " ")
+    .replace(/\s+/g, " ");
+
+  const namePatterns = [
+    // "1. NAME" followed by name: WILLIAMS, ROBERT
+    /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s*/i,
+    // Name pattern: LASTNAME, FIRSTNAME
+    /\b([A-Z]{3,})\s*[,;]\s*[A-Z]{2,}/,
+  ];
+
+  for (const pattern of namePatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const lastName = match[1]?.trim().toUpperCase();
+      // Validate it's not a form field label
+      const FIELD_LABELS = [
+        "DEPARTMENT",
+        "COMPONENT",
+        "BRANCH",
+        "GRADE",
+        "RANK",
+        "SERVICE",
+        "SOCIAL",
+        "SECURITY",
+        "NUMBER",
+        "NAME",
+        "DATE",
+        "CERTIFICATE",
+        "RELEASE",
+        "DISCHARGE",
+        "ACTIVE",
+        "DUTY",
+      ];
+      if (
+        lastName &&
+        lastName.length >= 3 &&
+        !FIELD_LABELS.includes(lastName)
+      ) {
+        return lastName;
+      }
+    }
+  }
+  return null;
+};
+
+/**
+ * Select the best DD214 segment from multiple found in a document
+ * Prioritizes by: 1) Filename match, 2) Data completeness
+ */
+const selectBestDD214Segment = (segments, filename) => {
+  if (segments.length === 0) return null;
+  if (segments.length === 1) return segments[0];
+
+  logger.info(
+    `🎯 Multiple DD214s found (${segments.length}), selecting best match`,
+  );
+
+  // Extract potential names from filename
+  // "Williams Service Records DD214 ALL.pdf" -> "WILLIAMS"
+  // "Smith_John_DD214.pdf" -> "SMITH"
+  const filenameUpper = filename.toUpperCase();
+  const filenameWords = filenameUpper.replace(/[_\-.]/g, " ").split(/\s+/);
+
+  // Common words to ignore in filename
+  const IGNORE_WORDS = new Set([
+    "SERVICE",
+    "RECORDS",
+    "DD214",
+    "DD",
+    "214",
+    "ALL",
+    "PDF",
+    "MILITARY",
+    "DISCHARGE",
+    "COPY",
+    "MEMBER",
+    "SCAN",
+    "FILE",
+  ]);
+  const potentialNames = filenameWords.filter(
+    (word) =>
+      word.length >= 3 && !IGNORE_WORDS.has(word) && /^[A-Z]+$/.test(word),
+  );
+
+  // Score each segment
+  const scoredSegments = segments.map((segment, index) => {
+    const extractedName = extractQuickName(segment.text);
+    let score = 0;
+    let matchReason = "default";
+
+    // Check if extracted name matches any potential name from filename
+    if (extractedName && potentialNames.length > 0) {
+      for (const potentialName of potentialNames) {
+        if (extractedName === potentialName) {
+          score += 100; // Exact match
+          matchReason = "exact match";
+          break;
+        } else if (
+          extractedName.startsWith(potentialName) ||
+          potentialName.startsWith(extractedName)
+        ) {
+          score += 50; // Partial match
+          matchReason = "partial match";
+        }
+      }
+    }
+
+    // Bonus for data completeness (look for key fields)
+    const hasRank = /4a?\.\s*GRADE|RANK|SGT|CPL|PFC|SPC|LT\b/i.test(
+      segment.text,
+    );
+    const hasBranch = /ARMY|NAVY|AIR\s*FORCE|MARINE|COAST\s*GUARD/i.test(
+      segment.text,
+    );
+    const hasDates = /\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/g.test(segment.text);
+    const hasAwards = /MEDAL|RIBBON|BADGE|AWARD/i.test(segment.text);
+
+    if (hasRank) score += 5;
+    if (hasBranch) score += 5;
+    if (hasDates) score += 5;
+    if (hasAwards) score += 5;
+
+    // Small bonus for earlier segments if no strong match found
+    // (first DD214 is often the "primary" one)
+    if (score < 50) {
+      score += segments.length - index;
+    }
+
+    logger.info(
+      `  Segment ${index + 1} (pages ${segment.pages}): score=${score}, reason="${matchReason}"`,
+    );
+
+    return { ...segment, score, extractedName, matchReason };
+  });
+
+  // Sort by score (highest first)
+  scoredSegments.sort((a, b) => b.score - a.score);
+
+  const best = scoredSegments[0];
+  logger.info(
+    `✅ Selected segment ${segments.indexOf(best) + 1} (pages ${best.pages}) - ${best.matchReason}`,
+  );
+
+  return best;
+};
+
+function _visionIdentityFields(vf) {
+  return {
+    veteranName:
+      vf.name ||
+      `${vf.lastName || ""}, ${vf.firstName || ""} ${vf.middleName || ""}`
+        .replace(/,\s*$/, "")
+        .trim() ||
+      null,
+    lastName: vf.lastName || null,
+    firstName: vf.firstName || null,
+    middleName: vf.middleName || null,
+    branch: vf.branch || null,
+    component: vf.component || null,
+    rank: vf.rank || null,
+    payGrade: vf.payGrade || null,
+    mos: vf.mos || null,
+    mosTitle: vf.mosTitle || null,
+  };
+}
+
+function _visionServiceFields(vf) {
+  return {
+    serviceStartDate: vf.entryDateFormatted || vf.entryDate || null,
+    serviceEndDate: vf.separationDateFormatted || vf.separationDate || null,
+    dateOfBirth: vf.dateOfBirth || null,
+    awards: vf.awards || [],
+    dischargeType: vf.characterOfService || null,
+    separationCode: vf.separationCode || null,
+    spdCode: vf.separationCode || null,
+    reentryCode: vf.reentryCode || null,
+    narrativeReason: vf.narrativeReason || null,
+    combatService: vf.combatService || null,
+    // ?? not || : an explicit "false" (known no foreign service) must
+    // survive, not collapse into "unknown" the way `||` would.
+    foreignService: vf.foreignService ?? null,
+    foreignServiceLocations: vf.foreignServiceLocations || [],
+  };
+}
+
+const buildVisionParsedServiceRecord = (text, visionParsedData) => {
+  // eslint-disable-next-line no-console
+  console.log("👁️ Using pre-parsed Vision data for DD214");
+  const vf = visionParsedData.fields;
+
+  const visionData = {
+    type: "service_record",
+    ..._visionIdentityFields(vf),
+    ..._visionServiceFields(vf),
+    method: "vision_florence",
+    visionConfidence: vf.overallConfidence || 0,
+    raw: text.substring(0, 1000),
+  };
+
+  logger.info(
+    `✅ Vision-parsed DD214: fields [${presentFieldNames(visionData).join(", ")}], ${visionData.awards?.length || 0} award(s)`,
+  );
+
+  return visionData;
+};
+
+const parseDD214Document = async (
+  text,
+  filename,
+  visionParsedData,
+  docType,
+) => {
+  // FIX-3b: carry the document's classified type through as a formType
+  // marker on the parsed period ("DD214" | "NGB22" | "DD256" | "DD257").
+  // FIX-15: documentClassifier.js's DD214 pattern set (Box labels shared by
+  // every DD214-style service-record form) routinely outscores NGB22's
+  // narrower pattern set on an NGB-22 scan, so docType comes back
+  // "DD214" even for a genuine NGB-22.
+  // A literal "NGB22"/"NGB-22" in the filename is a much stronger signal
+  // for the FORM-SPECIFIC parsing behavior selected here (Box 18 date
+  // format, Box 1 boilerplate rejection) than for re-scoring the general
+  // classifier, and never downgrades an already-correct NGB22/DD256/DD257
+  // classification - it only fills the gap when docType is missing or
+  // (mis-)landed on the generic "DD214".
+  const filenameLooksLikeNGB22 = /ngb[-\s]?22/i.test(filename || "");
+  const docTypeIsGenericOrMissing = !docType || docType === "DD214";
+  let formType = docType || "DD214";
+  if (docTypeIsGenericOrMissing && filenameLooksLikeNGB22) formType = "NGB22";
+  // ============================================================
+  // VISION-FIRST PARSING (v1.16.4)
+  // If Florence-2 Vision already parsed this DD214, use that data!
+  // This avoids re-parsing with regex which may fail on vision output.
+  // ============================================================
+  if (visionParsedData?.fields) {
+    const visionParsed = buildVisionParsedServiceRecord(text, visionParsedData);
+    visionParsed.formType = visionParsed.formType || formType;
+    return visionParsed;
+  }
+
+  // Standard path: regex-based parsing
+  // Check for multiple DD214s in the document
+  const dd214Segments = splitMultipleDD214s(text);
+
+  if (dd214Segments.length > 1) {
+    // Multiple DD214s found - use intelligent selection based on filename
+    // eslint-disable-next-line no-console
+    console.log(
+      `🎖️ Found ${dd214Segments.length} DD214s in this document - selecting best match`,
+    );
+
+    // Select the DD214 that best matches the filename (e.g., "Williams" in filename)
+    const bestSegment = selectBestDD214Segment(dd214Segments, filename);
+
+    if (bestSegment) {
+      // Parse just the selected DD214
+      const parsed = await parseServiceRecord(bestSegment.text, formType);
+      parsed.sourcePages = bestSegment.pages;
+      parsed.multiDocument = true;
+      parsed.selectedFromCount = dd214Segments.length;
+      parsed.selectionReason = bestSegment.matchReason || "filename match";
+
+      // Also store info about other DD214s found (but don't parse them in detail)
+      parsed.otherDD214sFound = dd214Segments
+        .filter((seg) => seg !== bestSegment)
+        .map((seg) => ({
+          pages: seg.pages,
+          extractedName: extractQuickName(seg.text),
+        }));
+
+      // eslint-disable-next-line no-console
+      console.log(`✅ Selected DD214 from pages ${bestSegment.pages}`);
+      return parsed;
+    }
+
+    // Fallback: if selection fails, parse first one
+    console.warn("⚠️ Selection failed, falling back to first DD214");
+    return await parseServiceRecord(dd214Segments[0].text, formType);
+  }
+
+  // Single DD214
+  return await parseServiceRecord(dd214Segments[0]?.text || text, formType);
+};
+
+const parseRatingDecisionDocument = async (text, options = {}) => {
+  // Enhanced: Use new VA Document Parser for Decision Letters
+  // eslint-disable-next-line no-console
+  console.log("📋 Using enhanced VA Document Parser for Rating Decision...");
+  const decisionData = parseDecisionLetter(text);
+
+  // If new parser found data, use it; otherwise fall back to legacy parser
+  if (
+    decisionData.success &&
+    (decisionData.conditions.length > 0 || decisionData.combinedRating)
+  ) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Enhanced parser found ${decisionData.conditions.length} conditions, ${decisionData.combinedRating || "N/A"}% combined`,
+    );
+
+    // Also extract the "Big Three" for each condition
+    const bigThree = extractBigThree(text);
+
+    return attachPerIssueDecisions(
+      {
+        type: "rating_decision",
+        ...decisionData,
+        bigThree,
+        parserVersion: "v1.16.0-enhanced",
+      },
+      text,
+      options.letterheadText,
+    );
+  }
+  // eslint-disable-next-line no-console
+  console.log("⚠️ Enhanced parser found limited data, using legacy parser");
+  return await parseRatingDecision(text, options);
+};
+
+const parseDBQDocument = async (text) => {
+  // Enhanced: Use new VA Document Parser for DBQs
+  // eslint-disable-next-line no-console
+  console.log("🩺 Using enhanced VA Document Parser for DBQ...");
+  const dbqData = parseDBQReport(text);
+
+  if (dbqData.success && dbqData.diagnosis) {
+    // eslint-disable-next-line no-console
+    console.log("✅ Enhanced parser found a diagnosis");
+    return {
+      type: "dbq",
+      ...dbqData,
+      parserVersion: "v1.16.0-enhanced",
+    };
+  }
+  // eslint-disable-next-line no-console
+  console.log("⚠️ Enhanced parser found limited data, using legacy parser");
+  return await parseDBQ(text);
+};
+
+// A rating decision or DBQ's own restatement of the same DD214
+// ("PERTINENT RECORDS INCLUDE: DD Form 214 ... Service in <country>
+// from <date> -<date>") is routinely repeated across several exam
+// reports in the same C-File and OCR'd far more cleanly than a scanned
+// form - it can be the only clean copy of a tour whose own DD214 Box 18
+// OCR'd too corrupted (in the location name, the digits, or both, on every
+// scanned copy) to read directly. Only DATED_DEPLOYMENT_PATTERNS run here -
+// never an undated/bare pattern - so a rating decision or DBQ's generic
+// "Veterans who were deployed to the Persian Gulf, Afghanistan..." PACT Act
+// eligibility boilerplate (no date attached to a specific person at all)
+// is never read as a record of THIS veteran's own service. Without this
+// restriction, segmentCFile's own boundary detection could sweep exactly
+// that boilerplate paragraph into what it classified as a DD214 segment,
+// and a bare pattern there would have fabricated a Persian Gulf deployment.
+function _extractDatedDeploymentMentions(text) {
+  const found = { deployments: [] };
+  const scanText = _stripDeploymentBoilerplate(text.toUpperCase());
+  for (const pattern of DATED_DEPLOYMENT_PATTERNS) {
+    let match;
+    while ((match = pattern.exec(scanText)) !== null) {
+      const location = match[1]?.trim();
+      if (!location) continue;
+      _pushDeployment(
+        found,
+        null,
+        location,
+        _normalizeDeploymentDate(match[2]),
+        _normalizeDeploymentDate(match[3]),
+      );
+    }
+  }
+  return found.deployments;
+}
+
+// A single standalone DD214/NGB-22 PDF upload really is the form named by
+// its own DD214-signature match, so _extractNarrativeAndDeploymentLocations
+// falling back to scanning the whole document (when Box 18 can't be
+// isolated) is a reasonable last resort there. A C-File segment
+// segmentCFile classifies as "DD214" is not always that reliable -
+// seen when a segment boundary swept in a
+// neighboring DBQ's "Self-reported Deployment Data" table and its own
+// generic PACT Act exposure paragraph, neither of which is this
+// veteran's own Box 18 remarks. So there is no whole-document fallback
+// here: if Box 18 can't be isolated, this segment contributes no
+// deployments at all, on the same "a missed deployment is far cheaper
+// than a fabricated one" reasoning already documented on
+// _extractBox18RemarksText. Reuses the same OCR preprocessing, Box 18
+// isolation, boilerplate stripping, and pattern set a single DD214
+// upload's own parseServiceRecord relies on (see
+// _extractNarrativeAndDeploymentLocations) - only the fallback is
+// intentionally narrower here.
+function _extractCFileDD214Deployments(rawText) {
+  const { ocrCorrectedUpperText } = _preprocessDD214Text(rawText);
+  const box18Text = _extractBox18RemarksText(ocrCorrectedUpperText);
+  if (!box18Text) return [];
+  const scanUpper = _stripDeploymentBoilerplate(box18Text).toUpperCase();
+
+  const patterns = [
+    ...DATED_DEPLOYMENT_PATTERNS,
+    /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
+    /\b(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN|SINAI|MFO)\b/gi,
+  ];
+  const found = { deployments: [] };
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(scanUpper)) !== null) {
+      const location = match[1]?.trim();
+      if (!location) continue;
+      _pushDeployment(
+        found,
+        null,
+        location,
+        _normalizeDeploymentDate(match[2]),
+        _normalizeDeploymentDate(match[3]),
+      );
+    }
+  }
+  return found.deployments;
+}
+
+// Real C-Files hold several scanned copies of the same DD214/NGB-22 (the
+// very large scanned claims file can hold several duplicate copies covering
+// multiple deployments) and, until now, nothing read deployments from the C-File
+// path at all - only a directly-uploaded single DD214/NGB22 ever
+// populated extractedData.deployments. Runs _extractCFileDD214Deployments
+// on every DD214-signature segment and _extractDatedDeploymentMentions on
+// every DD214/RATING_DECISION/DBQ-signature segment segmentCFile already
+// found, then folds every segment's results into one list with _pushDeployment's
+// own location+date merge - the same merge a single multi-page DD214
+// upload already relies on to collapse repeat mentions - so repeat copies
+// of the same tour collapse into one entry while two genuinely different
+// tours to the same country (see that function's comment) stay separate.
+function _extractCFileDeployments(segmentList) {
+  const merged = { deployments: [] };
+
+  const dd214Segments = segmentList.filter(
+    (s) => s.type === "DD214" && s.rawText,
+  );
+  for (const segment of dd214Segments) {
+    for (const dep of _extractCFileDD214Deployments(segment.rawText)) {
+      _pushDeployment(merged, null, dep.location, dep.startDate, dep.endDate);
+    }
+  }
+
+  // A segment segmentCFile classifies "DD214" is not always a real scanned
+  // form - a DBQ's own "PERTINENT RECORDS INCLUDE: DD Form 214 ...
+  // Service in <country> <date>-<date>" citation matches the same "DD FORM 214"
+  // signature segmentCFile uses for a genuinely scanned one, so it never
+  // reaches _extractDatedDeploymentMentions below at all if this scan were
+  // limited to RATING_DECISION/DBQ-typed segments only. Those citation
+  // segments never have an isolatable Box 18 either (correctly, safely
+  // skipped by _extractCFileDD214Deployments above), so the dated-only
+  // scan also runs across every DD214-typed segment - redundant, and a
+  // safe no-op, on a segment that really is a scanned form and already
+  // got its dates from the Box 18 pass above.
+  const evidenceSegments = segmentList.filter(
+    (s) =>
+      (s.type === "RATING_DECISION" ||
+        s.type === "DBQ" ||
+        s.type === "DD214") &&
+      s.rawText,
+  );
+  for (const segment of evidenceSegments) {
+    for (const dep of _extractDatedDeploymentMentions(segment.rawText)) {
+      _pushDeployment(merged, null, dep.location, dep.startDate, dep.endDate);
+    }
+  }
+
+  return merged.deployments;
+}
+
+// D19-7: segmentCFileChunked/parseRatingCodeSheetsChunked share ONE slicer so
+// the ~40ms time budget carries across the whole segmentation+code-sheet
+// pass instead of resetting (and so allowing a longer uninterrupted run)
+// every time a new chunked call starts.
+async function _computeSegmentation(text, slicer) {
+  // Full segmentation for large files, uncapped: a very large C-File can
+  // segment into more documents than segmentCFile's 1000 default, and
+  // any cap silently drops the tail of the file.
+  // parseDocuments:false - the mapped return below reads only type/startPage/
+  // endPage/confidence/snippet, and the inventory needs no parsed bodies, so
+  // the default (true) was parsing every segment of a very large C-File into
+  // full VA document objects and discarding every one. That waste is a prime
+  // suspect for the renderer dying during a very long run on a huge file.
+  const segments = await segmentCFileChunked(text, {
+    parseDocuments: false,
+    maxSegments: Infinity,
+    slicer,
+  });
+  // eslint-disable-next-line no-console
+  console.log(`✅ Segmented C-File into ${segments.segments.length} documents`);
+
+  // Build inventory from the segmentation just computed. This used to call
+  // buildDocumentInventory(text), which re-segments from scratch - a second
+  // full pass over a text that can run to millions of characters.
+  const inventory = buildInventoryFromSegmentation(segments);
+  const deployments = _extractCFileDeployments(segments.segments);
+  return { segments, inventory, deployments };
+}
+
+// D19-7: parses every code sheet in the text exactly once (chunked) and
+// derives both the "latest sheet" and "record events" views from that one
+// result - latestRatingCodeSheet(text) and codeSheetRecordEvents(text) used
+// to each re-run the full parse (including its own flatten() pass) on the
+// same text, doubling that cost for no reason. When no sheet was found,
+// that chunked parse already proves latestRatingCodeSheet(text) would also
+// be null (same SC_HEADER search - see vaCodeSheet.chunked.equivalence.
+// test.js), so the fallback goes straight to scanLooseRatingLinesChunked's
+// loose-line scan instead of calling the synchronous, whole-text
+// parseCodeSheet(text) - that used to re-derive the same "no sheet" answer
+// and then run its own unyielded fallback scan, both in one main-thread task.
+async function _computeCodeSheetData(text, slicer) {
+  const sheets = await parseRatingCodeSheetsChunked(text, slicer);
+  const ratingSheet = latestFromSheets(sheets);
+  const codeSheet = ratingSheet
+    ? _codeSheetSummary(ratingSheet)
+    : await scanLooseRatingLinesChunked(text, slicer);
+  return {
+    ratingSheet,
+    codeSheet,
+    recordEvents: recordEventsFromSheets(sheets),
+  };
+}
+
+const AI_ANALYSIS_RETRY_DELAY_MS = 1500;
+const AI_ANALYSIS_RETRY_TIMEOUT_MS = 180_000;
+const AI_ENGINE_RELOAD_TIMEOUT_MS = 330_000;
+// generateAI races its own timeout (120s default, or the retry's); these outer
+// bounds add a small margin so the analysis step itself can never be the thing
+// that waits forever if that inner race is ever bypassed.
+const AI_ANALYSIS_FIRST_BOUND_MS = 135_000;
+const AI_ANALYSIS_RETRY_BOUND_MS = AI_ANALYSIS_RETRY_TIMEOUT_MS + 15_000;
+const AI_ANALYSIS_FAILED_NOTICE =
+  "AI analysis of this document couldn't complete right now - this can happen " +
+  "when several imports are running at once. Nothing was lost: your document, " +
+  "its segmentation and rating data were saved normally. You can try AI " +
+  "analysis again later from the C-File tools.";
+
+// The first call's failure is usually a disposed or unloaded engine, or a call
+// the timeout race abandoned but the engine is still working through - a
+// plain retry then fails the same way (or queues behind the abandoned call).
+// Rebuilding the Warrant Council engine kills both. One rebuild is shared
+// when several imports fail at once, and it is bounded so a wedged GPU can
+// only delay the retry, never hang the import. Engines with no reload
+// (wllama, local server) keep the short pause.
+let _pendingEngineReload = null;
+
+// The on-device backend seen ready most recently. It is what tells "the engine
+// was running and is now gone" (reload it, retry, tell the veteran) apart from
+// "no on-device AI was ever loaded" (the status banner already says so, and a
+// reload would start downloading a model nobody asked for).
+let _lastOnDeviceMode = null;
+
+// Sampled where every document starts as well as at the AI step itself: an
+// engine that was ready when the import began but is lost before the first
+// C-File reaches the AI step (a long OCR pass, vision work under load) would
+// otherwise look like "never loaded" and be skipped without a word.
+function _noteOnDeviceEngineReady() {
+  const routing = getDocumentAIRouting();
+  if (routing.onDeviceReady) _lastOnDeviceMode = routing.onDeviceMode;
+  return routing;
+}
+
+function _reloadEngineOnce() {
+  if (!_pendingEngineReload) {
+    const reload = reloadSwarmEngine().finally(() => {
+      if (_pendingEngineReload === reload) _pendingEngineReload = null;
+    });
+    _pendingEngineReload = reload;
+  }
+  return _pendingEngineReload;
+}
+
+async function _prepareEngineForRetry(onDeviceMode) {
+  if (onDeviceMode !== "swarm") {
+    await new Promise((resolve) =>
+      setTimeout(resolve, AI_ANALYSIS_RETRY_DELAY_MS),
+    );
+    return;
+  }
+  try {
+    await withStepTimeout(
+      _reloadEngineOnce,
+      "engine reload",
+      AI_ENGINE_RELOAD_TIMEOUT_MS,
+    );
+  } catch (reloadErr) {
+    // A reload that never settles must not stay shared: the next import would
+    // wait on the same dead promise instead of starting a fresh rebuild.
+    if (reloadErr instanceof StepTimeoutError) _pendingEngineReload = null;
+    console.warn("⚠️ AI engine reload before retry failed:", reloadErr.message);
+  }
+}
+
+const _analysisResult = (aiAnalysis) => ({
+  aiAnalysis,
+  offDeviceNotice: null,
+  aiAnalysisNotice: null,
+});
+
+const _boundedAnalysis = (excerpt, options, boundMs) =>
+  withStepTimeout(
+    () => analyzeCFileWithAI(excerpt, options),
+    "AI analysis",
+    boundMs,
+  );
+
+// Part 3 (final19): under GPU/engine contention from concurrent imports, an
+// on-device AI call that routing considered "ready" can still time out or
+// throw. analyzeCFileWithAI used to swallow that into a silent `null` with
+// only a console.error - the veteran never learned their AI analysis was
+// skipped. This retries once with a longer timeout (a transient contention
+// window is the one failure mode a retry can actually fix) and, only if
+// that also fails, returns a plain notice instead of silence. Segmentation/
+// codeSheet/deployments are computed independently of this and are never
+// affected by an AI failure here - no imported data is ever lost.
+// D21-2: an engine that was running and is gone by now counts as the failed
+// first attempt: it is rebuilt (bounded), retried once, and reported the same
+// way when it still cannot run.
+async function _runCFileAIAnalysis(text) {
+  const routing = _noteOnDeviceEngineReady();
+  const anyAI = isAnyAIAvailable();
+  const engineGone =
+    !routing.onDeviceReady && !anyAI && _lastOnDeviceMode !== null;
+  if (!anyAI && !engineGone) {
+    return { aiAnalysis: null, offDeviceNotice: null, aiAnalysisNotice: null };
+  }
+  if (!routing.onDeviceReady && !engineGone) {
+    return {
+      aiAnalysis: null,
+      offDeviceNotice: buildDocumentOffDeviceNotice(
+        routing.blockedProviderLabel,
+      ),
+      aiAnalysisNotice: null,
+    };
+  }
+
+  const excerpt = text.substring(0, 50000); // First 50K chars for context
+  if (engineGone) {
+    console.warn("⚠️ On-device AI engine is gone, rebuilding it for one retry");
+  } else {
+    try {
+      const aiAnalysis = await _boundedAnalysis(
+        excerpt,
+        {},
+        AI_ANALYSIS_FIRST_BOUND_MS,
+      );
+      return _analysisResult(aiAnalysis);
+    } catch (firstErr) {
+      console.warn(
+        "⚠️ AI C-File analysis failed, retrying once:",
+        firstErr.message,
+      );
+    }
+  }
+
+  await _prepareEngineForRetry(
+    engineGone ? _lastOnDeviceMode : routing.onDeviceMode,
+  );
+  try {
+    const aiAnalysis = await _boundedAnalysis(
+      excerpt,
+      { timeoutMs: AI_ANALYSIS_RETRY_TIMEOUT_MS },
+      AI_ANALYSIS_RETRY_BOUND_MS,
+    );
+    return _analysisResult(aiAnalysis);
+  } catch (secondErr) {
+    console.error(
+      "❌ AI C-File analysis failed on retry, surfacing to the veteran:",
+      secondErr.message,
+    );
+    return {
+      aiAnalysis: null,
+      offDeviceNotice: null,
+      aiAnalysisNotice: AI_ANALYSIS_FAILED_NOTICE,
+    };
+  }
+}
+
+// segmentCFile emits {id, type, category, position, length, preview,
+// confidence, rawText, parsed} - there is no `text`, and no startPage/
+// endPage has ever existed on a segment. This read `s.text.substring()`
+// (TypeError) and emitted two permanently-undefined page fields; it never
+// surfaced because nothing reached this function until page-count
+// classification started routing real C-Files here.
+const _projectSegment = (s) => ({
+  type: s.type,
+  category: s.category,
+  position: s.position,
+  length: s.length,
+  confidence: s.confidence,
+  snippet: s.preview.substring(0, 200),
+});
+
+export const buildSegmentedCFileResult = async (text, cFileSummary) => {
+  const slicer = createTimeSlicer();
+  const { segments, inventory, deployments } = await _computeSegmentation(
+    text,
+    slicer,
+  );
+  const { ratingSheet, codeSheet, recordEvents } = await _computeCodeSheetData(
+    text,
+    slicer,
+  );
+
+  // ADR-009: C-File text is document-derived and stays on-device only - see
+  // _runCFileAIAnalysis's own doc comment for the off-device/failure split.
+  const { aiAnalysis, offDeviceNotice, aiAnalysisNotice } =
+    await _runCFileAIAnalysis(text);
+
+  return {
+    type: "c_file",
+    summary: cFileSummary,
+    segments: segments.segments.map(_projectSegment),
+    inventory,
+    codeSheet: codeSheet.success ? codeSheet : null,
+    ...(ratingSheet ? _ratingFieldsFromCodeSheet(ratingSheet) : {}),
+    recordEvents,
+    deployments,
+    aiAnalysis, // Include AI-enhanced analysis if available
+    offDeviceNotice, // ADR-009: set when only an off-device AI is configured
+    aiAnalysisNotice, // set when on-device AI was ready but failed twice
+    parserVersion: "v1.18.3-enhanced",
+  };
+};
+
+const _codeSheetSummary = (sheet) => ({
+  documentType: "CODE_SHEET",
+  success: true,
+  sheetDate: sheet.sheetDate,
+  combinedRating: sheet.combinedRating,
+  conditions: sheet.conditions.map((c) => ({
+    diagnosticCode: c.diagnosticCode,
+    name: c.name,
+    percent: c.rating,
+  })),
+});
+
+// The newest code sheet in a C-File is VA's complete current rating list, so
+// it feeds the same rating pipeline a decision letter does. Each denial keeps
+// its own original denial date rather than the sheet's date.
+const _ratingFieldsFromCodeSheet = (sheet) => ({
+  conditions: sheet.conditions.map((c) => ({
+    name: c.name,
+    rating: c.rating,
+    effectiveDate: c.effectiveDate,
+    diagnosticCode: c.diagnosticCode,
+    serviceConnected: true,
+    outcome: "code_sheet",
+  })),
+  combinedRating: sheet.combinedRating,
+  combinedRatingHistory: sheet.combinedRatingHistory,
+  deniedConditions: sheet.notServiceConnected.map((c) => ({
+    name: c.name,
+    decisionDate: c.originalDenialDate,
+  })),
+  decisionDate: sheet.sheetDate,
+  decisionDateKind: "letter",
+  ratingSource: "code_sheet",
+  servicePeriods: sheet.servicePeriods,
+  representative: sheet.representative,
+});
+
+// quickScanCFile() reports detected document TYPES and a page estimate - it has
+// never returned a document count. This function previously read
+// `.estimatedDocCount` and `.categories`, neither of which exists on that
+// object, so the log line threw on `.join()` of undefined and the routing test
+// was `undefined > 5` - always false. The segmented path was unreachable for the
+// life of the code; it only surfaced once page-count classification started
+// routing real C-Files here instead of to parseClaimLetter. A consolidated
+// C-File is distinguished by carrying several distinct document types, or by
+// simply being long.
+const CFILE_SEGMENTATION_MIN_PAGES = 50;
+
+const parseCFileDocument = async (text) => {
+  // Enhanced: Use C-File Segmentation for large claim files
+  // eslint-disable-next-line no-console
+  console.log("📚 Using enhanced C-File Segmentation...");
+
+  // Quick scan to determine file structure - chunked so a large narrative
+  // C-File missing most signatures doesn't spend this on one synchronous
+  // whole-text scan right at the pipeline's own entry point.
+  const cFileSummary = await quickScanCFileChunked(text, createTimeSlicer());
+  // eslint-disable-next-line no-console
+  console.log(
+    `📊 C-File scan: ~${cFileSummary.estimatedPages} pages, types: ${cFileSummary.detectedTypes.join(", ") || "none detected"}`,
+  );
+
+  // Check if this is actually a large C-File (multi-document)
+  const looksConsolidated =
+    cFileSummary.detectedTypes.length > 1 ||
+    cFileSummary.estimatedPages >= CFILE_SEGMENTATION_MIN_PAGES;
+  if (looksConsolidated) {
+    return await buildSegmentedCFileResult(text, cFileSummary);
+  }
+
+  // Small file - parse as regular medical record
+  return await parseMedicalRecord(text);
+};
+
+/**
+ * Parse document based on its classified type
+ * @param {string} text - Raw extracted text
+ * @param {string} docType - Document classification type
+ * @param {string} filename - Original filename
+ * @param {Object} visionParsedData - Pre-parsed data from Florence Vision (optional)
+ */
+const parseDocumentByType = async (
+  text,
+  docType,
+  filename,
+  visionParsedData = null,
+  letterheadText = null,
+) => {
+  switch (docType) {
+    case DOCUMENT_TYPES.DD214:
+    case DOCUMENT_TYPES.NGB22:
+    case DOCUMENT_TYPES.DD256:
+    case DOCUMENT_TYPES.DD257:
+      return await parseDD214Document(
+        text,
+        filename,
+        visionParsedData,
+        docType,
+      );
+
+    case DOCUMENT_TYPES.RATING_DECISION:
+      return await parseRatingDecisionDocument(text, { letterheadText });
+
+    case DOCUMENT_TYPES.CLAIM_LETTER:
+      return await parseClaimLetter(text, { letterheadText });
+
+    case DOCUMENT_TYPES.DBQ:
+      return await parseDBQDocument(text);
+
+    case DOCUMENT_TYPES.C_FILE_MEDICAL:
+      return await parseCFileDocument(text);
+
+    case DOCUMENT_TYPES.MEDICAL_RECORD:
+      return await parseMedicalRecord(text);
+
+    case DOCUMENT_TYPES.NEXUS_LETTER:
+      return await parseNexusLetter(text);
+
+    default:
+      return { raw: text.substring(0, 1000) };
+  }
+};
+
+/**
+ * Parse DD214 and other service records
+ * Extracts all standard DD214 boxes and fields
+ * Field names match collectionRules.js expectations
+ */
+// Module-level: static DD214 parsing data, hoisted out of parseServiceRecord
+// so it isn't rebuilt on every call and isn't at risk of being captured by
+// only one of the extracted per-box helper functions below.
+const ocrFixPatterns = [
+  // "CAUTI0N" → "CAUTION"
+  [/CAUTI0N/g, "CAUTION"],
+  [/N0T\s+T0\s+BE/g, "NOT TO BE"],
+  [/IMP0RTANT/g, "IMPORTANT"],
+  // "CERT1FICATE" → "CERTIFICATE"
+  [/CERT1F1CATE/gi, "CERTIFICATE"],
+  [/CERT1FICATE/gi, "CERTIFICATE"],
+  [/CERTIF1CATE/gi, "CERTIFICATE"],
+  // "DISCH4RGE" → "DISCHARGE"
+  [/D1SCHARGE/gi, "DISCHARGE"],
+  [/DISCH4RGE/gi, "DISCHARGE"],
+  [/DISCHARG3/gi, "DISCHARGE"],
+  // "ACT1VE" → "ACTIVE"
+  [/ACT1VE/gi, "ACTIVE"],
+  [/ACTIV3/gi, "ACTIVE"],
+  // "REL3ASE" → "RELEASE"
+  [/REL3ASE/gi, "RELEASE"],
+  [/RELEAS3/gi, "RELEASE"],
+  // "D4TE" → "DATE"
+  [/D4TE/gi, "DATE"],
+  [/DAT3/gi, "DATE"],
+  // "SER1AL" / "SERI4L" → "SERIAL"
+  [/SER1AL/gi, "SERIAL"],
+  [/SERI4L/gi, "SERIAL"],
+  // "S0CIAL" → "SOCIAL"
+  [/S0CIAL/gi, "SOCIAL"],
+  [/SOCI4L/gi, "SOCIAL"],
+  // "SECUR1TY" → "SECURITY"
+  [/SECUR1TY/gi, "SECURITY"],
+  [/S3CURITY/gi, "SECURITY"],
+  // "SEPARAT10N" → "SEPARATION"
+  [/SEPARAT10N/gi, "SEPARATION"],
+  [/S3PARATION/gi, "SEPARATION"],
+  // "GR4DE" → "GRADE"
+  [/GR4DE/gi, "GRADE"],
+  [/GRAD3/gi, "GRADE"],
+  // "N4ME" / "NAM3" → "NAME"
+  [/N4ME/gi, "NAME"],
+  [/NAM3/gi, "NAME"],
+  // "BR4NCH" → "BRANCH"
+  [/BR4NCH/gi, "BRANCH"],
+  [/8RANCH/gi, "BRANCH"],
+  // "SERV1CE" → "SERVICE"
+  [/SERV1CE/gi, "SERVICE"],
+  [/S3RVICE/gi, "SERVICE"],
+  [/SERVIC3/gi, "SERVICE"],
+  // "AUTH0RITY" → "AUTHORITY"
+  [/AUTH0RITY/gi, "AUTHORITY"],
+  [/AUTHORIT¥/gi, "AUTHORITY"],
+  // "DECORAT10NS" → "DECORATIONS"
+  [/DECORAT10NS/gi, "DECORATIONS"],
+  [/DEC0RATIONS/gi, "DECORATIONS"],
+  // "HONORAB1E" → "HONORABLE"
+  [/HONORAB1E/gi, "HONORABLE"],
+  [/H0NORABLE/gi, "HONORABLE"],
+  // General patterns - but be careful with context
+  // Only fix 0→O in words (not numbers)
+  [/\b([A-Z]+)0([A-Z]+)\b/g, "$1O$2"],
+  [/\b0([A-Z]{2,})\b/g, "O$1"],
+  [/\b([A-Z]{2,})0\b/g, "$1O"],
+  // Same 0→O fix as above, but for a single-letter run (e.g. NGB22 Block 15
+  // "0H-FSR" - a state-prefixed award abbreviation whose two-letter state
+  // prefix was OCR'd as "0H"). The {2,} patterns above only fire on 2+
+  // letter runs, so a lone letter immediately after/before the 0 needs its
+  // own boundary-anchored rule to avoid also matching numeric-only tokens.
+  [/\b0([A-Z])\b/g, "O$1"],
+  // Fix 1→I in words (not numbers)
+  [/\b([A-Z]+)1([A-Z]+)\b/g, "$1I$2"],
+  [/\b1([A-Z]{2,})\b/g, "I$1"],
+  [/\b([A-Z]{2,})1\b/g, "$1I"],
+  // Fix 3→E in words
+  [/\b([A-Z]+)3([A-Z]+)\b/g, "$1E$2"],
+  [/\b([A-Z])3\b/g, "$1E"],
+  // Fix 4→A in words
+  [/\b([A-Z]+)4([A-Z]+)\b/g, "$1A$2"],
+  // Fix 5→S at word boundaries
+  [/\b5([A-Z]{2,})\b/g, "S$1"],
+  // Fix 8→B at word boundaries (but not inside MOS codes)
+  [/\b8([A-Z]{2,})\b/g, "B$1"],
+];
+const INSTRUCTIONAL_PATTERNS = [
+  /SILVER\s+STAR.*?BRONZE\s+STAR.*?AIR\s+MEDAL/gi, // Example awards list
+  /DECORATIONS.*?AWARDED.*?SUCH\s+AS/gi, // "Decorations awarded such as"
+  /EXAMPLES?:/gi,
+  /\bE\.?G\.?\b/gi,
+  /FOR\s+EXAMPLE/gi,
+  /INSTRUCTIONS?:/gi,
+  /SUCH\s+AS/gi,
+  /INCLUDING\s+BUT\s+NOT\s+LIMITED/gi,
+  /SEE\s+INSTRUCTIONS/gi,
+  // Mixed case phrases are likely instructions (real data is ALL CAPS)
+  /[a-z]{3,}/g, // Remove any word with 3+ lowercase letters
+];
+const DD214_FIELD_LABELS = [
+  // Field labels
+  "DEPARTMENT",
+  "COMPONENT",
+  "BRANCH",
+  "GRADE",
+  "RANK",
+  "RATE",
+  "SERVICE",
+  "SOCIAL",
+  "SECURITY",
+  "NUMBER",
+  "NAME",
+  "DATE",
+  "BIRTH",
+  "PLACE",
+  "ENTRY",
+  "HOME",
+  "RECORD",
+  "RESERVE",
+  "ACTIVE",
+  "DUTY",
+  "SEPARATION",
+  "AUTHORITY",
+  "CODE",
+  "MEMBER",
+  "COPY",
+  "MILITARY",
+  "COMMAND",
+  "REMARKS",
+  "DECORATIONS",
+  "MEDALS",
+  "BADGES",
+  "CITATIONS",
+  "CAMPAIGN",
+  "RIBBONS",
+  "AWARDED",
+  "EDUCATION",
+  "TRAINING",
+  "PRIMARY",
+  "SPECIALTY",
+  "FOREIGN",
+  "SEA",
+  "LAST",
+  "FIRST",
+  "MIDDLE",
+  "TYPE",
+  "CHARACTER",
+  "NARRATIVE",
+  "REASON",
+  "REENTRY",
+  "MEMBER",
+  "VETERAN",
+  "CERTIFICATE",
+  "RELEASE",
+  "DISCHARGE",
+  // Address components that look like names
+  "COUNTY",
+  "CITY",
+  "STATE",
+  "TOWN",
+  "VILLAGE",
+  "TOWNSHIP",
+  "OREGON",
+  "WASHINGTON",
+  "CALIFORNIA",
+  "TEXAS",
+  "FLORIDA",
+  "LINN",
+  "MARION",
+  "LANE",
+  "POLK",
+  "BENTON",
+  "CLACKAMAS",
+  "MULTNOMAH",
+  "JACKSON",
+  "DOUGLAS",
+  "CLARK",
+  "LEWIS",
+  // Common location words
+  "FORT",
+  "CAMP",
+  "BASE",
+  "AIR",
+  "FORCE",
+  "NAVAL",
+  "STATION",
+  // FIX-3b: NGB22 boilerplate ("FOR USE OF THIS FORM, SEE NGR ...") that
+  // the loose Box-1 fallback pattern can mistake for a LAST, FIRST name.
+  "FORM",
+  "SEE",
+  "NGR",
+  "NGB",
+  "USE",
+  "THIS",
+];
+const NAME_EXPANSIONS = {
+  CR: ["CRAIG", "CHRISTOPHER", "CRYSTAL"],
+  JR: ["JUNIOR", "JAMES"],
+  WM: ["WILLIAM"],
+  JN: ["JOHN"],
+  JS: ["JAMES"],
+  RB: ["ROBERT"],
+  RD: ["RICHARD"],
+  MD: ["MICHAEL", "DAVID"],
+  TH: ["THOMAS"],
+  ED: ["EDWARD", "EDWIN"],
+  GR: ["GREGORY"],
+  DN: ["DENNIS", "DONALD", "DOUGLAS"],
+  AN: ["ANTHONY"],
+};
+const INSTRUCTIONAL_AWARDS = [
+  "SILVER STAR",
+  "BRONZE STAR",
+  "AIR MEDAL",
+  "PURPLE HEART",
+  "DISTINGUISHED FLYING CROSS",
+  "ARMY COMMENDATION",
+];
+
+// FIX-3a: preprinted DD214 boilerplate that _extractNarrativeAndDeploymentLocations
+// and _extractEducationAndRemarks must never treat as a real deployment mention.
+const DEPLOYMENT_BOILERPLATE_PATTERNS = [
+  /POST-VIETNAM\s+ERA/gi,
+  /VIETNAM\s+ERA\s+VETERAN/gi,
+  /EDUCATIONAL\s+ASSISTANCE\s+PROGRAM/gi,
+];
+
+// Last plausible year a veteran could have served in each named era -
+// sanity guard against fabricating a deployment that predates the
+// veteran's own birth (or is otherwise chronologically impossible).
+const DEPLOYMENT_ERA_LATEST_YEAR = {
+  VIETNAM: 1975,
+  KOREA: 1953,
+};
+
+// A bare "MFO" (Multinational Force & Observers - the Sinai peacekeeping
+// mission) mention is recorded as a Sinai deployment.
+const DEPLOYMENT_LOCATION_ALIASES = {
+  MFO: "SINAI",
+};
+
+// Every deployment mention that carries a real, specific date range
+// attached to its location - never a bare mention of a country on its
+// own. Shared between a single DD214/NGB-22's own Box 18 scan
+// (_extractNarrativeAndDeploymentLocations, which also runs two
+// undated/bare patterns of its own after these) and the C-File-wide scan
+// over rating-decision/DBQ segments (_extractDatedDeploymentMentions),
+// which - unlike the Box 18 scan - deliberately never runs an undated
+// pattern: a rating decision or DBQ routinely discusses a designated
+// theater in passing ("Veterans who were deployed to the Persian Gulf,
+// Afghanistan...", a PACT Act eligibility paragraph) with no date
+// attached at all, and that must never be read as a service record for
+// this veteran.
+const DATED_DEPLOYMENT_PATTERNS = [
+  // {1,60} not unbounded +: real multi-word deployment locations are a
+  // few words, never remotely close to 60 chars - unbounded [A-Z\s]+?
+  // immediately followed by \s+ is the same ambiguous-adjacent-quantifier
+  // shape fixed elsewhere in this file (see parseRatingDecision's
+  // CONDITION_PERCENT_RE), which sonarjs/super-linear-regex flags.
+  /(?:SERVICE|SERVED)\s+IN\s+([A-Z][A-Z\s]{1,60}?)\s+FROM\s+(\d{8})\s+TO\s+(\d{8})/gi,
+  /DEPLOYED\s+TO\s+([A-Z][A-Z\s]{1,60}?)\s+FROM\s+(\d{8})\s+TO\s+(\d{8})/gi,
+  // An NGB-22's own Box 18 activation-breakdown style also states a
+  // location's dates as "<LOCATION> YYYYMMDD-YYYYMMDD" (no FROM/TO
+  // keywords at all).
+  // Anchored to the same fixed location vocabulary as the bare fallback
+  // in _extractNarrativeAndDeploymentLocations, not the free-form
+  // multi-word capture the FROM/TO patterns above use, since there's no
+  // keyword here to bound where a location name starts.
+  /\b(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN|SINAI|MFO)\s+(\d{8})-(\d{8})\b/gi,
+  // A rating decision or DBQ's own "PERTINENT RECORDS INCLUDE: DD Form
+  // 214 ... Service in <country> from <date> -<date>" /
+  // "Service in <country> <date>-<date>" restates the same
+  // DD214 in MM/DD/YYYY rather than Box 18's compact YYYYMMDD - it can be
+  // the only clean copy of a tour whose own DD214 Box 18 OCR'd too
+  // corrupted (in the location name, the digits, or both, on every
+  // scanned copy) to read directly.
+  /(?:SERVICE|SERVED)\s+IN\s+([A-Z][A-Z\s]{1,60}?)\s+(?:FROM\s+)?(\d{1,2}\/\d{1,2}\/\d{4})\s{0,5}-\s{0,5}(\d{1,2}\/\d{1,2}\/\d{4})/gi,
+];
+
+/**
+ * Isolate Box 18 (Remarks) text so deployment/narrative extraction never
+ * scans the entire document - the whole-document scan is what let
+ * preprinted boilerplate ("POST-VIETNAM ERA VETERAN'S EDUCATIONAL
+ * ASSISTANCE PROGRAM") get matched as a real Vietnam deployment.
+ * Returns "" (not the full text) if the box can't be reliably isolated -
+ * a missed deployment is far cheaper than a fabricated one.
+ */
+// FIX-12: callers must pass ocrCorrectedUpperText, not raw text - see
+// _extractStateCode for the same requirement. A real DD214 scan renders
+// "POST-VIETNAM ERA" as "P0ST-VIETNAM ERA", and DEPLOYMENT_BOILERPLATE_PATTERNS
+// is letter-only, so stripping boilerplate against the raw text left the
+// corrupted phrase in place while the (digit-immune) deployment-country
+// matcher below still matched "VIETNAM" inside it, fabricating a deployment.
+function _extractBox18RemarksText(ocrCorrectedText) {
+  const match = ocrCorrectedText.match(
+    // eslint-disable-next-line sonarjs/regex-complexity -- inherent to the multi-alternative field-boundary lookahead this parser depends on; simplifying it is a separate, larger task out of scope here. Bounded below for S8786.
+    /18\.\s{0,10}REMARKS[:\s]{0,20}(.{1,5000}?)(?=\s{0,10}19a?\.|\s{0,10}20\.|\s{0,10}21\.|\s{0,10}22\.|\s{0,10}23\.\s{0,10}TYPE\s{1,10}OF\s{1,10}SEPARATION|$)/is,
+  );
+  return match ? match[1] : "";
+}
+
+/**
+ * Strip known boilerplate phrases out of a Box 18 substring before running
+ * deployment/location regexes over it.
+ */
+function _stripDeploymentBoilerplate(box18Text) {
+  let scanText = box18Text;
+  for (const pattern of DEPLOYMENT_BOILERPLATE_PATTERNS) {
+    scanText = scanText.replace(pattern, " ");
+  }
+  return scanText;
+}
+
+function _parseYearFromDate(dateStr) {
+  if (!dateStr) return null;
+  const match = /(\d{4})/.exec(String(dateStr));
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
+function _preprocessDD214Text(text) {
+  const upperText = text.toUpperCase();
+  let ocrCorrectedUpperText = text;
+
+  // ============================================================
+  // DD214 FORM STRUCTURE (Critical for parsing):
+  //
+  // 1. FIELD LABELS = BOLD ALL CAPS (e.g., "NAME", "GRADE", "DECORATIONS")
+  // 2. INSTRUCTIONS = (parenthetic, often lowercase or mixed case)
+  //    Example: "(Silver Star, Bronze Star, Air Medal, etc.)"
+  // 3. ACTUAL DATA = ALL CAPS, not bold, NOT in parentheses
+  //    Example: "WILLIAMS, ROBERT LEE"
+  //
+  // Key insight: Remove EVERYTHING in parentheses - that's instructional!
+  // Then look for ALL CAPS text that's NOT a field label.
+  // ============================================================
+
+  let cleanedText = text;
+
+  // ============================================================
+  // OCR ERROR CORRECTION
+  // Common character substitutions from low-quality scans:
+  // - 0 → O (zeros mistaken for letter O)
+  // - 1 → I or L (ones mistaken for I or L)
+  // - 5 → S (fives mistaken for S)
+  // - 8 → B (eights mistaken for B)
+  // - $ → S (dollar sign mistaken for S)
+  // Only apply to specific DD214 field labels, not numeric data!
+  // ============================================================
+
+  // Fix common OCR substitutions in DD214 field labels and keywords
+
+  // Most of the "0-for-O" noise in a real scanned corpus turned out to be
+  // self-inflicted: advancedOCR.js's post-processor used to run a
+  // context-free, whole-document "O" -> "0" substitution on every OCR
+  // pass, corrupting words like "FROM"/"TO" into "FR0M"/"T0" - fixed at
+  // the source there. Raw Tesseract can still independently misread the
+  // letter O as a zero on a genuinely low-quality all-caps scan
+  // ("J0NES", "NATI0NAL GUARD", "C0MP0NENT") since the two glyphs are
+  // visually near-identical, so this narrower backstop stays: a zero
+  // adjacent to a letter is treated as an O, a zero between digits (SSN,
+  // dates, "12Y10") is left as a real zero. Applied before the
+  // label-specific fixes below so those see whole words.
+  const zeroToLetterO = (value) =>
+    value.replace(/(?<=[A-Za-z])0|0(?=[A-Za-z])/g, "O");
+  cleanedText = zeroToLetterO(cleanedText);
+  ocrCorrectedUpperText = zeroToLetterO(ocrCorrectedUpperText);
+
+  for (const [pattern, replacement] of ocrFixPatterns) {
+    cleanedText = cleanedText.replace(pattern, replacement);
+    ocrCorrectedUpperText = ocrCorrectedUpperText.replace(pattern, replacement);
+  }
+  ocrCorrectedUpperText = ocrCorrectedUpperText.toUpperCase();
+
+  // eslint-disable-next-line no-console
+  console.log("🔧 OCR normalization applied to DD214 text");
+
+  // STEP 1: Remove ALL parenthetical content (instructions/examples)
+  // This catches "(Silver Star, Bronze Star...)", "(Last, First, Middle)", etc.
+  // Excludes "/" from the character class - see ribbonRackData.js's
+  // parseDD214Text STEP 1 for why: real DD214/NGB22 award data is always
+  // "//"-delimited, and an unclosed instructional paren (some real NGB22
+  // OCR scans have one right before Block 15's award list) must not be
+  // allowed to greedily span across "//"-delimited award tokens to reach a
+  // later, unrelated field's closing ")".
+  // eslint-disable-next-line sonarjs/slow-regex -- {0,300} bounds backtracking to O(300n); measured 59ms at 100k unmatched "(" (was 9.1s unbounded)
+  cleanedText = cleanedText.replace(/\([^)/]{0,300}\)/g, " ");
+
+  // STEP 2: Remove common instructional phrases (not always in parentheses)
+  for (const pattern of INSTRUCTIONAL_PATTERNS) {
+    cleanedText = cleanedText.replace(pattern, " ");
+  }
+
+  // STEP 3: Clean up multiple spaces
+  cleanedText = cleanedText.replace(/\s+/g, " ").trim();
+  return { cleanedText, upperText, ocrCorrectedUpperText };
+}
+
+function _extractNameField(ctx) {
+  const { data, cleanedText } = ctx;
+  // === BOX 1: NAME ===
+  // Look for name after "1. NAME" heading - the actual veteran name
+  // Format is typically: LAST, FIRST MIDDLE or LAST; FIRST MIDDLE
+  //
+  // CRITICAL: DD214 forms have field LABELS like "DEPARTMENT, COMPONENT AND BRANCH"
+  // that look like names (LASTNAME, FIRSTNAME MIDDLE) but are NOT names!
+  // Also exclude address components (counties, cities, states) that look like names
+
+  // ============================================================
+  // COMMON NAME ABBREVIATIONS TO EXPAND
+  // OCR often truncates names - expand common abbreviations
+  // ============================================================
+
+  // === BOX 1 NAME EXTRACTION ===
+  // CRITICAL: Only extract name from Box 1 area, NOT from addresses (Box 7, 8)
+  // Box 1 is always near the top of the document, before "2. DEPARTMENT"
+
+  // First, try to isolate Box 1 content (everything between "1. NAME" and
+  // whatever field boundary comes next).
+  // FIX-16: anchor forward from "1. NAME" to the NEXT field-number boundary
+  // that appears after it, whatever box that happens to be - not
+  // specifically "2. DEPARTMENT". A real DD214 scan's linearized OCR text
+  // reads the form in column/field order, not printed reading order: "2.
+  // DEPARTMENT" (and 3.-7.) routinely appear BEFORE "1. NAME" in the
+  // extracted text stream, so the previous fixed "2. DEPARTMENT"/"2. DEPT"
+  // lookahead never found one AFTER "1. NAME" and Box 1 extraction failed
+  // on every real document sampled, even when the name text was sitting
+  // right there in plain sight.
+  // NGB22 labels Block 1 "1. LAST NAME - FIRST NAME - MIDDLE NAME".
+  const nameAnchorMatch = cleanedText.match(/1\.?\s*(?:LAST\s+)?NAME/i);
+  // FIX-3b: the DD214 Box 1 anchor always fails on NGB22 (different box
+  // structure/label text), which used to fall back to the first 500 chars
+  // of the document - that fallback matched NGB22 boilerplate ("FOR USE OF
+  // THIS FORM, SEE NGR ...") as a name. No box anchor = no name extraction;
+  // returning nothing is far cheaper than returning a wrong name.
+  if (!nameAnchorMatch) return;
+  const afterAnchor = cleanedText.slice(
+    nameAnchorMatch.index + nameAnchorMatch[0].length,
+  );
+  // A real field boundary looks like "4a GRADE" / "7.a PLACE" / "13.
+  // DECORATIONS": 1-2 digits, an optional sub-box letter, an optional dot,
+  // then an ALL-CAPS label word. \d{1,2} fails immediately (no match, no
+  // backtracking) at every position with no digit, so an adversarial run
+  // with no digit at all (or digits never followed by whitespace, as in a
+  // real name like "WILLI0AMS") resolves in <5ms at 100k+ chars - verified
+  // via adversarial timing test.
+  const nextBoundaryMatch = afterAnchor.match(/\d{1,2}[a-z]?\.?\s+[A-Z]{3,}/);
+  const box1Body = nextBoundaryMatch
+    ? afterAnchor.slice(0, nextBoundaryMatch.index)
+    : afterAnchor.slice(0, 300);
+  // FIX-14: Box 1 is name-only (SSN is Box 3) and never legitimately
+  // contains a numeric "0", so a real scan's digit-for-letter OCR
+  // corruption ("WILLI0AMS") can be corrected unconditionally here. The
+  // document-wide ocrFixPatterns pass already tries this, but its general
+  // \b([A-Z]+)0([A-Z]+)\b rule fires once per word and needs a real word
+  // boundary on both sides of the run it replaces - a word with two zeros
+  // ("WILLI0AMS") has no boundary between the letters after the first zero
+  // and the second zero (both are \w chars), so the whole word is silently
+  // skipped. This narrow, name-only substring has no such ambiguity.
+  const box1Text = `1. NAME${box1Body}`.replaceAll("0", "O");
+
+  const namePatterns = [
+    // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional Last/First/Middle-label alternation count, not backtracking; bounded for S8786 above
+    /1\.\s{0,10}NAME.{0,2000}?(?:Last.{0,200}?First.{0,200}?Middle.{0,200}?)?[:\s]{1,20}([A-Z]{3,})[,;]\s{0,10}([A-Z]{3,})(?:\s{1,10}([A-Z]{1,50}))?/i,
+    // Name on line after "1. NAME" label
+    /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s+([A-Z]{3,})(?:\s+([A-Z]+))?/i,
+    // Look for CAPS name with comma in Box 1 area: "WILLIAMS, ROBERT"
+    /\b([A-Z]{3,})\s*[,;]\s*([A-Z]{3,})(?:\s+([A-Z]{3,}))?\b/,
+  ];
+
+  // Search ONLY in Box 1 area to avoid address contamination (like "LINN COUNTY")
+  for (const pattern of namePatterns) {
+    const match = pattern.exec(box1Text);
+    if (match) {
+      const potentialLastName = match[1]?.trim().toUpperCase();
+      const potentialFirstName = match[2]?.trim().toUpperCase();
+      const potentialMiddleName = match[3]?.trim().toUpperCase() || null;
+
+      // === VALIDATION ===
+      // Reject if ANY part matches a DD214 field label
+      const isFieldLabel = DD214_FIELD_LABELS.some(
+        (label) =>
+          potentialLastName === label ||
+          potentialFirstName === label ||
+          potentialMiddleName === label,
+      );
+
+      // Reject garbage: too short, or looks like form text
+      const isGarbage =
+        !potentialLastName ||
+        potentialLastName.length < 3 ||
+        !potentialFirstName ||
+        /^\d+$/.test(potentialLastName) || // Just numbers
+        /^(AND|OR|THE|FOR|WITH)$/i.test(potentialFirstName); // Common words
+
+      // FIX-3b: reject a candidate whose matched text sits inside a
+      // "FOR USE OF THIS FORM" / "SEE NGR" instructional phrase.
+      const matchedSpan = match[0] || "";
+      const surroundStart = Math.max(0, match.index - 40);
+      const surroundingText = box1Text.substring(
+        surroundStart,
+        match.index + matchedSpan.length + 40,
+      );
+      const isFormInstructionPhrase =
+        /FOR\s+USE\s+OF\s+THIS\s+FORM/i.test(surroundingText) ||
+        /SEE\s+NGR/i.test(surroundingText);
+
+      if (!isFieldLabel && !isGarbage && !isFormInstructionPhrase) {
+        _assignParsedName(
+          data,
+          potentialLastName,
+          potentialFirstName,
+          potentialMiddleName,
+        );
+        break;
+      }
+    }
+  }
+
+  if (!data.lastName) _extractNameFromLabelZone(ctx, nameAnchorMatch);
+}
+
+// Row-wise OCR (Tesseract reading the printed form) emits the whole label
+// row first - "1. NAME (Last, First, Middle)  2. DEPARTMENT, COMPONENT AND
+// BRANCH  3. SOCIAL SECURITY NO." - and only then the value row "JONES;
+// ROBERT LEE  ARNGUS/OHARNG  000-00-0000", so Box 1's value sits past two
+// other labels and the next-boundary slice above is empty. Confirmed on four
+// real scans. Take the stretch from the NAME label up to Box 4/5, strip every
+// label phrase, branch code and digit run, and the first CAPS word-pair that
+// survives the plausibility checks is the name.
+const NAME_ZONE_NOISE = [
+  /DEPARTMENT[,\s]*COMPONENT\s+AND\s+BRANCH/gi,
+  /SOCIAL\s+SECURITY\s+(?:NUMBER|NO\.?)/gi,
+  /\b(?:LAST|FIRST|MIDDLE)\s+NAME\b/gi,
+  /\bNAME\b/gi,
+  /\d[\d\s\-/]*/g,
+  /[;:()/]/g,
+];
+const NAME_ZONE_NON_NAME_TOKEN =
+  // eslint-disable-next-line sonarjs/regex-complexity -- a flat, anchored alternation of the tokens that appear in a DD214 Box 1 zone but are never part of a name (service abbreviations, field labels, stopwords); its size is the vocabulary, not nesting
+  /^(?:ARNGUS|[A-Z]{2}ARNG|ARNG|ANG|USAR|USAFR|USNR|USMCR|USCGR|USMC|USAF|USCG|USN|USSF|ARMY|NAVY|MARINE|MARINES|CORPS|FORCE|GUARD|AND|OR|THE|FOR|OF|NO|SSN|DATE|YEAR|MONTH|DAY)$/;
+
+function _isPlausibleNameToken(token) {
+  if (DD214_FIELD_LABELS.includes(token)) return false;
+  if (NAME_ZONE_NON_NAME_TOKEN.test(token)) return false;
+  if (token.length === 2 && STATE_AWARD_CODES.has(token)) return false;
+  if (token in STATE_NAME_TO_CODE) return false;
+  return true;
+}
+
+function _extractNameFromLabelZone(ctx, anchorMatch) {
+  const { data, cleanedText } = ctx;
+  const after = cleanedText.slice(anchorMatch.index + anchorMatch[0].length);
+  const end = after.search(
+    /\b4[.\sa]{0,4}(?:GRADE|RANK)|\b5[.\sa]{0,4}(?:RANK|DATE)|\bPAY\s+GRADE/i,
+  );
+  let zone = after
+    .slice(0, end === -1 ? 260 : Math.min(end, 400))
+    .replaceAll("0", "O");
+  for (const noise of NAME_ZONE_NOISE) zone = zone.replace(noise, " ");
+  const tokens = zone.match(/\b[A-Z][A-Z'-]+\b/g) || [];
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const lastName = tokens[i];
+    const firstName = tokens[i + 1];
+    if (
+      lastName.length < 3 ||
+      firstName.length < 2 ||
+      !_isPlausibleNameToken(lastName) ||
+      !_isPlausibleNameToken(firstName)
+    ) {
+      continue;
+    }
+    const candidateMiddle = tokens[i + 2] || null;
+    const middleName =
+      candidateMiddle && _isPlausibleNameToken(candidateMiddle)
+        ? candidateMiddle
+        : null;
+    _assignParsedName(data, lastName, firstName, middleName);
+    return;
+  }
+}
+
+function _assignParsedName(data, lastName, firstName, middleName) {
+  data.lastName = lastName;
+  data.firstName = firstName;
+
+  // Short first names may be OCR-truncated abbreviations (e.g. "JS" -> James)
+  if (firstName && firstName.length <= 2) {
+    const expansion = NAME_EXPANSIONS[firstName];
+    if (expansion) {
+      data.firstNamePossibleExpansions = expansion;
+    }
+    data.nameNeedsVerification = true;
+    console.warn("⚠️ Short first name detected - may be OCR abbreviation");
+  }
+
+  data.middleName = middleName;
+  data.veteranName = `${lastName}, ${firstName}${middleName ? " " + middleName : ""}`;
+}
+
+function _extractBranchField(ctx) {
+  const { data, cleanedText } = ctx;
+  // === BOX 2: BRANCH/COMPONENT ===
+  // Handle abbreviations like ARNGUS, OHARNG, USMC, etc.
+  const branchPatterns = [
+    /2\.\s{0,10}DEPARTMENT[^:]{0,200}[:\s]{1,20}([A-Z0-9/\s]{1,200}?)(?:\s{1,10}3\.|$)/i,
+    /COMPONENT\s+AND\s+BRANCH[:\s]+([A-Z0-9/\s]+)/i,
+    // Common branch abbreviations
+    /\b(ARMY|ARNGUS|OHARNG|[A-Z]{2}ARNG|USAR|USN|USNR|USMC|USMCR|USAF|USAFR|USCG|USCGR|USSF)\b/i,
+  ];
+  for (const pattern of branchPatterns) {
+    const match = cleanedText.match(pattern);
+    if (!match) continue;
+    const branchText = match[1]?.toUpperCase().trim();
+    data.branch = _branchFromToken(branchText) ?? data.branch;
+    data.component = _componentFromToken(branchText);
+    if (data.branch) break;
+  }
+
+  _resolveComponentFromDocument(ctx);
+}
+
+// Ordered: "OHARNG" contains ARN and must resolve to Army before any other
+// alternative gets a chance.
+const BRANCH_TOKEN_TABLE = [
+  { branch: "Army", literal: "ARMY", abbrev: /ARN|USAR/i },
+  { branch: "Navy", literal: "NAVY", abbrev: /USN/i },
+  { branch: "Air Force", literal: "AIR FORCE", abbrev: /USAF/i },
+  { branch: "Marine Corps", literal: "MARINE", abbrev: /USMC/i },
+  { branch: "Coast Guard", literal: "COAST GUARD", abbrev: /USCG/i },
+  { branch: "Space Force", literal: "SPACE FORCE", abbrev: /USSF/i },
+];
+
+const _branchFromToken = (branchText) =>
+  BRANCH_TOKEN_TABLE.find(
+    (b) => branchText?.includes(b.literal) || b.abbrev.test(branchText),
+  )?.branch ?? null;
+
+const _componentFromToken = (branchText) => {
+  if (branchText?.includes("RESERVE") || /US[A-Z]R\b/.test(branchText)) {
+    return "Reserve";
+  }
+  if (branchText?.includes("GUARD") || /ARNG|[A-Z]{2}ARNG/.test(branchText)) {
+    return "National Guard";
+  }
+  return "Active Duty";
+};
+
+// The matched branch token alone can't decide the component: "ARMY NATIONAL
+// GUARD OF <STATE>" matches the bare ARMY alternation and fell through to
+// "Active Duty" on an NGB22. Read Guard/Reserve codes from the whole
+// document - Guard first, because every DD214 carries RESERVE in a box label
+// ("6. RESERVE OBLIG. TERM. DATE").
+function _resolveComponentFromDocument(ctx) {
+  const { data, ocrCorrectedUpperText } = ctx;
+  if (
+    data.formType === "NGB22" ||
+    /\bNATIONAL\s+GUARD\b|\bARNG(?:US)?\b|\b[A-Z]{2}ARNG\b|\bANG\b/.test(
+      ocrCorrectedUpperText,
+    )
+  ) {
+    data.component = "National Guard";
+    return;
+  }
+  if (
+    // eslint-disable-next-line sonarjs/regex-complexity -- word-bounded alternation of the five reserve-component abbreviations plus their spelled-out forms; flat, no nesting
+    /\bUSAR\b|\bUSNR\b|\bUSMCR\b|\bUSAFR\b|\bUSCGR\b|\b(?:ARMY|NAVY|AIR\s+FORCE|MARINE\s+CORPS|COAST\s+GUARD)\s+RESERVE\b/.test(
+      ocrCorrectedUpperText,
+    )
+  ) {
+    data.component = "Reserve";
+  }
+}
+
+// Resolves a National Guard state/territory code for state-scoped award
+// matching. Kept off the returned `data` object (internal to this parse
+// call only) so it doesn't show up as an extra reviewable field in the
+// document intelligence UI. Tries, in order: the DD214/NGB22 Box 2 state
+// prefix ("OHARNG"), an explicit "NATIONAL GUARD OF ___"/"STATE OF ___"
+// field, then falls back to the veteran's own profile state on file.
+function _extractStateCode(ctx) {
+  // ocrCorrectedUpperText, not upperText: an NGB22 scan renders Box 2 as
+  // "ARNGUS/0<ST>ARNG" and its header as "NATI0NAL GUARD 0F <ST>", and both
+  // regexes below are [A-Z]-based, so they can only match after the
+  // ocrFixPatterns 0->O pass has run. upperText is the raw text uppercased.
+  const { ocrCorrectedUpperText } = ctx;
+
+  const arngMatch = ocrCorrectedUpperText.match(/\b([A-Z]{2})ARNG\b/);
+  if (arngMatch && STATE_AWARD_CODES.has(arngMatch[1])) {
+    ctx.stateCode = arngMatch[1];
+    return;
+  }
+
+  const guardOfMatch = ocrCorrectedUpperText.match(
+    /(?:NATIONAL\s+GUARD\s+OF|STATE\s+OF)\s+([A-Z][A-Z\s]{2,30}?)(?=[.,\n]|\s{2}|$)/,
+  );
+  if (guardOfMatch) {
+    const code = STATE_NAME_TO_CODE[guardOfMatch[1].trim()];
+    if (code) {
+      ctx.stateCode = code;
+      return;
+    }
+  }
+
+  const profileState = (getVeteranProfile().state || "").trim().toUpperCase();
+  if (STATE_AWARD_CODES.has(profileState)) {
+    ctx.stateCode = profileState;
+  }
+}
+
+function _extractRankField(ctx) {
+  const { data, cleanedText } = ctx;
+  // === BOX 4a: RANK/GRADE ===
+  // Look for rank specifically in Box 4a context
+  const rankPatterns = [
+    /4a?\.\s*GRADE.*?RANK[:\s]+([A-Z0-9]{2,6})/i,
+    /GRADE.*?RANK[:\s]+([A-Z]{2,4}\d?)/i,
+    // Enlisted ranks
+    /\b(SPC|SGT|SSG|SFC|MSG|1SG|SGM|CSM|CPL|PFC|PV2|PVT)\b/i,
+    // Officer ranks
+    /\b(2LT|1LT|CPT|MAJ|LTC|COL|BG|MG|LTG|GEN)\b/i,
+    // Navy/CG ranks
+    /\b(SN|PO3|PO2|PO1|CPO|SCPO|MCPO|ENS|LTJG|LT|LCDR|CDR|CAPT)\b/i,
+  ];
+  for (const pattern of rankPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const rank = match[1]?.trim().toUpperCase();
+      // Validate it's a real rank, not garbage like "AN" or "oe"
+      const validRanks = [
+        "PVT",
+        "PV2",
+        "PFC",
+        "SPC",
+        "CPL",
+        "SGT",
+        "SSG",
+        "SFC",
+        "MSG",
+        "1SG",
+        "SGM",
+        "CSM",
+        "2LT",
+        "1LT",
+        "CPT",
+        "MAJ",
+        "LTC",
+        "COL",
+        "BG",
+        "MG",
+        "LTG",
+        "GEN",
+        "SN",
+        "SA",
+        "SR",
+        "AA",
+        "AN",
+        "PO3",
+        "PO2",
+        "PO1",
+        "CPO",
+        "SCPO",
+        "MCPO",
+        "ENS",
+        "LTJG",
+        "LT",
+        "LCDR",
+        "CDR",
+        "CAPT",
+      ];
+      if (validRanks.includes(rank)) {
+        data.rank = rank;
+        break;
+      }
+    }
+  }
+}
+
+function _extractPayGrade(ctx) {
+  const { data, cleanedText } = ctx;
+  // Box 4b: Pay Grade - Handle OCR garbling like "Ed" for "E4"
+  const payGradePatterns = [
+    /4b?\.\s*PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
+    /PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
+    /\b([EO]-?\d)\b/,
+    // OCR might garble the Box 4b digit as a lowercase letter ("Ed" for
+    // "E4"): anchored to the PAY GRADE label, unlike the old bare
+    // `\b(E[a-z])\b` search, so a lowercase "e"+letter pair anywhere else
+    // in the document can't be picked up instead of the real Box 4b
+    // value. That old pattern also carried a stray /g flag while reading
+    // match[1] - with /g, String.match() returns an array of whole
+    // matches with no capture groups at all, so match[1] was actually the
+    // *second* occurrence of "E"+letter found anywhere in the document,
+    // not this pattern's capture group. Seen on a scan where that
+    // silently fabricated a pay grade from an unrelated "ES" elsewhere in
+    // the text.
+    /PAY\s+GRADE[:\s]+(E[a-z])\b/i,
+  ];
+  for (const pattern of payGradePatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      let grade = match[1]?.toUpperCase();
+      // Attempt to fix OCR garbling: Ed->E4, Eb->E8, etc.
+      grade = grade
+        ?.replace(/ED$/i, "E4")
+        .replace(/EB$/i, "E8")
+        .replace(/EG$/i, "E6")
+        .replace(/ES$/i, "E5");
+      if (grade && /^[EO]-?\d$/.test(grade)) {
+        data.payGrade = grade.replace(/([EO])(\d)/, "$1-$2"); // Normalize E4 to E-4
+        break;
+      }
+    }
+  }
+
+  // ============================================================
+}
+
+/**
+ * Convert a compact YYYYMMDD (or, if the year range check fails,
+ * MMDDYYYY) date-of-birth string to MM/DD/YYYY. Validates the year falls
+ * in a reasonable DOB range (1940-2010); returns the input unchanged if
+ * it isn't 8 digits or neither format's year passes that check.
+ */
+function _normalizeCompactDob(dob) {
+  if (!/^\d{8}$/.test(dob)) return dob;
+
+  const year = dob.substring(0, 4);
+  const month = dob.substring(4, 6);
+  const day = dob.substring(6, 8);
+  if (Number.parseInt(year) >= 1940 && Number.parseInt(year) <= 2010) {
+    return `${month}/${day}/${year}`;
+  }
+
+  // Might be MMDDYYYY format instead
+  const altYear = dob.substring(4, 8);
+  const altMonth = dob.substring(0, 2);
+  const altDay = dob.substring(2, 4);
+  if (Number.parseInt(altYear) >= 1940 && Number.parseInt(altYear) <= 2010) {
+    return `${altMonth}/${altDay}/${altYear}`;
+  }
+
+  return dob;
+}
+
+function _extractDateOfBirth(ctx) {
+  const { data, cleanedText } = ctx;
+  // BOX 5: DATE OF BIRTH (NOT Box 6! Box 6 is Reserve Obligation)
+  // Common formats: YYYYMMDD, MM/DD/YYYY, DD-MMM-YYYY
+  // ============================================================
+  const dobPatterns = [
+    // Explicit Box 5 reference
+    /5\.\s*(?:DATE\s+OF\s+)?BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // "DATE OF BIRTH" label (near start of doc, not near service dates)
+    /DATE\s+OF\s+BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // DOB abbreviation
+    /\bDOB[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // Box 5 with compact YYYYMMDD format. Lazy `.{0,50}?`, not `\D{0,50}`:
+    // a column-scrambled scan can render the row below the Box 5 header
+    // as "E-5                        YYYYMMDD" - Box 4b's pay grade value
+    // lands between the label and the actual DOB digits, and a
+    // non-digit-only gap can never skip past that embedded "5" to reach
+    // the real 8-digit date, so dateOfBirth came back null even though
+    // the digits were right there. Still bounded to 50 chars.
+    //
+    // Anchored to the BIRTH label itself, not just a bare "5." - "5."
+    // alone matches the tail of ANY box number that ends in 5 ("15.",
+    // "25."), so this used to pick up a completely unrelated later box's
+    // 8-digit date as the veteran's date of birth.
+    /5\.\s{0,10}.{0,10}?BIRTH.{0,50}?(\d{8})\b/i,
+  ];
+  for (const pattern of dobPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      data.dateOfBirth = _normalizeCompactDob(match[1]);
+      break;
+    }
+  }
+
+  // ============================================================
+}
+
+// Runs after serviceStartDate/serviceEndDate are extracted (see the call
+// order in parseServiceRecord below) - dateOfBirth itself is extracted
+// first, before either is known, so a bad match there (e.g. the wrong
+// box's 8-digit run) can't be caught until now. No real veteran was under
+// 17 at entry (the minimum enlistment age, with parental consent) or born
+// after their own separation date; either condition means the DOB pattern
+// landed on the wrong digits, and the fabricated value is discarded rather
+// than shown as fact.
+const MIN_ENLISTMENT_AGE_YEARS = 17;
+function _validateDateOfBirth(ctx) {
+  const { data } = ctx;
+  const dob = formatLocalDate(data.dateOfBirth);
+  if (Number.isNaN(dob.getTime())) {
+    // An unparseable value is exactly as useless as a fabricated one - keeping
+    // it around just lets it surface as if it were a real date of birth.
+    data.dateOfBirth = null;
+    return;
+  }
+
+  const entryDate = formatLocalDate(data.serviceStartDate);
+  if (!Number.isNaN(entryDate.getTime())) {
+    const minEntryDate = new Date(dob);
+    minEntryDate.setFullYear(dob.getFullYear() + MIN_ENLISTMENT_AGE_YEARS);
+    if (entryDate.getTime() < minEntryDate.getTime()) {
+      data.dateOfBirth = null;
+      return;
+    }
+  }
+
+  const separationDate = formatLocalDate(data.serviceEndDate);
+  if (
+    !Number.isNaN(separationDate.getTime()) &&
+    dob.getTime() > separationDate.getTime()
+  ) {
+    data.dateOfBirth = null;
+  }
+}
+
+function _extractServiceStartDate(ctx) {
+  const { data, cleanedText } = ctx;
+  // BOX 12a: DATE ENTERED AD THIS PERIOD (NOT Box 7!)
+  // Box 7 is Place of Entry, NOT date!
+  // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
+  // ============================================================
+  // FIX-13: the "12a" anchor never matched a real PDF text layer's "12.a."
+  // rendering (dot before the sub-box letter, not just after), and the
+  // table-format value pattern required a "|", "/", or "-" separator between
+  // the year/month/day groups - a DD214 can render that box as plain
+  // whitespace-separated "YYYY MM DD" with no punctuation at all, so neither
+  // ever matched and serviceStartDate came back null even on clean input.
+  const entryPatterns = [
+    // Explicit Box 12a reference
+    /12\.?\s*a\.?\s*(?:DATE\s+)?(?:ENTERED|ENTRY|ENTERED\s+AD)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // "DATE ENTERED AD" or "ENTERED ACTIVE DUTY" label
+    /DATE\s+ENTERED\s+(?:AD|ACTIVE\s+DUTY)\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // Box 12a with compact YYYYMMDD
+    /12\.?\s*a\.?\D*(\d{8})\b/i,
+    // Table format: "2004 | 04 | 12", "04 04 12", or plain whitespace-only
+    // "2002 04 27"
+    // eslint-disable-next-line sonarjs/regex-complexity -- pre-existing (predates this change, unrelated to it); the repeated (separator|whitespace) alternation is what makes this table-format date matcher tolerant of real OCR spacing variance, simplifying it is a separate, larger task out of scope here
+    /12\.?\s*a\.?\D*(\d{2,4})(?:\s*[|/-]\s*|\s+)(\d{2})(?:\s*[|/-]\s*|\s+)(\d{2})\b/i,
+    // Fallback: "DATE ENTERED" followed by date anywhere
+    /(?:DATE\s+)?ENTERED[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+  ];
+  for (const pattern of entryPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const dateStr = _normalizeDateMatch(match);
+      // Sanity check: Entry date should NOT be same as DOB
+      if (dateStr !== data.dateOfBirth) {
+        data.serviceStartDate = dateStr;
+        break;
+      }
+    }
+  }
+}
+
+// Normalizes a date regex match to MM/DD/YYYY. Handles two shapes: a
+// table-style match with separate year/month/day groups (match[2] &&
+// match[3]), and a single-group match that may be compact YYYYMMDD.
+function _normalizeDateMatch(match) {
+  if (match[2] && match[3]) {
+    let year = match[1];
+    const month = match[2];
+    const day = match[3];
+    if (year.length === 2) {
+      year = Number.parseInt(year) > 50 ? `19${year}` : `20${year}`;
+    }
+    return `${month}/${day}/${year}`;
+  }
+
+  let dateStr = match[1];
+  if (/^\d{8}$/.test(dateStr)) {
+    const year = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day = dateStr.substring(6, 8);
+    if (Number.parseInt(year) >= 1950 && Number.parseInt(year) <= 2030) {
+      dateStr = `${month}/${day}/${year}`;
+    }
+  }
+  return dateStr;
+}
+
+// FIX-20: Box 7a is "Place of Entry into Active Duty" - Box 8a/8b are "Last
+// Duty Assignment"/"Station Where Separated", a different field entirely.
+// The old anchor literally required "8." before the label, so it never
+// matched on a DD214, so placeOfEntry was always empty. Words that only ever appear in this
+// box's own instructional boilerplate ("(City and State, or complete
+// address if known)") or the neighboring Box 7b (Home of Record) label -
+// used to reject a "City, ST"-shaped regex match that's actually boilerplate
+// text, not a real place name. Deliberately excludes state abbreviations
+// (e.g. "OR" for Oregon) from this list: "OR" is both a real, correct
+// two-letter answer AND the boilerplate's own connector word, so only the
+// city half of a match is ever checked against it.
+const BOX7_PLACE_OF_ENTRY_NOISE_WORDS = new Set([
+  "CITY",
+  "AND",
+  "STATE",
+  "AT",
+  "TIME",
+  "OF",
+  "ENTRY",
+  "HOME",
+  "RECORD",
+  "COMPLETE",
+  "ADDRESS",
+  "IF",
+  "KNOWN",
+]);
+
+// Same reasoning FIX-16 already applies to the Box 1 name field: this box's
+// value is a city/state name, which never legitimately contains a digit, so
+// a real scan's digit-for-letter OCR corruption can be corrected
+// unconditionally on a candidate match. Box 7b's own "(City and State, or
+// complete address if known)" boilerplate is instructional (mixed-case in
+// the printed form) rather than a real field label, so it sits OUTSIDE the
+// general ocrFixPatterns pass (that pass requires already-uppercase context
+// on both sides of a digit to fire) and reaches this function with its
+// digit-corruption intact - this boilerplate OCR's as
+// "0R C0MPLETE ... ADDRESS IF KN0WN".
+function _normalizeOcrLetterDigits(str) {
+  return str
+    .replaceAll("0", "O")
+    .replaceAll("1", "I")
+    .replaceAll("3", "E")
+    .replaceAll("4", "A")
+    .replaceAll("5", "S")
+    .replaceAll("8", "B");
+}
+
+// Real DD214 scans read the two-column Box 7a/7b layout in scrambled order
+// (same root cause as FIX-16's Box 1 name fix) - Box 7a's own label and
+// value aren't reliably adjacent, and Box 7b's "(City and State, or complete
+// address if known)" boilerplate is sometimes OCR'd with Box 7a's real value
+// landing INSIDE what looks like that parenthetical, so this deliberately
+// scans ocrCorrectedUpperText (OCR-digit-fixed, uppercased, NOT
+// parenthetical-stripped - see _extractBox18RemarksText for why stripping
+// parens here would be destructive) for the label, then walks forward
+// through every "City, ST"-shaped candidate in a bounded window and takes
+// the first one that isn't boilerplate/label text. The character classes
+// below admit digits (real scans mix stray digit-for-letter OCR into both
+// halves of a candidate, including the state abbreviation itself, e.g.
+// "0REG0N") - _normalizeOcrLetterDigits repairs a candidate before it's
+// checked against the boilerplate word list or accepted.
+// Real US state capitals + the largest-population US metros - used only to
+// flag a place-of-entry city as low-confidence, never to reject/replace it.
+// A single OCR letter misread can turn a real city into a different-looking
+// but still plausible one ("COLUNBUS, OHIO" for "COLUMBUS, OHIO"); there
+// is no way to validate an arbitrary small town against a short list like
+// this, so this deliberately only flags the narrow case of a city that is
+// exactly one edit away from a well-known city without matching one
+// outright - everything else (including real, uncommon small towns) passes
+// through unflagged rather than risk false positives.
+const PLACE_OF_ENTRY_KNOWN_CITIES = new Set([
+  "MONTGOMERY",
+  "JUNEAU",
+  "PHOENIX",
+  "LITTLE ROCK",
+  "SACRAMENTO",
+  "DENVER",
+  "HARTFORD",
+  "DOVER",
+  "TALLAHASSEE",
+  "ATLANTA",
+  "HONOLULU",
+  "BOISE",
+  "SPRINGFIELD",
+  "INDIANAPOLIS",
+  "DES MOINES",
+  "TOPEKA",
+  "FRANKFORT",
+  "BATON ROUGE",
+  "AUGUSTA",
+  "ANNAPOLIS",
+  "BOSTON",
+  "LANSING",
+  "SAINT PAUL",
+  "JACKSON",
+  "JEFFERSON CITY",
+  "HELENA",
+  "LINCOLN",
+  "CARSON CITY",
+  "CONCORD",
+  "TRENTON",
+  "SANTA FE",
+  "ALBANY",
+  "RALEIGH",
+  "BISMARCK",
+  "COLUMBUS",
+  "OKLAHOMA CITY",
+  "SALEM",
+  "HARRISBURG",
+  "PROVIDENCE",
+  "COLUMBIA",
+  "PIERRE",
+  "NASHVILLE",
+  "AUSTIN",
+  "SALT LAKE CITY",
+  "MONTPELIER",
+  "RICHMOND",
+  "OLYMPIA",
+  "CHARLESTON",
+  "MADISON",
+  "CHEYENNE",
+  "WASHINGTON",
+  "NEW YORK",
+  "LOS ANGELES",
+  "CHICAGO",
+  "HOUSTON",
+  "PHILADELPHIA",
+  "SAN ANTONIO",
+  "SAN DIEGO",
+  "DALLAS",
+  "SAN JOSE",
+  "FORT WORTH",
+  "JACKSONVILLE",
+  "CHARLOTTE",
+  "SAN FRANCISCO",
+  "SEATTLE",
+  "PORTLAND",
+  "LAS VEGAS",
+  "LOUISVILLE",
+  "BALTIMORE",
+  "MILWAUKEE",
+  "ALBUQUERQUE",
+  "TUCSON",
+  "FRESNO",
+  "MESA",
+  "KANSAS CITY",
+  "OMAHA",
+  "COLORADO SPRINGS",
+  "LONG BEACH",
+  "VIRGINIA BEACH",
+  "OAKLAND",
+  "MINNEAPOLIS",
+  "TULSA",
+  "TAMPA",
+  "ARLINGTON",
+  "NEW ORLEANS",
+  "WICHITA",
+  "CLEVELAND",
+  "ST LOUIS",
+  "PITTSBURGH",
+  "ANCHORAGE",
+  "NEWARK",
+  "ORLANDO",
+  "NORFOLK",
+  "SPOKANE",
+  "EL PASO",
+  "MEMPHIS",
+  "DETROIT",
+]);
+
+// True only when `a`/`b` differ by exactly one single-character
+// insertion/deletion/substitution (a bounded, early-exit edit-distance-1
+// check - not a full Levenshtein DP, since every candidate here is already
+// a short city name).
+function _editDistanceIsOne(a, b) {
+  if (a === b) return false;
+  const lenDiff = a.length - b.length;
+  if (lenDiff < -1 || lenDiff > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
+    }
+    edits++;
+    if (edits > 1) return false;
+    if (lenDiff === 0) {
+      i++;
+      j++;
+    } else if (lenDiff > 0) {
+      i++;
+    } else {
+      j++;
+    }
+  }
+  edits += a.length - i + (b.length - j);
+  return edits === 1;
+}
+
+function _isPlaceOfEntryLowConfidence(city) {
+  if (PLACE_OF_ENTRY_KNOWN_CITIES.has(city)) return false;
+  for (const known of PLACE_OF_ENTRY_KNOWN_CITIES) {
+    if (_editDistanceIsOne(city, known)) return true;
+  }
+  return false;
+}
+
+function _extractPlaceOfEntry(ctx) {
+  const { data, ocrCorrectedUpperText } = ctx;
+  const anchorMatch = ocrCorrectedUpperText.match(/PLACE\s+OF\s+ENTRY/);
+  if (!anchorMatch) return;
+  const windowStart = anchorMatch.index + anchorMatch[0].length;
+  const windowText = ocrCorrectedUpperText.slice(
+    windowStart,
+    windowStart + 300,
+  );
+
+  // The city portion is bounded to a single line (a space-only character
+  // class, not \s) - real scans routinely place the anchor's trailing
+  // words ("INTO ACTIVE DUTY") and the actual value on separate lines, and
+  // an \s-based class would lazily cross that newline to fuse them into one
+  // bogus multi-word "city".
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test (100k-char no-comma input resolves in <5ms): bounded {1,30} lazy quantifier prevents backtracking blowup
+  const cityStatePattern =
+    /\b([A-Z][A-Z0-9 .-]{1,30}?),[ \t]*([A-Z0-9]{2,12})\b/g;
+  let match;
+  while ((match = cityStatePattern.exec(windowText)) !== null) {
+    // Periods are stripped (not just excluded from the match) so "ST.
+    // LOUIS" normalizes to the same "ST LOUIS" form the known-cities
+    // gazetteer and low-confidence check both use; hyphens are kept
+    // since they're load-bearing in real city names ("WINSTON-SALEM").
+    const city = _normalizeOcrLetterDigits(match[1].trim())
+      .replace(/\.+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const state = _normalizeOcrLetterDigits(match[2].trim());
+    const cityWords = city.split(/\s+/);
+    const isBoilerplate = cityWords.every((word) =>
+      BOX7_PLACE_OF_ENTRY_NOISE_WORDS.has(word),
+    );
+    if (!isBoilerplate) {
+      data.placeOfEntry = `${city}, ${state}`;
+      data.placeOfEntryLowConfidence = _isPlaceOfEntryLowConfidence(city);
+      break;
+    }
+  }
+}
+
+function _extractPlaceOfEntryAndMOS(ctx) {
+  const { data, cleanedText } = ctx;
+  _extractPlaceOfEntry(ctx);
+
+  // Box 11: Primary MOS/Specialty (mos) - Handle various formats
+  // Examples: "12Y10 GEOSPATIAL ENGR", "11B INFANTRY", "0311 RIFLEMAN"
+  const mosPatterns = [
+    /11\.\s{0,10}PRIMARY\s{1,10}SPECIALTY[:\s]{1,20}([A-Z0-9]{1,20})[:\s-]{0,10}([A-Z\s-]{1,200}?)(?:\s{1,10}12\.|$)/i,
+    // MOS followed by title: "12Y10 GEOSPATIAL ENGR" or "12Y GEOSPATIAL ENGINEER"
+    /\b(\d{2}[A-Z]\d{0,2})\s+([A-Z][A-Z\s]{5,30}(?:SPEC|SP|NCO)?)/i,
+    // Marine MOS: 0311, 0341, etc.
+    /\b(0[1-9]\d{2})\s+([A-Z][A-Z\s]+)/i,
+    // Air Force AFSC: 2A3X1, etc.
+    /\b(\d[A-Z]\d[A-Z]\d[A-Z]?)\s+([A-Z][A-Z\s]+)?/i,
+    // Navy Rate: BM2, IT1, etc. Gated to Navy/Coast Guard (the only
+    // branches that use "rate" terminology): this 2-4-letters-plus-digit
+    // shape also matches OCR noise anywhere else in the document - a real
+    // Army DD214's boilerplate header ("THIS IS AN IMPORTANT RECORD")
+    // OCR'd as "THI3 1S" matched this pattern and fabricated MOS "THI3".
+    ...(data.branch === "Navy" || data.branch === "Coast Guard"
+      ? [/\b([A-Z]{2,4}\d)\s+([A-Z][A-Z\s]+)?/i]
+      : []),
+    // Generic fallback: an explicit "MOS:"/"AFSC:"/"RATE:" label followed
+    // by a real code shape. [A-Z0-9]{2,6} used to accept the LABEL's own
+    // trailing words too - Box 4a's real printed label is "GRADE, RATE OR
+    // RANK", and a real scan OCR's that as "GRADE RATE QO" (or "GRADE,
+    // RATE, OR RANK") - "RATE" is itself one of this pattern's label
+    // alternatives, so "QO"/"OR", the two letters right after it, satisfied
+    // the old class and got stored as the MOS. Requiring the real MOS/AFSC
+    // shape (the Navy/Coast Guard rating shape only when the branch is
+    // actually Navy/Coast Guard, same gating as the dedicated Navy pattern
+    // above) means Box 4a's own label text can never match here again.
+    new RegExp(
+      String.raw`(?:MOS|AFSC|RATE)[:\s]+(\d{2}[A-Z]\d{0,2}|\d[A-Z]\d[A-Z]\d[A-Z]?${
+        data.branch === "Navy" || data.branch === "Coast Guard"
+          ? String.raw`|[A-Z]{2,4}\d`
+          : ""
+      })[:\s-]*([A-Z\s-]*)`,
+      "i",
+    ),
+    /PRIMARY\s+(?:MOS|SPECIALTY)[:\s]+([A-Z0-9]+)/i,
+  ];
+  for (const pattern of mosPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      data.mos = match[1]?.trim();
+      // Clean up MOS title - remove trailing garbage
+      let title = match[2]?.trim();
+      if (title) {
+        // Remove numbers and noise at end, keep just the job title.
+        // \s{1,50} not \s+: title is capped to 50 chars below anyway, and
+        // unbounded \s+ before a digit that might never appear is O(n²)
+        // on adversarial input (confirmed 3.5s+ at 80k chars).
+        title = title.replace(/\s{1,50}\d{1,10}.{0,200}$/, "").trim();
+        if (title.length >= 5 && title.length <= 50) {
+          data.mosTitle = title;
+        }
+      }
+      break;
+    }
+  }
+
+  // ============================================================
+}
+
+function _extractServiceEndDate(ctx) {
+  const { data, cleanedText } = ctx;
+  // BOX 12b: SEPARATION DATE THIS PERIOD (NOT Box 12a!)
+  // Box 12a is Entry Date, Box 12b is Separation Date!
+  // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
+  // ============================================================
+  // FIX-13: same "12b." vs "12.b." anchor and punctuation-only-separator
+  // bugs as _extractServiceStartDate's Box 12a - see that function's
+  // comment for the real-document repro that motivated this.
+  const separationPatterns = [
+    // Explicit Box 12b reference
+    /12\.?\s*b\.?\s*(?:DATE\s+)?(?:SEPARATION|RELEASE)[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // "SEPARATION DATE" or "DATE OF SEPARATION" label
+    /SEPARATION\s+DATE\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    /DATE\s+OF\s+(?:SEPARATION|RELEASE)\D*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    // Box 12b with compact YYYYMMDD
+    /12\.?\s*b\.?\D*(\d{8})\b/i,
+    // Table format: "2007 | 06 | 03", "07 06 03", or plain whitespace-only
+    // "2015 05 30"
+    // eslint-disable-next-line sonarjs/regex-complexity -- pre-existing (predates this change, unrelated to it); the repeated (separator|whitespace) alternation is what makes this table-format date matcher tolerant of real OCR spacing variance, simplifying it is a separate, larger task out of scope here
+    /12\.?\s*b\.?\D*(\d{2,4})(?:\s*[|/-]\s*|\s+)(\d{2})(?:\s*[|/-]\s*|\s+)(\d{2})\b/i,
+  ];
+  for (const pattern of separationPatterns) {
+    const match = cleanedText.match(pattern);
+    if (match) {
+      const dateStr = _normalizeDateMatch(match);
+      // Sanity check: Separation date should be AFTER entry date
+      // And should NOT be same as DOB
+      if (dateStr !== data.dateOfBirth && dateStr !== data.serviceStartDate) {
+        data.serviceEndDate = dateStr;
+        break;
+      }
+    }
+  }
+}
+
+/** Box 12b: NET ACTIVE SERVICE THIS PERIOD. Mutates `data.totalActiveService`. */
+function _extractNetActiveServiceTime(data, cleanedText, netActivePatterns) {
+  for (const pattern of netActivePatterns) {
+    const match = cleanedText.match(pattern);
+    if (!match) continue;
+
+    const years = Number.parseInt(match[1]) || 0;
+    const months = Number.parseInt(match[2]) || 0;
+    const days = Number.parseInt(match[3]) || 0;
+    // Sanity check: active duty period should be reasonable (< 40 years)
+    if (years >= 40 || months > 12) continue;
+
+    data.totalActiveService =
+      days > 0
+        ? `${years} years, ${months} months, ${days} days`
+        : `${years} years, ${months} months`;
+    return;
+  }
+}
+
+/** Box 12c/12d: TOTAL PRIOR ACTIVE/INACTIVE SERVICE. Returns a formatted
+ * "N years, M months" string, or null if the pattern didn't match or both
+ * parts were zero. */
+function _extractPriorServiceTime(cleanedText, pattern) {
+  const match = cleanedText.match(pattern);
+  if (!match) return null;
+
+  const years = Number.parseInt(match[1]) || 0;
+  const months = Number.parseInt(match[2]) || 0;
+  if (years === 0 && months === 0) return null;
+
+  return `${years} years, ${months} months`;
+}
+
+function _extractServiceTime(ctx) {
+  const { data, cleanedText } = ctx;
+  // === BOX 12b-d: SERVICE TIME ===
+  // CRITICAL: Box 12b is "NET ACTIVE SERVICE THIS PERIOD" - the actual active duty time
+  // Box 12c is "TOTAL PRIOR ACTIVE SERVICE" - previous active duty
+  // Box 12d is "TOTAL PRIOR INACTIVE SERVICE" - reserve/guard time (not active duty)
+  // Box 12e is "FOREIGN SERVICE" - overseas time
+  // We need to be VERY specific about which box we're reading
+
+  // Box 12b: NET ACTIVE SERVICE THIS PERIOD (the important one)
+  const netActivePatterns = [
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the YR/MO/DAY optional-suffix alternation count, not backtracking; bounded for S8786 above
+    /12b\.?\s{0,10}NET\s{1,10}ACTIVE\s{1,10}SERVICE\s{1,10}THIS\s{1,10}PERIOD[:\s]{1,20}(\d{1,2})\s{0,10}(?:YR|YEAR)?S?\s{0,10}(\d{1,2})\s{0,10}(?:MO|MONTH)?S?\s{0,10}(\d{1,2})?\s{0,10}(?:DAY)?S?/i,
+    /NET\s+ACTIVE\s+SERVICE[:\s]+(\d{1,2})\s*(\d{1,2})/i,
+    // Look for pattern: "12b. XX YY ZZ" (years months days)
+    /12b\.\s*(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})?/i,
+  ];
+  _extractNetActiveServiceTime(data, cleanedText, netActivePatterns);
+
+  // Box 12c: TOTAL PRIOR ACTIVE SERVICE (previous enlistments)
+  const priorActive = _extractPriorServiceTime(
+    cleanedText,
+    /12c\.?\s{0,10}(?:TOTAL\s{1,10})?PRIOR\s{1,10}ACTIVE[:\s]{1,20}(\d{1,2})\s{0,10}(?:YR)?S?\s{0,10}(\d{1,2})/i,
+  );
+  if (priorActive) data.totalPriorActiveService = priorActive;
+
+  // Box 12d: TOTAL PRIOR INACTIVE SERVICE (reserve/guard time)
+  const priorInactive = _extractPriorServiceTime(
+    cleanedText,
+    /12d\.?\s{0,10}(?:TOTAL\s{1,10})?PRIOR\s{1,10}INACTIVE[:\s]{1,20}(\d{1,2})\s{0,10}(?:YR)?S?\s{0,10}(\d{1,2})/i,
+  );
+  if (priorInactive) data.totalPriorInactiveService = priorInactive;
+}
+
+function _extractAwardsFromBlock13(ctx) {
+  const { data, cleanedText, stateCode, ocrCorrectedUpperText } = ctx;
+  // === BOX 13: DECORATIONS/MEDALS/AWARDS ===
+  // CRITICAL: Only parse Block 13 section, NOT instructional text
+  // DD214 forms have INSTRUCTIONAL TEXT listing example awards on the blank form
+  // Common instructional awards: Silver Star, Bronze Star, Air Medal, Purple Heart
+  // These are NOT the veteran's awards unless they appear WITHOUT the instructional context
+
+  // Awards that commonly appear in DD214 instructions (should be filtered unless clearly real)
+
+  // Look specifically for Block 13 content
+  const block13Match = cleanedText.match(
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the BADGES/CITATIONS/CAMPAIGN optional-group alternation count, not backtracking; bounded for S8786 above
+    /13\.?\s{0,10}DECORATIONS.{0,2000}?(?:BADGES.{0,200}?CITATIONS.{0,200}?CAMPAIGN.{0,200}?)?[:\s]{1,20}(.{1,5000}?)(?=\s{0,10}14\.|15\.|---|\[INSTRUCTION)/is,
+  );
+
+  if (block13Match) {
+    let block13Text = block13Match[1];
+
+    // FIX-3c: Block 13 sometimes terminates with a continuation marker
+    // ("...CONT IN BLOCK 18", with or without a leading "//" delimiter --
+    // real scans vary) when the award list overflows into Remarks. Append
+    // the isolated Box 18 text so the continued awards still get parsed.
+    // Previously required a literal leading "//", which silently dropped
+    // the continuation on forms where OCR/the source form omits it.
+    if (/(?:\/\/\s*)?CONT(?:INUED)?\s+IN\s+BLOCK\s+18/i.test(block13Text)) {
+      const box18Continuation = _extractBox18RemarksText(ocrCorrectedUpperText);
+      if (box18Continuation) {
+        block13Text = `${block13Text} ${box18Continuation}`;
+      }
+    }
+
+    // Check if this looks like instructional text
+    const hasInstructionalPattern =
+      /SILVER\s+STAR.*BRONZE\s+STAR|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE|E\.G\./i.test(
+        block13Text,
+      );
+    const hasMultipleHighAwards =
+      (
+        block13Text.match(
+          /SILVER\s+STAR|BRONZE\s+STAR|AIR\s+MEDAL|PURPLE\s+HEART/gi,
+        ) || []
+      ).length >= 3;
+
+    // Only parse if it doesn't look like instructional text
+    if (
+      block13Text &&
+      block13Text.length > 20 &&
+      !hasInstructionalPattern &&
+      !hasMultipleHighAwards
+    ) {
+      const parsedAwards = parseDD214Text(
+        block13Text,
+        data.branch || "Army",
+        stateCode,
+      );
+      if (parsedAwards && parsedAwards.length > 0) {
+        // Filter out awards that are likely instructional (high valor awards are rare)
+        data.awards = parsedAwards.filter((award) => {
+          const awardName =
+            award.award?.name?.toUpperCase() ||
+            award.matchedText?.toUpperCase() ||
+            "";
+          // Keep service ribbons, campaign medals, marksmanship - these are common real awards
+          // Be skeptical of high valor awards appearing with other instructional patterns
+          return (
+            !INSTRUCTIONAL_AWARDS.some((ia) => awardName.includes(ia)) ||
+            // Unless it's the ONLY high-value award found (might be real)
+            parsedAwards.filter((a) =>
+              INSTRUCTIONAL_AWARDS.some((ia) =>
+                (a.award?.name?.toUpperCase() || "").includes(ia),
+              ),
+            ).length === 1
+          );
+        });
+      }
+    }
+  }
+}
+
+// The regex extraction path never produced a combatService field at all, so
+// every document ingested through Muster Call reached the profile, the VKB,
+// the packet export and the AI context as a non-combat veteran no matter what
+// Block 13 said. Only the single-document DD214Analyzer.jsx upload set it.
+function _deriveCombatServiceField(ctx) {
+  const { data } = ctx;
+  const derived = deriveCombatService(data.awards || []);
+  // Only a determination that says something gets a field. A DD214 set is
+  // routinely four pages where one carries Block 13; emitting an
+  // all-negative object on the other three put an empty "Combat Service"
+  // row on the review screen for the veteran to verify, and combat is
+  // never established by a document's silence anyway - _mergeDD214Record
+  // treats a missing value as "no new information", not as a retraction.
+  data.combatService = derived.hasVerifiedCombat
+    ? {
+        ...derived,
+        deployments: Array.isArray(data.deployments)
+          ? [...data.deployments]
+          : [],
+      }
+    : null;
+}
+
+function _extractAwardsFallback(ctx) {
+  const { data, cleanedText, stateCode } = ctx;
+  // Fallback: If no awards found in Block 13, look for award patterns in general
+  // but be very conservative about what we accept
+  if (!data.awards || data.awards.length === 0) {
+    // Only parse if we DON'T see ANY classic instructional patterns
+    const hasAnyInstructionalText =
+      /SILVER\s+STAR.*(?:BRONZE|AIR)|BRONZE\s+STAR.*AIR\s+MEDAL|SUCH\s+AS|EXAMPLE/i.test(
+        cleanedText,
+      );
+
+    if (!hasAnyInstructionalText) {
+      const parsedAwards = parseDD214Text(
+        cleanedText,
+        data.branch || "Army",
+        stateCode,
+      );
+      if (parsedAwards && parsedAwards.length > 0) {
+        // Only keep clearly real awards (service ribbons, qualification badges, etc.)
+        data.awards = parsedAwards.filter((award) => {
+          const awardName = award.award?.name?.toUpperCase() || "";
+          // Service ribbons and campaign medals are almost always real
+          return (
+            awardName.includes("SERVICE RIBBON") ||
+            awardName.includes("CAMPAIGN") ||
+            awardName.includes("QUALIFICATION") ||
+            awardName.includes("MARKSMAN") ||
+            awardName.includes("EXPERT") ||
+            awardName.includes("GOOD CONDUCT") ||
+            // Or it's explicitly NOT an instructional award
+            !INSTRUCTIONAL_AWARDS.some((ia) => awardName.includes(ia))
+          );
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Try each Box 14 pattern in turn; the first one that MATCHES wins (even
+ * if its captured text doesn't look like real education data), matching
+ * the original loop's break-on-first-match behavior.
+ */
+function _extractMilitaryEducationText(text, eduPatterns) {
+  for (const pattern of eduPatterns) {
+    const eduMatch = text.match(pattern);
+    if (!eduMatch) continue;
+
+    // Clean up: remove noise, limit length
+    const edu = eduMatch[1]?.replace(/\s+/g, " ").trim();
+    // Only keep if it looks like actual education (course names, durations)
+    const looksLikeEducation =
+      edu &&
+      edu.length > 10 &&
+      edu.length < 500 &&
+      /\d{1,10}\s{0,10}(?:WK|WEEK|MONTH)/i.test(edu);
+    if (!looksLikeEducation) return null;
+
+    // Remove trailing noise like NOTHING FOLLOWS
+    return edu
+      .replace(/\s{0,10}\/\/\s{0,10}NOTHING\s{1,10}FOLLOWS.{0,500}$/i, "")
+      .trim();
+  }
+  return null;
+}
+
+/**
+ * Extract key deployment/service info from Box 18 remarks - not the
+ * entire section, just deployment locations and OEF/OIF/OND service
+ * mentions.
+ */
+function _extractRemarksKeyInfo(box18Text) {
+  const remarksKeyInfo = [];
+  if (!box18Text) return remarksKeyInfo;
+
+  // Check for deployment info
+  const deploymentInfo = box18Text.match(
+    /(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s,]+?)(?:\.|\/\/|$)/gi,
+  );
+  if (deploymentInfo) {
+    remarksKeyInfo.push(...deploymentInfo.map((d) => d.trim()));
+  }
+
+  // Check for OEF/OIF/OND service
+  if (/OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)/i.test(box18Text)) {
+    const opMatch = box18Text.match(
+      /(OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)\s+FREEDOM?)/i,
+    );
+    if (opMatch) remarksKeyInfo.push(opMatch[1]);
+  }
+
+  return remarksKeyInfo;
+}
+
+function _extractEducationAndRemarks(ctx) {
+  const { data, text, ocrCorrectedUpperText } = ctx;
+  // Box 14: Military Education - extract ONLY the structured education portion
+  const eduPatterns = [
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the "15." vs "HIGH SCHOOL" boundary alternation count, not backtracking; bounded for S8786 above
+    /14\.\s{0,10}MILITARY\s{1,10}EDUCATION[^:]{0,200}:\s{0,10}(.{1,5000}?)(?=\s{0,10}15\s{0,10}[.ab]|\s{1,10}HIGH\s{1,10}SCHOOL)/is,
+    /MILITARY\s{1,10}EDUCATION[^:]{0,200}:\s{0,10}([A-Z\s,0-9]{1,500}?(?:WEEKS?|WK|MONTHS?)[^15]{0,500})/is,
+  ];
+  const edu = _extractMilitaryEducationText(text, eduPatterns);
+  if (edu) data.militaryEducation = edu;
+
+  // Box 18: Remarks. FIX-3a: scoped to the isolated Box 18 substring only
+  // (not the whole document) so preprinted boilerplate elsewhere on the
+  // form can't be mistaken for a real deployment/service mention.
+  const box18Text = _stripDeploymentBoilerplate(
+    _extractBox18RemarksText(ocrCorrectedUpperText),
+  );
+  const remarksKeyInfo = _extractRemarksKeyInfo(box18Text);
+
+  // Only store remarks if we found valuable info
+  if (remarksKeyInfo.length > 0) {
+    data.remarks = remarksKeyInfo.join(" | ");
+  }
+}
+
+function _extractSeparationTypeAndCharacter(ctx) {
+  const { data, ocrCorrectedUpperText: text } = ctx;
+  // Box 23: Type of Separation
+  const sepTypeMatch = text.match(
+    /23\.\s{0,10}TYPE\s{1,10}OF\s{1,10}SEPARATION[:\s]{1,20}([A-Z\s]{1,200}?)(?:\s{1,10}24\.|$)/i,
+  );
+  if (sepTypeMatch) {
+    data.separationType = sepTypeMatch[1]?.trim();
+  }
+
+  // Boxes 23/24 are read from the OCR-corrected text, not the raw text: a real
+  // scan renders Box 24 as "GENERAL - UNDER H0N0RABLE C0NDITI0NS", which no
+  // [A-Z] pattern here can match until the zero-for-O pass has run.
+  //
+  // Box 24: Character of Service - CRITICAL for benefits (dischargeType).
+  // The bare-word fallback is deliberately the narrowest of the four: a real
+  // NGB22 is signed by the state's ADJUTANT GENERAL and carries "GENERAL
+  // REMARKS" in Box 18, either of which the previous unanchored `GENERAL`
+  // alternative would have read as a General discharge on a document that
+  // never characterizes one.
+  // The printed form label itself is "24. CHARACTER OF SERVICE (Include
+  // upgrades)" - that parenthetical is instructional boilerplate, not part
+  // of the value, but it's made of the same [A-Z\s()-] characters the value
+  // is, so the two label-anchored patterns below skip over it (when
+  // present) before starting the real capture. Optional: a real NGB22 never
+  // has it at all.
+  const includeUpgradesLabel = String.raw`(?:\(\s{0,5}INCLUDE\s{1,10}UPGRADES?\s{0,5}\)[:\s]{0,20})?`;
+  const characterPatterns = [
+    // [A-Z\s()-] not [A-Z\s-]: the form can print this box as "GENERAL
+    // (UNDER HONORABLE CONDITIONS)", and a class that can't include "("
+    // stops the capture at "GENERAL" alone - a different, wrong VA
+    // characterization. _normalizeDischargeType strips the parens back out.
+    new RegExp(
+      String.raw`24\.\s{0,10}CHARACTER\s{1,10}OF\s{1,10}SERVICE[:\s]{1,20}${includeUpgradesLabel}([A-Z\s()-]{1,200}?)(?:\s{1,10}25\.|$)`,
+      "i",
+    ),
+    // eslint-disable-next-line sonarjs/slow-regex -- distinctive literal prefix "CHARACTER OF SERVICE" gates the unbounded class, so the match cannot restart at arbitrary offsets; verified on the 10KB Box 23/24 slice
+    new RegExp(
+      String.raw`CHARACTER\s+OF\s+SERVICE[:\s]+${includeUpgradesLabel}([A-Z\s()-]+)`,
+      "i",
+    ),
+    // Bounded rather than \s*[-–—(]?\s* — two unbounded runs either side of
+    // an optional separator backtrack quadratically on a long whitespace
+    // stretch. The separator also accepts "(": same real-form rendering as
+    // above, for when the "CHARACTER OF SERVICE" label itself didn't
+    // survive OCR well enough for the two patterns above to anchor on.
+    /\b(GENERAL\s{0,4}[-–—(]?\s{0,4}UNDER\s+HONORABLE\s+CONDITIONS)\b/i,
+    /\b(OTHER\s+THAN\s+HONORABLE|DISHONORABLE|BAD\s+CONDUCT|UNCHARACTERIZED|HONORABLE)\b/i,
+  ];
+  for (const pattern of characterPatterns) {
+    const match = text.match(pattern);
+    // A real NGB22 can render Box 24's label with the real value on a
+    // later OCR line, well past this pattern's bounded gap to "25." - the
+    // label-anchored pattern still matches, but group 1 is nothing but the
+    // whitespace between the two labels. Treat that the same as no match
+    // (instead of breaking here) so a later, narrower pattern still gets a
+    // chance to find the real value elsewhere in the text.
+    const captured = match?.[1];
+    if (captured && captured.replace(/[\s()-]/g, "").length > 0) {
+      data.dischargeType = _normalizeDischargeType(captured);
+      break;
+    }
+  }
+}
+
+const DISCHARGE_TYPES = [
+  "GENERAL UNDER HONORABLE CONDITIONS",
+  "OTHER THAN HONORABLE",
+  "BAD CONDUCT",
+  "DISHONORABLE",
+  "UNCHARACTERIZED",
+  "HONORABLE",
+  "GENERAL",
+];
+
+// Box 24 arrives in several renderings ("GENERAL - UNDER HONORABLE
+// CONDITIONS", "HONORABLE  25. SEPARATION AUTHORITY") plus whatever the next
+// box label bled into the capture; reduce to the canonical characterization so
+// downstream eligibility checks compare like with like.
+function _normalizeDischargeType(raw) {
+  const cleaned = String(raw ?? "")
+    .toUpperCase()
+    .replace(/[-–—()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return DISCHARGE_TYPES.find((t) => cleaned.startsWith(t)) ?? cleaned;
+}
+
+function _extractSeparationAuthorityAndCodes(ctx) {
+  const { data, text } = ctx;
+  // Box 25: Separation Authority (regulation)
+  const authMatch = text.match(
+    /25\.\s{0,10}SEPARATION\s{1,10}AUTHORITY[:\s]{1,20}([A-Z0-9\s.-]{1,200}?)(?:\s{1,10}26\.|$)/i,
+  );
+  if (authMatch) {
+    data.separationAuthority = authMatch[1]?.trim();
+  }
+
+  // Box 26: SPD Code
+  const spdMatch =
+    text.match(
+      /26\.\s*(?:SEPARATION\s+(?:PROGRAM\s+)?)?(?:DESIGNATOR|CODE)[:\s]+([A-Z]{3})/i,
+    ) || text.match(/SPD[:\s]+([A-Z]{3})/i);
+  if (spdMatch) {
+    data.spdCode = spdMatch[1]?.toUpperCase();
+  }
+
+  // Box 27: Reentry Code - Valid RE codes are: RE-1, RE-2, RE-3, RE-4 (with optional letter suffix)
+  // Also NA for not applicable
+  const rePatterns = [
+    /27\.\s*(?:REENTRY|RE)\s+CODE[:\s]*([A-Z0-9-]{1,4})/i,
+    /RE\s*CODE[:\s]*([A-Z0-9-]{1,4})/i,
+    /\b(RE-?[1-4][A-Z]?|NA)\b/i,
+  ];
+  for (const pattern of rePatterns) {
+    const reMatch = text.match(pattern);
+    if (reMatch) {
+      const code = reMatch[1]?.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+      // Validate it's a real RE code format (RE-1, RE-2A, NA, etc) not OCR garbage
+      if (code && /^(?:RE-?[1-4][A-Z]?|NA|[1-4][A-Z]?)$/.test(code)) {
+        // Normalize format
+        if (/^[1-4][A-Z]?$/.test(code)) {
+          data.reentryCode = `RE-${code}`;
+        } else if (code === "NA") {
+          data.reentryCode = "NA";
+        } else {
+          data.reentryCode = code.replace(/RE-?/, "RE-");
+        }
+        break;
+      }
+    }
+  }
+}
+
+function _extractNarrativeAndDeploymentLocations(ctx) {
+  const { data, text, ocrCorrectedUpperText } = ctx;
+  // Box 28: Narrative Reason
+  const narrativeMatch = text.match(
+    /28\.\s{0,10}NARRATIVE\s{1,10}REASON[:\s]{1,20}(.{1,500}?)(?:\s{1,10}29\.|$)/i,
+  );
+  if (narrativeMatch) {
+    data.narrativeReason = narrativeMatch[1]?.trim();
+  }
+
+  // FIX-3a (HIGHEST PRIORITY): deployment locations must be scoped to the
+  // isolated Box 18 remarks substring by default, NOT the entire document.
+  // Scanning the whole doc previously matched preprinted boilerplate
+  // ("POST-VIETNAM ERA VETERAN'S EDUCATIONAL ASSISTANCE PROGRAM") and
+  // fabricated a Vietnam deployment.
+  // FIX-12: isolate against ocrCorrectedUpperText, not raw text - see
+  // _extractBox18RemarksText for why (boilerplate stripper and the
+  // deployment-country matcher must see the same OCR-corrected text, or a
+  // corrupted "P0ST-VIETNAM ERA" slips past the boilerplate strip while the
+  // digit-immune "VIETNAM" match still fires below).
+  const box18Text = _extractBox18RemarksText(ocrCorrectedUpperText);
+  const box18Scan = box18Text
+    ? _stripDeploymentBoilerplate(box18Text).toUpperCase()
+    : "";
+  const dobYear = _parseYearFromDate(data.dateOfBirth);
+
+  // Extract deployments from remarks (Box 18) - common locations, with or
+  // without an explicit "FROM YYYYMMDD TO YYYYMMDD" date range. The dated
+  // patterns (DATED_DEPLOYMENT_PATTERNS) run first so a bare-location
+  // match for the same place (below) is a no-op merge instead of
+  // overwriting real dates with nothing - see _pushDeployment.
+  const deploymentPatterns = [
+    ...DATED_DEPLOYMENT_PATTERNS,
+    // {1,60} not unbounded +: real multi-word deployment locations are a
+    // few words, never remotely close to 60 chars - unbounded [A-Z\s]+?
+    // immediately followed by \s+ is the same ambiguous-adjacent-quantifier
+    // shape fixed elsewhere in this file (see parseRatingDecision's
+    // CONDITION_PERCENT_RE), which sonarjs/super-linear-regex flags.
+    /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
+    /\b(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN|SINAI|MFO)\b/gi,
+  ];
+
+  // A scrambled OCR reading order on a multi-column DD214/NGB22 layout can
+  // make a later box's heading (e.g. a stray "19a.") appear ahead of Box
+  // 18's real end in the linearized text stream, truncating the isolated
+  // substring well short of genuine remarks - seen on a scan
+  // where Box 18 isolated to a few words of boilerplate and the
+  // "SERVICE IN <place> <dates>" line landed elsewhere in the document.
+  // When the isolated substring is empty or doesn't contain anything the
+  // deployment patterns recognize, fall back to the full document - still
+  // boilerplate-stripped first, so FIX-3a's fabrication guard still
+  // applies even in the fallback.
+  const scanUpper = deploymentPatterns.some(
+    (pattern) => box18Scan.match(pattern) !== null,
+  )
+    ? box18Scan
+    : _stripDeploymentBoilerplate(ocrCorrectedUpperText).toUpperCase();
+
+  for (const pattern of deploymentPatterns) {
+    let match;
+    while ((match = pattern.exec(scanUpper)) !== null) {
+      const location = match[1]?.trim();
+      if (!location) continue;
+      _pushDeployment(
+        data,
+        dobYear,
+        location,
+        _normalizeDeploymentDate(match[2]),
+        _normalizeDeploymentDate(match[3]),
+      );
+    }
+  }
+}
+
+// _normalizeCompactDate is declared further down (function declarations
+// hoist) - see FIX-15 there for the YYYYMMDD -> MM/DD/YYYY convention.
+// startDate/endDate are null for a bare location mention with no date range.
+//
+// A real C-File holds several scanned copies of the same DD214/NGB-22, and
+// a veteran can genuinely have two different tours to the same country -
+// matching on location alone (as this used to) collapsed a second, later
+// tour into the first one's dates instead of recording it. The match now
+// also requires the dates to be compatible: an undated mention (no
+// startDate) merges into any existing entry for that location - it's
+// either a repeat of an already-dated tour or a still-undated one, either
+// way not new information - while a DATED mention only merges into an
+// existing entry whose startDate is either unset or the exact same date;
+// a different startDate for the same location is a second, distinct tour.
+function _pushDeployment(data, dobYear, rawLocation, startDate, endDate) {
+  const location = DEPLOYMENT_LOCATION_ALIASES[rawLocation] || rawLocation;
+  const existing = data.deployments.find(
+    (d) =>
+      d.location === location &&
+      (!d.startDate || !startDate || d.startDate === startDate),
+  );
+  if (existing) {
+    if (!existing.startDate && startDate) existing.startDate = startDate;
+    if (!existing.endDate && endDate) existing.endDate = endDate;
+    existing.combatZone = isDesignatedCombatZone(location, existing.startDate);
+    return;
+  }
+
+  // Sanity guard: reject a deployment whose era ended before the veteran
+  // was even born.
+  const eraEndYear = DEPLOYMENT_ERA_LATEST_YEAR[location];
+  if (eraEndYear && dobYear && dobYear >= eraEndYear) return;
+
+  data.deployments.push({
+    location,
+    startDate: startDate || null,
+    endDate: endDate || null,
+    combatZone: isDesignatedCombatZone(location, startDate),
+  });
+}
+
+// FIX-15: 8-digit YYYYMMDD -> MM/DD/YYYY, same convention as every other
+// date field parseServiceRecord produces (converted to canonical ISO at the
+// saveServiceRecordToProfile write boundary via _toISODateString). Returns
+// null instead of fabricating a date when the digits fall outside a
+// plausible service-record year range.
+function _normalizeCompactDate(yyyymmdd) {
+  if (!/^\d{8}$/.test(yyyymmdd)) return null;
+  const year = yyyymmdd.substring(0, 4);
+  const month = yyyymmdd.substring(4, 6);
+  const day = yyyymmdd.substring(6, 8);
+  const y = Number.parseInt(year, 10);
+  if (y < 1950 || y > 2030) return null;
+  return `${month}/${day}/${year}`;
+}
+
+// DATED_DEPLOYMENT_PATTERNS' slash-date variant (see its own comment)
+// captures an already-MM/DD/YYYY date - just pad, don't reinterpret it as
+// compact YYYYMMDD digits.
+function _normalizeDeploymentDate(value) {
+  if (!value) return null;
+  if (/^\d{8}$/.test(value)) return _normalizeCompactDate(value);
+  const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value);
+  if (!slashMatch) return null;
+  const [, month, day, year] = slashMatch;
+  return `${month.padStart(2, "0")}/${day.padStart(2, "0")}/${year}`;
+}
+
+// FIX-15: real NGB-22 (Guard) discharge records carry a granular activation
+// breakdown in Box 18 that Box 12a/12b (a single date pair) never captures,
+// e.g. "IADT: YYYYMMDD-YYYYMMDD//AD: YYYYMMDD-YYYYMMDD//YYYYMMDD-YYYYMMDD//
+// YYYYMMDD-YYYYMMDD//" - one IADT window plus several separately-dated AD
+// windows. Each "//"-delimited segment inherits the most recently seen
+// IADT/AD label. Dates only - no location name is ever present in this
+// data, so this never populates a place field.
+//
+// FIX-18: a real scan OCR's "IADT" as "1A DT" (digit-for-letter plus a
+// spurious space) - this exact
+// corruption dropped the whole segment (dates included, not just the
+// label) because the label match failed and the pre-fix code required a
+// resolved component before it would even look at the date range. Every
+// segment's label prefix (if it has one - a bare continuation range never
+// does, see above) is now run through the same digit-for-letter
+// normalization the Box 1 name field and Box 7a place-of-entry field
+// already use (labels here never legitimately contain digits either), so
+// "1A DT" normalizes to "IADT" and is recognized like any other IADT label.
+// A label prefix that STILL doesn't normalize to a known IADT/AD label is
+// treated as unknown (component: null) rather than dropped, and rather
+// than silently inheriting whatever component the previous segment
+// resolved to - symmetric with the IADT case: if "AD" were the one that
+// OCR'd unrecognizably instead, silently inheriting a stale "IADT" would
+// mislabel real Active Duty service as training. A segment with no colon
+// at all (a genuine bare continuation, not a label attempt) still inherits
+// the most recently resolved component, same as before this fix.
+/**
+ * Resolve one "//"-delimited NGB22 Box 18 segment's label prefix, if it
+ * has one. Returns `component: undefined` when there's no label prefix
+ * at all (a bare continuation range that should inherit whatever
+ * component the previous segment resolved to), or the resolved
+ * component (a string, or null for an unrecognized label) otherwise.
+ */
+function _resolveNGB22SegmentLabel(segment) {
+  const labelPrefixMatch = segment.match(/^([^:]{1,15}):\s{0,10}(.{0,2000})$/);
+  if (!labelPrefixMatch) return { component: undefined, rest: segment };
+
+  const normalizedLabel = _normalizeOcrLetterDigits(labelPrefixMatch[1])
+    .replace(/\s+/g, "")
+    .toUpperCase();
+  let component;
+  if (normalizedLabel === "AD") {
+    component = "Active Duty";
+  } else if (normalizedLabel === "IADT") {
+    component = "IADT";
+  } else {
+    component = null;
+  }
+  return { component, rest: labelPrefixMatch[2].trim() };
+}
+
+/** Parse a "YYYYMMDD-YYYYMMDD" date range, normalizing both dates. */
+function _parseNGB22DateRange(rest) {
+  const rangeMatch = rest.match(/^(\d{8})\s*-\s*(\d{8})$/);
+  if (!rangeMatch) return null;
+
+  const serviceStartDate = _normalizeCompactDate(rangeMatch[1]);
+  const serviceEndDate = _normalizeCompactDate(rangeMatch[2]);
+  if (!serviceStartDate || !serviceEndDate) return null;
+
+  return { serviceStartDate, serviceEndDate };
+}
+
+function _extractNGB22PeriodDates(ctx) {
+  const { data, ocrCorrectedUpperText } = ctx;
+  if (data.formType !== "NGB22") return;
+
+  const box18Text = _extractBox18RemarksText(ocrCorrectedUpperText);
+  if (!box18Text) return;
+
+  const segments = box18Text
+    .split("//")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  let currentComponent = null;
+  const periods = [];
+  for (const segment of segments) {
+    const { component, rest } = _resolveNGB22SegmentLabel(segment);
+    if (component !== undefined) currentComponent = component;
+
+    const dateRange = _parseNGB22DateRange(rest);
+    if (!dateRange) continue;
+
+    periods.push({ component: currentComponent, ...dateRange });
+  }
+
+  if (periods.length > 0) data.additionalPeriods = periods;
+}
+
+// N9c (final9 QA, 2026-09-25): a real NGB-22 (Report of Separation and
+// Record of Service) never prints "date entered this period" the way a
+// DD-214's Box 12a does. Its
+// separation date lives at the "STATION OR INSTALLATION AT WHICH
+// EFFECTED" item instead (labeled "DATE", not "12b"), and there is no
+// printed entry date at all - only Item 10's "NET SERVICE THIS PERIOD"
+// duration (YRS|MOS|DAYS), which this form's own separation date counts
+// back from. Same tolerant Y/M/D-triple separator shape as the DD-214 Box
+// 12a/12b table-format matcher (see _extractServiceStartDate).
+// prettier-ignore
+// eslint-disable-next-line sonarjs/regex-complexity -- pre-existing pattern (see _extractServiceStartDate's own suppression above); the repeated (separator|whitespace) alternation is what makes this table-format date matcher tolerant of real OCR spacing variance, simplifying it is a separate, larger task out of scope here
+const NGB22_SEPARATION_DATE_RE = /STATION\s+OR\s+INSTALLATION\s+AT\s+WHICH\s+EFFECTED[\s\S]{0,400}?DATE\s+(\d{4})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
+
+// prettier-ignore
+// eslint-disable-next-line sonarjs/regex-complexity -- same tolerant-separator shape as NGB22_SEPARATION_DATE_RE above
+const NGB22_NET_SERVICE_RE = /NET\s+SERVICE\s+THIS\s+PERIOD\D{0,20}?(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
+
+// D-E (final10 QA, 2026-09-25): Item 10's YRS|MOS|DAYS triple was never
+// range-checked, so an OCR/label misread (e.g. months and days swapped,
+// or a stray digit) that produced "13" months round-tripped straight
+// through subtractDuration as if it meant 13 real calendar months.
+// Months and days are calendar remainders, never a full unit's worth of
+// the next one up; years is bounded to a plausible career length rather
+// than an arbitrary "any positive number" pass-through.
+const MAX_NGB22_NET_SERVICE_YEARS = 50;
+
+// D-E (final10 QA correctness re-review, 2026-09-26): "00 00 00" passed
+// this range check (0 is a valid year/month/day count on its own) and
+// derived a zero-length primary period - entryDate === separationDate -
+// from what is really a total OCR miss, not a plausible one-day-or-less
+// tour. Rejected outright rather than range-checked, since there is no
+// valid all-zero NET SERVICE duration.
+function _isValidNetServiceDuration(years, months, days) {
+  if (years === 0 && months === 0 && days === 0) return false;
+  return (
+    Number.isInteger(years) &&
+    years >= 0 &&
+    years <= MAX_NGB22_NET_SERVICE_YEARS &&
+    Number.isInteger(months) &&
+    months >= 0 &&
+    months <= 11 &&
+    Number.isInteger(days) &&
+    days >= 0 &&
+    days <= 31
+  );
+}
+
+/**
+ * Derives the NGB-22's own primary (enlistment-level) period dates from
+ * Item 8's separation date and Item 10's net-service duration - never a
+ * guess: both fields must be present, clearly labeled, and round-trip
+ * through parseExplicitDate's calendar validation (N13), or neither date
+ * is set and the primary period stays undated (upstream: unmatched, not
+ * merged onto one of this document's own Box 18 windows - see
+ * veteranProfile.js's _hasProvenLink).
+ */
+function _extractNGB22PrimaryPeriodDates(ctx) {
+  const { data, ocrCorrectedUpperText } = ctx;
+  if (data.formType !== "NGB22") return;
+  if (data.serviceStartDate || data.serviceEndDate) return;
+
+  const sepMatch = ocrCorrectedUpperText.match(NGB22_SEPARATION_DATE_RE);
+  const netMatch = ocrCorrectedUpperText.match(NGB22_NET_SERVICE_RE);
+  if (!sepMatch || !netMatch) return;
+
+  const separationDate = parseExplicitDate(
+    `${sepMatch[1]}-${sepMatch[2].padStart(2, "0")}-${sepMatch[3].padStart(2, "0")}`,
+  );
+  if (!separationDate) return;
+
+  const [years, months, days] = netMatch.slice(1, 4).map(Number);
+  if (!_isValidNetServiceDuration(years, months, days)) return;
+  const entryDate = subtractDuration(separationDate, years, months, days);
+  if (!entryDate || !parseExplicitDate(entryDate)) return;
+
+  data.serviceStartDate = entryDate;
+  data.serviceStartDateDerived = true;
+  data.serviceEndDate = separationDate;
+}
+
+export const parseServiceRecord = async (text, formType = "DD214") => {
+  const data = {
+    type: "service_record",
+    // FIX-3b: source form type marker ("DD214" | "NGB22" | "DD256" | "DD257")
+    formType,
+    // ============================================================
+    // DD214 FORM BOX STRUCTURE (VERIFIED FROM ACTUAL FORMS):
+    // Box 1: Name (Last, first, middle)
+    // Box 2: Department, Component, Branch
+    // Box 3: Social Security Number (we don't store)
+    // Box 4a: Grade/Rank
+    // Box 4b: Pay Grade
+    // Box 5: Date of Birth ⚠️ NOT Box 6!
+    // Box 6: Reserve Obligation Termination Date
+    // Box 7a: Place of Entry into Active Duty
+    // Box 7b: Home of Record at Time of Entry
+    // Box 8a: Last Duty Assignment
+    // Box 8b: Station Where Separated
+    // Box 11: Primary Specialty (MOS/AFSC/Rate)
+    // Box 12a: Date Entered AD This Period ⚠️ Entry Date!
+    // Box 12b: Separation Date This Period ⚠️ End Date!
+    // Box 12c-e: Service Time calculations
+    // Box 13: Decorations, Medals, Badges
+    // Box 14: Military Education
+    // Box 18: Remarks
+    // Box 23: Type of Separation
+    // Box 24: Character of Service
+    // Box 25: Separation Authority
+    // Box 26: SPD Code
+    // Box 27: Reentry Code
+    // Box 28: Narrative Reason
+    // ============================================================
+
+    // Box 1: Name (matches collectionRules: veteranName)
+    veteranName: null,
+    lastName: null,
+    firstName: null,
+    middleName: null,
+    // Box 2: Department, Component, Branch (matches collectionRules: branch)
+    branch: null,
+    component: null,
+    // Box 4a: Grade/Rate/Rank (matches collectionRules: rank)
+    rank: null,
+    // Box 4b: Pay Grade
+    payGrade: null,
+    // Box 5: Date of Birth (matches collectionRules: dateOfBirth)
+    dateOfBirth: null,
+    // Box 12a: Date Entered AD This Period (matches collectionRules: serviceStartDate)
+    serviceStartDate: null,
+    // Box 7a: Place of Entry
+    placeOfEntry: null,
+    // True when placeOfEntry's city is a single-edit-distance OCR-plausible
+    // misread of a well-known city (see _isPlaceOfEntryLowConfidence) -
+    // hedges the field in the UI without blocking extraction.
+    placeOfEntryLowConfidence: false,
+    // Box 11: Primary MOS/Specialty (matches collectionRules: mos)
+    mos: null,
+    mosTitle: null,
+    // Box 12b: Separation Date (matches collectionRules: serviceEndDate)
+    serviceEndDate: null,
+    // Box 12c-e: Service Time
+    totalActiveService: null,
+    totalPriorActiveService: null,
+    totalPriorInactiveService: null,
+    foreignService: null,
+    seaService: null,
+    // Box 13: Decorations, Medals, Badges (parsed awards - matches collectionRules: awards)
+    awards: [],
+    // Box 14: Military Education (cleaned/validated)
+    militaryEducation: null,
+    // Box 18: Remarks - extracted key info (deployments, operations)
+    remarks: null,
+    deployments: [],
+    // Box 18 (NGB-22 only): granular IADT/AD activation date ranges - see
+    // _extractNGB22PeriodDates. Empty unless this document is an NGB-22 AND
+    // Box 18 contains the IADT:/AD: date-range format.
+    additionalPeriods: [],
+    // Box 23: Type of Separation
+    separationType: null,
+    // Box 24: Character of Service (matches collectionRules: dischargeType)
+    dischargeType: null,
+    // Box 25: Separation Authority
+    separationAuthority: null,
+    // Box 26: Separation Code (SPD)
+    spdCode: null,
+    // Box 27: Reentry Code
+    reentryCode: null,
+    // Box 28: Narrative Reason
+    narrativeReason: null,
+    // Metadata
+    raw: text.substring(0, 1000),
+  };
+
+  try {
+    const { cleanedText, upperText, ocrCorrectedUpperText } =
+      _preprocessDD214Text(text);
+    const ctx = { data, text, cleanedText, upperText, ocrCorrectedUpperText };
+
+    _extractNameField(ctx);
+    _extractBranchField(ctx);
+    _extractStateCode(ctx);
+    _extractRankField(ctx);
+    _extractPayGrade(ctx);
+    _extractDateOfBirth(ctx);
+    _extractServiceStartDate(ctx);
+    _extractPlaceOfEntryAndMOS(ctx);
+    _extractServiceEndDate(ctx);
+    // N9c: NGB-22 only, and only when the DD-214-style Box 12a/12b
+    // extractors above found nothing - this form never carries that box.
+    _extractNGB22PrimaryPeriodDates(ctx);
+    // After both service dates are known - see _validateDateOfBirth.
+    _validateDateOfBirth(ctx);
+    _extractServiceTime(ctx);
+    _extractAwardsFromBlock13(ctx);
+    _extractAwardsFallback(ctx);
+    _extractEducationAndRemarks(ctx);
+    _extractSeparationTypeAndCharacter(ctx);
+    _extractSeparationAuthorityAndCodes(ctx);
+    _extractNarrativeAndDeploymentLocations(ctx);
+    _extractNGB22PeriodDates(ctx);
+    // After the deployment extractor, so the determination carries them.
+    _deriveCombatServiceField(ctx);
+    logger.info("📋 DD214 parsed fields:", {
+      fields: presentFieldNames(data),
+      awardsCount: data.awards?.length || 0,
+      deploymentsCount: data.deployments?.length || 0,
+    });
+
+    return data;
+  } catch (error) {
+    console.error("Service record parsing error:", error.message);
+    return { ...data, error: error.message };
+  }
+};
+
+/**
+ * Parse VA Rating Decision (legacy fallback -- see parseRatingDecisionDocument)
+ */
+export const parseRatingDecision = async (text, { letterheadText } = {}) => {
+  const data = {
+    type: "rating_decision",
+    conditions: [],
+    combinedRating: null,
+    effectiveDate: null,
+    decisionDate: null,
+    raw: text.substring(0, 500),
+  };
+
+  try {
+    // Extract combined rating
+    const combinedMatch = text.match(
+      /COMBINED\s{1,10}RATING\s{0,10}[:=]?\s{0,10}(\d{1,3})%?/i,
+    );
+    if (combinedMatch) {
+      data.combinedRating = Number.parseInt(combinedMatch[1]);
+    }
+
+    // Extract effective date
+    const effectiveDateMatch = text.match(
+      /EFFECTIVE\s{1,10}DATE\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
+    if (effectiveDateMatch) {
+      data.effectiveDate = effectiveDateMatch[1];
+    }
+
+    // Extract decision date
+    const decisionDateMatch = text.match(
+      /DECISION\s{1,10}DATE\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
+    if (decisionDateMatch) {
+      data.decisionDate = decisionDateMatch[1];
+    }
+
+    // Extract conditions with diagnostic codes.
+    //
+    // Security review note: this legacy fallback (only reached when the
+    // primary vaDocumentParser.js finds limited data -- see
+    // parseRatingDecisionDocument above) originally combined an optional
+    // diagnostic-code prefix, an unbounded `[\s\S]{0,200}?` skip, and an
+    // unbounded condition-name capture into one regex. `[A-Z][A-Z\s,]+?`
+    // immediately adjacent to `[\s-]+` (both match plain spaces) is the
+    // same ambiguous-adjacent-quantifier shape fixed elsewhere in this
+    // session; confirmed 52s at 30k chars, still 3s+ at 100k after only
+    // bounding the name length. Restructured as find-condition-first
+    // (name length bounded to a realistic 100 chars) then a bounded
+    // backward lookback for a preceding diagnostic code, same technique
+    // used in vaDocumentParser.js. Verified identical on realistic
+    // "DIAGNOSTIC CODE: NNNN, Condition - NN%"-shaped input; differs from
+    // the original only on adversarial/unrealistic input (100+ char gaps
+    // between code and name) that doesn't occur in real decision letters,
+    // where the original's own behavior was already fragile (it could
+    // swallow unrelated prose into the "condition name"). The dash is
+    // required: without it every "...rating is 30%" or "Original award, 30%"
+    // in a letter's prose became a rated condition.
+    const CONDITION_PERCENT_RE = /([A-Z][A-Z\s,]{1,100}?) {0,3}- {0,3}(\d+)%/gi;
+    const DIAGNOSTIC_CODE_BEFORE_RE =
+      /DIAGNOSTIC\s{1,10}CODE\s{0,10}[:=]?\s{0,10}(\d{4})\s{0,10}$/i;
+    const DIAGNOSTIC_CODE_LOOKBACK_WINDOW = 200;
+
+    let match;
+    let prevEnd = 0;
+    while ((match = CONDITION_PERCENT_RE.exec(text)) !== null) {
+      const nameStart = match.index;
+      const windowStart = Math.max(
+        0,
+        nameStart - DIAGNOSTIC_CODE_LOOKBACK_WINDOW,
+        prevEnd,
+      );
+      const dcMatch = text
+        .slice(windowStart, nameStart)
+        .match(DIAGNOSTIC_CODE_BEFORE_RE);
+      prevEnd = nameStart + match[0].length;
+
+      data.conditions.push({
+        name: match[1].trim(),
+        rating: Number.parseInt(match[2]),
+        diagnosticCode: dcMatch ? dcMatch[1] : null,
+        serviceConnected: true,
+      });
+      if (match[0].length === 0) CONDITION_PERCENT_RE.lastIndex++;
+    }
+  } catch (error) {
+    console.error("Rating decision parsing error:", error.message);
+    data.error = error.message;
+  }
+
+  return attachPerIssueDecisions(data, text, letterheadText);
+};
+
+// pdf.js emits one text line per PAGE, and a real decision letter wraps every
+// bullet across several visual lines, so "line" is the wrong unit: splitting
+// on newlines and anchoring at line start found exactly one of eleven
+// decisions on a real 2024 letter. Sentences are the right unit - every
+// outcome clause ends in a period - and bullet glyphs survive pdf.js as a
+// stray "l", "•", "-" or a numbered prefix at the sentence start.
+const DECISION_SENTENCE_MAX_CHARS = 900;
+const DECISION_OUTCOME_RE =
+  // eslint-disable-next-line sonarjs/slow-regex -- anchored at ^, lazy head capped at 450 chars, and the input is a single sentence already capped at DECISION_SENTENCE_MAX_CHARS
+  /^(.{3,450}?)\s+(?:is|are|was|were|remains?)\s+(granted|denied|continued|increased|decreased|reduced|confirmed and continued|deferred)\b(.*)$/i;
+const DECISION_DATE_RE =
+  // eslint-disable-next-line sonarjs/regex-complexity -- both alternation branches use non-overlapping character classes (letters vs digits); runs on a <=900-char sentence
+  /effective\s+([A-Z][a-z]+\.?\s+\d{1,2},?\s+\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/i;
+// Every real outcome clause opens with one of these; boilerplate that merely
+// contains an outcome verb ("...review a claim that was denied more than one
+// year ago...") does not.
+const DECISION_CLAUSE_STARTER_RE =
+  // eslint-disable-next-line sonarjs/regex-complexity -- the four literal openings VA uses to start a decision clause, each with its optional article/adjective; flat alternation, every group bounded
+  /(?:service connection for|entitlement to|(?:an?\s+|the\s+)?(?:increased |compensable )?evaluation of|(?:the\s+|your\s+)?claim for)\s+/gi;
+
+function splitDecisionSentences(text) {
+  return text
+    .replace(/---\s*PAGE\s+\d+\s*---/gi, ". ")
+    .replace(/\bPage\s+\d+\s+(?=---|\.|$)/g, ". ")
+    .replace(/\s+/g, " ")
+    .split(/(?<=\.)\s+/)
+    .map((s) =>
+      s
+        .replace(/^(?:[•·▪■*-]\s+|l\s+|\d{1,2}[.)]\s+)+/, "")
+        .trim()
+        .slice(0, DECISION_SENTENCE_MAX_CHARS),
+    )
+    .filter((s) => s.length >= 8);
+}
+
+// Keep only the text from the LAST clause starter onward: the sentence split
+// leaves section headings and bullet residue in front of the clause ("Your
+// Benefit Information: l Service connection for sinusitis", "DECISION Service
+// connection for ..."). Returns null when no starter is present at all.
+function cleanDecisionCondition(head, keepWholeClause = false) {
+  let firstStart = -1;
+  let firstLen = 0;
+  let lastStart = -1;
+  let lastLen = 0;
+  for (const m of head.matchAll(DECISION_CLAUSE_STARTER_RE)) {
+    if (firstStart === -1) {
+      firstStart = m.index;
+      firstLen = m[0].length;
+    }
+    lastStart = m.index;
+    lastLen = m[0].length;
+  }
+  if (lastStart === -1) return null;
+  const from = keepWholeClause ? firstStart + firstLen : lastStart + lastLen;
+  return head
+    .slice(from)
+    .replace(
+      /,?\s{0,10}which is currently\s{1,10}\d{1,3}\s{0,10}percent\s{1,10}disabling,?\s{0,10}$/i,
+      "",
+    )
+    .replace(
+      /,?\s{0,10}currently\s{1,10}(?:evaluated\s{1,10}(?:as|at)\s{1,10})?\d{1,3}\s{0,10}percent\s{1,10}disabling,?\s{0,10}$/i,
+      "",
+    )
+    .replace(/[,;]\s*$/, "")
+    .trim();
+}
+
+/**
+ * Extracts per-issue outcomes from a VA decision/notification letter,
+ * e.g. "Service connection for tinnitus is granted with an evaluation of 10
+ * percent effective November 1, 2025." / "Evaluation of knee strain,
+ * which is currently 10 percent disabling, is increased to 20 percent
+ * effective August 22, 2023." / "Service connection for sinusitis is
+ * denied." Returns {condition, outcome, rating, priorRating, effectiveDate};
+ * rating is the evaluation that applies AFTER the decision (null for a
+ * denial), priorRating the one the letter says was in effect before.
+ */
+// "Entitlement to an earlier effective date for the 20 percent evaluation of
+// migraine headaches is denied" decides a DATE, not the condition -
+// recording it as "migraines denied" would contradict the veteran's
+// actual 20% service connection. Such issues keep the whole clause as their
+// label and are excluded from condition/denial lists.
+const EFFECTIVE_DATE_ISSUE_RE =
+  /\b(?:an\s+)?earlier\s+effective\s+date\b|\beffective\s+date\s+(?:for|of)\b/i;
+
+// The cover page and the enclosed rating decision state every decision
+// twice, with small parenthetical differences; the first 40 characters of the
+// condition plus the outcome identify the pair. A genuine bilateral pair
+// (e.g. "Shoulder strain ... left" / "... right") can share
+// that entire 40-character prefix when the distinguishing "left"/"right"
+// token sits past it, which collapsed two real, differently-sided
+// conditions into one and silently dropped the second. Fold in the side so
+// same-prefix left/right/bilateral conditions stay distinct while true
+// cover-page/decision-enclosure repeats (identical side) still collapse.
+const decisionKey = (condition, outcome) =>
+  `${condition
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .slice(0, 40)}|${outcome}|${_sideFromConditionName(condition)}`;
+
+/**
+ * Parse one sentence matched by DECISION_OUTCOME_RE into a decision
+ * object, or return null if it should be skipped (no match, a "not
+ * granted/established" negation, or an unresolvable condition name).
+ */
+function _buildDecisionFromSentence(sentence) {
+  const match = sentence.match(DECISION_OUTCOME_RE);
+  if (!match) return null;
+  const [, head, rawOutcome, tail] = match;
+  const outcome = rawOutcome.toLowerCase().replace(/\s+/g, " ");
+  if (/\bnot\s+(?:granted|established)\b/i.test(head)) return null;
+
+  const isEffectiveDateIssue = EFFECTIVE_DATE_ISSUE_RE.test(head);
+  const condition = cleanDecisionCondition(head, isEffectiveDateIssue);
+  if (!condition || /^(?:it|this|that|which|the claim)$/i.test(condition))
+    return null;
+
+  const priorMatch = head.match(
+    /currently\s+(?:evaluated\s+(?:as|at)\s+)?(\d{1,3})\s*percent/i,
+  );
+  const priorRating = priorMatch ? Number(priorMatch[1]) : null;
+  const tailRating = tail.match(
+    /(?:evaluation of|to|at|as)\s+(\d{1,3})\s*percent/i,
+  );
+  let rating = tailRating ? Number(tailRating[1]) : null;
+  if (
+    rating === null &&
+    /^(?:continued|confirmed and continued)$/.test(outcome)
+  )
+    rating = priorRating;
+  if (outcome === "denied" || outcome === "deferred" || isEffectiveDateIssue)
+    rating = null;
+
+  const dateMatch = tail.match(DECISION_DATE_RE);
+  return {
+    condition,
+    outcome,
+    rating,
+    priorRating,
+    effectiveDate: dateMatch ? dateMatch[1] : null,
+    ...(isEffectiveDateIssue && { issue: "effective_date" }),
+  };
+}
+
+function extractPerIssueDecisions(text) {
+  const decisions = [];
+  const seen = new Set();
+  const push = (decision) => {
+    const key = decisionKey(decision.condition, decision.outcome);
+    if (seen.has(key)) return;
+    seen.add(key);
+    decisions.push(decision);
+  };
+
+  for (const sentence of splitDecisionSentences(text)) {
+    const decision = _buildDecisionFromSentence(sentence);
+    if (decision) push(decision);
+  }
+
+  for (const row of extractDecisionTableRows(text)) push(row);
+
+  const rated = new Set(
+    decisions
+      .filter((d) => d.rating !== null && !d.issue)
+      .map((d) => primaryConditionKey(d.condition)),
+  );
+  for (const assigned of extractAssignedEvaluations(text)) {
+    if (!rated.has(primaryConditionKey(assigned.condition))) push(assigned);
+  }
+
+  return decisions;
+}
+
+// A Higher-Level Review that only decides an effective date still restates
+// the rating in its reasons: "We have assigned a 20 percent evaluation for
+// your migraine headaches (formerly evaluated as ...) based on:".
+// That is the letter's only statement of the current percentage, so it counts
+// as a continued rating unless the letter already decided that condition.
+const ASSIGNED_EVALUATION_RE =
+  /We have assigned an? (\d{1,3}) percent evaluation for your (.{3,400}?) based on\b/gi;
+
+function extractAssignedEvaluations(text) {
+  const flat = text.replace(/\s+/g, " ");
+  return [...flat.matchAll(ASSIGNED_EVALUATION_RE)].map((m) => ({
+    condition: m[2].trim(),
+    outcome: "continued",
+    rating: Number(m[1]),
+    priorRating: Number(m[1]),
+    effectiveDate: null,
+  }));
+}
+
+// Pre-2015 decision letters tabulate outcomes instead of writing sentences:
+// "We determined that the following conditions were related to your military
+// service, so service connection has been granted: Medical Description
+// Percent (%) Assigned Effective Date  Tension headaches ... 30% Feb 3, 2010
+// Knee strain ... 10% Feb 3, 2011". The outcome lives in the sentence that
+// introduces the table; each row ends in "NN%" plus an optional date. The
+// denied table lists bare condition names with no delimiter between them, so
+// it cannot be split reliably and is skipped.
+const DECISION_TABLE_HEADER_RE =
+  // eslint-disable-next-line sonarjs/slow-regex -- literal alternation, a {0,80} bounded skip to the colon, then literal header words; runs on whitespace-normalized letter text
+  /(?:service connection (?:has been|is) granted|hasn'?t changed|has not changed|(?:has been|is) increased)[^:]{0,80}:\s*Medical Description\s+Percent\s*\(%\)\s*Assigned(?:\s+Effective Date)?/gi;
+const DECISION_TABLE_ROW_RE =
+  // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- lazy name capture bounded to 200 non-% chars and anchored by the literal "%"; runs on a <=1500-char table section. The optional trailing date group is one flat alternative, not nesting.
+  /([A-Z][^%]{3,200}?)\s+(\d{1,3})%(?:\s+([A-Z][a-z]{2,8}\.?\s+\d{1,2},\s+\d{4}))?/g;
+
+function extractDecisionTableRows(text) {
+  const flat = text.replace(/\s+/g, " ");
+  const rows = [];
+  for (const header of flat.matchAll(DECISION_TABLE_HEADER_RE)) {
+    let outcome = "granted";
+    if (/hasn'?t changed|has not changed/i.test(header[0]))
+      outcome = "continued";
+    else if (/increased/i.test(header[0])) outcome = "increased";
+    const bodyStart = header.index + header[0].length;
+    const body = flat.slice(bodyStart, bodyStart + 1500);
+    const stop = body.search(
+      /\bWe determined\b|\bYour overall\b|\bAn examination\b|\bWhat You Should Do\b|\bWe have enclosed\b/i,
+    );
+    const section = stop === -1 ? body : body.slice(0, stop);
+    for (const m of section.matchAll(DECISION_TABLE_ROW_RE)) {
+      const rating = Number(m[2]);
+      rows.push({
+        condition: m[1].trim(),
+        outcome,
+        rating,
+        priorRating: outcome === "continued" ? rating : null,
+        effectiveDate: m[3] || null,
+      });
+    }
+  }
+  return rows;
+}
+
+/**
+ * "Combined Rating Evaluation  Effective Date  20% Feb 3, 2010  30% Aug 14,
+ * 2012 ... 60% Mar 3, 2021" - the history table every modern decision letter
+ * carries - or the older prose form "Your overall or combined rating is 20%
+ * effective Feb 3, 2010 and then 30% effective Feb 3, 2011". Returns rows
+ * in letter order; the last row is the current combined rating.
+ */
+function extractCombinedRatingHistory(text) {
+  const flat = text.replace(/\s+/g, " ");
+  const tableStart = flat.search(
+    /Combined Rating Evaluation\s+Effective Date/i,
+  );
+  if (tableStart !== -1) {
+    const window = flat.slice(tableStart, tableStart + 800);
+    return [
+      ...window.matchAll(
+        /(\d{1,3})%\s+([A-Z][a-z]{2,8}\.?\s+\d{1,2},\s+\d{4})/g,
+      ),
+    ].map((m) => ({ percentage: Number(m[1]), effectiveDate: m[2] }));
+  }
+  const proseStart = flat.search(
+    /(?:overall or )?combined rating is\s+\d{1,3}%/i,
+  );
+  if (proseStart === -1) return [];
+  const window = flat.slice(proseStart, proseStart + 400);
+  return [
+    ...window.matchAll(
+      /(\d{1,3})%\s+effective\s+([A-Z][a-z]{2,8}\.?\s+\d{1,2},\s+\d{4})/g,
+    ),
+  ].map((m) => ({ percentage: Number(m[1]), effectiveDate: m[2] }));
+}
+
+function extractCombinedRatingValue(text, history) {
+  if (history.length > 0) return history[history.length - 1].percentage;
+  const flat = text.replace(/\s+/g, " ");
+  const explicit =
+    flat.match(
+      /COMBINED\s{1,10}RATING\s{0,10}[:=]?\s{0,10}(\d{1,3})\s{0,10}%?/i,
+    ) ||
+    flat.match(
+      /combined\s{1,10}(?:rating\s{1,10})?evaluation\s{1,10}(?:is|of|remains)\s{0,10}:?\s{0,10}(\d{1,3})\s{0,10}(?:%|percent)/i,
+    );
+  return explicit ? Number(explicit[1]) : null;
+}
+
+const RATED_OUTCOMES = new Set([
+  "granted",
+  "increased",
+  "continued",
+  "confirmed and continued",
+  "decreased",
+  "reduced",
+]);
+
+/**
+ * Per-issue decisions expressed as rating-decision conditions. Used to fill
+ * `conditions` when neither the header-first parser nor the legacy
+ * "CONDITION - NN%" regex found anything - the notification-letter format
+ * ("Your Benefit Information: ... is granted with an evaluation of ...")
+ * carries every condition and rating but matches neither.
+ */
+function decisionsToConditions(decisions) {
+  return decisions
+    .filter(
+      (d) => !d.issue && RATED_OUTCOMES.has(d.outcome) && d.rating !== null,
+    )
+    .map((d) => ({
+      name: d.condition,
+      rating: d.rating,
+      priorRating: d.priorRating,
+      outcome: d.outcome,
+      effectiveDate: d.effectiveDate,
+      diagnosticCode: null,
+      serviceConnected: true,
+    }));
+}
+
+// Real decision/notification letters rarely carry an explicit
+// "DECISION DATE:" label (that only matches an old intake-form shape) - the
+// best fallback signal for "when was this decision made" is the newest
+// effective date the letter actually states, either a per-issue decision's
+// or the combined-rating history's last row. Returns the original date
+// string (whatever prose/numeric form the letter used), not a normalized
+// one, since callers store it as-is.
+function _latestEffectiveDate(decisions, combinedRatingHistory) {
+  const candidates = [
+    ...(Array.isArray(decisions) ? decisions : []).map((d) => d.effectiveDate),
+    ...(Array.isArray(combinedRatingHistory) ? combinedRatingHistory : []).map(
+      (h) => h.effectiveDate,
+    ),
+  ].filter(Boolean);
+  let best = null;
+  let bestIso = null;
+  for (const candidate of candidates) {
+    const iso = _toIsoDay(candidate);
+    if (!iso) continue;
+    if (!bestIso || iso > bestIso) {
+      bestIso = iso;
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+function attachPerIssueDecisions(data, text, letterheadText) {
+  const decisions = extractPerIssueDecisions(text);
+  const history = extractCombinedRatingHistory(text);
+  data.decisions = decisions;
+  // Per-issue decisions carry the exact condition wording, outcome, prior
+  // and new percentage; the legacy "CONDITION - NN%" regex also matches the
+  // combined-rating table ("Effective Date 30%") and similar noise, so when
+  // decisions exist they replace whatever the regex found.
+  const fromDecisions = decisionsToConditions(decisions);
+  if (fromDecisions.length > 0 || !Array.isArray(data.conditions)) {
+    data.conditions = fromDecisions;
+  }
+  data.deniedConditions = decisions
+    .filter((d) => d.outcome === "denied" && !d.issue)
+    .map((d) => d.condition);
+  if (history.length > 0) data.combinedRatingHistory = history;
+  if (data.combinedRating === null || data.combinedRating === undefined) {
+    data.combinedRating = extractCombinedRatingValue(text, history);
+  }
+  if (data.decisionDate) {
+    data.decisionDateKind ||= "letter";
+  } else {
+    data.letterDate ||= _letterheadDate(letterheadText || text);
+    _setDecisionDate(data, decisions, history);
+  }
+  return data;
+}
+
+/**
+ * Parse VA Claim Letter - covers the real, broad CLAIM_LETTER category
+ * (documentClassifier.js): development/evidence-request letters, Intent to
+ * File acknowledgments, exam-scheduling notices, and decision/award letters
+ * that don't hit the stricter RATING_DECISION triggers. Real letters use
+ * prose ("We received your claim... on [date]", "What we need from you",
+ * "You have 30 days to respond") rather than the "CLAIM NUMBER:"/
+ * "CONTENTIONS:" intake-form labels the previous version looked for.
+ */
+// VA file number, claim-received date and the letter's own issue date. Split
+// out of parseClaimLetter to keep that function under the repo's line ceiling.
+function _parseClaimLetterHeader(text, data, letterheadText) {
+  // A VA file number identifies the veteran (and is often their SSN); a
+  // claim number identifies one claim. Keep them apart so the file number is
+  // never shown or shared as a claim number.
+  const idMatch = text.match(
+    /(VA\s{1,10}FILE|C-FILE|FILE|CLAIM)\s{1,10}NUMBER\s{0,10}[:#]?\s{0,10}(\d[\d-]{6,14})/i,
+  );
+  if (idMatch) {
+    if (/^CLAIM/i.test(idMatch[1])) data.claimNumber = idMatch[2];
+    else data.vaFileNumber = idMatch[2];
+  }
+
+  // Claim-received date ("We received your claim ... on November 1, 2025")
+  const receivedMatch = text.match(
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: bounded filler ({0,80}) between anchors prevents backtracking blowup; both date-alternation branches use non-overlapping character classes
+    /RECEIVED\s+YOUR\s+CLAIM[^.\n]{0,80}?\bON\s+([A-Z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/i,
+  );
+  if (receivedMatch) {
+    data.claimDate = receivedMatch[1];
+  } else {
+    // Fall back to the old intake-form label for backward compatibility
+    const claimDateMatch = text.match(
+      /(?:DATE\s{1,10}OF\s{1,10}CLAIM|CLAIM\s{1,10}DATE)\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
+    if (claimDateMatch) {
+      data.claimDate = claimDateMatch[1];
+    }
+  }
+
+  data.letterDate =
+    _letterDate(text) ?? (letterheadText ? _letterDate(letterheadText) : null);
+}
+
+// The letter's own issue date: an explicit "Date:" label, else a date alone on
+// a letterhead line. Both need line breaks, which only letterheadText keeps
+// for PDFs (see extractStandardText in advancedOCR.js).
+function _letterDate(text) {
+  const letterDateMatch = text.match(
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the two date-format alternatives, not backtracking; anchored to start-of-line (^ with /m) and bounded for S8786 above
+    /^\s{0,10}Date\s{0,10}[:.]?\s{0,10}([A-Z]{1,30}\s{1,10}\d{1,2},?\s{1,10}\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/im,
+  );
+  return letterDateMatch ? letterDateMatch[1] : _letterheadDate(text);
+}
+
+const LETTERHEAD_DATE =
+  /^(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}$/;
+
+// Real VA letters carry no "Date:" label: the issue date sits alone on a line
+// in the letterhead ("February 4, 2024"). Only the first 40 lines are searched so
+// a dated sentence in the body is never mistaken for it.
+function _letterheadDate(text) {
+  for (const line of text.split("\n", 40)) {
+    const trimmed = line.trim().replace(/\s+/g, " ");
+    if (LETTERHEAD_DATE.test(trimmed)) return trimmed;
+  }
+  return null;
+}
+
+// Which kind of date decisionDate holds, so the UI can say "dated" for the
+// letter's issue date and "effective" for the fallback.
+function _setDecisionDate(data, decisions, history) {
+  if (data.letterDate) {
+    data.decisionDate = data.letterDate;
+    data.decisionDateKind = "letter";
+    return;
+  }
+  data.decisionDate = _latestEffectiveDate(decisions, history);
+  data.decisionDateKind = data.decisionDate ? "effective" : null;
+}
+
+export const parseClaimLetter = async (text, { letterheadText } = {}) => {
+  const data = {
+    type: "claim_letter",
+    claimNumber: null,
+    vaFileNumber: null,
+    claimDate: null,
+    letterDate: null,
+    decisionDate: null,
+    decisions: [],
+    conditions: [],
+    combinedRating: null,
+    evidenceNeeded: [],
+    responseDeadlineDays: null,
+    status: null,
+    raw: text.substring(0, 500),
+  };
+
+  try {
+    _parseClaimLetterHeader(text, data, letterheadText);
+
+    // Per-issue grant/deny/continue outcomes (decision-bearing letters) and
+    // the combined-rating table when the letter carries one
+    data.decisions = extractPerIssueDecisions(text);
+    const history = extractCombinedRatingHistory(text);
+    if (history.length > 0) data.combinedRatingHistory = history;
+    data.combinedRating = extractCombinedRatingValue(text, history);
+    data.conditions = decisionsToConditions(data.decisions);
+    // The letter's own issue date ("Date: November 15, 2025" near the
+    // letterhead) is the best signal for when a decision was made; real
+    // letters that skip that header (notification-format, pdf.js page-line
+    // layouts) still state effective dates, so fall back to the newest one.
+    _setDecisionDate(data, data.decisions, history);
+
+    // Evidence-request section (development letters)
+    const evidenceSectionMatch = text.match(
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; bounded body ({0,800}) lazily matched up to a blank line or end
+      /(?:WHAT\s{1,10}WE\s{1,10}NEED\s{1,10}FROM\s{1,10}YOU|EVIDENCE\s{1,10}(?:WE\s{1,10})?NEED(?:ED)?|WE\s{1,10}NEED\s{1,10}THE\s{1,10}FOLLOWING)\s{0,10}[:.]?\s{0,10}([\s\S]{0,800}?)(?:\n\s{0,10}\n|\r\n\s{0,10}\r\n|$)/i,
+    );
+    if (evidenceSectionMatch) {
+      data.evidenceNeeded = evidenceSectionMatch[1]
+        .split(/\r?\n/)
+        .map((line) => line.replace(/^[\s•\-*]+/, "").trim())
+        .filter((line) => line.length > 3 && !line.endsWith(":"));
+    }
+
+    // Response deadline ("you have 30 days", "respond within 60 days")
+    const deadlineMatch = text.match(
+      /(?:you\s+have|within|respond(?:\s+by)?)\s+(\d{1,3})\s+days/i,
+    );
+    if (deadlineMatch) {
+      data.responseDeadlineDays = Number(deadlineMatch[1]);
+    }
+
+    // Overall status derived from the real signals above, not a bare
+    // PENDING/APPROVED/DENIED keyword scan (those words rarely appear
+    // standalone in real letters).
+    const grantedCount = data.decisions.filter((d) =>
+      ["granted", "increased", "continued", "confirmed and continued"].includes(
+        d.outcome,
+      ),
+    ).length;
+    const deniedCount = data.decisions.filter(
+      (d) => d.outcome === "denied",
+    ).length;
+
+    if (grantedCount > 0 && deniedCount > 0) {
+      data.status = "mixed";
+    } else if (grantedCount > 0) {
+      data.status = "granted";
+    } else if (deniedCount > 0) {
+      data.status = "denied";
+    } else if (
+      data.evidenceNeeded.length > 0 ||
+      /PENDING|IN\s+PROGRESS|UNDER\s+REVIEW/i.test(text)
+    ) {
+      data.status = "pending";
+    }
+  } catch (error) {
+    console.error("Claim letter parsing error:", error.message);
+    data.error = error.message;
+  }
+
+  return data;
+};
+
+/**
+ * Parse DBQ (Disability Benefits Questionnaire)
+ */
+const parseDBQ = async (text) => {
+  const data = {
+    type: "dbq",
+    condition: null,
+    diagnosis: null,
+    nexusOpinion: null,
+    examDate: null,
+    examiner: null,
+    raw: text.substring(0, 500),
+  };
+
+  try {
+    // Extract condition name
+    const conditionMatch = text.match(/DBQ\s+FOR\s+([A-Z][A-Z\s]+?)(?:\n|$)/i);
+    if (conditionMatch) {
+      data.condition = conditionMatch[1].trim();
+    }
+
+    // Extract diagnosis
+    const diagnosisMatch = text.match(
+      /DIAGNOSIS\s{0,10}[:=]?\s{0,10}([\s\S]{0,300}?)(?:\n\n|\r\n\r\n)/i,
+    );
+    if (diagnosisMatch) {
+      data.diagnosis = diagnosisMatch[1].trim();
+    }
+
+    // Extract nexus opinion
+    if (/MORE\s+LIKELY\s+THAN\s+NOT/i.test(text)) {
+      data.nexusOpinion = "more_likely_than_not";
+    } else if (/AS\s+LIKELY\s+AS\s+NOT/i.test(text)) {
+      data.nexusOpinion = "as_likely_as_not";
+    } else if (/LESS\s+LIKELY\s+THAN\s+NOT/i.test(text)) {
+      data.nexusOpinion = "less_likely_than_not";
+    }
+
+    // Extract exam date
+    const examDateMatch = text.match(
+      /EXAMINATION\s{1,10}DATE\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
+    if (examDateMatch) {
+      data.examDate = examDateMatch[1];
+    }
+  } catch (error) {
+    console.error("DBQ parsing error:", error.message);
+    data.error = error.message;
+  }
+
+  return data;
+};
+
+/**
+ * Parse medical records from C-File
+ */
+const parseMedicalRecord = async (text) => {
+  const data = {
+    type: "medical_record",
+    diagnoses: [],
+    treatments: [],
+    medications: [],
+    dateOfService: null,
+    provider: null,
+    raw: text.substring(0, 500),
+  };
+
+  try {
+    // Extract date of service
+    const dateMatch = text.match(
+      /(?:DATE\s{1,10}OF\s{1,10}SERVICE|VISIT\s{1,10}DATE)\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+    );
+    if (dateMatch) {
+      data.dateOfService = dateMatch[1];
+    }
+
+    // Extract diagnoses (ICD codes)
+    const icdPattern =
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional ICD-code-prefix branching, not backtracking; bounded for S8786 above
+      /(?:ICD-?\d{1,2}\s{0,10}[:=]?\s{0,10})?([A-Z]\d{2}(?:\.\d{1,2})?)\s{1,10}[-–—]\s{1,10}([A-Za-z\s,]{1,300})/g;
+    let match;
+    while ((match = icdPattern.exec(text)) !== null) {
+      data.diagnoses.push({
+        code: match[1],
+        description: match[2].trim(),
+      });
+    }
+  } catch (error) {
+    console.error("Medical record parsing error:", error.message);
+    data.error = error.message;
+  }
+
+  return data;
+};
+
+/**
+ * Parse nexus letter
+ */
+const parseNexusLetter = async (text) => {
+  const data = {
+    type: "nexus_letter",
+    condition: null,
+    opinion: null,
+    rationale: null,
+    provider: null,
+    raw: text.substring(0, 500),
+  };
+
+  try {
+    // Extract nexus opinion strength
+    if (/MORE\s+LIKELY\s+THAN\s+NOT/i.test(text)) {
+      data.opinion = "more_likely_than_not";
+    } else if (/AS\s+LIKELY\s+AS\s+NOT/i.test(text)) {
+      data.opinion = "as_likely_as_not";
+    }
+
+    // Extract provider info
+    const providerMatch = text.match(
+      /(?:Sincerely|Respectfully),?\s{0,10}\n\s{0,10}([A-Z][A-Z\s.]{1,100},?\s{1,10}M\.?D\.?)/i,
+    );
+    if (providerMatch) {
+      data.provider = providerMatch[1].trim();
+    }
+  } catch (error) {
+    console.error("Nexus letter parsing error:", error.message);
+    data.error = error.message;
+  }
+
+  return data;
+};
+
+/**
+ * Process multiple documents in batch with parallel processing
+ */
+const runConcurrentDocumentProcessing = async (
+  validFiles,
+  { signal, onProgress, maxConcurrent },
+) => {
+  const results = [];
+  const queue = [...validFiles];
+  let completed = 0;
+  let processing = 0;
+
+  onProgress?.({
+    state: PROCESSING_STATES.LOADING,
+    total: queue.length,
+    completed: 0,
+    processing: 0,
+  });
+
+  // Process files with concurrency limit
+  const processNext = async () => {
+    // Check for abort signal
+    if (signal?.aborted) {
+      throw new DOMException("Processing aborted", "AbortError");
+    }
+
+    if (queue.length === 0) return null;
+
+    const file = queue.shift();
+    processing++;
+
+    try {
+      const result = await processSingleDocument(file, (fileProgress) => {
+        onProgress?.({
+          ...fileProgress,
+          total: validFiles.length,
+          completed,
+          processing,
+        });
+      });
+
+      processing--;
+      completed++;
+      results.push(result);
+
+      onProgress?.({
+        state: PROCESSING_STATES.LOADING,
+        total: validFiles.length,
+        completed,
+        processing,
+      });
+
+      return result;
+    } catch (error) {
+      // Catch any errors that slip through processSingleDocument
+      console.error(`Failed to process this document:`, forLog(error));
+      processing--;
+      completed++;
+
+      // Add error result
+      results.push({
+        filename: file.name,
+        status: "error",
+        error: describeFailureKind(classifyDocumentFailure(error)),
+        fileSize: file.size,
+      });
+
+      onProgress?.({
+        state: PROCESSING_STATES.ERROR,
+        total: validFiles.length,
+        completed,
+        processing,
+        filename: file.name,
+        error: describeFailureKind(classifyDocumentFailure(error)),
+      });
+
+      return null;
+    }
+  };
+
+  // Start processing with concurrency limit
+  const workers = [];
+  for (let i = 0; i < Math.min(maxConcurrent, validFiles.length); i++) {
+    workers.push(
+      (async () => {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          if (queue.length === 0) {
+            if (processing === 0) break;
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            continue;
+          }
+          const result = await processNext();
+          if (result === null && queue.length === 0) break;
+        }
+      })(),
+    );
+  }
+
+  await Promise.all(workers);
+  return results;
+};
+
+const mergeClassificationIntoResults = (results, classified) => {
+  results.forEach((result, index) => {
+    const classifiedDoc = classified.grouped[
+      Object.keys(classified.grouped).find((key) =>
+        classified.grouped[key].some((d) => d.index === index),
+      )
+    ]?.find((d) => d.index === index);
+
+    if (classifiedDoc) {
+      result.classification = classifiedDoc.classification;
+    }
+  });
+};
+
+const buildBatchSummary = (validation, results) => ({
+  totalFiles: validation.valid.length,
+  totalSize: validation.totalSize,
+  successful: results.filter((r) => r.status === "complete").length,
+  failed: results.filter((r) => r.status === "error").length,
+  processingTime: results.reduce((sum, r) => sum + r.processingTime, 0),
+});
+
+export const processMusterCallBatch = async (files, options = {}) => {
+  const {
+    onProgress,
+    onComplete,
+    signal, // AbortSignal from abort controller
+    maxConcurrent = 3, // Process 3 files at a time to avoid memory issues
+  } = options;
+
+  // Check if already aborted
+  if (signal?.aborted) {
+    throw new DOMException("Processing aborted", "AbortError");
+  }
+
+  // Validation
+  const validation = validateFilesBatch(files);
+  if (validation.errors.length > 0 || validation.valid.length === 0) {
+    return {
+      success: false,
+      validation,
+      results: [],
+    };
+  }
+
+  const results = await runConcurrentDocumentProcessing(validation.valid, {
+    signal,
+    onProgress,
+    maxConcurrent,
+  });
+
+  // Classify and group results
+  onProgress?.({
+    state: PROCESSING_STATES.CLASSIFYING,
+    total: results.length,
+    completed: results.length,
+  });
+
+  const classified = classifyDocumentBatch(
+    results.map((r) => ({ text: r.text, filename: r.filename })),
+  );
+
+  mergeClassificationIntoResults(results, classified);
+
+  onComplete?.({
+    results,
+    classified,
+    validation,
+  });
+
+  return {
+    success: true,
+    validation,
+    results,
+    classified,
+    summary: buildBatchSummary(validation, results),
+  };
+};
+
+// FIX-9: parseServiceRecord (this file) emits serviceStartDate/
+// serviceEndDate/dischargeType. dd214FieldExtractor.js legitimately emits
+// entryDate/separationDate/characterOfService for the same concepts.
+// applyServiceRecordToProfileUpdates previously only read the second set,
+// so every conditional was false whenever the data came from
+// parseServiceRecord - the profile silently never got auto-populated.
+// Accept both naming conventions.
+const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
+  logger.info("📝 Found service record");
+
+  // FIX-17: extractedData.veteranName/lastName/firstName/middleName were
+  // extracted correctly (see _assignParsedName) but never mapped onto the
+  // profile update at all, so the Profile tab's First/Last Name fields
+  // stayed empty for every Muster Call bulk import regardless of OCR
+  // quality.
+  if (extractedData.veteranName) updates.fullName = extractedData.veteranName;
+  if (extractedData.lastName) updates.lastName = extractedData.lastName;
+  if (extractedData.firstName) updates.firstName = extractedData.firstName;
+  if (extractedData.middleName) updates.middleName = extractedData.middleName;
+
+  if (extractedData.branch) updates.branch = extractedData.branch;
+
+  const entryDate = extractedData.serviceStartDate || extractedData.entryDate;
+  if (entryDate) {
+    updates.serviceStartDate = entryDate;
+    // D-C (final10 QA, 2026-09-25): carries whether this date was
+    // calculated (NGB-22 separation date minus net service) rather than
+    // printed on the form - propagated onto the profile alongside it so
+    // no consumer treats a calculated Guard enlistment date the way it
+    // would a real printed entry date.
+    updates.serviceStartDateDerived = !!extractedData.serviceStartDateDerived;
+  }
+
+  const separationDate =
+    extractedData.serviceEndDate || extractedData.separationDate;
+  if (separationDate) updates.serviceEndDate = separationDate;
+
+  if (extractedData.mos) updates.mos = extractedData.mos;
+  if (extractedData.mosTitle) updates.mosTitle = extractedData.mosTitle;
+
+  const characterOfService =
+    extractedData.dischargeType || extractedData.characterOfService;
+  if (characterOfService) updates.characterOfService = characterOfService;
+
+  if (extractedData.separationType)
+    updates.separationType = extractedData.separationType;
+};
+
+const applyRatingDecisionToProfileUpdates = (updates, extractedData) => {
+  logger.info("📊 Found rating decision");
+  if (extractedData.combinedRating)
+    updates.currentCombinedRating = extractedData.combinedRating;
+  if (extractedData.effectiveDate)
+    updates.effectiveDate = extractedData.effectiveDate;
+};
+
+const applyClaimLetterToProfileUpdates = (updates, extractedData) => {
+  logger.info("📬 Found claim letter");
+  if (extractedData.claimNumber)
+    updates.claimNumber = extractedData.claimNumber;
+  if (extractedData.vaFileNumber)
+    updates.vaFileNumber = extractedData.vaFileNumber;
+};
+
+// Only a C-File's newest code sheet speaks for the veteran's current record.
+const applyCFileToProfileUpdates = (updates, extractedData) => {
+  if (extractedData.ratingSource !== "code_sheet") return;
+  if (extractedData.combinedRating != null)
+    updates.currentCombinedRating = extractedData.combinedRating;
+  if (extractedData.representative)
+    updates.vsoOrganization = extractedData.representative;
+};
+
+/**
+ * Auto-populate veteran profile from processed documents.
+ *
+ * FIX-9 overwrite semantics: fill-if-empty; if a field is non-empty and
+ * was never user-edited (profileFieldSources[field] !== "user"), document
+ * data may keep refining it; if the veteran has manually edited a field,
+ * it is NEVER overwritten - a conflict is surfaced instead so the UI can
+ * show "your document says X, your profile says Y".
+ */
+// eslint-disable-next-line max-lines-per-function -- pre-existing (predates this change, unrelated to it); this is the single fill-if-empty/never-overwrite-user-edited pass over every document type (service record, rating decision, claim letter) plus conflict tracking - splitting it apart is a separate, larger task out of scope here
+export const autoPopulateProfile = async (processedResults) => {
+  // eslint-disable-next-line no-console
+  console.log("📋 Auto-populate Profile starting...");
+  // eslint-disable-next-line no-console
+  console.log("📊 Total results to process:", processedResults?.length);
+
+  const currentProfile = getVeteranProfile();
+  const fieldSources = { ...(currentProfile.profileFieldSources || {}) };
+  const updates = { ...currentProfile };
+  const conflicts = [];
+  // ADR-007: once a canonical period backs the service entry date, it (not
+  // this generic document-fill loop) is the only path allowed to move
+  // serviceStartDate - the projection (saveServiceHistory/saveVeteranProfile's
+  // chokepoint) keeps the flat mirror in sync instead.
+  const skipStart = hasPeriodBackedServiceEntry();
+
+  let updateCount = 0;
+
+  for (const result of processedResults) {
+    logger.info(`📄 Checking this document:`, {
+      status: result.status,
+      hasExtractedData: !!result.extractedData,
+      extractedDataType: result.extractedData?.type,
+      classification: result.classification?.type,
+    });
+
+    if (result.status !== "complete" || !result.extractedData) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `⏭️ Skipping this document - status: ${result.status}, hasData: ${!!result.extractedData}`,
+      );
+      continue;
+    }
+
+    const { type } = result.extractedData;
+    logger.info(`🔍 Processing this document with type: ${type}`);
+
+    const documentUpdates = {};
+    switch (type) {
+      case "service_record":
+        applyServiceRecordToProfileUpdates(
+          documentUpdates,
+          result.extractedData,
+        );
+        updateCount++;
+        break;
+
+      case "rating_decision":
+        applyRatingDecisionToProfileUpdates(
+          documentUpdates,
+          result.extractedData,
+        );
+        updateCount++;
+        break;
+
+      case "claim_letter":
+        applyClaimLetterToProfileUpdates(documentUpdates, result.extractedData);
+        updateCount++;
+        break;
+
+      case "c_file":
+        applyCFileToProfileUpdates(documentUpdates, result.extractedData);
+        updateCount++;
+        break;
+
+      default:
+        logger.info(`⚠️ Unknown document type: ${type} for this document`);
+        continue;
+    }
+
+    Object.keys(documentUpdates).forEach((field) => {
+      // D-C (final10 QA correctness re-review, 2026-09-26): describes
+      // serviceStartDate itself, not an independent fact - paired with it
+      // below instead of running through this generic pass on its own,
+      // where it always wrote through even when serviceStartDate itself
+      // was blocked as a conflict, flagging the veteran's OWN typed date
+      // as "calculated".
+      if (field === "serviceStartDateDerived") return;
+      if (field === "serviceStartDate" && skipStart) return;
+      const newValue = documentUpdates[field];
+      if (newValue === undefined || newValue === null || newValue === "") {
+        return;
+      }
+      const currentValue = updates[field];
+      const isUserEdited = fieldSources[field] === "user";
+
+      // Fill whenever the field is still empty, or it was never
+      // user-edited (a later document may keep refining it). Only a
+      // populated, user-edited field is protected - and even then, a
+      // genuine conflict is surfaced rather than silently dropped.
+      if (isUserEdited && currentValue) {
+        if (String(currentValue) !== String(newValue)) {
+          conflicts.push({
+            field,
+            profileValue: currentValue,
+            documentValue: newValue,
+            source: result.filename,
+          });
+        }
+      } else {
+        updates[field] = newValue;
+        fieldSources[field] = "document";
+        if (field === "serviceStartDate") {
+          updates.serviceStartDateDerived =
+            !!documentUpdates.serviceStartDateDerived;
+        }
+      }
+    });
+  }
+
+  updates.profileFieldSources = fieldSources;
+
+  // Persist newly-found conflicts onto the profile itself (append to
+  // whatever's already pending, capped so a veteran who never visits the
+  // Profile tab to dismiss them can't grow this unboundedly) so MyPacket's
+  // Profile tab can surface them -- this array previously had zero
+  // consumers anywhere, so a real conflict (manual edit vs. re-imported
+  // document) was silently invisible even though the underlying
+  // never-overwrite protection above was already working correctly.
+  if (conflicts.length > 0) {
+    updates.pendingProfileConflicts = [
+      ...(currentProfile.pendingProfileConflicts || []),
+      ...conflicts,
+    ].slice(-50);
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`📊 Auto-populate complete: ${updateCount} documents processed`);
+  logger.info("📝 Profile fields updated", {
+    fields: presentFieldNames(updates),
+  });
+
+  if (updateCount > 0) {
+    const success = updateVeteranProfile(updates);
+    // eslint-disable-next-line no-console
+    console.log(`✅ Profile update ${success ? "successful" : "failed"}`);
+    return { success, updates, count: updateCount, conflicts };
+  }
+
+  // eslint-disable-next-line no-console
+  console.log("⚠️ No profile updates made");
+  return { success: false, updates: {}, count: 0, conflicts: [] };
+};
+
+const applyServiceRecordToBriefing = (briefingData, serviceData) => {
+  logger.info("📝 Extracting service record", {
+    fields: presentFieldNames(serviceData),
+  });
+
+  // Handle array-structured data (indexed 0, 1, 2, etc.)
+  if (serviceData[0]) {
+    // Data is in numbered keys
+    Object.keys(serviceData).forEach((key) => {
+      if (!Number.isNaN(Number(key)) && serviceData[key]) {
+        const entry = serviceData[key];
+        if (entry.branch) briefingData.branch = entry.branch;
+        if (entry.entryDate) briefingData.serviceStart = entry.entryDate;
+        if (entry.separationDate)
+          briefingData.serviceEnd = entry.separationDate;
+        if (entry.mos) briefingData.mos = entry.mos;
+        if (entry.mosTitle) briefingData.mosTitle = entry.mosTitle;
+        if (entry.characterOfService)
+          briefingData.characterOfService = entry.characterOfService;
+      }
+    });
+  } else {
+    // Direct field structure
+    if (serviceData.branch) briefingData.branch = serviceData.branch;
+    if (serviceData.entryDate)
+      briefingData.serviceStart = serviceData.entryDate;
+    if (serviceData.separationDate)
+      briefingData.serviceEnd = serviceData.separationDate;
+    if (serviceData.mos) briefingData.mos = serviceData.mos;
+    if (serviceData.mosTitle) briefingData.mosTitle = serviceData.mosTitle;
+    if (serviceData.characterOfService)
+      briefingData.characterOfService = serviceData.characterOfService;
+  }
+};
+
+const applyRatingDecisionToBriefing = (briefingData, extractedData) => {
+  logger.info("📊 Extracting rating decision");
+  if (extractedData.combinedRating) {
+    briefingData.currentCombinedRating = extractedData.combinedRating;
+  }
+  if (extractedData.conditions && Array.isArray(extractedData.conditions)) {
+    extractedData.conditions.forEach((condition) => {
+      // Check if condition already exists
+      const exists = briefingData.conditions.find(
+        (c) => c.name?.toLowerCase() === condition.name?.toLowerCase(),
+      );
+      if (!exists && condition.name) {
+        briefingData.conditions.push({
+          name: condition.name,
+          rating: condition.rating || null,
+          diagnosticCode: condition.diagnosticCode || null,
+          effectiveDate:
+            condition.effectiveDate || extractedData.effectiveDate || null,
+        });
+      }
+    });
+  }
+};
+
+const applyClaimLetterToBriefing = (briefingData, extractedData) => {
+  logger.info("📬 Extracting claim letter");
+  if (
+    extractedData.claimNumber &&
+    !briefingData.claimNumbers.includes(extractedData.claimNumber)
+  ) {
+    briefingData.claimNumbers.push(extractedData.claimNumber);
+  }
+};
+
+/**
+ * Extract and consolidate data for Intelligence Briefing
+ * Transforms processed document results into structured data for review
+ */
+export const extractIntelligenceBriefingData = (processedResults) => {
+  // eslint-disable-next-line no-console
+  console.log("📋 Extracting Intelligence Briefing data...");
+
+  const briefingData = {
+    // Personal Information
+    fullName: null,
+    dob: null,
+    ssnLast4: null,
+    vaFileNumber: null,
+
+    // Service History
+    branch: null,
+    serviceStart: null,
+    serviceEnd: null,
+    characterOfService: null,
+    mos: null,
+    mosTitle: null,
+
+    // Ratings & Claims
+    currentCombinedRating: null,
+    conditions: [],
+    claimNumbers: [],
+
+    // Documents processed
+    documentsProcessed: processedResults?.length || 0,
+    documentTypes: {},
+  };
+
+  if (!processedResults || processedResults.length === 0) {
+    console.warn("⚠️ No results to extract from");
+    return briefingData;
+  }
+
+  for (const result of processedResults) {
+    if (result.status !== "complete" || !result.extractedData) continue;
+
+    const { type } = result.extractedData;
+
+    // Count document types
+    if (!briefingData.documentTypes[type]) {
+      briefingData.documentTypes[type] = 0;
+    }
+    briefingData.documentTypes[type]++;
+
+    switch (type) {
+      case "service_record":
+        applyServiceRecordToBriefing(briefingData, result.extractedData);
+        break;
+
+      case "rating_decision":
+        applyRatingDecisionToBriefing(briefingData, result.extractedData);
+        break;
+
+      case "claim_letter":
+        applyClaimLetterToBriefing(briefingData, result.extractedData);
+        break;
+    }
+  }
+
+  logger.info("✅ Intelligence Briefing data extracted:", {
+    fields: presentFieldNames(briefingData),
+    conditionCount: briefingData.conditions.length,
+    claimNumberCount: briefingData.claimNumbers.length,
+  });
+  return briefingData;
+};
+
+/**
+ * Analyze processed documents for Evidence Gaps and DTA Violations
+ * (NEW in v1.16.0)
+ *
+ * This runs automatically if we have both a Decision Letter and medical evidence
+ * Identifies potential "Duty to Assist" violations under 38 CFR § 3.159
+ */
+const analyzeDecisionLetterGaps = (decision, evidenceDocs, allGaps) => {
+  logger.info(`📋 Analyzing Decision: this document`);
+
+  // Combine all non-decision text as the "C-File equivalent"
+  const combinedEvidence = evidenceDocs
+    .filter((d) => d.filename !== decision.filename)
+    .map((d) => d.text)
+    .join("\n\n--- DOCUMENT BREAK ---\n\n");
+
+  try {
+    // Use quickGapCheck for faster analysis
+    const quickGaps = quickGapCheck(decision.text, {
+      documentTypes: evidenceDocs.map((d) => d.classification?.type),
+      estimatedDocCount: evidenceDocs.length,
+    });
+
+    if (quickGaps.gaps && quickGaps.gaps.length > 0) {
+      allGaps.push({
+        decisionLetter: decision.filename,
+        gaps: quickGaps.gaps,
+        severity: quickGaps.overallSeverity,
+        recommendations: quickGaps.recommendations,
+      });
+    }
+
+    // If we have substantial evidence, do full gap analysis
+    if (combinedEvidence.length > 5000 && combinedEvidence.length < 500000) {
+      const fullAnalysis = findEvidenceGaps(decision.text, combinedEvidence);
+
+      if (fullAnalysis.gapsFound && fullAnalysis.gapsFound.length > 0) {
+        // Merge with quick check results
+        const existingEntry = allGaps.find(
+          (g) => g.decisionLetter === decision.filename,
+        );
+        if (existingEntry) {
+          existingEntry.fullAnalysis = fullAnalysis;
+          existingEntry.dtaViolations = fullAnalysis.dtaViolations;
+        } else {
+          allGaps.push({
+            decisionLetter: decision.filename,
+            fullAnalysis,
+            dtaViolations: fullAnalysis.dtaViolations,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`⚠️ Gap analysis error for this document:`, err.message);
+  }
+};
+
+export const analyzeEvidenceGaps = (processedResults) => {
+  // eslint-disable-next-line no-console
+  console.log("🔍 Analyzing evidence gaps across processed documents...");
+
+  // Find decision letters
+  const decisionLetters = processedResults.filter(
+    (r) =>
+      r.classification?.type === DOCUMENT_TYPES.RATING_DECISION &&
+      r.status === "complete" &&
+      r.text,
+  );
+
+  // Find all medical/service evidence
+  const evidenceDocs = processedResults.filter(
+    (r) =>
+      r.status === "complete" &&
+      r.text &&
+      r.classification?.category !== "correspondence",
+  );
+
+  if (decisionLetters.length === 0) {
+    // eslint-disable-next-line no-console
+    console.log("ℹ️ No Decision Letters found - skipping gap analysis");
+    return {
+      success: false,
+      reason: "No Decision Letters found in processed documents",
+      gapsFound: [],
+    };
+  }
+
+  if (evidenceDocs.length < 2) {
+    // eslint-disable-next-line no-console
+    console.log("ℹ️ Insufficient evidence documents for gap analysis");
+    return {
+      success: false,
+      reason: "Need at least 2 documents for meaningful gap analysis",
+      gapsFound: [],
+    };
+  }
+
+  const allGaps = [];
+
+  // For each decision letter, check against all other evidence
+  for (const decision of decisionLetters) {
+    analyzeDecisionLetterGaps(decision, evidenceDocs, allGaps);
+  }
+
+  const result = {
+    success: true,
+    gapsFound: allGaps,
+    totalGaps: allGaps.reduce((sum, g) => sum + (g.gaps?.length || 0), 0),
+    hasDTAViolations: allGaps.some(
+      (g) => g.dtaViolations && g.dtaViolations.length > 0,
+    ),
+    analyzedAt: new Date().toISOString(),
+    parserVersion: "v1.16.0",
+  };
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `🔍 Evidence gap analysis complete: ${result.totalGaps} potential gaps found`,
+  );
+  return result;
+};
+
+// Summarize extracted data to avoid token overflow.
+// D15-5 / ADR-008: `data.name`/`data.serviceNumber` are the veteran's own
+// direct identifiers - never printed into an AI prompt, the same as every
+// other AI-context builder in this codebase (myPacketManager.js,
+// veteranKnowledgeBase.js, ...). This summary feeds buildMusterCallPrompt
+// below; it never needed the name to make a service-connection
+// recommendation.
+const summarizeExtractedData = (data) => {
+  if (!data) return "No data extracted";
+  const summary = [];
+  if (data.branch) summary.push(`Branch: ${data.branch}`);
+  if (data.entryDate) summary.push(`Entry: ${data.entryDate}`);
+  if (data.dischargeDate) summary.push(`Discharge: ${data.dischargeDate}`);
+  if (data.mos) summary.push(`MOS: ${data.mos}`);
+  if (data.rank) summary.push(`Rank: ${data.rank}`);
+  if (data.conditions && Array.isArray(data.conditions)) {
+    summary.push(
+      `Conditions (${data.conditions.length}): ${data.conditions
+        .slice(0, 10)
+        .map((c) => c.name || c)
+        .join(", ")}`,
+    );
+  }
+  if (data.rating) summary.push(`Rating: ${data.rating}%`);
+  if (data.effectiveDate) summary.push(`Effective: ${data.effectiveDate}`);
+  return summary.length > 0 ? summary.join(", ") : "Limited data";
+};
+
+const groupProcessedDocuments = (processedResults) => ({
+  serviceRecords: processedResults.filter(
+    (r) =>
+      r.classification?.category === "service_record" &&
+      r.status === "complete",
+  ),
+  ratingDocs: processedResults.filter(
+    (r) => r.classification?.category === "rating" && r.status === "complete",
+  ),
+  medicalDocs: processedResults.filter(
+    (r) => r.classification?.category === "medical" && r.status === "complete",
+  ),
+});
+
+// D15-5 / ADR-008: a real VA-exported filename routinely carries the
+// veteran's own surname/first name and the last four of their VA file
+// number (the same convention myPacketManager.js's _neutralDocLabel exists
+// to neutralize for My Packet's AI contexts) - a neutral, structural label
+// (category + index) replaces the raw filename here too. The real filename
+// is unaffected anywhere in the veteran-facing UI (Formation queue/upload
+// list); only this AI-context prompt goes through this.
+const neutralDocLabel = (categoryLabel, index) =>
+  `${categoryLabel} #${index + 1}`;
+
+// A-H03: filenames and extracted fields are user-uploaded (untrusted). Wrap the
+// whole document-derived block in a spotlighted section so an injected
+// instruction inside a filename/summary is treated as data, not a command.
+export const buildMusterCallPrompt = (
+  serviceRecords,
+  ratingDocs,
+  medicalDocs,
+) => {
+  const serviceRecordLines = serviceRecords
+    .map(
+      (r, i) =>
+        `- ${neutralDocLabel("Service Record", i)}: ${summarizeExtractedData(r.extractedData)}`,
+    )
+    .join("\n");
+  const ratingDocLines = ratingDocs
+    .map(
+      (r, i) =>
+        `- ${neutralDocLabel("Rating Decision", i)}: ${summarizeExtractedData(r.extractedData)}`,
+    )
+    .join("\n");
+  const medicalDocLines = medicalDocs
+    .map(
+      (r, i) =>
+        `- ${neutralDocLabel("Medical Record", i)}: ${r.classification.type}`,
+    )
+    .join("\n");
+
+  const documentEvidence = untrustedSection(
+    "UPLOADED DOCUMENT EVIDENCE",
+    `SERVICE RECORDS (${serviceRecords.length} documents):
+${serviceRecordLines}
+
+RATING DECISIONS (${ratingDocs.length} documents):
+${ratingDocLines}
+
+MEDICAL RECORDS (${medicalDocs.length} documents):
+${medicalDocLines}`,
+  );
+
+  return `Analyze this veteran's complete file and provide comprehensive recommendations:
+
+${documentEvidence}
+
+Provide:
+1. **Service Connection Opportunities**: What conditions should be claimed based on service records?
+2. **Rating Increase Opportunities**: Current ratings that may qualify for increase
+3. **Secondary Conditions**: Potential secondary conditions based on service-connected disabilities
+4. **Missing Evidence**: What additional evidence would strengthen claims?
+5. **Next Steps**: Prioritized action plan
+
+Format as markdown with clear sections.`;
+};
+
+// ADR-009: only an off-device AI is configured. The narrative report itself
+// has no regex/local-parser equivalent (it's freeform prose), so the
+// "local parser path" here is the structural document counts Muster Call
+// already extracted locally (groupProcessedDocuments, non-AI) - zero
+// document TEXT is sent anywhere, no dead end.
+function _buildOffDeviceFallbackReport(
+  serviceRecords,
+  ratingDocs,
+  medicalDocs,
+) {
+  return (
+    `## Document Summary (Built-In Reader)\n\n` +
+    `- ${serviceRecords.length} service record(s)\n` +
+    `- ${ratingDocs.length} rating document(s)\n` +
+    `- ${medicalDocs.length} medical document(s)\n\n` +
+    `Load the on-device AI (Warrant Council or Wllama) for a full plain-English claims analysis of these documents.`
+  );
+}
+
+/**
+ * Generate comprehensive analysis report using LLM
+ */
+export const generateMusterCallReport = async (
+  processedResults,
+  _classified,
+) => {
+  // eslint-disable-next-line no-console
+  console.log("🎖️ Starting Muster Call Report generation...");
+  // eslint-disable-next-line no-console
+  console.log("📊 Total processed results:", processedResults?.length);
+
+  if (!isAnyAIAvailable()) {
+    console.warn("⚠️ AI not available for report generation");
+    return {
+      success: false,
+      error: "AI service not available. Report generation requires AI.",
+    };
+  }
+
+  const { serviceRecords, ratingDocs, medicalDocs } =
+    groupProcessedDocuments(processedResults);
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `📝 Document counts: ${serviceRecords.length} service, ${ratingDocs.length} rating, ${medicalDocs.length} medical`,
+  );
+
+  // Check if we have any documents to analyze
+  if (
+    serviceRecords.length === 0 &&
+    ratingDocs.length === 0 &&
+    medicalDocs.length === 0
+  ) {
+    console.warn("⚠️ No completed documents to analyze");
+    return {
+      success: false,
+      error: "No completed documents available for analysis.",
+    };
+  }
+
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    return {
+      success: true,
+      report: _buildOffDeviceFallbackReport(
+        serviceRecords,
+        ratingDocs,
+        medicalDocs,
+      ),
+      generatedAt: new Date().toISOString(),
+      offDeviceBlocked: true,
+      offDeviceNotice: buildDocumentOffDeviceNotice(
+        routing.blockedProviderLabel,
+      ),
+    };
+  }
+
+  const prompt = buildMusterCallPrompt(serviceRecords, ratingDocs, medicalDocs);
+
+  // eslint-disable-next-line no-console
+  console.log(`📤 Sending prompt to AI (${prompt.length} chars)`);
+
+  try {
+    const response = await generateAI(prompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
+      systemPrompt:
+        "You are a VA disability claims expert. Provide actionable, regulation-based guidance.",
+      temperature: 0.3,
+    });
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Report generated successfully (${response?.length || 0} chars)`,
+    );
+
+    return {
+      success: true,
+      report: response,
+      generatedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("❌ Report generation error:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};

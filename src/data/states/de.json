@@ -1,0 +1,214 @@
+{
+  "state": "Delaware",
+  "stateCode": "DE",
+  "officialSource": "https://vets.delaware.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "de-property_tax_exemption-disabled-veterans-school-tax-credit",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veterans School Tax Credit",
+      "description": "Delaware provides a tax credit against 100% of non-vocational school district property tax on a primary residence for veterans who receive 100% disability compensation from the VA based on service-connected, permanent and total disability (including individual unemployability) or a 100% VA disability rating, and who have held legal domicile in Delaware for the past 3 years. Enacted via House Bill 214 (with House Amendment 1), signed August 10, 2021. Applications for the upcoming tax year are due April 30. A separate county-level exemption (available in New Castle, Kent, and Sussex counties) fully exempts county property taxes and local school taxes for a disabled veteran with a 100% VA-rated service-connected permanent and total disability, or who receives 100% disability compensation due to individual unemployability. Recipients may not claim both this credit and the Senior School Property Tax Credit; property tax bills must be paid in full by year-end to remain eligible in subsequent years.",
+      "value": "Credit against 100% of non-vocational school district property tax on primary residence; separate county-level full exemption of county + local school property tax available in New Castle, Kent, and Sussex counties",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must have held legal domicile in Delaware for the past 3 years",
+          "Applies only to primary residence",
+          "Applications due April 30 for the upcoming tax year",
+          "Cannot be combined with the Senior School Property Tax Credit",
+          "Property tax bills must be paid in full by year-end to remain eligible in subsequent years"
+        ]
+      },
+      "application": {
+        "agency": "Delaware Department of Finance",
+        "form": null,
+        "url": "https://finance.delaware.gov/disabled-veterans/",
+        "documentation": [
+          "Valid driver's license or state ID",
+          "USDVA disability rating documentation",
+          "Copy of Social Security card"
+        ]
+      },
+      "legalCitation": "Delaware House Bill 214 (House Amendment 1), signed August 10, 2021",
+      "authorityTier": "reference",
+      "sourceUrl": "https://finance.delaware.gov/disabled-veterans/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "de-license_plate-disabled-american-veterans-dav-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled American Veterans (DAV) License Plate",
+      "description": "Delaware issues a Disabled American Veterans (DAV) license plate, with a DAV/Special Parking variant available for veterans who also need disabled-parking designation. Veterans must provide official VA documentation of a service-connected disability received during a time of war or conflict. Applications are submitted via the DMV's DAV plate application forms (standard or Special Parking version).",
+      "value": "Specialty DAV license plate; DAV/Special Parking variant available",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Service-connected disability (as determined by the VA) received during a time of war or conflict",
+          "Official VA documentation required with application"
+        ]
+      },
+      "application": {
+        "agency": "Delaware Division of Motor Vehicles",
+        "form": "MV549 / MV550 DAV Application",
+        "url": "https://dmv.de.gov/VehicleServices/tags/index.shtml?dc=tags_military",
+        "documentation": [
+          "Official VA documentation of service-connected disability"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dmv.de.gov/VehicleServices/tags/index.shtml?dc=tags_military",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "de-recreation-disabled-veteran-hunting-fishing-trapping-licens",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Hunting, Fishing & Trapping License Exemption",
+      "description": "Delaware residents (and non-residents) who are veterans with a VA-rated service-connected disability of 60% or greater are eligible for a complete, lifetime exemption from hunting, fishing, and trapping license fees, administered by the Division of Fish and Wildlife. Applicants complete the Veterans with Disabilities Exempt Application and submit it to the Division; processing takes up to 4 weeks. Military patients hospitalized in military facilities may also qualify with written certification from their commanding officer documenting disability status and station location.",
+      "value": "Complete lifetime exemption from hunting, fishing, and trapping license fees",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 60,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "VA-rated service-connected disability of 60% or greater",
+          "Complete the Veterans with Disabilities Exempt Application",
+          "Applies to residents and non-residents meeting the disability threshold",
+          "Processing takes up to 4 weeks"
+        ]
+      },
+      "application": {
+        "agency": "Delaware Division of Fish and Wildlife (DNREC)",
+        "form": "Veterans with Disabilities Exempt Application",
+        "url": "https://dnrec.delaware.gov/fish-wildlife/licenses/exemptions/",
+        "documentation": [
+          "VA documentation of 60%+ service-connected disability rating"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dnrec.delaware.gov/fish-wildlife/licenses/exemptions/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "de-hiring_preference-state-merit-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Merit Employment Veterans' Preference",
+      "description": "Delaware adds preference points to the total ranking score of veterans applying for original entrance to State Merit employment: 10 points for disabled veterans and 5 points for other eligible veterans who served on active duty and were honorably discharged or discharged under other than dishonorable conditions. Members of the Delaware National Guard or a Reserve unit located within Delaware with at least 20 years of membership also qualify, as do unmarried widows/widowers of eligible veterans and spouses of active-duty members who are missing in action or detained 90+ days, or spouses of disabled veterans. Preference applies only to original entrance to State Merit employment, not to promotion or retention in a reduction in force. Applicants submit DD-214 (veterans, reservists with active duty, unmarried surviving spouses), Form 1300 (spouses of missing/captured/detained members), Form NGB-22 (National Guard members/spouses), or Form DD256 (reservists without active duty) by 4:30 p.m. the business day following the job posting's closing date.",
+      "value": "10 preference points (disabled veterans) or 5 preference points (other eligible veterans) added to State Merit hiring ranking score",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge or discharge under other than dishonorable conditions",
+          "Applies only to original entrance to State Merit employment, not promotion or RIF retention",
+          "Documentation (DD-214, Form 1300, NGB-22, or DD256 depending on category) due by 4:30pm the business day after the job posting closes"
+        ]
+      },
+      "application": {
+        "agency": "Delaware Office of Management and Budget / State Jobs",
+        "form": "DD-214, Form 1300, Form NGB-22, or Form DD256 (category-dependent)",
+        "url": "https://statejobs.delaware.gov/explore/veterans-preference.shtml",
+        "documentation": ["DD-214 or applicable category-specific form"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://statejobs.delaware.gov/explore/veterans-preference.shtml",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "de-education_tuition-educational-benefits-for-children-of-deceased-ve",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Educational Benefits for Children of Deceased Veterans and Others",
+      "description": "Delaware's Higher Education Office (DHEO) administers a scholarship covering tuition and required fees for the child (age 16-24) of a member of the armed forces whose death was service-related, who is being held or was held as a prisoner of war, or who is officially declared missing in action. The applicant must be a Delaware resident for three or more consecutive years prior to applying, and if the parent was a service member, the parent must have been a Delaware resident at the time of death or POW/MIA declaration. Award priority sequences across Delaware public, Delaware private, and out-of-state institutions depending on program availability. Applicants must file the FAFSA and complete the scholarship application through DHEO's Student Account Access portal by the annual May deadline.",
+      "value": "Tuition and required fees covered, sequenced by Delaware public / Delaware private / out-of-state institution priority",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applicant must be age 16-24",
+          "Delaware resident for 3+ consecutive years before application",
+          "Parent (service member) must have been a Delaware resident at time of death, POW status, or MIA declaration",
+          "FAFSA filing required",
+          "Annual application deadline (typically mid-May)"
+        ]
+      },
+      "application": {
+        "agency": "Delaware Higher Education Office (DHEO), Dept. of Education",
+        "form": "DHEO Scholarship Application (Student Account Access)",
+        "url": "https://education.delaware.gov/families/college-career-life/college-scholarship-financial-aid/scholarships-and-financial-aid-resources/dheo-scholarships/",
+        "documentation": [
+          "Proof of parent's service-related death, POW status, or MIA declaration",
+          "Proof of Delaware residency",
+          "Completed FAFSA"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://education.delaware.gov/families/college-career-life/college-scholarship-financial-aid/scholarships-and-financial-aid-resources/dheo-scholarships/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "de-state_veterans_home-delaware-veterans-home-milford",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Delaware Veterans Home (Milford)",
+      "description": "The Delaware Veterans Home, established 2007 on 24 acres in Milford, provides skilled nursing care across four units (144 total beds), offering both Long Term Care and Short Term & Rehab Care. Eligibility requires honorable discharge from active service (peacetime or wartime) with a minimum of 180 days of service (or qualifying alternative service such as National Guard overseas service, reservist status with 180+ days, or Gold Star family membership), residency in Delaware for at least one year before applying, and a medically determined need for a long-term level of care. Applicants download and submit the application and VA Form 10-10EZ along with supporting documentation to the Admissions Coordinator.",
+      "value": "Skilled nursing / long-term and short-term rehabilitative care",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge with minimum 180 days of service (or qualifying National Guard/Reservist/Gold Star family alternative)",
+          "Delaware residency for at least 1 year before applying",
+          "Medically determined need for long-term level of care"
+        ]
+      },
+      "application": {
+        "agency": "Delaware Veterans Home",
+        "form": "Application for Admission + VA Form 10-10EZ",
+        "url": "https://vethome.delaware.gov/",
+        "documentation": [
+          "DD-214 or proof of honorable discharge",
+          "VA Form 10-10EZ"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://vethome.delaware.gov/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

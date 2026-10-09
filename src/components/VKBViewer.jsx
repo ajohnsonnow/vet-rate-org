@@ -1,0 +1,1009 @@
+/**
+ * Vet-Rate.org - Veteran Knowledge Base Viewer
+ * Copyright (c) 2024-2026 Anthony Johnson
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * Visual interface for the Veteran Knowledge Base - shows all extracted
+ * knowledge in an organized, editable format.
+ */
+
+import { useState, useEffect, useRef } from "react";
+import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import {
+  loadVKB,
+  saveVKB,
+  generateLLMContext,
+  exportVKB,
+} from "../utils/veteranKnowledgeBase";
+import { setServiceEntryDate } from "../utils/veteranProfile";
+import { isSameCalendarDay } from "../utils/serviceEntryDate";
+import { wipeAllLocalData, forceReloadWithCacheBypass } from "./AtomicWipe";
+import { broadcastDataWipe } from "../utils/dataWipeChannel";
+
+// Decision B: same scope as the app's full "delete my data" (Atomic Wipe) -
+// this confirm must say exactly that, not a VKB-only subset, since
+// wipeAllLocalData() below deletes everything Atomic Wipe deletes.
+const CLEAR_ALL_DATA_CONFIRM_TEXT =
+  "This permanently deletes EVERYTHING Vet-Rate.org has about you on this " +
+  "device: your records, profile, and service history; My Packet documents; " +
+  "the knowledge base; your timeline; saved claims and conditions; local AI " +
+  "models and vector databases; preferences and settings; and all cached or " +
+  "offline data. This does not redirect you anywhere and cannot be undone. " +
+  "Continue?";
+
+const SECTIONS = [
+  { id: "personal", label: "Personal Info", icon: "👤" },
+  { id: "service", label: "Service History", icon: "🎖️" },
+  { id: "conditions", label: "Medical Conditions", icon: "🏥" },
+  { id: "medications", label: "Medications", icon: "💊" },
+  { id: "treatments", label: "Treatments", icon: "🩺" },
+  { id: "evidence", label: "Evidence Timeline", icon: "📅" },
+  { id: "documentation", label: "Documents", icon: "📄" },
+  { id: "insights", label: "AI Insights", icon: "🤖" },
+];
+
+const PersonalSection = ({ vkb, setVkb, editMode }) => (
+  <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Full Name
+        </label>
+        <input
+          type="text"
+          value={vkb.personal.fullName || ""}
+          onChange={(e) =>
+            setVkb({
+              ...vkb,
+              personal: { ...vkb.personal, fullName: e.target.value },
+            })
+          }
+          disabled={!editMode}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
+        />
+      </div>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Date of Birth
+        </label>
+        <input
+          type="date"
+          value={vkb.personal.dateOfBirth || ""}
+          onChange={(e) =>
+            setVkb({
+              ...vkb,
+              personal: { ...vkb.personal, dateOfBirth: e.target.value },
+            })
+          }
+          disabled={!editMode}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
+        />
+      </div>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Email
+        </label>
+        <input
+          type="email"
+          value={vkb.personal.email || ""}
+          onChange={(e) =>
+            setVkb({
+              ...vkb,
+              personal: { ...vkb.personal, email: e.target.value },
+            })
+          }
+          disabled={!editMode}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
+        />
+      </div>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Phone
+        </label>
+        <input
+          type="tel"
+          value={vkb.personal.phone || ""}
+          onChange={(e) =>
+            setVkb({
+              ...vkb,
+              personal: { ...vkb.personal, phone: e.target.value },
+            })
+          }
+          disabled={!editMode}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
+        />
+      </div>
+    </div>
+  </div>
+);
+
+const ServiceHistoryBranchField = ({ vkb, setVkb, editMode }) => (
+  <div>
+    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      Branch
+    </label>
+    <select
+      value={vkb.serviceHistory.branch || ""}
+      onChange={(e) =>
+        setVkb({
+          ...vkb,
+          serviceHistory: {
+            ...vkb.serviceHistory,
+            branch: e.target.value,
+          },
+        })
+      }
+      disabled={!editMode}
+      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
+    >
+      <option value="">Select...</option>
+      <option value="Army">Army</option>
+      <option value="Navy">Navy</option>
+      <option value="Air Force">Air Force</option>
+      <option value="Marines">Marines</option>
+      <option value="Coast Guard">Coast Guard</option>
+      <option value="Space Force">Space Force</option>
+    </select>
+  </div>
+);
+
+const ServiceHistoryCharacterField = ({ vkb, setVkb, editMode }) => (
+  <div>
+    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      Character of Service
+    </label>
+    <select
+      value={vkb.serviceHistory.characterOfService || ""}
+      onChange={(e) =>
+        setVkb({
+          ...vkb,
+          serviceHistory: {
+            ...vkb.serviceHistory,
+            characterOfService: e.target.value,
+          },
+        })
+      }
+      disabled={!editMode}
+      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
+    >
+      <option value="">Select...</option>
+      <option value="Honorable">Honorable</option>
+      <option value="General Under Honorable Conditions">
+        General Under Honorable Conditions
+      </option>
+      <option value="Other Than Honorable">Other Than Honorable</option>
+    </select>
+  </div>
+);
+
+// ADR-007: the VKB is a PROJECTION of servicePeriods[] now, never an
+// independent editor - this only ever updates LOCAL component state (never
+// servicePeriods[] itself); the real correction is applied to the
+// canonical period by saveVkbViewerEdits (via setServiceEntryDate) on
+// Save, and the projection then re-derives every VKB field, including
+// this one, from that single source of truth.
+function _applyEntryDateEdit(vkb, newValue) {
+  return {
+    ...vkb,
+    serviceHistory: {
+      ...vkb.serviceHistory,
+      entryDate: newValue,
+      // A veteran editing this field is supplying a real, remembered
+      // date - never the calculated NGB-22 guess the marker above and
+      // generateLLMContext's own check of this same flag key off.
+      entryDateDerived: false,
+    },
+  };
+}
+
+const ServiceHistoryEntryDateField = ({ vkb, setVkb, editMode }) => (
+  <div>
+    <label
+      htmlFor="vkbServiceHistoryEntryDate"
+      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+    >
+      Entry Date
+      {vkb.serviceHistory.entryDateDerived && (
+        <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+          (calculated from net service)
+        </span>
+      )}
+    </label>
+    <input
+      id="vkbServiceHistoryEntryDate"
+      type="date"
+      value={vkb.serviceHistory.entryDate || ""}
+      onChange={(e) => setVkb(_applyEntryDateEdit(vkb, e.target.value))}
+      disabled={!editMode}
+      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
+    />
+  </div>
+);
+
+const ServiceHistorySeparationDateField = ({ vkb, setVkb, editMode }) => (
+  <div>
+    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      Separation Date
+    </label>
+    <input
+      type="date"
+      value={vkb.serviceHistory.separationDate || ""}
+      onChange={(e) =>
+        setVkb({
+          ...vkb,
+          serviceHistory: {
+            ...vkb.serviceHistory,
+            separationDate: e.target.value,
+          },
+        })
+      }
+      disabled={!editMode}
+      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
+    />
+  </div>
+);
+
+const ServiceHistoryFields = ({ vkb, setVkb, editMode }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <ServiceHistoryBranchField vkb={vkb} setVkb={setVkb} editMode={editMode} />
+    <ServiceHistoryCharacterField
+      vkb={vkb}
+      setVkb={setVkb}
+      editMode={editMode}
+    />
+    <ServiceHistoryEntryDateField
+      vkb={vkb}
+      setVkb={setVkb}
+      editMode={editMode}
+    />
+    <ServiceHistorySeparationDateField
+      vkb={vkb}
+      setVkb={setVkb}
+      editMode={editMode}
+    />
+  </div>
+);
+
+const ServiceHistoryMOSList = ({ mosList }) => (
+  <div>
+    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+      Military Occupational Specialties (MOS)
+    </h4>
+    {mosList.length === 0 ? (
+      <p className="text-gray-500 dark:text-gray-400 italic">
+        No MOS records yet
+      </p>
+    ) : (
+      <div className="space-y-2">
+        {mosList.map((mos) => (
+          <div
+            key={mos.code}
+            className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
+            <div className="font-semibold">
+              {mos.code} - {mos.title}
+            </div>
+            {mos.hazards && mos.hazards.length > 0 && (
+              <div className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                ⚠️ Hazards: {mos.hazards.join(", ")}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+const ServiceHistoryAwardsList = ({ awards }) => (
+  <div>
+    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+      Awards & Decorations
+    </h4>
+    {awards.length === 0 ? (
+      <p className="text-gray-500 dark:text-gray-400 italic">
+        No awards recorded yet
+      </p>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {awards.map((award) => (
+          <div
+            key={award.name}
+            className="p-2 bg-gray-50 dark:bg-gray-800 rounded"
+          >
+            <span className="font-medium">{award.name}</span>
+            {award.isCombat && (
+              <span className="ml-2 text-red-600 dark:text-red-400">
+                🎖️ Combat
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+// D11-6: previously never rendered at all - a veteran with more than one
+// enlistment period (or a single corrected period) had no way to see what
+// this same data looked like to generateLLMContext's "Period N:" lines.
+// Display-only (matches "service periods display" scope) - editing a
+// specific period lives in My Packet's Service tab, the canonical editor
+// for the profile-side servicePeriods[] array.
+const ServiceHistoryPeriodsList = ({ periods }) => {
+  if (!periods || periods.length === 0) return null;
+  return (
+    <div>
+      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+        Service Periods
+      </h4>
+      <div className="space-y-2">
+        {periods.map((period, index) => (
+          <div
+            key={`${period.serviceStartDate || ""}-${period.serviceEndDate || ""}-${index}`}
+            className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
+            <div className="font-semibold">
+              {period.serviceStartDate || "?"}
+              {period.serviceStartDateDerived && (
+                <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+                  (calculated from net service)
+                </span>
+              )}{" "}
+              to {period.serviceEndDate || "?"}
+            </div>
+            {(period.branch || period.rank || period.mos) && (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {[period.branch, period.rank, period.mos]
+                  .filter(Boolean)
+                  .join(" - ")}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ServiceSection = ({ vkb, setVkb, editMode }) => (
+  <div className="space-y-6">
+    <ServiceHistoryFields vkb={vkb} setVkb={setVkb} editMode={editMode} />
+    <ServiceHistoryPeriodsList periods={vkb.serviceHistory.servicePeriods} />
+    <ServiceHistoryMOSList mosList={vkb.serviceHistory.mos} />
+    <ServiceHistoryAwardsList awards={vkb.serviceHistory.awards} />
+  </div>
+);
+
+const ConditionsSection = ({ vkb }) => (
+  <div className="space-y-6">
+    <div>
+      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+        Current Conditions
+      </h4>
+      {vkb.medicalConditions.current.length === 0 ? (
+        <p className="text-gray-500 dark:text-gray-400 italic">
+          No conditions recorded yet
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {vkb.medicalConditions.current.map((condition) => (
+            <div
+              key={condition.name}
+              className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h5 className="font-semibold text-gray-900 dark:text-gray-100">
+                    {condition.name}
+                  </h5>
+                  {condition.diagnosisDate && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Diagnosed: {condition.diagnosisDate}
+                    </p>
+                  )}
+                  {condition.ratedPercentage && (
+                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mt-1">
+                      Rated: {condition.ratedPercentage}%
+                    </p>
+                  )}
+                  {condition.source && (
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      Source: {condition.source}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <div>
+      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+        Secondary Conditions
+      </h4>
+      {vkb.medicalConditions.secondary.length === 0 ? (
+        <p className="text-gray-500 dark:text-gray-400 italic">
+          No secondary conditions yet
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {vkb.medicalConditions.secondary.map((sec) => (
+            <div
+              key={sec.condition}
+              className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
+            >
+              <div className="font-medium">{sec.condition}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Secondary to: {sec.primaryCondition}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const DocumentationSection = ({ vkb }) => {
+  const totalDocs =
+    vkb.documentation.dd214s.length +
+    vkb.documentation.blueButtonReports.length +
+    vkb.documentation.cFiles.length +
+    vkb.documentation.privateRecords.length +
+    vkb.documentation.otherEvidence.length;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+          {totalDocs}
+        </div>
+        <div className="text-sm text-blue-700 dark:text-blue-300">
+          Documents in Knowledge Base
+        </div>
+      </div>
+
+      {vkb.documentation.dd214s.length > 0 && (
+        <div>
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            DD-214s ({vkb.documentation.dd214s.length})
+          </h4>
+          <div className="space-y-2">
+            {vkb.documentation.dd214s.map((doc) => (
+              <div
+                key={`${doc.fileName}-${doc.uploadDate}`}
+                className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{doc.fileName}</span>
+                  <span className="text-sm text-gray-500">
+                    {new Date(doc.uploadDate).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {vkb.documentation.blueButtonReports.length > 0 && (
+        <div>
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Blue Button Reports ({vkb.documentation.blueButtonReports.length})
+          </h4>
+          <div className="space-y-2">
+            {vkb.documentation.blueButtonReports.map((doc) => (
+              <div
+                key={doc.uploadDate}
+                className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">
+                    {doc.recordCount} medical records
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {new Date(doc.uploadDate).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const InsightsStrengths = ({ strengths }) => (
+  <div>
+    <h4 className="text-lg font-semibold text-green-700 dark:text-green-400 mb-3">
+      ✅ Strengths of Your Claim
+    </h4>
+    <div className="space-y-2">
+      {strengths.map((strength) => (
+        <div
+          key={strength.condition}
+          className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
+        >
+          <div className="font-semibold">{strength.condition}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {strength.reasons.join(", ")}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const InsightsMissingEvidence = ({ missingEvidence }) => (
+  <div>
+    <h4 className="text-lg font-semibold text-amber-700 dark:text-amber-400 mb-3">
+      ⚠️ Missing Evidence
+    </h4>
+    <div className="space-y-2">
+      {missingEvidence.map((missing) => (
+        <div
+          key={missing.condition}
+          className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
+        >
+          <div className="font-semibold">{missing.condition}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Need: {missing.evidenceType}
+          </div>
+          {missing.howToObtain && (
+            <div className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+              How: {missing.howToObtain}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const InsightsSuggestedSecondaries = ({ suggestions }) => (
+  <div>
+    <h4 className="text-lg font-semibold text-purple-700 dark:text-purple-400 mb-3">
+      💡 Suggested Secondary Conditions
+    </h4>
+    <div className="space-y-2">
+      {suggestions.map((suggestion) => (
+        <div
+          key={`${suggestion.secondaryCondition}-${suggestion.primaryCondition}`}
+          className="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg"
+        >
+          <div className="font-semibold">{suggestion.secondaryCondition}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Secondary to: {suggestion.primaryCondition}
+          </div>
+          {suggestion.rationale && (
+            <div className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+              {suggestion.rationale}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const InsightsEmptyState = () => (
+  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+    <div className="text-4xl mb-4">🤖</div>
+    <p className="text-lg font-medium mb-2">No AI Insights Yet</p>
+    <p className="text-sm">
+      Upload documents and use AI tools to generate personalized insights
+    </p>
+  </div>
+);
+
+const InsightsSection = ({ vkb }) => (
+  <div className="space-y-6">
+    {vkb.aiInsights.strengthsOfClaim.length > 0 && (
+      <InsightsStrengths strengths={vkb.aiInsights.strengthsOfClaim} />
+    )}
+
+    {vkb.aiInsights.missingEvidence.length > 0 && (
+      <InsightsMissingEvidence
+        missingEvidence={vkb.aiInsights.missingEvidence}
+      />
+    )}
+
+    {vkb.aiInsights.suggestedSecondaries.length > 0 && (
+      <InsightsSuggestedSecondaries
+        suggestions={vkb.aiInsights.suggestedSecondaries}
+      />
+    )}
+
+    {vkb.aiInsights.strengthsOfClaim.length === 0 &&
+      vkb.aiInsights.missingEvidence.length === 0 &&
+      vkb.aiInsights.suggestedSecondaries.length === 0 && (
+        <InsightsEmptyState />
+      )}
+  </div>
+);
+
+const SectionContent = ({ activeSection, vkb, setVkb, editMode }) => {
+  switch (activeSection) {
+    case "personal":
+      return <PersonalSection vkb={vkb} setVkb={setVkb} editMode={editMode} />;
+    case "service":
+      return <ServiceSection vkb={vkb} setVkb={setVkb} editMode={editMode} />;
+    case "conditions":
+      return <ConditionsSection vkb={vkb} />;
+    case "documentation":
+      return <DocumentationSection vkb={vkb} />;
+    case "insights":
+      return <InsightsSection vkb={vkb} />;
+    default:
+      return <div>Section not implemented yet</div>;
+  }
+};
+
+const ViewerHeader = ({
+  vkb,
+  editMode,
+  setEditMode,
+  onSave,
+  onExport,
+  onClose,
+}) => (
+  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
+      <div className="min-w-0">
+        <h2
+          id="vkb-viewer-title"
+          className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+        >
+          📚 Veteran Knowledge Base
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Completeness: {vkb.metadata.completeness}% •{" "}
+          {vkb.metadata.documentCount} documents
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {editMode ? (
+          <>
+            <button
+              onClick={onSave}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+            >
+              💾 Save
+            </button>
+            <button
+              onClick={() => setEditMode(false)}
+              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setEditMode(true)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          >
+            ✏️ Edit
+          </button>
+        )}
+        <button
+          onClick={onExport}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+        >
+          📥 Export
+        </button>
+      </div>
+    </HeaderCloseSlot>
+  </div>
+);
+
+const ViewerFooter = ({ vkb, showLLMContext, setShowLLMContext, onClear }) => (
+  <div className="flex items-center justify-between">
+    <div className="text-sm text-gray-500 dark:text-gray-400">
+      Last updated:{" "}
+      {vkb.metadata.lastUpdated
+        ? new Date(vkb.metadata.lastUpdated).toLocaleString()
+        : "Never"}
+    </div>
+    <div className="flex gap-2">
+      <button
+        onClick={() => setShowLLMContext(!showLLMContext)}
+        className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+      >
+        {showLLMContext ? "Hide" : "Show"} LLM Context
+      </button>
+      <button
+        onClick={onClear}
+        className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+      >
+        Clear All Data
+      </button>
+    </div>
+  </div>
+);
+
+const SectionNav = ({ activeSection, setActiveSection }) => (
+  <div className="flex shrink-0 overflow-x-auto border-b border-gray-200 dark:border-gray-700 sm:w-64 sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:border-b-0 sm:border-r">
+    {SECTIONS.map((section) => (
+      <button
+        key={section.id}
+        onClick={() => setActiveSection(section.id)}
+        className={`flex shrink-0 items-center gap-3 whitespace-nowrap px-4 py-3 text-left transition-colors sm:w-full ${
+          activeSection === section.id
+            ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 sm:border-r-2 sm:border-blue-600"
+            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+        }`}
+      >
+        <span className="text-xl">{section.icon}</span>
+        <span className="font-medium">{section.label}</span>
+      </button>
+    ))}
+  </div>
+);
+
+const ViewerLoadingState = () => (
+  <div className="flex items-center justify-center h-96">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600 dark:text-gray-400">
+        Loading your Knowledge Base...
+      </p>
+    </div>
+  </div>
+);
+
+const LLMContextModal = ({ vkb, onClose }) => (
+  <ResponsiveModal
+    isOpen
+    onClose={onClose}
+    size="xl"
+    zIndex={70}
+    title="LLM Context String"
+  >
+    <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-xs overflow-x-auto">
+      {generateLLMContext(vkb)}
+    </pre>
+  </ResponsiveModal>
+);
+
+const ViewerModal = ({
+  isOpen,
+  onClose,
+  vkb,
+  setVkb,
+  loading,
+  editMode,
+  setEditMode,
+  activeSection,
+  setActiveSection,
+  showLLMContext,
+  setShowLLMContext,
+  onSave,
+  onExport,
+  onClear,
+}) => (
+  <ResponsiveModal
+    isOpen={isOpen}
+    onClose={onClose}
+    size="2xl"
+    labelledBy="vkb-viewer-title"
+    header={
+      loading || !vkb ? undefined : (
+        <ViewerHeader
+          vkb={vkb}
+          editMode={editMode}
+          setEditMode={setEditMode}
+          onSave={onSave}
+          onExport={onExport}
+          onClose={onClose}
+        />
+      )
+    }
+    footer={
+      loading || !vkb ? undefined : (
+        <ViewerFooter
+          vkb={vkb}
+          showLLMContext={showLLMContext}
+          setShowLLMContext={setShowLLMContext}
+          onClear={onClear}
+        />
+      )
+    }
+  >
+    {loading || !vkb ? (
+      // Loading state
+      <ViewerLoadingState />
+    ) : (
+      <div className="-mx-4 -my-4 flex h-full flex-col sm:flex-row">
+        {/* Sidebar Navigation — vertical on desktop, horizontal scroller on mobile */}
+        <SectionNav
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+        />
+
+        {/* Main Content Area */}
+        <div className="min-w-0 flex-1 overflow-y-auto p-6">
+          <SectionContent
+            activeSection={activeSection}
+            vkb={vkb}
+            setVkb={setVkb}
+            editMode={editMode}
+          />
+        </div>
+      </div>
+    )}
+  </ResponsiveModal>
+);
+
+const VKB_VIEWER_REASON_MESSAGES = {
+  invalid_date: "that isn't a valid date.",
+  period_not_found: "the linked service period no longer exists.",
+  no_period_for_document: "it couldn't be matched to a service period.",
+  no_document_value: "there is no document value to revert to.",
+};
+
+// ADR-007: the ONE place the VKB viewer writes anything - the entry date
+// goes through setServiceEntryDate (via: 'vkb_viewer'), applying the
+// correction to the canonical period instead of the VKB's own top-level
+// field; every other editable field is copied onto a FRESHLY loaded VKB
+// (never a stale `vkb` state object saveVKB(vkb0) would silently clobber
+// any service-entry projection written since this modal was opened).
+export async function saveVkbViewerEdits({ edited, loaded }) {
+  const loadedEntryDate = loaded?.serviceHistory?.entryDate;
+  const editedEntryDate = edited?.serviceHistory?.entryDate;
+  if (!isSameCalendarDay(editedEntryDate, loadedEntryDate)) {
+    const result = setServiceEntryDate({
+      date: editedEntryDate,
+      via: "vkb_viewer",
+      periodId: loaded?.serviceHistory?.entryPeriodId || undefined,
+    });
+    if (!result.ok) {
+      const reason =
+        VKB_VIEWER_REASON_MESSAGES[result.reason] || "please try again.";
+      alert(`Your entry date couldn't be saved: ${reason}`);
+      return { ok: false };
+    }
+  }
+
+  const fresh = await loadVKB();
+  fresh.personal.fullName = edited.personal.fullName;
+  fresh.personal.dateOfBirth = edited.personal.dateOfBirth;
+  fresh.personal.email = edited.personal.email;
+  fresh.personal.phone = edited.personal.phone;
+  fresh.serviceHistory.branch = edited.serviceHistory.branch;
+  fresh.serviceHistory.characterOfService =
+    edited.serviceHistory.characterOfService;
+  fresh.serviceHistory.separationDate = edited.serviceHistory.separationDate;
+  const saveResult = await saveVKB(fresh);
+  if (!saveResult.success) {
+    alert(
+      `Your changes couldn't be saved: ${saveResult.error || "please try again."}`,
+    );
+    return { ok: false };
+  }
+  return { ok: true, vkb: fresh };
+}
+
+const VKBViewer = ({ isOpen, onClose }) => {
+  const [vkb, setVkb] = useState(null);
+  const [activeSection, setActiveSection] = useState("personal");
+  const [showLLMContext, setShowLLMContext] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const loadedRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true);
+      loadVKB()
+        .then((loaded) => {
+          setVkb(loaded);
+          loadedRef.current = loaded;
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Failed to load VKB:", err);
+          setLoading(false);
+        });
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSave = async () => {
+    const result = await saveVkbViewerEdits({
+      edited: vkb,
+      loaded: loadedRef.current,
+    });
+    if (!result.ok) return;
+    setVkb(result.vkb);
+    loadedRef.current = result.vkb;
+    setEditMode(false);
+  };
+
+  const handleExport = () => {
+    exportVKB();
+  };
+
+  // Decision B: deletes everything the full data delete deletes (reuses
+  // AtomicWipe's wipeAllLocalData, not a VKB-only clear), without the decoy
+  // redirect (Quick Exit keeps that job - this just reloads), and
+  // propagates to every open tab so a stale tab cannot re-save deleted data.
+  const handleClear = async () => {
+    if (!confirm(CLEAR_ALL_DATA_CONFIRM_TEXT)) return;
+    try {
+      await wipeAllLocalData();
+    } catch (error) {
+      console.error("Error during Clear All Data wipe:", error);
+      // A silent reload here would look identical to a real success - the
+      // veteran needs to know the delete may not have fully landed, the same
+      // warning the VKB-only clear path this replaced used to give.
+      alert(
+        "Some data may not have been fully deleted and could return after this reload. If this device is shared, clearing your browser's site data for this page is the more thorough option.",
+      );
+    }
+    broadcastDataWipe();
+    forceReloadWithCacheBypass();
+  };
+
+  return (
+    <>
+      <ViewerModal
+        isOpen={isOpen}
+        onClose={onClose}
+        vkb={vkb}
+        setVkb={setVkb}
+        loading={loading}
+        editMode={editMode}
+        setEditMode={setEditMode}
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+        showLLMContext={showLLMContext}
+        setShowLLMContext={setShowLLMContext}
+        onSave={handleSave}
+        onExport={handleExport}
+        onClear={handleClear}
+      />
+
+      {/* LLM Context Preview Modal — lifted above the viewer shell */}
+      {showLLMContext && vkb && (
+        <LLMContextModal vkb={vkb} onClose={() => setShowLLMContext(false)} />
+      )}
+    </>
+  );
+};
+
+export default VKBViewer;

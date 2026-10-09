@@ -1,0 +1,742 @@
+{
+  "title": "38 CFR Part 3 - Adjudication",
+  "description": "The official VA regulations governing how disability claims are processed, evaluated, and decided. Understanding these rules empowers veterans to file stronger claims and effectively appeal unfavorable decisions.",
+  "ecfrBaseUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-3",
+  "revisionInfo": {
+    "displayDate": "1/15/2026",
+    "lastAmended": "1/09/2026",
+    "source": "eCFR - Title 38: Pensions, Bonuses, and Veterans' Relief"
+  },
+  "lastUpdated": "2026-01-17",
+  "categories": [
+    {
+      "id": "definitions",
+      "title": "Key Definitions (§3.1)",
+      "icon": "📖",
+      "description": "Official VA definitions that determine how your claim is processed",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.1",
+      "regulations": [
+        {
+          "section": "§3.1(p)",
+          "title": "Claim",
+          "summary": "A written or electronic communication requesting a determination of entitlement to a specific benefit under VA laws, submitted on an application form prescribed by the Secretary.",
+          "keyPoints": [
+            "Must be on official VA forms (like VA Form 21-526EZ for disability compensation)",
+            "Electronic submissions through VA.gov are valid claims",
+            "Identifies the veteran and the benefit sought"
+          ],
+          "veteranTip": "Always use official VA forms. Informal statements or letters are NOT claims - they may trigger VA's duty to send you the proper form, but won't protect your effective date."
+        },
+        {
+          "section": "§3.1(p)(1)",
+          "title": "Initial Claim",
+          "summary": "Any complete claim, other than a supplemental claim, for a benefit on a form prescribed by the Secretary. The first initial claim received is called an 'original claim.'",
+          "keyPoints": [
+            "Includes new claims requesting service connection",
+            "Includes claims for increased ratings",
+            "The first claim you ever file is your 'original claim'"
+          ],
+          "veteranTip": "Your original claim date can be preserved for years through proper Intent to File and appeal procedures."
+        },
+        {
+          "section": "§3.1(p)(2)",
+          "title": "Supplemental Claim",
+          "summary": "A complete claim for VA benefits where an initial or supplemental claim for the same or similar benefit was previously decided.",
+          "keyPoints": [
+            "Must include new and relevant evidence",
+            "Filed on VA Form 20-0995",
+            "One path to reopen a previously denied claim"
+          ],
+          "veteranTip": "If you have new evidence (like a nexus letter or buddy statements), a supplemental claim is often your best path after a denial."
+        }
+      ]
+    },
+    {
+      "id": "reasonable-doubt",
+      "title": "Benefit of the Doubt (§3.102)",
+      "icon": "⚖️",
+      "description": "The legal standard that tilts the scales in your favor",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.102",
+      "regulations": [
+        {
+          "section": "§3.102",
+          "title": "Reasonable Doubt",
+          "summary": "When the evidence is in approximate balance (50/50), the benefit of the doubt goes to the veteran. VA will give the benefit of the doubt to the veteran.",
+          "keyPoints": [
+            "You do NOT need to prove your case beyond a reasonable doubt",
+            "You do NOT need a preponderance (more than 50%) of evidence",
+            "If evidence is roughly equal for and against, YOU WIN",
+            "This applies to service connection, ratings, and effective dates"
+          ],
+          "veteranTip": "This is one of your most powerful protections! If your evidence is 'at least as likely as not' (50% probability), you should win. Cite §3.102 in appeals if VA ignored this standard.",
+          "importantQuote": "When there is an approximate balance of positive and negative evidence regarding any issue material to the determination of a matter, the Secretary shall give the benefit of the doubt to the claimant."
+        }
+      ]
+    },
+    {
+      "id": "procedural-rights",
+      "title": "Your Rights as a Claimant (§3.103)",
+      "icon": "🛡️",
+      "description": "Due process protections every veteran should know",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.103",
+      "regulations": [
+        {
+          "section": "§3.103(a)",
+          "title": "Statement of Policy",
+          "summary": "Every claimant has the right to written notice of decisions, the right to a hearing, and the right of representation. VA must assist you in developing facts and grant every benefit supported by law.",
+          "keyPoints": [
+            "VA must provide written notice of ALL decisions",
+            "You have the right to a hearing",
+            "You can have representation (VSO, attorney, agent)",
+            "VA proceedings are 'ex parte' - VA must help you, not work against you"
+          ],
+          "veteranTip": "VA is supposed to work WITH you, not against you. They have a duty to grant 'every benefit that can be supported in law.' If they're being adversarial, cite this regulation.",
+          "importantQuote": "Proceedings before VA are ex parte in nature, and it is the obligation of VA to assist a claimant in developing the facts pertinent to the claim and to render a decision which grants every benefit that can be supported in law."
+        },
+        {
+          "section": "§3.103(b)",
+          "title": "Right to Notice",
+          "summary": "Claimants and representatives are entitled to notice of any decision affecting benefits, including the issues adjudicated, evidence considered, applicable laws, favorable findings, and what's needed for higher ratings.",
+          "keyPoints": [
+            "Decision letters must identify all issues decided",
+            "Must summarize the evidence considered",
+            "Must explain applicable laws and regulations",
+            "Must list favorable findings that cannot be reversed",
+            "Must explain what's needed to get the next higher rating"
+          ],
+          "veteranTip": "Your rating decision letter should tell you EXACTLY what evidence you need for a higher rating. If it doesn't, the decision may be inadequate."
+        },
+        {
+          "section": "§3.103(c)",
+          "title": "Submission of Evidence",
+          "summary": "VA must include in the record ALL evidence submitted by the claimant in support of a pending claim. The evidentiary record closes when VA issues notice of a decision.",
+          "keyPoints": [
+            "VA must consider ALL evidence you submit before a decision",
+            "Once a decision is issued, you need to file a review option to add new evidence",
+            "Evidence received after a decision requires a supplemental claim or Board appeal"
+          ],
+          "veteranTip": "Submit ALL your evidence BEFORE VA decides your claim. If you have more evidence after a decision, file a supplemental claim promptly."
+        },
+        {
+          "section": "§3.103(d)",
+          "title": "Right to a Hearing",
+          "summary": "Upon request, you are entitled to a hearing on any issue before VA issues a decision. Hearings are held at VA regional offices or via video.",
+          "keyPoints": [
+            "You can request a hearing before any initial or supplemental claim decision",
+            "No hearing available for Higher-Level Review (HLR)",
+            "Board of Veterans Appeals offers optional hearings",
+            "Can be in-person or video teleconference"
+          ],
+          "veteranTip": "Hearings are optional but can be powerful. You can explain your symptoms, clarify evidence, and make your case directly to a decision-maker."
+        }
+      ]
+    },
+    {
+      "id": "binding-decisions",
+      "title": "Final Decisions & Errors (§3.104-§3.105)",
+      "icon": "📋",
+      "description": "When decisions become final and how to correct errors",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.104",
+      "regulations": [
+        {
+          "section": "§3.104(a)",
+          "title": "Binding Nature of Decisions",
+          "summary": "A decision by VA is binding on all VA field offices and final after the review period expires, unless appealed or shown to contain clear and unmistakable error.",
+          "keyPoints": [
+            "Decisions become final if not appealed within the timeframe",
+            "Review options: Supplemental Claim, Higher-Level Review, or Board Appeal",
+            "Modern review system gives 1 year to choose a review option"
+          ],
+          "veteranTip": "You have 1 year from a decision to choose a review option without losing your effective date. Don't let that deadline pass!"
+        },
+        {
+          "section": "§3.104(c)",
+          "title": "Favorable Findings",
+          "summary": "Any favorable finding made by a VA adjudicator is binding on all subsequent adjudicators, unless clear and unmistakable error is shown.",
+          "keyPoints": [
+            "If VA found an in-service event occurred, they cannot reverse that later",
+            "Favorable findings carry forward to future claims",
+            "Can only be reversed if there was clear and unmistakable error"
+          ],
+          "veteranTip": "If VA previously acknowledged your in-service injury, that finding is locked in! Future adjudicators must honor it."
+        },
+        {
+          "section": "§3.105(a)",
+          "title": "Clear and Unmistakable Error (CUE)",
+          "summary": "Final decisions can be revised if there was clear and unmistakable error - meaning the correct facts were known but the law was incorrectly applied, and the outcome would undoubtedly have been different.",
+          "keyPoints": [
+            "Very high standard - must be 'undebatable' that error occurred",
+            "Correct facts must have been in the record at the time",
+            "Law must have been incorrectly applied",
+            "Outcome must have been manifestly different but for the error",
+            "If successful, can get back-pay to the original effective date"
+          ],
+          "veteranTip": "CUE claims are difficult but powerful. If you believe VA made an obvious error years ago, a successful CUE claim can result in substantial back-pay."
+        },
+        {
+          "section": "§3.105(e)",
+          "title": "Reduction in Evaluation",
+          "summary": "Before reducing a disability rating, VA must notify you and allow 60 days to submit evidence showing the reduction is not warranted.",
+          "keyPoints": [
+            "VA must send a proposed reduction letter",
+            "You get 60 days to respond with evidence",
+            "You can request a hearing",
+            "Certain ratings have additional protections (see §3.344)"
+          ],
+          "veteranTip": "Never ignore a proposed reduction letter! Respond with medical evidence showing your condition hasn't improved, and request a hearing if needed."
+        }
+      ]
+    },
+    {
+      "id": "filing-claims",
+      "title": "How to File Claims (§3.155-§3.160)",
+      "icon": "📝",
+      "description": "The rules for properly filing and protecting your claim date",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.155",
+      "regulations": [
+        {
+          "section": "§3.155(b)",
+          "title": "Intent to File",
+          "summary": "You can reserve your effective date for up to 1 year by submitting an Intent to File (ITF), giving you time to gather evidence.",
+          "keyPoints": [
+            "Can be submitted electronically, on VA Form 21-0966, or verbally to VA",
+            "Reserves your effective date for 12 months",
+            "Must file complete claim within 1 year to preserve the date",
+            "Does NOT need to identify specific conditions"
+          ],
+          "veteranTip": "ALWAYS file an Intent to File first! If your claim takes months to prepare, you'll get back-pay from the ITF date, not the final claim date. This can be worth thousands of dollars.",
+          "forms": ["VA Form 21-0966"]
+        },
+        {
+          "section": "§3.155(d)",
+          "title": "Complete Claim Requirement",
+          "summary": "A complete claim is required for benefits. VA will consider entitlement to ancillary benefits and secondary conditions as part of your claim.",
+          "keyPoints": [
+            "Must use prescribed VA forms",
+            "VA will adjudicate ancillary benefits automatically (SMC, DEA, etc.)",
+            "VA considers complications listed in the rating criteria",
+            "Scope of claim includes conditions reasonably identified by evidence"
+          ],
+          "veteranTip": "When you claim a condition, VA should also consider associated complications. For example, a spine claim should automatically consider associated radiculopathy."
+        },
+        {
+          "section": "§3.160(a)",
+          "title": "Complete Claim Definition",
+          "summary": "A complete claim requires: claimant's name, relationship to veteran, service information, signature, identification of benefit sought, and description of conditions.",
+          "keyPoints": [
+            "For supplemental claims: must identify new and relevant evidence",
+            "For Higher-Level Review: must identify the decision date being reviewed",
+            "Must be signed by claimant or authorized person"
+          ],
+          "veteranTip": "Incomplete claims cause delays. Double-check you've provided everything required before submitting."
+        }
+      ]
+    },
+    {
+      "id": "duty-to-assist",
+      "title": "VA's Duty to Assist (§3.159)",
+      "icon": "🤝",
+      "description": "What VA must do to help you with your claim",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.159",
+      "regulations": [
+        {
+          "section": "§3.159(a)",
+          "title": "Competent Evidence Standards",
+          "summary": "Defines competent medical evidence and competent lay evidence. Veterans are competent to report symptoms they personally observe.",
+          "keyPoints": [
+            "Medical evidence requires qualified healthcare providers",
+            "Lay evidence: anything from someone with personal knowledge",
+            "Veterans ARE competent to report their own symptoms",
+            "Buddy statements are competent lay evidence"
+          ],
+          "veteranTip": "You don't need a doctor to say you have pain - you're competent to report that. But diagnosing WHY you have pain requires medical evidence."
+        },
+        {
+          "section": "§3.159(b)",
+          "title": "Duty to Notify",
+          "summary": "VA must notify you of what information and evidence is needed to substantiate your claim.",
+          "keyPoints": [
+            "VA must tell you what evidence is missing",
+            "Must explain what VA will obtain vs. what you need to provide",
+            "Must send development letters for incomplete claims"
+          ],
+          "veteranTip": "If VA denies your claim without ever telling you what evidence was missing, they may have violated their duty to notify."
+        },
+        {
+          "section": "§3.159(c)",
+          "title": "Duty to Assist in Obtaining Evidence",
+          "summary": "VA must make reasonable efforts to obtain relevant records, both federal (service records, VA records) and non-federal (private medical records).",
+          "keyPoints": [
+            "VA must request your service records",
+            "VA must obtain relevant VA treatment records",
+            "VA must try to get private records if you provide authorization",
+            "At least one follow-up request for non-federal records"
+          ],
+          "veteranTip": "If VA says they couldn't get your records, ask what efforts they made. They must make 'reasonable efforts' and document their attempts."
+        },
+        {
+          "section": "§3.159(c)(4)",
+          "title": "Medical Examinations",
+          "summary": "VA must provide a medical examination when there's evidence of current disability, indication of association with service, and insufficient evidence to decide.",
+          "keyPoints": [
+            "Required when: current disability + in-service event + indication of connection",
+            "Low threshold - need only 'indication' of connection",
+            "Must provide exam even for supplemental claims with new evidence"
+          ],
+          "veteranTip": "If VA denies without an exam, check if you met the low threshold for one. Having current symptoms + any in-service event usually triggers exam requirement."
+        }
+      ]
+    },
+    {
+      "id": "service-connection",
+      "title": "Service Connection Principles (§3.303-§3.310)",
+      "icon": "🔗",
+      "description": "The legal standards for connecting disabilities to service",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.303",
+      "regulations": [
+        {
+          "section": "§3.303(a)",
+          "title": "Direct Service Connection",
+          "summary": "Service connection may be granted for disability resulting from disease or injury incurred in or aggravated by active military service.",
+          "keyPoints": [
+            "Three elements: current disability + in-service event + nexus",
+            "Must be incurred OR aggravated during service",
+            "Line of duty requirement (not due to misconduct)"
+          ],
+          "veteranTip": "For direct service connection, focus on documenting all three elements: (1) what you have now, (2) what happened in service, and (3) how they're connected."
+        },
+        {
+          "section": "§3.303(b)",
+          "title": "Chronicity and Continuity",
+          "summary": "For chronic diseases, service connection may be established by evidence of the disease in service and current manifestations. Continuity of symptoms can substitute for chronicity.",
+          "keyPoints": [
+            "Chronic diseases shown in service with same condition now = service connected",
+            "Continuity: symptoms since service, even without formal diagnosis then",
+            "Lay evidence of continuous symptoms is valuable"
+          ],
+          "veteranTip": "If you've had symptoms continuously since service, document that timeline. Your lay statements about ongoing symptoms since discharge are important evidence."
+        },
+        {
+          "section": "§3.310(a)",
+          "title": "Secondary Service Connection",
+          "summary": "Disability which is proximately due to or the result of a service-connected disease or injury shall be service connected.",
+          "keyPoints": [
+            "Your service-connected condition caused a new condition",
+            "Does NOT need to occur during service",
+            "Need medical evidence showing causation"
+          ],
+          "veteranTip": "Secondary conditions are powerful for increasing your rating. Think about what conditions your service-connected disabilities have caused - sleep apnea from PTSD, nerve damage from diabetes, hip problems from knee injuries, etc."
+        },
+        {
+          "section": "§3.310(b)",
+          "title": "Aggravation by Service-Connected Condition",
+          "summary": "Any increase in severity of a nonservice-connected disease caused by a service-connected disease or injury is secondary service connection.",
+          "keyPoints": [
+            "Even aggravation (worsening) of another condition counts",
+            "VA rates the DEGREE of aggravation",
+            "Baseline severity established, then increase measured"
+          ],
+          "veteranTip": "If your service-connected condition made another condition WORSE (even if it didn't cause it), you may qualify for secondary service connection for the aggravation."
+        }
+      ]
+    },
+    {
+      "id": "presumptive",
+      "title": "Presumptive Service Connection (§3.307-§3.320)",
+      "icon": "☢️",
+      "description": "Conditions presumed service-connected based on service location or timing",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.307",
+      "regulations": [
+        {
+          "section": "§3.307",
+          "title": "Presumptive Service Connection - General",
+          "summary": "Certain chronic diseases, tropical diseases, and conditions related to service are presumed service-connected if they manifest within specified periods.",
+          "keyPoints": [
+            "Chronic diseases: must manifest to 10% within 1 year of discharge",
+            "Some diseases have longer presumptive periods",
+            "Presumption can be rebutted only by affirmative evidence"
+          ],
+          "veteranTip": "If you developed arthritis, heart disease, diabetes, or other chronic diseases within one year of discharge, they may be presumptively connected even without proving causation."
+        },
+        {
+          "section": "§3.309",
+          "title": "Diseases Subject to Presumption",
+          "summary": "Lists specific diseases presumed service-connected for various veteran groups: chronic diseases, tropical diseases, POW diseases, and exposure-related conditions.",
+          "keyPoints": [
+            "Chronic diseases list includes arthritis, cardiovascular disease, diabetes, etc.",
+            "Agent Orange presumptives for Vietnam veterans",
+            "Gulf War presumptives for Southwest Asia veterans",
+            "PACT Act added many new presumptives"
+          ],
+          "veteranTip": "Check the specific lists in §3.309 to see if your condition qualifies for presumptive connection based on when and where you served."
+        },
+        {
+          "section": "§3.317",
+          "title": "Gulf War Presumptives",
+          "summary": "Compensation for Gulf War veterans with qualifying chronic disabilities: undiagnosed illnesses, medically unexplained chronic multi-symptom illnesses (like chronic fatigue, fibromyalgia, IBS).",
+          "keyPoints": [
+            "Covers undiagnosed illnesses and chronic multi-symptom illnesses",
+            "Must have served in Southwest Asia theater",
+            "Includes chronic fatigue syndrome, fibromyalgia, functional GI disorders",
+            "Disability must manifest to 10% or more"
+          ],
+          "veteranTip": "If you have unexplained symptoms after Gulf War service that doctors can't fully diagnose, you may still qualify for compensation under §3.317."
+        },
+        {
+          "section": "§3.320",
+          "title": "PACT Act - Toxic Exposure Presumptions",
+          "summary": "Establishes presumptions for conditions related to toxic exposure, burn pits, radiation, and expanded Agent Orange coverage.",
+          "keyPoints": [
+            "Burn pit exposure presumptives for Iraq/Afghanistan veterans",
+            "Expanded locations for Agent Orange presumption",
+            "Radiation-related cancers",
+            "Must have qualifying service"
+          ],
+          "veteranTip": "The PACT Act significantly expanded presumptive conditions. If you were denied before 2022, you may now qualify for presumptive connection."
+        }
+      ]
+    },
+    {
+      "id": "effective-dates",
+      "title": "Effective Dates (§3.400)",
+      "icon": "📅",
+      "description": "When your benefits start and how to protect back-pay",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.400",
+      "regulations": [
+        {
+          "section": "§3.400(a)",
+          "title": "General Rule",
+          "summary": "Effective date will be fixed according to facts found, but not earlier than the date of claim or the date entitlement arose, whichever is later.",
+          "keyPoints": [
+            "Usually the date VA received your claim",
+            "Can be earlier with Intent to File",
+            "For increases: date of claim OR date entitlement arose (whichever later)"
+          ],
+          "veteranTip": "Your effective date is usually your claim date. That's why Intent to File is so important - it preserves an earlier date while you prepare your full claim."
+        },
+        {
+          "section": "§3.400(b)(2)",
+          "title": "Disability Compensation",
+          "summary": "For direct service connection, effective date is day after discharge if claim filed within 1 year. Otherwise, date of claim.",
+          "keyPoints": [
+            "Claim within 1 year of discharge = day after discharge effective date",
+            "Claim after 1 year = date VA received claim",
+            "Presumptive conditions: when requirements first met"
+          ],
+          "veteranTip": "If you're within 1 year of discharge, file NOW to get the earliest possible effective date (day after discharge). Every month you wait is lost back-pay."
+        },
+        {
+          "section": "§3.400(o)(2)",
+          "title": "Increased Ratings",
+          "summary": "For increased ratings, effective date is date of claim or date entitlement arose, whichever is later. Can be up to 1 year before claim if increase is factually ascertainable.",
+          "keyPoints": [
+            "Usually date of claim for increase",
+            "Can go back 1 year if medical evidence shows increase",
+            "Need evidence showing specific date condition worsened"
+          ],
+          "veteranTip": "For increases, gather medical evidence showing WHEN your condition got worse. If you can show the increase happened within the year before your claim, you might get earlier effective date."
+        },
+        {
+          "section": "§3.400(q)",
+          "title": "Supplemental Claims",
+          "summary": "For supplemental claims filed within 1 year of a decision, effective date can relate back to the original claim. After 1 year, date of supplemental claim.",
+          "keyPoints": [
+            "Supplemental within 1 year: can get original claim date",
+            "Supplemental after 1 year: new claim date",
+            "Continuous pursuit preserves effective date"
+          ],
+          "veteranTip": "If you're filing a supplemental claim within 1 year of denial, you preserve your original effective date. Don't let the 1-year deadline pass!"
+        }
+      ]
+    },
+    {
+      "id": "review-options",
+      "title": "Review & Appeals (§3.2500-§3.2601)",
+      "icon": "🔄",
+      "description": "Your options when you disagree with a VA decision",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.2500",
+      "regulations": [
+        {
+          "section": "§3.2500",
+          "title": "Review Options",
+          "summary": "After receiving notice of a decision, you have three review options: Supplemental Claim, Higher-Level Review, or Board Appeal. Must choose within 1 year to preserve effective date.",
+          "keyPoints": [
+            "1-year deadline from date of decision notice",
+            "Can choose different options for different issues",
+            "Supplemental Claim: add new evidence",
+            "Higher-Level Review: no new evidence, error review",
+            "Board Appeal: three dockets available"
+          ],
+          "veteranTip": "Don't just accept a denial. Review your options carefully: HLR if you think VA made an error with existing evidence, Supplemental if you have new evidence, Board if you want a judge to decide."
+        },
+        {
+          "section": "§3.2501",
+          "title": "Supplemental Claims",
+          "summary": "A supplemental claim allows you to submit new and relevant evidence for a previously decided claim. Filed on VA Form 20-0995.",
+          "keyPoints": [
+            "Must include new and relevant evidence",
+            "New: not previously submitted",
+            "Relevant: relates to unestablished element",
+            "VA duty to assist reactivates with new evidence"
+          ],
+          "veteranTip": "The bar for 'new and relevant' is low. A nexus letter you didn't have before, buddy statements, updated treatment records - all can support a supplemental claim.",
+          "forms": ["VA Form 20-0995"]
+        },
+        {
+          "section": "§3.2601",
+          "title": "Higher-Level Review",
+          "summary": "A senior reviewer examines whether VA made an error based on evidence in the record at time of decision. No new evidence allowed.",
+          "keyPoints": [
+            "Review by more experienced adjudicator",
+            "No new evidence - only what was in record",
+            "Can request informal telephone conference",
+            "Good for clear errors in applying law"
+          ],
+          "veteranTip": "HLR is best when VA clearly misread your evidence or incorrectly applied the law. If you need to add new evidence, file supplemental instead.",
+          "forms": ["VA Form 20-0996"]
+        }
+      ]
+    },
+    {
+      "id": "special-ratings",
+      "title": "Special Monthly Compensation (§3.350-§3.352)",
+      "icon": "💰",
+      "description": "Additional compensation for severe disabilities",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.350",
+      "regulations": [
+        {
+          "section": "§3.350",
+          "title": "Special Monthly Compensation Ratings",
+          "summary": "Additional compensation beyond schedular ratings for: loss of use, blindness, deafness, being housebound, or needing aid and attendance.",
+          "keyPoints": [
+            "SMC(k): loss of use of one hand, foot, eye, or creative organ",
+            "SMC(l): need for aid and attendance",
+            "SMC(s): housebound or 100% plus 60% additional",
+            "Higher SMC levels for more severe combinations"
+          ],
+          "veteranTip": "SMC is often overlooked! If you need help with daily activities, are essentially confined to home, or have lost use of limbs/organs, you may qualify for SMC on top of your rating."
+        },
+        {
+          "section": "§3.350(b)",
+          "title": "Loss of Use",
+          "summary": "Loss of use exists when a limb or organ has no effective remaining function. Does not require physical amputation.",
+          "keyPoints": [
+            "Function must be so diminished that amputation would be equally serviceable",
+            "Applies to hands, feet, eyes, and creative organs",
+            "Each qualifies for SMC(k) rate"
+          ],
+          "veteranTip": "You don't need actual amputation. If your hand or foot is so non-functional that a prosthetic would work equally well, that's loss of use."
+        },
+        {
+          "section": "§3.352",
+          "title": "Aid and Attendance",
+          "summary": "Additional allowance if you need regular aid and attendance of another person due to service-connected disabilities.",
+          "keyPoints": [
+            "Inability to dress/undress, keep clean, attend to bathroom needs",
+            "Incapacity to protect self from hazards of daily environment",
+            "Being bedridden",
+            "Mental/physical incapacity requiring care or supervision"
+          ],
+          "veteranTip": "If someone helps you with bathing, dressing, eating, or you need supervision for safety, you may qualify for Aid and Attendance."
+        }
+      ]
+    },
+    {
+      "id": "protection",
+      "title": "Rating Protections (§3.344, §3.951)",
+      "icon": "🛡️",
+      "description": "Rules that protect your ratings from reduction",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.344",
+      "regulations": [
+        {
+          "section": "§3.344(a)",
+          "title": "Rating Stabilization",
+          "summary": "Ratings in effect for 5+ years cannot be reduced unless sustained improvement is shown under ordinary conditions of life. Examination must be complete and full.",
+          "keyPoints": [
+            "After 5 years at same rating, reduction requires sustained improvement",
+            "Must be improvement under ordinary conditions (not just in hospital)",
+            "Examination must be as complete as original rating exam",
+            "Applies to ratings based on diseases subject to improvement"
+          ],
+          "veteranTip": "If you've had a rating for 5+ years, VA can't reduce it just because one exam seems better. They must show SUSTAINED improvement in everyday life, not just test results."
+        },
+        {
+          "section": "§3.344(c)",
+          "title": "Permanent Ratings",
+          "summary": "Ratings for conditions likely to improve and in effect less than 5 years may be reduced based on any improvement. But 20-year ratings are protected.",
+          "keyPoints": [
+            "Ratings under 5 years: standard for reduction",
+            "Ratings 5-20 years: stabilization protections apply",
+            "Ratings 20+ years: cannot be reduced except for fraud"
+          ],
+          "veteranTip": "If you've had your rating for 20 years, it's essentially permanent. VA cannot reduce it except in cases of fraud."
+        },
+        {
+          "section": "§3.951(b)",
+          "title": "Total Disability Rating Protection",
+          "summary": "A total rating (100%) in effect for 20 years is protected and cannot be reduced. TDIU held for 20 years is also protected.",
+          "keyPoints": [
+            "100% schedular rating for 20 years = permanent",
+            "TDIU for 20 years = protected at 100% rate",
+            "Only fraud can overcome this protection"
+          ],
+          "veteranTip": "If you've been at 100% (schedular or TDIU) for 20 years, that rate is protected for life. Document when your total rating began."
+        }
+      ]
+    },
+    {
+      "id": "examinations",
+      "title": "VA Examinations (§3.326-§3.327)",
+      "icon": "🏥",
+      "description": "Rules governing C&P exams and reexaminations",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-3.326",
+      "regulations": [
+        {
+          "section": "§3.326",
+          "title": "Examinations",
+          "summary": "When medical evidence is not adequate for rating purposes, VA will authorize an examination. Hospital reports and private examinations may be accepted.",
+          "keyPoints": [
+            "C&P exam required when evidence is insufficient to rate",
+            "Private medical evidence can substitute if adequate",
+            "Hospital records from any government or private institution may be accepted",
+            "POW claimants must be offered VA hospital exam before denial"
+          ],
+          "veteranTip": "You don't always need a C&P exam. If your private doctor provides thorough documentation using DBQ format, it may be accepted."
+        },
+        {
+          "section": "§3.327",
+          "title": "Reexaminations",
+          "summary": "Reexaminations may be scheduled when VA needs to verify continuing entitlement. Generally not required after age 55 unless improvement is likely.",
+          "keyPoints": [
+            "Reexam when there's reason to believe condition changed",
+            "Not required for permanent disabilities",
+            "Generally not required after age 55",
+            "Must report to scheduled exams"
+          ],
+          "veteranTip": "If you're over 55 with a static condition, you likely won't be scheduled for routine reexams. But if you're younger, be prepared for occasional reexaminations."
+        },
+        {
+          "section": "§3.655",
+          "title": "Failure to Report for Examination",
+          "summary": "If you fail to report for a scheduled exam without good cause, your claim may be denied or benefits reduced.",
+          "keyPoints": [
+            "Original claims: rated on evidence of record (usually unfavorable)",
+            "Claims for increase: claim denied",
+            "Running awards: benefits may be reduced",
+            "Good cause exceptions exist"
+          ],
+          "veteranTip": "NEVER miss a C&P exam without notifying VA. If you can't make it, call immediately to reschedule. Missing exams is one of the most common reasons for denials."
+        }
+      ]
+    }
+  ],
+  "keyForms": [
+    {
+      "form": "VA Form 21-526EZ",
+      "name": "Application for Disability Compensation",
+      "use": "Filing initial disability claims or claims for increase",
+      "url": "https://www.va.gov/disability/file-disability-claim-form-21-526ez/"
+    },
+    {
+      "form": "VA Form 21-0966",
+      "name": "Intent to File",
+      "use": "Reserving your effective date for up to 1 year",
+      "url": "https://www.va.gov/supporting-forms-for-claims/intent-to-file-form-21-0966/"
+    },
+    {
+      "form": "VA Form 20-0995",
+      "name": "Supplemental Claim",
+      "use": "Reopening a claim with new and relevant evidence",
+      "url": "https://www.va.gov/decision-reviews/supplemental-claim/"
+    },
+    {
+      "form": "VA Form 20-0996",
+      "name": "Higher-Level Review",
+      "use": "Requesting review for errors in existing evidence",
+      "url": "https://www.va.gov/decision-reviews/higher-level-review/"
+    },
+    {
+      "form": "VA Form 10182",
+      "name": "Board Appeal",
+      "use": "Appealing to the Board of Veterans Appeals",
+      "url": "https://www.va.gov/decision-reviews/board-appeal/"
+    },
+    {
+      "form": "VA Form 21-4138",
+      "name": "Statement in Support of Claim",
+      "use": "Submitting your own personal statements to support your claim",
+      "url": "https://www.va.gov/find-forms/about-form-21-4138/"
+    },
+    {
+      "form": "VA Form 21-10210",
+      "name": "Lay/Witness Statement",
+      "use": "Buddy statements from family, friends, or fellow service members supporting your claim",
+      "url": "https://www.va.gov/find-forms/about-form-21-10210/"
+    },
+    {
+      "form": "VA Form 21-8940",
+      "name": "Application for TDIU",
+      "use": "Claiming Total Disability Individual Unemployability",
+      "url": "https://www.va.gov/find-forms/about-form-21-8940/"
+    }
+  ],
+  "criticalTimelines": [
+    {
+      "deadline": "1 Year from Discharge",
+      "importance": "File within 1 year of discharge for earliest possible effective date (day after discharge)",
+      "consequence": "Missing this deadline means your effective date will be your later claim date"
+    },
+    {
+      "deadline": "1 Year from Decision",
+      "importance": "Choose a review option within 1 year to preserve your effective date in the review lane",
+      "consequence": "After 1 year, you can still file supplemental claims but may lose earlier effective date"
+    },
+    {
+      "deadline": "1 Year from Intent to File",
+      "importance": "File complete claim within 1 year of ITF to preserve that effective date",
+      "consequence": "ITF expires and you'll need a new claim with new effective date"
+    },
+    {
+      "deadline": "60 Days for Proposed Reductions",
+      "importance": "Respond to proposed reduction letters within 60 days",
+      "consequence": "Reduction may proceed without your input"
+    },
+    {
+      "deadline": "120 Days for Board Appeals",
+      "importance": "If requesting a Board hearing or submitting evidence, must elect within 120 days",
+      "consequence": "May be limited to direct review docket"
+    }
+  ],
+  "commonMistakes": [
+    {
+      "mistake": "Not filing Intent to File first",
+      "impact": "Losing months or years of potential back-pay",
+      "solution": "Always file ITF immediately, even before you have evidence ready"
+    },
+    {
+      "mistake": "Missing C&P examinations",
+      "impact": "Claim denied or rated on incomplete evidence",
+      "solution": "Never miss exams; call to reschedule if you can't make it"
+    },
+    {
+      "mistake": "Not appealing within 1 year",
+      "impact": "Losing ability to preserve original effective date",
+      "solution": "File supplemental claim or HLR within 1 year of any denial"
+    },
+    {
+      "mistake": "Accepting first denial as final",
+      "impact": "Missing benefits you're entitled to",
+      "solution": "Most initial denials can be won on appeal with proper evidence"
+    },
+    {
+      "mistake": "Not claiming secondary conditions",
+      "impact": "Leaving significant rating percentage on the table",
+      "solution": "Think about all conditions caused by your service-connected disabilities"
+    },
+    {
+      "mistake": "Ignoring proposed reduction letters",
+      "impact": "Rating reduced without your input",
+      "solution": "Always respond with evidence and request hearing if needed"
+    }
+  ]
+}

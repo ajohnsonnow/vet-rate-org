@@ -1,0 +1,323 @@
+#!/usr/bin/env node
+/**
+ * Golden-set evaluation runner for the on-device AI.
+ *
+ *   node scripts/eval/run-golden-set.mjs --model <WebLLM model id> [--cases a01,a11] [--temperature 0] [--max-tokens 1024] [--thinking on|off]
+ *   node scripts/eval/run-golden-set.mjs --dry-run
+ *
+ * Real mode drives the app in a headed Chromium with WebGPU (Playwright spec
+ * tests/eval/golden-set.spec.ts), sends every golden-set case through
+ * generateAI (a tool case goes through the production function it names,
+ * with its form inputs), and records a JSONL transcript. Dry-run mode replaces the
+ * browser and engine with canned responses and exercises the same record,
+ * check and report code; it needs no browser, GPU or dev server.
+ *
+ * Either way the run ends by grading the transcript with the automated
+ * checks and writing a Markdown summary next to it. Existing run files are
+ * never overwritten.
+ */
+import { spawnSync } from "node:child_process";
+import { connect } from "node:net";
+import { join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { runnerImport } from "vite";
+import {
+  DRY_RUN_DRAFT_PATHS,
+  DRY_RUN_EXPECTATIONS,
+  DRY_RUN_LEGAL_SECTIONS,
+  DRY_RUN_MODEL_ID,
+  assertDryRunDraftPaths,
+  assertDryRunExpectations,
+  buildDryRunTranscript,
+  runSmallModelDryRun,
+} from "./lib/dryRun.js";
+import { loadGoldenSet, selectCases } from "./lib/goldenSet.js";
+import { noModelAnswerer } from "./lib/noModelCases.js";
+import { USAGE, parseArgs } from "./lib/cliArgs.js";
+import { loadLegalSections } from "./lib/legalSections.js";
+import {
+  appendTranscript,
+  claimRunFiles,
+  finalizeRun,
+} from "./lib/runArtifacts.js";
+import { captureRunStart } from "./lib/runStart.js";
+
+const REPO_ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)));
+const EVAL_PORT = 5199;
+
+/*
+ * An aborted run can leave its dev server behind. Playwright then refuses to
+ * start, and without this check the launcher would still claim run files and
+ * grade an empty transcript.
+ */
+function isPortInUse(port) {
+  return new Promise((done) => {
+    const socket = connect({ port, host: "127.0.0.1" });
+    socket.setTimeout(1500);
+    socket.once("connect", () => {
+      socket.destroy();
+      done(true);
+    });
+    for (const event of ["error", "timeout"]) {
+      socket.once(event, () => {
+        socket.destroy();
+        done(false);
+      });
+    }
+  });
+}
+const GOLDEN_PATH = join(REPO_ROOT, "src/__tests__/agentic/golden-set.jsonl");
+const RESULTS_DIR = join(REPO_ROOT, "llm-compiler/logs/golden-set-results");
+const DRY_RUN_DIR = join(REPO_ROOT, "test-results/golden-set-dry-run");
+
+async function loadFromSrc(relativePath) {
+  const { module } = await runnerImport(join(REPO_ROOT, relativePath), {
+    root: REPO_ROOT,
+    configFile: false,
+    logLevel: "error",
+  });
+  return module;
+}
+
+function legalContext(opts) {
+  if (opts.dryRun) {
+    return {
+      legalSections: DRY_RUN_LEGAL_SECTIONS,
+      legalIndexNote: "dry-run fixture, not the real index",
+    };
+  }
+  const path =
+    opts.legalChunks ??
+    join(REPO_ROOT, "public/legal-index/v0.1.0/chunks/ecfr.jsonl");
+  const { sections, reason } = loadLegalSections(path);
+  if (sections) {
+    return {
+      legalSections: sections,
+      legalIndexNote: `${sections.size} sections from ${path}`,
+    };
+  }
+  return { legalSections: null, legalIndexNote: `unavailable: ${reason}` };
+}
+
+/*
+ * What the app answers without a model, for the model this run loads and for
+ * a small-class model. Both come from the production functions.
+ */
+async function loadRouting(modelId) {
+  const { resolveAgentForTool } = await loadFromSrc(
+    "src/utils/agentBoundaries.js",
+  );
+  const { answerRatingQuestion } = await loadFromSrc(
+    "src/utils/ratingQuestion.js",
+  );
+  const { openAdviceHeldAnswer } = await loadFromSrc(
+    "src/utils/openAdviceHold.js",
+  );
+  const { isSmallModel } = await loadFromSrc(
+    "src/utils/deviceCapabilityDetector.js",
+  );
+  const answerer = (smallModel) =>
+    noModelAnswerer({
+      resolveAgentForTool,
+      answerRatingQuestion,
+      openAdviceHeldAnswer,
+      smallModel,
+    });
+  return {
+    resolveAgentForTool,
+    smallModel: isSmallModel(modelId),
+    answerWithoutModel: answerer(isSmallModel(modelId)),
+    answerWithoutModelOnSmall: answerer(true),
+  };
+}
+
+async function writeDryRunTranscript(
+  files,
+  cases,
+  settings,
+  { resolveAgentForTool, answerWithoutModel },
+) {
+  const { SWARM_AGENTS } = await loadFromSrc("src/utils/diamondSwarm.js");
+  const personaPrompts = Object.fromEntries(
+    Object.values(SWARM_AGENTS).map((agent) => [agent.id, agent.systemPrompt]),
+  );
+  appendTranscript(
+    files.transcriptPath,
+    buildDryRunTranscript({
+      cases,
+      personaPrompts,
+      resolveAgentForTool,
+      answerWithoutModel,
+      settings,
+    }),
+  );
+  return personaPrompts;
+}
+
+function runPlaywright(opts, files) {
+  const env = {
+    ...process.env,
+    STRESS_MODE: "webgpu",
+    EVAL: "1",
+    EVAL_MODEL_ID: opts.model,
+    EVAL_TRANSCRIPT: files.transcriptPath,
+    EVAL_CASE_IDS: opts.cases.join(","),
+    EVAL_TEMPERATURE: String(opts.temperature),
+    EVAL_MAX_TOKENS: String(opts.maxTokens),
+    EVAL_THINKING: opts.thinking ? "on" : "off",
+    ...(opts.frequencyPenalty === null
+      ? {}
+      : { EVAL_FREQUENCY_PENALTY: String(opts.frequencyPenalty) }),
+    EVAL_TIMEOUT_MS: String(opts.timeoutMs),
+    EVAL_FLAGS: opts.flags.join(","),
+    ...(opts.contextWindow
+      ? { EVAL_CONTEXT_WINDOW: String(opts.contextWindow) }
+      : {}),
+  };
+  return spawnSync(
+    "npx playwright test -c playwright.eval.config.ts tests/eval/golden-set.spec.ts",
+    { shell: true, stdio: "inherit", env, cwd: REPO_ROOT },
+  );
+}
+
+async function main() {
+  const opts = parseArgs(process.argv.slice(2));
+  if (opts.help) {
+    console.log(USAGE);
+    return 0;
+  }
+  if (!opts.dryRun && !opts.model) {
+    console.error(`--model is required for a real run\n\n${USAGE}`);
+    return 2;
+  }
+
+  if (!opts.dryRun && (await isPortInUse(EVAL_PORT))) {
+    console.error(
+      `port ${EVAL_PORT} is already in use, most likely a dev server left by an aborted evaluation run. Stop it (look for "vite --config vite.eval.config.js") and run again. No run files were created.`,
+    );
+    return 2;
+  }
+
+  const start = captureRunStart({ cwd: REPO_ROOT });
+  const modelId = opts.dryRun ? DRY_RUN_MODEL_ID : opts.model;
+  const goldenCases = selectCases(loadGoldenSet(GOLDEN_PATH), opts.cases);
+  const { calculateVARating } = await loadFromSrc("src/utils/vaCalculator.js");
+  const routing = await loadRouting(modelId);
+  const outDir = opts.outDir ?? (opts.dryRun ? DRY_RUN_DIR : RESULTS_DIR);
+  const files = claimRunFiles(outDir, modelId, start.startedAt);
+  const settings = {
+    temperature: opts.temperature,
+    maxTokens: opts.maxTokens,
+    frequencyPenalty: opts.frequencyPenalty,
+    thinking: opts.thinking,
+    timeoutMs: opts.timeoutMs,
+    flags: opts.flags,
+  };
+
+  let exitCode = 0;
+  let smallModelPass = null;
+  if (opts.dryRun) {
+    const personaPrompts = await writeDryRunTranscript(
+      files,
+      goldenCases,
+      settings,
+      routing,
+    );
+    smallModelPass = runSmallModelDryRun({
+      cases: goldenCases,
+      personaPrompts,
+      resolveAgentForTool: routing.resolveAgentForTool,
+      answerWithoutModel: routing.answerWithoutModelOnSmall,
+      settings,
+      ctx: { calculateVARating },
+    });
+  } else {
+    exitCode = runPlaywrightStep(opts, files);
+  }
+
+  const legal = legalContext(opts);
+  const { meta, cases, grades } = finalizeRun({
+    transcriptPath: files.transcriptPath,
+    summaryPath: files.summaryPath,
+    goldenCases,
+    ctx: {
+      calculateVARating,
+      answerWithoutModel: routing.answerWithoutModel,
+      smallModel: routing.smallModel,
+      ...legal,
+    },
+    runInfo: {
+      modelId,
+      date: start.date,
+      transcriptFile: `${files.name}.jsonl`,
+      legalIndexNote: legal.legalIndexNote,
+      gitCommit: start.gitCommit,
+      gitDirty: start.gitDirty,
+    },
+  });
+
+  reportRunFiles(files, cases.length, goldenCases.length);
+
+  const verdict = opts.dryRun
+    ? checkDryRun(grades, goldenCases, cases, smallModelPass)
+    : checkLoadedModel(meta, modelId);
+  return exitCode || verdict;
+}
+
+function reportRunFiles(files, recorded, expected) {
+  process.stdout.write(`transcript: ${files.transcriptPath}\n`);
+  process.stdout.write(`summary:    ${files.summaryPath}\n`);
+  process.stdout.write(`cases recorded: ${recorded} of ${expected}\n`);
+}
+
+function runPlaywrightStep(opts, files) {
+  const playwright = runPlaywright(opts, files);
+  if (playwright.status === 0) return 0;
+  console.error(
+    `playwright exited with status ${playwright.status}; grading the partial transcript`,
+  );
+  return 1;
+}
+
+function checkLoadedModel(meta, modelId) {
+  if (meta?.modelIdLoaded === modelId) return 0;
+  console.error(
+    `model loaded (${meta?.modelIdLoaded ?? "none"}) is not the model requested (${modelId})`,
+  );
+  return 1;
+}
+
+function checkDryRun(grades, goldenCases, records, smallModelPass) {
+  const present = new Set(goldenCases.map((c) => c.id));
+  const forThisRun = (table) =>
+    Object.fromEntries(Object.entries(table).filter(([id]) => present.has(id)));
+  const problems = [
+    ...assertDryRunExpectations(grades, forThisRun(DRY_RUN_EXPECTATIONS)),
+    ...assertDryRunDraftPaths(records, forThisRun(DRY_RUN_DRAFT_PATHS)),
+    ...smallModelPass.problems,
+  ];
+  process.stdout.write(
+    `small-model pass: ${smallModelPass.held} open questions held with the fixed message, ${smallModelPass.calculator} answered by the calculator, ${smallModelPass.needsRatings} asked for ratings, ${smallModelPass.heldTools} tool case(s) read by fixed rules, no model call\n`,
+  );
+  if (problems.length === 0) {
+    process.stdout.write(
+      "DRY RUN PASSED: every canned failure was caught by its check\n",
+    );
+    return 0;
+  }
+  console.error(`DRY RUN FAILED: ${problems.length} expectation(s) not met`);
+  for (const problem of problems) console.error(`  - ${problem}`);
+  return 1;
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  main().then(
+    (code) => {
+      process.exitCode = code;
+    },
+    (err) => {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    },
+  );
+}

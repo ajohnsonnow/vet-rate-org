@@ -1,0 +1,12 @@
+{
+  "color": {
+    "va-blue": {
+      "value": "#2d5016",
+      "comment": "Legacy alias — VA brand blue (kept as fallback for --va-blue CSS var)"
+    },
+    "va-gold": {
+      "value": "#88b04b",
+      "comment": "Legacy alias — VA brand gold (kept as fallback for --va-gold CSS var)"
+    }
+  }
+}

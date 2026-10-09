@@ -1,0 +1,249 @@
+{
+  "state": "Louisiana",
+  "stateCode": "LA",
+  "officialSource": "https://vetaffairs.la.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "la-property_tax_exemption-disabled-veteran-homestead-property-tax-exemptio",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran Homestead Property Tax Exemption",
+      "description": "In addition to Louisiana's standard $7,500 homestead exemption, veterans with a VA service-connected disability rating of 50-69% receive an additional $2,500 exemption of assessed valuation; veterans rated 70-99% receive an additional $4,500 exemption of assessed valuation; and veterans rated 100% (including 100% unemployability/IU) are exempt from ad valorem taxation on the entire remaining assessed value of their homestead-exempt property. An eligible unmarried surviving spouse of a veteran who was 100% disabled/unemployable may retain the full exemption if they continue to own and occupy the property.",
+      "value": "$2,500 additional exemption (50-69% rating); $4,500 additional exemption (70-99% rating); full exemption of remaining assessed value beyond the $7,500 homestead exemption (100%/unemployability rating)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Property must be owned and occupied as the veteran's homestead",
+          "Must already be receiving the standard homestead exemption",
+          "Apply through the parish assessor's office",
+          "Surviving spouse of a 100%/unemployable veteran may retain the exemption if unmarried and remains owner-occupant"
+        ]
+      },
+      "application": {
+        "agency": "Louisiana Parish Tax Assessors / Louisiana Department of Veterans Affairs",
+        "form": null,
+        "url": "https://vetaffairs.la.gov/benefit-category/tax-exemptions/",
+        "documentation": [
+          "VA disability rating letter confirming service-connected disability percentage",
+          "Proof of homestead exemption already on file with the parish assessor"
+        ]
+      },
+      "legalCitation": "Louisiana Constitution Article VII, Section 21(K)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.legis.la.gov/legis/law.aspx?d=206551",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "la-state_veterans_home-louisiana-state-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Louisiana State Veterans Homes",
+      "description": "Louisiana operates five state veterans homes: the Louisiana Veterans Home in Jackson (East Feliciana Parish), Northeast Louisiana Veterans Home in Monroe, Northwest Louisiana Veterans Home in Bossier City, Southwest Louisiana Veterans Home in Jennings, and Southeast Louisiana Veterans Home in Reserve. Eligible residents include honorably discharged veterans (wartime or peacetime, at least 90 days active duty), spouses of veterans, and Gold Star parents. The fetched homepage indicated cost varies by disability rating (described as free for veterans with a 70%+ VA disability rating, with a monthly fee cited for those below that threshold and a separate monthly fee for spouses/Gold Star parents) but these specific dollar figures were paraphrased by the fetch tool rather than quoted verbatim from the page, so they should be re-confirmed directly with LDVA or a specific home before being presented as exact figures.",
+      "value": "Long-term/nursing care; admission cost reduced or waived based on VA disability rating (exact current fee schedule not independently verified this session)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged, wartime or peacetime service",
+          "Served at least 90 days active duty (or eligible National Guard/Reservist)",
+          "Spouses of veterans and Gold Star parents also eligible",
+          "Admissions application required"
+        ]
+      },
+      "application": {
+        "agency": "Louisiana Department of Veterans Affairs",
+        "form": "LDVA Veterans Home admissions application",
+        "url": "https://vetaffairs.la.gov/homes",
+        "documentation": [
+          "DD-214 or other proof of discharge",
+          "VA disability rating letter (for fee determination)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://vetaffairs.la.gov/homes",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "la-education_tuition-title-29-fee-exemption-for-dependents-of-disable",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Title 29 Fee Exemption for Dependents of Disabled/Deceased Veterans",
+      "description": "Louisiana's Title 29 program exempts eligible children and spouses of qualifying veterans from tuition and school-imposed fees (not student-imposed fees) at Louisiana public postsecondary institutions. Per the LDVA page fetched this session, eligibility categories are: children of living qualifying veterans; spouses of POW/MIA veterans; and surviving spouses and children of deceased veterans. Secondary university financial-aid sources (LSU, not a .gov domain) state the living-veteran threshold is a 90%+ service-connected disability rating or 100% individual unemployability, and cite a 4-years-of-schooling-within-5-years or age-25 limit for children with no age limit for surviving spouses, plus a Louisiana residency/driver's-license requirement and a 2.0 GPA/full-time enrollment standard. I could not independently confirm the exact 90% threshold, GPA requirement, or full statutory text against a primary Louisiana Legislature (legis.la.gov) page this session — a legis.la.gov lookup returned an adjacent statute (R.S. 29:290) rather than R.S. 29:288 itself, and law.justia.com returned a 403 error. Treat the 90% figure and residency/GPA specifics as reported-but-unverified pending confirmation directly against R.S. 29:288 text or an LDVA-issued eligibility document.",
+      "value": "Exemption from tuition, matriculation, registration, laboratory, athletic, medical, and other school-imposed fees (student-imposed fees excluded) at Louisiana public postsecondary institutions",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Children ages 16-25 generally; benefit good for 4 years of schooling completed within 5 years or until age 25",
+          "No age limit cited for surviving spouses",
+          "Apply through parish veterans service office for a Fee Exemption Certificate",
+          "Full-time enrollment reportedly required (not independently verified)"
+        ]
+      },
+      "application": {
+        "agency": "Louisiana Department of Veterans Affairs / Louisiana public postsecondary institutions",
+        "form": "LDVA Fee Exemption Certificate (Title 29)",
+        "url": "https://vetaffairs.la.gov/education/title-29",
+        "documentation": [
+          "VA disability rating letter or death/KIA documentation for the veteran",
+          "Proof of relationship (birth or marriage certificate)",
+          "Proof of Louisiana residency"
+        ]
+      },
+      "legalCitation": "La. R.S. 29:288 (not independently confirmed against primary statute text this session)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://vetaffairs.la.gov/education/title-29",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "unverified"
+    },
+    {
+      "id": "la-hiring_preference-veterans-preference-in-state-civil-service-hirin",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veterans' Preference in State Civil Service Hiring",
+      "description": "Louisiana State Civil Service adds preference points to the passing examination score of eligible veteran applicants for original appointments (not promotions). The official HR Handbook page confirms a five-or-ten-point preference system exists. Secondary sources (not independently confirmed against the primary procedure document, which returned corrupted/unreadable PDF content when fetched this session) report the split is 5 points for honorably discharged non-disabled veterans and 10 points for veterans with a VA-established service-connected disability, and that the preference extends to a veteran's spouse, surviving spouse, or surviving parent in certain circumstances.",
+      "value": "5 or 10 preference points added to civil service exam score for original appointment (exact disability-linked split not independently verified this session)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge required",
+          "Applies only to original appointment, not promotions",
+          "Preference may extend to spouse, surviving spouse, or surviving parent of a qualifying veteran",
+          "Submit DD-214 (and current VA disability letter if claiming disability-based points)"
+        ]
+      },
+      "application": {
+        "agency": "Louisiana Department of State Civil Service",
+        "form": "SF-11 Claim Form for Veterans Preference",
+        "url": "https://www.civilservice.louisiana.gov/hrprofessionals/HRHandbook/Chapter22.aspx",
+        "documentation": [
+          "DD-214",
+          "VA disability rating letter (if applicable)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.civilservice.louisiana.gov/hrprofessionals/HRHandbook/Chapter22.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "la-license_plate-disabled-veteran-military-honor-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran Military Honor License Plate",
+      "description": "Louisiana resident veterans with a VA service-connected disability rating of 50% or more are eligible for a free 'DV' military honor license plate under R.S. 47:490.4, restricted to passenger cars, pickup trucks, recreational vehicles, motorcycles, and vans. A related plate under R.S. 47:490.32 is available to Purple Heart recipients who are also qualified disabled veterans (also requiring a 50%+ rating), printed 'Purple Heart Disabled Veteran.' Both plates are issued with no fee and are exempt from the renewal requirements that apply to standard plates; holders may also receive a free accessibility hang tag.",
+      "value": "Free license plate (no purchase or renewal fee) plus optional free accessibility hang tag",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Service-connected disability rating of 50% or more from the VA",
+          "Louisiana resident",
+          "Restricted to passenger cars, pickup trucks, RVs, motorcycles, and vans",
+          "One plate issuable per vehicle registered in the applicant's name",
+          "Purple Heart recipients with a 50%+ rating may instead request the Purple Heart-specific variant"
+        ]
+      },
+      "application": {
+        "agency": "Louisiana Office of Motor Vehicles (Department of Public Safety)",
+        "form": null,
+        "url": "https://expresslane.dps.louisiana.gov/specialplatespublic/specialplatesviewer.aspx",
+        "documentation": [
+          "VA disability rating letter confirming 50%+ service-connected disability",
+          "Proof of Louisiana residency/vehicle registration"
+        ]
+      },
+      "legalCitation": "La. R.S. 47:490.4 (general disabled veteran plate); La. R.S. 47:490.32 (Purple Heart disabled veteran plate)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.legis.la.gov/legis/Law.aspx?d=321788",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "la-recreation-disabled-veteran-hunting-and-fishing-license",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Hunting and Fishing License",
+      "description": "Veterans with a permanent service-connected disability rating of 50% or more are eligible for a free combination hunting and fishing license package from the Louisiana Department of Wildlife and Fisheries. The $4 fee otherwise charged is covered by the Louisiana Wildlife and Fisheries Foundation, not waived by statute directly. It is unclear from the fetched source whether this specific free-license tier is limited to Louisiana residents (a separate, less-generous 80%-discounted combo license is explicitly described elsewhere as for honorably discharged veteran residents), so residency requirements for this particular license should be confirmed before being treated as certain.",
+      "value": "Free combo license covering Basic and Saltwater Fishing Licenses; Basic, Deer, Waterfowl, and Turkey Hunting Licenses; and the WMA Access Permit (Federal Duck Stamp not included)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Disability must be classified as permanent",
+          "Does not include the Federal Duck Stamp",
+          "Apply in person at LDWF Headquarters, by mail, or by email with required documentation"
+        ]
+      },
+      "application": {
+        "agency": "Louisiana Department of Wildlife and Fisheries",
+        "form": "Disabled Veteran License Application (LDWF)",
+        "url": "https://www.wlf.louisiana.gov/page/special-licenses-and-permits",
+        "documentation": [
+          "VA disability rating letter confirming permanent 50%+ service-connected disability"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.wlf.louisiana.gov/page/special-licenses-and-permits",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "la-financial_bonus-military-retirement-pay-state-income-tax-exempti",
+      "benefitType": "financial_bonus",
+      "category": "Other",
+      "name": "Military Retirement Pay State Income Tax Exemption",
+      "description": "Louisiana excludes federal retirement benefits, including military retired pay, from Louisiana taxable income under R.S. 47:44.2, which applies broadly to federal retirees (military and nonmilitary), with military survivor benefit plan payments also excludable. The Department of Revenue FAQ page fetched this session did not address whether VA disability compensation is separately exempt (VA disability compensation is not counted as gross income at the federal level to begin with, so it would generally not appear as Louisiana taxable income either, but this was not explicitly confirmed on the fetched page and should not be presented as a distinct, separately-legislated state exemption without further sourcing).",
+      "value": "100% exclusion of military retired pay (and other federal retirement benefits) from Louisiana state income tax",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applies to federal retirees generally (military and nonmilitary) under R.S. 47:44.2",
+          "Federal military survivor benefit plan payments also excludable"
+        ]
+      },
+      "application": {
+        "agency": "Louisiana Department of Revenue",
+        "form": null,
+        "url": "https://revenue.louisiana.gov/tax-education-and-faqs/faqs/individual-income-tax/is-there-a-list-of-retirement-system-benefits-that-may-be-excluded-from-louisiana-income-tax/",
+        "documentation": []
+      },
+      "legalCitation": "La. R.S. 47:44.2",
+      "authorityTier": "reference",
+      "sourceUrl": "https://revenue.louisiana.gov/tax-education-and-faqs/faqs/individual-income-tax/is-there-a-list-of-retirement-system-benefits-that-may-be-excluded-from-louisiana-income-tax/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

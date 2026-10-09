@@ -1,0 +1,268 @@
+{
+  "_generated": {
+    "by": "scripts/verified-reference/build.mjs",
+    "note": "Generated. Do not edit by hand; change the script and rebuild."
+  },
+  "reviewOptions": {
+    "lead": {
+      "citation": "38 CFR § 3.2500(a)(1)",
+      "text": "(1) Within one year from the date on which the agency of original jurisdiction issues a notice of a decision on a claim or issue as defined in § 3.151(c), except as otherwise provided in paragraphs (c), (e), and (f) of this section, a claimant may elect one of the following administrative review options by timely filing the appropriate form prescribed by the Secretary:",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "lanes": [
+      {
+        "id": "higher-level-review",
+        "form": {
+          "number": "20-0996",
+          "title": "Decision Review Request: Higher-Level Review"
+        },
+        "quotes": [
+          {
+            "citation": "38 CFR § 3.2500(a)(1)(i)",
+            "text": "(i) A request for higher-level review under § 3.2601 or",
+            "source": {
+              "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+              "retrieved": "2026-07-10"
+            }
+          },
+          {
+            "citation": "38 CFR § 3.2601(f)",
+            "text": "(f) Evidentiary record. The evidentiary record in a higher-level review is limited to the evidence of record as of the date the agency of original jurisdiction issued notice of the prior decision under review and the higher-level adjudicator may not consider additional evidence.",
+            "source": {
+              "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+              "retrieved": "2026-07-10"
+            }
+          }
+        ]
+      },
+      {
+        "id": "board-appeal",
+        "form": {
+          "number": "10182",
+          "title": "Decision Review Request: Board Appeal (Notice of Disagreement)"
+        },
+        "quotes": [
+          {
+            "citation": "38 CFR § 3.2500(a)(1)(ii)",
+            "text": "(ii) An appeal to the Board under § 20.202 of this chapter.",
+            "source": {
+              "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+              "retrieved": "2026-07-10"
+            }
+          },
+          {
+            "citation": "38 CFR § 20.203(a)",
+            "text": "(a) Place of filing. The Notice of Disagreement must be filed with the Board of Veterans' Appeals, P.O. Box 27063, Washington, DC 20038.",
+            "source": {
+              "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+              "retrieved": "2026-07-10"
+            }
+          },
+          {
+            "citation": "38 CFR § 20.203(b)",
+            "text": "(b) Time of filing. Except as provided in § 20.402 for simultaneously contested claims, a claimant, or his or her representative, must file a properly completed Notice of Disagreement with a decision by the agency of original jurisdiction within one year from the date that the agency mails the notice of the decision.",
+            "source": {
+              "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+              "retrieved": "2026-07-10"
+            }
+          }
+        ]
+      },
+      {
+        "id": "supplemental-claim",
+        "form": {
+          "number": "20-0995",
+          "title": "Decision Review Request: Supplemental Claim"
+        },
+        "quotes": [
+          {
+            "citation": "38 CFR § 3.2500(a)(2)",
+            "text": "(2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501.",
+            "source": {
+              "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+              "retrieved": "2026-07-10"
+            }
+          },
+          {
+            "citation": "38 CFR § 3.2501(a)(1)",
+            "text": "(1) Definition. New evidence is evidence not previously part of the actual record before agency adjudicators. Relevant evidence is information that tends to prove or disprove a matter at issue in a claim. Relevant evidence includes evidence that raises a theory of entitlement that was not previously addressed.",
+            "source": {
+              "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+              "retrieved": "2026-07-10"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "corrections": {
+    "secondary": {
+      "citation": "38 CFR § 3.310(a)",
+      "text": "(a) General. Except as provided in § 3.300(c), disability which is proximately due to or the result of a service-connected disease or injury shall be service connected.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "tdiu-judgment": {
+      "citation": "38 CFR § 4.16(a)",
+      "text": "(a) Total disability ratings for compensation may be assigned, where the schedular rating is less than total, when the disabled person is, in the judgment of the rating agency, unable to secure or follow a substantially gainful occupation as a result of service-connected disabilities: Provided That, if there is only one such disability, this disability shall be ratable at 60 percent or more, and that, if there are two or more disabilities, there shall be at least one disability ratable at 40 percent or more, and sufficient additional disability to bring the combined rating to 70 percent or more.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "tdiu-extra-schedular": {
+      "citation": "38 CFR § 4.16(b)",
+      "text": "(b) It is the established policy of the Department of Veterans Affairs that all veterans who are unable to secure and follow a substantially gainful occupation by reason of service-connected disabilities shall be rated totally disabled. Therefore, rating boards should submit to the Director, Compensation Service, for extra-schedular consideration all cases of veterans who are unemployable by reason of service-connected disabilities, but who fail to meet the percentage standards set forth in paragraph (a) of this section.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "presumptive-herbicide": {
+      "citation": "38 CFR § 3.309(e)",
+      "text": "(e) Disease associated with exposure to certain herbicide agents. If a veteran was exposed to an herbicide agent during active military, naval, or air service, the following diseases shall be service-connected if the requirements of § 3.307(a)(6) are met even though there is no record of such disease during service, provided further that the rebuttable presumption provisions of § 3.307(d) are also satisfied.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "presumptive-toxic": {
+      "citation": "VA manual M21-1 VIII.ii.2.A.1.d",
+      "text": "Veterans who served in a qualifying location as listed in M21-1, Part VIII, Subpart ii, 2.A.1.e and are suffering from a recognized BPOT presumptive disability may receive compensation benefits.",
+      "abbreviations": [
+        {
+          "short": "BPOT",
+          "long": "burn pits and other toxins, including fine particulate matter"
+        }
+      ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "retrieved": "2026-07-19"
+      }
+    },
+    "presumed-toxic-exposure": {
+      "citation": "VA manual M21-1 VIII.ii.2.A.1.e",
+      "text": "VA will presume BPOT exposure for any Veteran who served during the applicable timeframe in one of the locations as listed in the table below.",
+      "abbreviations": [
+        {
+          "short": "BPOT",
+          "long": "burn pits and other toxins, including fine particulate matter"
+        }
+      ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "retrieved": "2026-07-19"
+      }
+    },
+    "presumed-herbicide-exposure": {
+      "citation": "VA manual M21-1 VIII.i.1.A.1.c",
+      "text": "Currently, the Department of Veterans Affairs (VA) recognizes a presumption of exposure to herbicides in specific locations and military service experiences as listed in the table below.",
+      "abbreviations": [],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "retrieved": "2026-07-19"
+      }
+    },
+    "higher-level-review-evidence": {
+      "citation": "38 CFR § 3.2601(f)",
+      "text": "(f) Evidentiary record. The evidentiary record in a higher-level review is limited to the evidence of record as of the date the agency of original jurisdiction issued notice of the prior decision under review and the higher-level adjudicator may not consider additional evidence.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "higher-level-review-conference": {
+      "citation": "38 CFR § 3.2601(h)",
+      "text": "(h) Informal conferences. A claimant or his or her representative may include a request for an informal conference with a request for higher-level review. For purposes of this section, informal conference means contact with a claimant's representative or, if not represented, with the claimant, telephonically, or as otherwise determined by VA, for the sole purpose of allowing the claimant or representative to identify any errors of law or fact in a prior decision based on the record at the time the decision was issued.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "review-period-start": {
+      "citation": "38 CFR § 3.2500(a)(1)",
+      "text": "(1) Within one year from the date on which the agency of original jurisdiction issues a notice of a decision on a claim or issue as defined in § 3.151(c), except as otherwise provided in paragraphs (c), (e), and (f) of this section, a claimant may elect one of the following administrative review options by timely filing the appropriate form prescribed by the Secretary:",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "bilateral-both-sides": {
+      "citation": "38 CFR § 4.26",
+      "text": "Except as provided in paragraph (d) of this section, when a partial disability results from disease or injury of both arms, or of both legs, or of paired skeletal muscles, the ratings for the disabilities of the right and left sides will be combined as usual, and 10 percent of this value will be added (i.e., not combined) before proceeding with further combinations, or converting to degree of disability.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "ratings-combined": {
+      "citation": "38 CFR § 4.25",
+      "text": "Thus, a person having a 60 percent disability is considered 40 percent efficient. Proceeding from this 40 percent efficiency, the effect of a further 30 percent disability is to leave only 70 percent of the efficiency remaining after consideration of the first disability, or 28 percent efficiency altogether. The individual is thus 72 percent disabled, as shown in table I opposite 60 percent and under 30 percent.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "supplemental-any-time": {
+      "citation": "38 CFR § 3.2500(a)(2)",
+      "text": "(2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "new-and-relevant": {
+      "citation": "38 CFR § 3.2501(a)",
+      "text": "(a) New and relevant evidence. The new and relevant standard will not impose a higher evidentiary threshold than the previous new and material evidence standard under § 3.156(a).",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "claim-has-its-own-date": {
+      "citation": "38 CFR § 3.155(d)(1)",
+      "text": "(1) Requirement for complete claim and date of claim. A complete claim is required for all types of claims, and will generally be considered filed as of the date it was received by VA for an evaluation or award of benefits under the laws administered by the Department of Veterans Affairs.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "intent-year-from-receipt": {
+      "citation": "38 CFR § 3.155(b)",
+      "text": "If VA receives a complete application form prescribed by the Secretary, as defined in paragraph (a) of § 3.160, appropriate to the benefit sought within 1 year of receipt of the intent to file a claim, VA will consider the complete claim filed as of the date the intent to file a claim was received.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "marginal-employment": {
+      "citation": "38 CFR § 4.16(a)",
+      "text": "Marginal employment shall not be considered substantially gainful employment.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "intent-paragraph-scope": {
+      "citation": "38 CFR § 3.155",
+      "text": "The provisions of this section are applicable to all claims governed by part 3, with the exception that paragraph (b) of this section, regarding intent to file a claim, does not apply to supplemental claims.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "review-filing": {
+      "citation": "38 CFR § 3.2500(a)",
+      "text": "(1) Within one year from the date on which the agency of original jurisdiction issues a notice of a decision on a claim or issue as defined in § 3.151(c), except as otherwise provided in paragraphs (c), (e), and (f) of this section, a claimant may elect one of the following administrative review options by timely filing the appropriate form prescribed by the Secretary: (i) A request for higher-level review under § 3.2601 or (ii) An appeal to the Board under § 20.202 of this chapter. (2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    }
+  }
+}

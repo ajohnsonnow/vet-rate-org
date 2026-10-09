@@ -1,0 +1,259 @@
+{
+  "state": "Texas",
+  "stateCode": "TX",
+  "officialSource": "https://tvc.texas.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "tx-property_tax_exemption-100-disabled-veteran-residence-homestead-exempti",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "100% Disabled Veteran Residence Homestead Exemption",
+      "description": "Veterans with a 100 percent disability rating (including individual unemployability) receive a total exemption from property tax on their residence homestead. An unmarried surviving spouse may continue to receive the exemption if the property was the spouse's residence homestead when the veteran died and remains the spouse's homestead.",
+      "value": "Total exemption of the residence homestead from property tax",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Texas resident",
+          "Property is the veteran's residence homestead",
+          "100% VA disability compensation for a service-connected disability, or individual unemployability rating"
+        ]
+      },
+      "application": {
+        "agency": "County Appraisal District",
+        "form": "Form 50-114 (Residence Homestead Exemption Application)",
+        "url": "https://comptroller.texas.gov/taxes/property-tax/exemptions/",
+        "documentation": [
+          "VA disability rating letter showing 100% disability compensation or individual unemployability"
+        ]
+      },
+      "legalCitation": "Texas Tax Code §11.131",
+      "authorityTier": "reference",
+      "sourceUrl": "https://comptroller.texas.gov/taxes/property-tax/exemptions/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tx-property_tax_exemption-disabled-veteran-partial-exemption-tiered-by-dis",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran Partial Exemption (Tiered by Disability Rating)",
+      "description": "Texas offers a partial property tax exemption on one property owned by a disabled veteran. The exemption amount adjusts based on the veteran's disability rating as determined by the U.S. Department of Veterans Affairs or the branch of service. Unmarried surviving spouses and surviving children may also qualify. The exact dollar-amount tiers by rating band could not be confirmed against readable official source text in this research session and are intentionally omitted rather than guessed — consult Form 50-135 or the county appraisal district for current tier amounts.",
+      "value": "Partial exemption; dollar amount increases with disability rating percentage (specific tier amounts not confirmed this session)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": 90,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Texas resident",
+          "Disability rating from the U.S. VA or the veteran's branch of service",
+          "Applies to one property owned by the disabled veteran"
+        ]
+      },
+      "application": {
+        "agency": "County Appraisal District",
+        "form": "Form 50-135 (Disabled Veteran's or Survivor's Exemption Application)",
+        "url": "https://comptroller.texas.gov/taxes/property-tax/exemptions/",
+        "documentation": ["VA disability rating letter"]
+      },
+      "legalCitation": "Texas Tax Code §11.22",
+      "authorityTier": "reference",
+      "sourceUrl": "https://comptroller.texas.gov/taxes/property-tax/exemptions/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tx-property_tax_exemption-donated-residence-homestead-exemption-for-disabl",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Donated Residence Homestead Exemption for Disabled Veterans",
+      "description": "When a charitable organization donates a homestead to a disabled veteran at less than market value, the veteran may receive an exemption based on disability rating. The exemption extends to the surviving spouse of the disabled veteran who has not remarried.",
+      "value": "Exemption amount based on disability rating percentage of the donated homestead's appraised value",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Texas resident",
+          "Homestead donated by a charitable organization",
+          "Surviving spouse must not have remarried"
+        ]
+      },
+      "application": {
+        "agency": "County Appraisal District",
+        "form": "Form 50-114",
+        "url": "https://comptroller.texas.gov/taxes/property-tax/exemptions/",
+        "documentation": [
+          "VA disability rating letter",
+          "Documentation of charitable donation of homestead"
+        ]
+      },
+      "legalCitation": "Texas Tax Code §11.132",
+      "authorityTier": "reference",
+      "sourceUrl": "https://comptroller.texas.gov/taxes/property-tax/exemptions/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tx-state_veterans_home-texas-state-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Texas State Veterans Homes",
+      "description": "The Texas Veterans Land Board (part of the Texas General Land Office) operates a network of state veterans homes providing long-term nursing care to qualified veterans, their spouses, and Gold Star parents. Veterans with a service-connected disability rating of 70% or higher can generally live in the homes for free, since VA per diem payments subsidize much of the cost of care.",
+      "value": "Long-term nursing home care; generally free of charge for veterans rated 70% or higher service-connected disabled, with VA per diem offsetting costs for others",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 70,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Meets USDVA medical, financial, and military-service admission criteria",
+          "Veteran, spouse, or Gold Star parent"
+        ]
+      },
+      "application": {
+        "agency": "Texas Veterans Land Board / Texas General Land Office",
+        "form": null,
+        "url": "https://www.glo.texas.gov/veterans/veterans-homes/index.html",
+        "documentation": [
+          "DD-214 or other proof of military service",
+          "VA disability rating letter (for free-care eligibility)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.glo.texas.gov/veterans/veterans-homes/index.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tx-state_va_healthcare-texas-state-veterans-homes-nursing-care-network",
+      "benefitType": "state_va_healthcare",
+      "category": "Healthcare",
+      "name": "Texas State Veterans Homes Nursing Care Network",
+      "description": "Texas State Veterans Homes are Texas-owned nursing care facilities regulated by the Texas Health and Human Services Commission and the U.S. Department of Veterans Affairs. They provide core therapies (physical, occupational, speech) and alternative therapies (equine, art, music, pet), with the VA per diem benefit subsidizing medication and therapy costs regardless of the resident's own disability rating.",
+      "value": "State-regulated nursing care network offering subsidized long-term medical/therapeutic care for eligible veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Meets USDVA medical, financial, and military-service admission criteria"
+        ]
+      },
+      "application": {
+        "agency": "Texas Health and Human Services Commission / Texas Veterans Land Board",
+        "form": null,
+        "url": "https://www.glo.texas.gov/veterans/veterans-homes/index.html",
+        "documentation": ["DD-214 or other proof of military service"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.glo.texas.gov/veterans/veterans-homes/index.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tx-education_tuition-hazlewood-act-tuition-exemption",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Hazlewood Act Tuition Exemption",
+      "description": "The Hazlewood Act provides qualified Texas veterans, and eligible spouses and dependent children, up to 150 hours of tuition and fee exemption at Texas public colleges and universities. Unused hours may be transferred to one child at a time under the Legacy provisions. The program does not cover living expenses, books, or supply fees. The exact Texas Education Code section and detailed eligibility criteria (minimum service length, discharge type, residency-at-enlistment requirement) could not be confirmed against readable official source text in this session — the Texas Veterans Commission's own Hazlewood pages returned an access-denied response to automated fetching.",
+      "value": "Up to 150 hours of tuition and fee exemption at Texas state-supported colleges or universities",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Texas veteran, spouse, or dependent child",
+          "Enrollment at a Texas public institution of higher education"
+        ]
+      },
+      "application": {
+        "agency": "Texas Veterans Commission (Education Office), with Texas Military Department support",
+        "form": null,
+        "url": "https://tvc.texas.gov/education/hazlewood/",
+        "documentation": ["DD-214", "Proof of Texas residency"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://tmd.texas.gov/hazlewood",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "tx-hiring_preference-state-employment-veteran-s-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veteran's Preference",
+      "description": "Texas Government Code Chapter 657 establishes a veteran's employment preference for hiring by public entities and public works of the state, including additional consideration for veterans with a service-connected disability on competitive hiring examinations. This research session could not obtain a readable fetch of the official statute text (statutes.capitol.texas.gov returned only navigation content, and the Texas agency HR pages checked returned blocked or paywalled responses) or an official agency page confirming the specific point values and hiring-percentage goals, so those figures are intentionally omitted rather than guessed. Chapter 657 exists at the cited URL location, but its substantive text was not independently confirmed in this session.",
+      "value": null,
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": []
+      },
+      "application": {
+        "agency": null,
+        "form": null,
+        "url": null,
+        "documentation": ["DD-214"]
+      },
+      "legalCitation": "Texas Government Code Chapter 657 (Veteran's Employment Preferences) — chapter number confirmed by official URL structure only; body text not independently verified",
+      "authorityTier": "reference",
+      "sourceUrl": "https://statutes.capitol.texas.gov/docs/gv/htm/gv.657.htm",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "unverified"
+    },
+    {
+      "id": "tx-license_plate-disabled-veteran-dv-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran (DV) License Plate",
+      "description": "Texas offers a Disabled Veteran (DV) specialty license plate to veterans with a service-connected disability rating of at least 50 percent, or at least 40 percent if the disability is due to amputation of a lower extremity, who receive VA disability compensation. A version featuring the International Symbol of Access (ISA) is available for veterans who also qualify for disabled parking; DV plates without the ISA do not by themselves authorize parking in accessible spaces. The exact plate fee and Transportation Code citation could not be confirmed against readable official source text in this session (the source page referenced Senate Bill 792 but did not state a specific fee or code section, and the DV plate fee brochure PDF could not be parsed as text).",
+      "value": "Specialty 'DV' license plate; ISA version available for accessible-parking eligibility",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Service-connected disability rating of at least 50%, or at least 40% due to amputation of a lower extremity",
+          "Receives VA disability compensation",
+          "Proof via VA-signed Form VTR-615 or a VA letter"
+        ]
+      },
+      "application": {
+        "agency": "Texas Department of Motor Vehicles / County Tax Assessor-Collector",
+        "form": "VTR-615",
+        "url": "https://www.txdmv.gov/motorists/disabled-parking-placards-plates",
+        "documentation": [
+          "Form VTR-615 signed by the VA, or a letter from the VA confirming disability rating"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.txdmv.gov/motorists/disabled-parking-placards-plates",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

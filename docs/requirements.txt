@@ -1,0 +1,10 @@
+# MkDocs Documentation Requirements
+# Install with: pip install -r requirements.txt
+
+mkdocs>=1.5.0
+mkdocs-material>=9.5.0
+mkdocs-with-pdf>=0.9.3
+pymdown-extensions>=10.21.3
+
+# Transitive: floor above the vulnerable 3.9.0 (PYSEC-2026-215)
+idna>=3.15

@@ -1,0 +1,278 @@
+{
+  "state": "Oregon",
+  "stateCode": "OR",
+  "officialSource": "https://www.oregon.gov/odva/pages/default.aspx",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "or-property_tax_exemption-disabled-veteran-or-surviving-spouse-property-ta",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran or Surviving Spouse Property Tax Exemption",
+      "description": "Oregon exempts $27,092 or $32,512 of a qualifying homestead's assessed value from property taxes, depending on the type of disability; the exemption amount increases 3 percent each year. The $27,092 tier applies to a veteran officially certified by the VA or a branch of the Armed Forces as having disabilities of 40 percent or more (of any origin, not necessarily service-connected), or a veteran certified annually by a licensed physician as 40 percent or more disabled and whose total gross income (including pensions, disability compensation, and military retirement pay) does not exceed 185 percent of the Federal Poverty Level. The $32,512 tier applies to a veteran with a VA/Armed-Forces-certified SERVICE-CONNECTED disability of 40 percent or more, or to that veteran's qualifying surviving spouse/partner if the veteran died of a service-connected cause or had received at least one year of the maximum exemption. The applicant must own and live on the homestead property and file a claim with the county assessor, generally by April 1 preceding the tax year.",
+      "value": "$27,092 or $32,512 exemption of homestead assessed value (tier depends on disability type), increasing 3% annually; figures current for the 2026 tax year per the January 2026 publication",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 40,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged (or discharged for service-connected disability regardless of length of service, or served in a combat zone, or received a combat/campaign/expeditionary award)",
+          "Own and live on the homestead property",
+          "File claim (form 150-303-086) with county assessor by April 1 preceding the tax year, or within 30 days of acquiring property between March 1 and July 1",
+          "Physician-certified (non-VA) claimants under the $27,092 tier are subject to a 185% Federal Poverty Level income limit"
+        ]
+      },
+      "application": {
+        "agency": "Oregon Department of Revenue / County Assessors",
+        "form": "150-303-086 (Disabled Veteran or Surviving Spouse Exemption Claim)",
+        "url": "https://www.oregon.gov/dor/programs/property/pages/exemptions.aspx",
+        "documentation": [
+          "DD-214 or other military-issued documentation of honorable discharge and period of active service",
+          "Disability certificate from the VA or a branch of the Armed Forces (dated within 3 years of the claim), or annual physician certification",
+          "For surviving spouse/partner: marriage/domestic-partnership certificate and the veteran's death certificate"
+        ]
+      },
+      "legalCitation": "ORS 307.250–307.283",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.oregon.gov/dor/forms/FormsPubs/veteran-spouse-exemption_310-676.pdf",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "or-state_veterans_home-oregon-veterans-homes-the-dalles-lebanon",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Oregon Veterans' Homes (The Dalles & Lebanon)",
+      "description": "The Oregon Department of Veterans' Affairs owns and operates two long-term skilled nursing care facilities: the Oregon Veterans' Home in The Dalles (opened 1997, the state's first) and the Edward C. Allworth Veterans' Home in Lebanon (opened 2014). Care is described as an earned benefit available to veterans, their spouses, and parents who had a child die while serving in the U.S. Armed Forces. Admission requires honorable discharge and a physician's recommendation that skilled nursing care is needed. The official ODVA page did not publish specific room rates or a description of how VA per-diem subsidies affect cost, so the exact cost structure could not be confirmed against a source read this session and is not stated here as fact.",
+      "value": "Skilled nursing / long-term care at two dedicated state veterans' homes; exact rate/cost structure not confirmed against an official source this session",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge from service as defined by the U.S. Department of Veterans Affairs",
+          "Physician's recommendation that skilled nursing care is needed",
+          "Also open to spouses and to parents who had a child die while serving"
+        ]
+      },
+      "application": {
+        "agency": "Oregon Department of Veterans' Affairs",
+        "form": null,
+        "url": "https://www.oregon.gov/odva/vets-homes/pages/default.aspx",
+        "documentation": [
+          "Proof of honorable discharge / qualifying service",
+          "Physician documentation supporting need for skilled nursing care"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.oregon.gov/odva/vets-homes/pages/default.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "or-education_tuition-nonresident-veteran-in-state-tuition-rate-hb-215",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Nonresident Veteran In-State Tuition Rate (HB 2158)",
+      "description": "Under Oregon law (HB 2158), veterans pursuing undergraduate studies at Oregon public universities and community colleges pay tuition and fees no greater than the Oregon resident rate, regardless of their actual state residency status. This also extends to dependents using transferred GI Bill benefits and to veterans' dependent 'orphans.' A separate law, HB 4021, reduces nonresident graduate tuition after other VA benefits and gift aid (grants/fee remissions) are deducted, under the Tuition Top-Up program. ODVA separately administers the Oregon Veterans Educational Bridge Grant (VEBG), offering grants of up to $5,000 (per OAR chapter 274) to veterans who are unable to complete an academic program due to missing required classes or outstanding account debt.",
+      "value": "In-state tuition rate for undergraduate veterans regardless of residency; reduced nonresident graduate tuition after VA benefits/gift aid; VEBG bridge grants up to $5,000",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Veteran (or qualifying dependent using transferred benefits) enrolled at an Oregon public university or community college",
+          "VEBG grant has separate eligibility requirements under OAR chapter 274"
+        ]
+      },
+      "application": {
+        "agency": "Oregon Department of Veterans' Affairs / Oregon public colleges and universities",
+        "form": null,
+        "url": "https://www.oregon.gov/odva/benefits/pages/education.aspx",
+        "documentation": [
+          "Proof of veteran status (DD-214)",
+          "Enrollment documentation at the institution"
+        ]
+      },
+      "legalCitation": "HB 2158; HB 4021; OAR chapter 274 (Veterans Educational Bridge Grant)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.oregon.gov/odva/benefits/pages/education.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "or-hiring_preference-veterans-preference-in-public-employment",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veterans' Preference in Public Employment",
+      "description": "Oregon public employers (state, county, and local government agencies) must grant hiring preference to veterans and disabled veterans applying for civil service positions, whether as a new hire or an internal promotion. Preference-eligible applicants who pass the initial screening, application exam, or civil service test receive five additional percentage points added to their score; disabled veterans receive ten additional percentage points. These points are applied at each stage of the selection process, including interviews. Beginning January 1, 2026, current and former Oregon National Guard members receive similar preference under SB 808. Private employers may voluntarily offer preference under ORS 408.497 but are not required to.",
+      "value": "5 percentage points added for veterans; 10 percentage points for disabled veterans, applied at each stage of public-sector hiring",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Must first pass the initial screening, application exam, or civil service test and meet minimum/special qualifications for the position",
+          "Applies to public employers (state, county, local government); private employer preference is voluntary"
+        ]
+      },
+      "application": {
+        "agency": "Oregon Bureau of Labor and Industries (BOLI) / State, county, and local government employers",
+        "form": null,
+        "url": "https://www.oregon.gov/boli/workers/pages/veterans-preference.aspx",
+        "documentation": [
+          "DD-214/DD-215, or a letter from the U.S. Department of Veterans Affairs indicating receipt of a non-service-connected pension",
+          "VA disability rating letter (for the 10-point disabled-veteran preference)"
+        ]
+      },
+      "legalCitation": "ORS 408.225 to 408.240; ORS 408.497",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.oregon.gov/boli/workers/pages/veterans-preference.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "or-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "Oregon issues Disabled Veteran license plates to qualifying veterans with a service-connected or service-related disability. Applicants submit a completed application, a $15 disabled veteran registration fee plus a $26 plate fee, and a letter or DD-214 from the VA or a branch of the Armed Forces documenting the service-connected/service-related disability. The official DMV application form does not state a minimum disability percentage; ORS 805.100 (the statute governing this registration) similarly qualifies a person by having a disability connected to service, an honorable discharge, and either at least 90 consecutive days of service or an earlier discharge due to service-connected injury or illness, rather than a specific percentage threshold. The plate does not confer disabled-parking privileges — a separate Disabled Person Parking Permit is required for that.",
+      "value": "Disabled Veteran plate for a one-time $15 registration fee plus $26 plate fee",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Service-connected or service-related disability documented by the VA or a branch of the Armed Forces",
+          "Only one disabled veteran plate or set of plates per qualifying veteran",
+          "Does not grant disabled-person parking privileges (separate permit required)"
+        ]
+      },
+      "application": {
+        "agency": "Oregon Department of Transportation, Driver and Motor Vehicle Services (DMV)",
+        "form": "735-6736 (Application for Disabled Veteran Plates)",
+        "url": "https://www.oregon.gov/odva/benefits/pages/licenses.aspx",
+        "documentation": [
+          "Letter or DD-214 from the VA or a branch of the Armed Forces showing a service-connected or service-related disability"
+        ]
+      },
+      "legalCitation": "ORS 805.100",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.oregon.gov/odot/Forms/DMV/6736fill.PDF",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "or-vehicle_registration-permanent-one-time-vehicle-registration-for-disa",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Permanent (One-Time) Vehicle Registration for Disabled Veterans",
+      "description": "Oregon has no general sales tax, so it has no vehicle sales/use-tax exemption comparable to other states. Instead, ORS 805.100 gives qualifying disabled veterans a one-time registration fee (set under ORS 803.420) in place of Oregon's normal recurring registration renewal cycle: the statute explicitly exempts registration issued under this section from any requirement to be renewed or to pay renewal fees. This is combined administratively with the Disabled Veteran license plate application (the $15 'disabled veteran registration fee' on DMV form 735-6736). The department may issue one such permanent registration per qualifying disabled veteran in a household, and may not register commercial vehicles under this section.",
+      "value": "One-time registration fee (no recurring renewal fee) in place of Oregon's standard biennial registration renewal, for qualifying disabled-veteran-registered vehicles",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Same service-connected/service-related disability qualification as ORS 805.100 (honorable discharge; 90+ consecutive days of service, or earlier discharge for service-connected injury/illness)",
+          "Not available for commercial vehicles",
+          "One permanent registration per qualifying disabled veteran in a household"
+        ]
+      },
+      "application": {
+        "agency": "Oregon Department of Transportation, Driver and Motor Vehicle Services (DMV)",
+        "form": "735-6736 (Application for Disabled Veteran Plates)",
+        "url": "https://www.oregon.gov/odot/dmv/pages/driverid/veteran_designation.aspx",
+        "documentation": [
+          "Letter or DD-214 from the VA or a branch of the Armed Forces showing a service-connected disability"
+        ]
+      },
+      "legalCitation": "ORS 805.100; ORS 803.420",
+      "authorityTier": "reference",
+      "sourceUrl": "https://oregon.public.law/statutes/ors_805.100",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "or-recreation-disabled-veteran-hunting-fishing-shellfish-licen",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Hunting, Fishing & Shellfish License / Disabilities Permit",
+      "description": "Oregon residents who are disabled veterans with at least a 25 percent disability rating (certified by the VA or any branch of the Armed Forces) qualify for a free combination license covering hunting, fishing, and shellfish (including the Columbia Basin and Ocean Endorsements). Applicants must have resided in Oregon for at least 6 consecutive months before applying. Qualifying disabled veterans may also purchase a reduced-rate elk tag ($29). Separately, both resident and non-resident veterans certified at least 65 percent disabled by the VA or Armed Forces may apply for a free Oregon Disabilities Hunting and Fishing Permit (which also covers clam digging) regardless of the residency-duration requirement that applies to the 25%-threshold license.",
+      "value": "Free combination hunting/fishing/shellfish license (25%+ disabled, 6-month Oregon residency); reduced $29 elk tag; separate free Disabilities Hunting and Fishing Permit for veterans 65%+ disabled",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 25,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Resided in Oregon at least 6 consecutive months before applying (for the free combination license)",
+          "The 65%+ Disabilities Hunting and Fishing Permit is open to non-residents as well as residents"
+        ]
+      },
+      "application": {
+        "agency": "Oregon Department of Fish and Wildlife (ODFW)",
+        "form": null,
+        "url": "https://myodfw.com/articles/exclusive-benefits-uniformed-services-and-disabled-veterans",
+        "documentation": [
+          "Copy of most recent VA letter or Armed Forces certification showing disability rating"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://myodfw.com/articles/exclusive-benefits-uniformed-services-and-disabled-veterans",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "or-housing-oregon-veteran-home-loan-program-odva",
+      "benefitType": "housing",
+      "category": "Housing",
+      "name": "Oregon Veteran Home Loan Program (ODVA)",
+      "description": "The Oregon Department of Veterans' Affairs directly funds low-interest home loans to eligible Oregon veterans, separate and distinct from the federal VA Home Loan Guaranty (in which the VA only guarantees a portion of a lender-funded loan). ODVA has lent approximately $10 billion to more than 340,000 veterans since the program began in 1945, making Oregon one of a small number of states offering this kind of state-funded veteran home loan. Eligible veterans must meet a service-length or discharge-condition test (generally 90+ consecutive days of active duty before January 31, 1955, or 178+ consecutive days after that date, with exceptions for combat-zone service, service-connected disability discharge, or combat/campaign/expeditionary award), or be receiving a nonservice-connected VA pension. Loans are available for 15, 20, or 30-year terms, up to the Fannie Mae loan limit, up to 95% loan-to-value, for owner-occupied, single-family primary residences (including condos, townhomes, and land-affixed manufactured homes) located in Oregon. A veteran may use this loan benefit up to four times in a lifetime (only one loan open at a time). The page reviewed did not publish current interest rates directly (it links to a separate rate sheet not fetched this session), so specific rate figures are not stated here.",
+      "value": "State-funded low-interest home loans (15/20/30-year terms, up to 95% LTV, up to 4 lifetime uses) for owner-occupied Oregon primary residences",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Property must be an owner-occupied, single-family primary residence located in Oregon",
+          "Meets one of ODVA's service-length/discharge-condition criteria, or receives a nonservice-connected VA pension",
+          "Maximum of 4 loans over a lifetime; only one open at a time",
+          "PMI required for loans exceeding 80% LTV"
+        ]
+      },
+      "application": {
+        "agency": "Oregon Department of Veterans' Affairs",
+        "form": "HL0409 (Veteran's Home Loan Eligibility)",
+        "url": "https://www.oregon.gov/odva/home-loans/pages/default.aspx",
+        "documentation": [
+          "DD-214",
+          "Eligibility Application Form with supporting service documentation"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.oregon.gov/odva/home-loans/pages/eligibility.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

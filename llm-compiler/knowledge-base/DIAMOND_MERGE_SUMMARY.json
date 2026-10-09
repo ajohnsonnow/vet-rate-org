@@ -1,0 +1,38 @@
+{
+  "merged_at": "2026-01-22T14:01:05.495490",
+  "total_entries": 2161,
+  "sources": {
+    "eCFR_OFFICIAL": 1070,
+    "COMMUNITY_PROVIDED": 560,
+    "FEDERAL_REGISTER_OFFICIAL": 15,
+    "EAJA_STATISTICS_OFFICIAL": 1,
+    "BVA_REPORTS_OFFICIAL": 38,
+    "VA_OFFICIAL": 159,
+    "M21-1_OFFICIAL": 4,
+    "OGC_PRECEDENT_OPINION": 49,
+    "BVA_DECISIONS": 3,
+    "PACT_ACT_OFFICIAL": 28,
+    "SECONDARY_CONDITIONS_MATRIX": 234
+  },
+  "types": {
+    "diagnostic_code": 735,
+    "rating_criteria": 322,
+    "diagnostic_code_removed": 60,
+    "community_knowledge": 525,
+    "community_knowledge_summary": 35,
+    "regulatory_notice": 15,
+    "eaja_statistics": 1,
+    "bva_annual_report": 36,
+    "bva_overview": 1,
+    "bva_wait_times": 1,
+    "procedural_guidance": 4,
+    "legal_opinion": 48,
+    "bva_decision": 3,
+    "legal_overview": 2,
+    "presumptive_overview": 6,
+    "presumptive_condition": 134,
+    "secondary_overview": 25,
+    "secondary_condition_guidance": 208
+  },
+  "status": "DIAMOND"
+}

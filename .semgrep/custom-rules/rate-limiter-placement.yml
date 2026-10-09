@@ -1,0 +1,76 @@
+rules:
+  - id: local.rate-limiter-in-factory
+    severity: WARNING
+    message: >
+      rateLimit() declared inside a factory/router function. SAST analyzers
+      (Snyk) cannot resolve closure-captured limiters and will flag every
+      route handler that uses one with NoRateLimitingForExpensiveWebOperation.
+      Move the rateLimit({...}) declaration to module top-level scope, then
+      reference the const inside the route chain.
+
+      Pattern that works:
+          // top of file
+          const myLimiter = rateLimit({...});
+          export default function createRouter(...) {
+            router.get("/path", auth, myLimiter, handler);
+          }
+
+      Pattern that fails:
+          export default function createRouter({ rateLimit, ... }) {
+            const myLimiter = rateLimit({...});  // <-- flagged
+            router.get("/path", auth, myLimiter, handler);
+          }
+    languages: [javascript, typescript]
+    metadata:
+      category: best-practice
+      technology: [express, security-tooling]
+      cwe: "CWE-770: Allocation of Resources Without Limits or Throttling"
+      references:
+        - https://docs.snyk.io/scan-using-snyk/snyk-code/snyk-code-security-rules
+    patterns:
+      - pattern-either:
+          - pattern: |
+              function $FN(...) {
+                ...
+                const $LIM = rateLimit({...});
+                ...
+              }
+          - pattern: |
+              function $FN(...) {
+                ...
+                let $LIM = rateLimit({...});
+                ...
+              }
+
+  - id: local.argv-flows-to-fs
+    severity: WARNING
+    message: >
+      Command-line argument flows into a filesystem operation. SAST analyzers
+      (Snyk) flag this as Path Traversal because the value isn't constrained
+      by a recognized sanitizer. Source the path from an environment variable
+      set at deploy time, or from a hardcoded constant. If a configurable
+      data dir is required, validate it against an allowlist before use.
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [nodejs]
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory"
+      references:
+        - https://owasp.org/www-community/attacks/Path_Traversal
+    paths:
+      # Toolkit-internal scripts and codemods explicitly take file paths from
+      # argv (that IS their interface). They aren't deployed to projects;
+      # they live only in the toolkit.
+      exclude:
+        - "templates/codemods/**"
+        - "scripts/codemods/**"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $X = process.argv...;
+              ...
+              fs.$M($X, ...);
+          - pattern: |
+              $X = process.argv...;
+              ...
+              fs.promises.$M($X, ...);

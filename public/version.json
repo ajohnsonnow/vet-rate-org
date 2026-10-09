@@ -1,0 +1,78 @@
+{
+  "version": "1.30.4",
+  "updateDate": "2026-09-06",
+  "maintenance_mode": false,
+  "maintenance_message": "Vet-Rate.org is currently undergoing critical maintenance to protect your data. Please check back in a few hours. Follow us on Twitter @VetRateOrg for status updates.",
+  "changelog": [
+    {
+      "type": "improvement",
+      "title": "Faster first paint — lazy-loaded feature surfaces",
+      "description": "Modal-shaped tools (My Packet, C&P Simulator, Pathfinder, Nexus Builder, and 60+ others) now load on first open instead of all at boot. Main bundle dropped to ~196 KB gzipped."
+    },
+    {
+      "type": "security",
+      "title": "Signed releases — cosign + SLSA-3 provenance",
+      "description": "Every release now ships with Sigstore keyless signatures and SLSA Level 3 build provenance. Anyone can verify the dist tarball + SBOMs came from the published GitHub workflow."
+    },
+    {
+      "type": "security",
+      "title": "Local-first structured logger",
+      "description": "New ring-buffer logger keeps recent events in memory for export-on-demand. Persistence is opt-in (IndexedDB), zero auto-egress, no third-party SDKs."
+    },
+    {
+      "type": "feature",
+      "title": "📡 VA API Status Monitor - 'The Lighthouse'",
+      "description": "Real-time VA API status monitoring! When VA systems (Blue Button, Health Records, Appeals) are down for maintenance, you'll see a banner - so you know it's not us, it's them."
+    },
+    {
+      "type": "feature",
+      "title": "💻 Tablet Optimization - 'The iPad General'",
+      "description": "Full iPad and tablet support! Smart device detection, orientation-aware layouts, and enhanced save prompts for Files app/cloud storage integration."
+    },
+    {
+      "type": "feature",
+      "title": "🛡️ CRASH-PROOF STORAGE - 'The Bunker'",
+      "description": "Your data now survives browser crashes and cache clears! Click 'Save My Packet' to create a crash-proof file on your device that auto-saves as you work."
+    },
+    {
+      "type": "feature",
+      "title": "🎮 GPU Selection for Dual-GPU Systems",
+      "description": "Laptops with dual GPUs can now choose which GPU runs Local AI! Force 'High Performance' for speed or 'Power Saver' for battery life in Faraday Cage settings."
+    },
+    {
+      "type": "feature",
+      "title": "Save-As-You-Go Protocol",
+      "description": "Every form field, every claim, every statement now auto-saves within 1.5 seconds. No more lost work!"
+    },
+    {
+      "type": "feature",
+      "title": "Resume Packet Feature",
+      "description": "Coming back tomorrow? Click 'Resume Packet' to load your saved file and pick up exactly where you left off."
+    },
+    {
+      "type": "feature",
+      "title": "Live Operations Protection System",
+      "description": "Added automatic data migration system to protect your saved data during updates"
+    },
+    {
+      "type": "feature",
+      "title": "Update Notifications",
+      "description": "App now checks for updates every 15 minutes and notifies you when a new version is available"
+    },
+    {
+      "type": "feature",
+      "title": "What's New Modal",
+      "description": "See exactly what changed in each update with our new changelog system"
+    },
+    {
+      "type": "security",
+      "title": "Version Tracking",
+      "description": "Comprehensive version management ensures compatibility and smooth upgrades"
+    },
+    {
+      "type": "improvement",
+      "title": "Cache Busting",
+      "description": "Hard reload when updating ensures you always get the latest code, not cached versions"
+    }
+  ]
+}

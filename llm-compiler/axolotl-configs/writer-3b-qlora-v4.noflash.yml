@@ -1,0 +1,134 @@
+# ==============================================================================
+# LOCAL ENV-WORKAROUND COPY — NOT for commit
+# ==============================================================================
+# v4: identical to writer-3b-qlora-v2.noflash.yml (v3's config) except the
+# training data's `instruction` field now has the VetRate-Writer persona
+# system text folded in (axolotl's `type: alpaca` strategy silently drops
+# `field_system` — see memory: v3-swarm-retrain-regression-persists). Serving
+# format also folds persona into the instruction now, so training and
+# serving finally match exactly.
+# ==============================================================================
+base_model: meta-llama/Llama-3.2-3B-Instruct
+model_type: LlamaForCausalLM
+tokenizer_type: AutoTokenizer
+trust_remote_code: true
+
+load_in_8bit: false
+load_in_4bit: true
+adapter: qlora
+
+bnb_4bit_compute_dtype: bfloat16
+bnb_4bit_use_double_quant: true
+bnb_4bit_quant_type: nf4
+
+datasets:
+  - path: /mnt/e/VS_Studio/vet-rate-org-official/llm-compiler/training-data-v2/train_writer.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+
+val_set_size: 0.0
+test_datasets:
+  - path: /mnt/e/VS_Studio/vet-rate-org-official/llm-compiler/training-data-v2/val_writer.jsonl
+    type: alpaca
+    field_system: system
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+
+dataset_prepared_path: null
+push_dataset_to_hub: null
+
+flash_attention: false
+sample_packing: false
+eval_sample_packing: false
+pad_to_sequence_len: false
+
+bf16: true
+fp16: false
+tf32: false
+
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+
+sequence_len: 2048
+
+micro_batch_size: 2
+gradient_accumulation_steps: 8
+eval_batch_size: 2
+
+num_epochs: 8
+max_steps: null
+warmup_ratio: 0.1
+
+learning_rate: 2.0e-4
+lr_scheduler: cosine
+lr_scheduler_kwargs:
+  num_cycles: 0.5
+
+optimizer: adamw_bnb_8bit
+weight_decay: 0.01
+adam_beta1: 0.9
+adam_beta2: 0.999
+adam_epsilon: 1.0e-8
+
+lora_r: 64
+lora_alpha: 128
+lora_dropout: 0.05
+lora_fan_in_fan_out: false
+
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+lora_target_linear: false
+output_dir: /mnt/e/VS_Studio/vet-rate-org-official/llm-compiler/models/lora-adapters/vetrate-writer-3b-v4
+
+save_strategy: steps
+save_steps: 20
+save_total_limit: 5
+save_safetensors: true
+
+load_best_model_at_end: true
+metric_for_best_model: eval_loss
+greater_is_better: false
+
+eval_strategy: steps
+eval_steps: 20
+generation_max_new_tokens: 512
+
+logging_steps: 10
+report_to: tensorboard
+log_level: info
+
+max_grad_norm: 1.0
+seed: 42
+data_seed: 42
+early_stopping_patience: 5
+early_stopping_threshold: 0.001
+
+special_tokens:
+  bos_token: "<|begin_of_text|>"
+  eos_token: "<|end_of_text|>"
+  pad_token: "<|end_of_text|>"
+
+chat_template: llama3
+
+resume_from_checkpoint: null
+auto_resume_from_checkpoints: true
+debug: false
+
+ddp: false
+fsdp: null
+deepspeed: null
+
+merge_lora: false
+push_to_hub: false

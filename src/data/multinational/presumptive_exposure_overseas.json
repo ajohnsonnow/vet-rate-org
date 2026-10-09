@@ -1,0 +1,260 @@
+{
+  "category": "presumptive_exposure_overseas",
+  "displayName": "Overseas Presumptive Exposure",
+  "officialSource": "https://www.publichealth.va.gov/exposures/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "provisions": [
+    {
+      "id": "presumptive_exposure_overseas-occupation-of-hiroshima-or-nagasaki-japan",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Occupation of Hiroshima or Nagasaki, Japan",
+      "description": "Veterans who served in the U.S. occupation forces in Hiroshima or Nagasaki, Japan following the atomic bombings are presumed to have been exposed to ionizing radiation. This is a recognized radiation-risk activity for presumptive service connection.",
+      "keyPoints": [
+        "Qualifying dates: August 6, 1945 through July 1, 1946",
+        "Exposure type: radiation",
+        "Overseas location: Hiroshima and Nagasaki, Japan"
+      ],
+      "eligibility": "Veterans who participated in the occupation of Hiroshima or Nagasaki, Japan by United States forces during the period beginning August 6, 1945 and ending July 1, 1946.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/ionizing-radiation/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.309(d)(3)(ii)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-309.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-prisoners-of-war-interned-in-japan-wwii",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Prisoners of War Interned in Japan (WWII)",
+      "description": "Veterans held as prisoners of war in Japan during World War II, whose internment created an opportunity for radiation exposure comparable to the U.S. occupation forces at Hiroshima or Nagasaki, are recognized as having engaged in a radiation-risk activity.",
+      "keyPoints": [
+        "Qualifying period: World War II internment, exposure comparable to the Aug 6, 1945 - July 1, 1946 occupation window",
+        "Exposure type: radiation",
+        "Overseas location: POW camps in Japan near Hiroshima/Nagasaki"
+      ],
+      "eligibility": "Veterans interned as a prisoner of war in Japan (or on active duty in Japan immediately following such internment) during World War II which resulted in an opportunity for exposure to ionizing radiation comparable to that of the U.S. occupation forces in Hiroshima or Nagasaki.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/ionizing-radiation/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.309(d)(3)(ii)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-309.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-atmospheric-nuclear-weapons-test-participation-p",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Atmospheric Nuclear Weapons Test Participation (Pacific Proving Grounds)",
+      "description": "Veterans who took part onsite in atmospheric nuclear weapons testing are recognized as atomic veterans and presumed exposed to ionizing radiation. Testing was conducted primarily in Nevada and at Pacific Ocean sites (the Pacific Proving Grounds, including Enewetak and Bikini Atolls).",
+      "keyPoints": [
+        "Qualifying dates: atmospheric tests conducted between 1945 and 1962",
+        "Exposure type: radiation",
+        "Overseas location: Pacific Proving Grounds (Enewetak, Bikini) and other Pacific Ocean test sites"
+      ],
+      "eligibility": "Veterans with onsite participation in a test involving the atmospheric detonation of a nuclear device, including tests in the Pacific Ocean between 1945 and 1962.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/ionizing-radiation/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.309(d)(3)(ii)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.publichealth.va.gov/exposures/radiation/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-radiological-cleanup-of-enewetak-atoll",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Radiological Cleanup of Enewetak Atoll",
+      "description": "Veterans who participated in the radiological cleanup of Enewetak Atoll in the Marshall Islands are recognized as having engaged in a radiation-risk activity and are presumed exposed to ionizing radiation. This was added as a recognized activity under the PACT Act.",
+      "keyPoints": [
+        "Qualifying dates: January 1, 1977 through December 31, 1980",
+        "Exposure type: radiation",
+        "Overseas location: Enewetak Atoll, Marshall Islands"
+      ],
+      "eligibility": "Veterans who took part in the cleanup of Enewetak Atoll during the period beginning January 1, 1977 and ending December 31, 1980.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/ionizing-radiation/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.309(d)(3)(ii)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-309.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-palomares-spain-b-52-cleanup-1966",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Palomares, Spain B-52 Cleanup (1966)",
+      "description": "Veterans who took part in the response effort following the January 1966 mid-air collision of a U.S. Air Force B-52 bomber carrying nuclear weapons near Palomares, Spain are recognized as having engaged in a radiation-risk activity. This plutonium cleanup mission was added under the PACT Act.",
+      "keyPoints": [
+        "Qualifying dates: January 17, 1966 through March 31, 1967",
+        "Exposure type: radiation",
+        "Overseas location: Palomares, Spain"
+      ],
+      "eligibility": "Veterans with onsite participation in the response effort following the collision of a U.S. Air Force B-52 bomber and refueling plane in the vicinity of Palomares, Spain during the period beginning January 17, 1966 and ending March 31, 1967.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/ionizing-radiation/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.309(d)(3)(ii)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-309.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-thule-air-force-base-greenland-b-52-response-196",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Thule Air Force Base, Greenland B-52 Response (1968)",
+      "description": "Veterans who took part in the response effort following the January 1968 on-board fire and crash of a U.S. Air Force B-52 bomber carrying nuclear weapons near Thule Air Force Base, Greenland are recognized as having engaged in a radiation-risk activity. This plutonium cleanup mission was added under the PACT Act.",
+      "keyPoints": [
+        "Qualifying dates: January 21, 1968 through September 25, 1968",
+        "Exposure type: radiation",
+        "Overseas location: Thule Air Force Base, Greenland"
+      ],
+      "eligibility": "Veterans with onsite participation in the response effort following the on-board fire and crash of a U.S. Air Force B-52 bomber in the vicinity of Thule Air Force Base, Greenland during the period beginning January 21, 1968 and ending September 25, 1968.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/ionizing-radiation/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.309(d)(3)(ii)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.govinfo.gov/content/pkg/CFR-2023-title38-vol1/xml/CFR-2023-title38-vol1-sec3-309.xml",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-thailand-military-bases-agent-orange-perimeter-s",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Thailand Military Bases (Agent Orange perimeter service)",
+      "description": "VA presumes exposure to Agent Orange for veterans who served at any U.S. or Royal Thai military base in Thailand during the Vietnam era. Herbicides were used around base perimeters.",
+      "keyPoints": [
+        "Qualifying dates: January 9, 1962 through June 30, 1976",
+        "Exposure type: herbicide (Agent Orange)",
+        "Overseas location: U.S. or Royal Thai military bases in Thailand"
+      ],
+      "eligibility": "Veterans who served on any U.S. or Royal Thai military base in Thailand from January 9, 1962 through June 30, 1976.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.307(a)(6)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-korean-demilitarized-zone-dmz",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Korean Demilitarized Zone (DMZ)",
+      "description": "VA presumes exposure to Agent Orange for veterans who served in or near the Korean DMZ during the period when herbicides were applied along the zone.",
+      "keyPoints": [
+        "Qualifying dates: September 1, 1967 through August 31, 1971",
+        "Exposure type: herbicide (Agent Orange)",
+        "Overseas location: in or near the Korean Demilitarized Zone"
+      ],
+      "eligibility": "Veterans who served in or near the Korean DMZ for any length of time between September 1, 1967 and August 31, 1971.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.307(a)(6)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-laos-and-cambodia-vietnam-era",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Laos and Cambodia (Vietnam era)",
+      "description": "VA presumes exposure to Agent Orange for veterans who served in specified areas of Laos, or in Cambodia at Mimot or Krek in Kampong Cham Province, during defined Vietnam-era windows.",
+      "keyPoints": [
+        "Laos qualifying dates: December 1, 1965 through September 30, 1969",
+        "Cambodia (Mimot or Krek, Kampong Cham Province) qualifying dates: April 16, 1969 through April 30, 1969",
+        "Exposure type: herbicide (Agent Orange)"
+      ],
+      "eligibility": "Veterans who served in Laos from December 1, 1965 through September 30, 1969, or in Cambodia at Mimot or Krek, Kampong Cham Province from April 16, 1969 through April 30, 1969.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.307(a)(6)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "presumptive_exposure_overseas-guam-american-samoa-and-johnston-atoll-pact-act",
+      "category": "presumptive_exposure_overseas",
+      "displayCategory": "Overseas Presumptive Exposure",
+      "name": "Guam, American Samoa, and Johnston Atoll (PACT Act)",
+      "description": "The PACT Act added presumptive Agent Orange exposure for veterans who served in Guam or American Samoa (or their territorial waters), and for veterans who served on or aboard a ship that called at Johnston Atoll, where herbicides were used or stored.",
+      "keyPoints": [
+        "Guam / American Samoa qualifying dates: January 9, 1962 through July 31, 1980",
+        "Johnston Atoll qualifying dates: January 1, 1972 through September 30, 1977",
+        "Exposure type: herbicide (Agent Orange)",
+        "Added by the PACT Act"
+      ],
+      "eligibility": "Veterans who served in Guam or American Samoa or their territorial waters from January 9, 1962 through July 31, 1980; or on Johnston Atoll or a ship that called at Johnston Atoll from January 1, 1972 through September 30, 1977.",
+      "application": {
+        "howToFile": null,
+        "agency": null,
+        "form": null,
+        "url": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/",
+        "phone": null
+      },
+      "legalCitation": "38 CFR 3.307(a)(6)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/disability/eligibility/hazardous-materials-exposure/agent-orange/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

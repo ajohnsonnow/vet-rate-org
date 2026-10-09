@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1b365d" />
+    <title>Offline — Vet-Rate.org</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="manifest" href="/manifest.json" />
+    <style>
+      /* Inline CSS — the offline page must work with zero network requests. */
+      :root {
+        --service-blue-900: #1b365d;
+        --service-blue-700: #334e68;
+        --medal-green-700: #2e7d32;
+        --paper-300: #f8f9fa;
+        --paper-900: #5f6368;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--paper-300);
+        color: #102a43;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        font-size: 18px;
+        line-height: 1.6;
+      }
+      main {
+        max-width: 32rem;
+        margin: 0 auto;
+        padding: 3rem 1.25rem;
+        text-align: left;
+      }
+      header {
+        border-bottom: 3px solid var(--service-blue-900);
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      h1 {
+        color: var(--service-blue-900);
+        margin: 0 0 0.25rem;
+        font-size: 1.75rem;
+        line-height: 1.2;
+      }
+      h2 {
+        color: var(--service-blue-700);
+        margin: 1.5rem 0 0.5rem;
+        font-size: 1.125rem;
+      }
+      .subtitle {
+        margin: 0;
+        color: var(--paper-900);
+        font-size: 1rem;
+      }
+      ul {
+        margin: 0.5rem 0 0;
+        padding-left: 1.25rem;
+      }
+      li + li {
+        margin-top: 0.25rem;
+      }
+      .ok {
+        color: var(--medal-green-700);
+        font-weight: 600;
+      }
+      .button-row {
+        margin-top: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      button,
+      a.button {
+        display: inline-block;
+        min-height: 44px;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.5rem;
+        border: 2px solid var(--service-blue-900);
+        background: var(--service-blue-900);
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      button.secondary,
+      a.button.secondary {
+        background: transparent;
+        color: var(--service-blue-900);
+      }
+      button:hover,
+      a.button:hover {
+        filter: brightness(1.05);
+      }
+      button:focus-visible,
+      a.button:focus-visible {
+        outline: 3px solid var(--service-blue-900);
+        outline-offset: 3px;
+      }
+      footer {
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dadce0;
+        color: var(--paper-900);
+        font-size: 0.875rem;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background: #102a43;
+          color: #f0f4f8;
+        }
+        h1,
+        h2 {
+          color: #bcccdc;
+        }
+        .subtitle {
+          color: #bcccdc;
+        }
+        button,
+        a.button {
+          border-color: #bcccdc;
+          background: #243b53;
+        }
+        button.secondary,
+        a.button.secondary {
+          background: transparent;
+          color: #bcccdc;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>You're offline.</h1>
+        <p class="subtitle">
+          Vet-Rate.org couldn't reach the network — but your saved data is still
+          on this device.
+        </p>
+      </header>
+
+      <h2>What still works <span class="ok">offline</span></h2>
+      <ul>
+        <li>My Packet (your saved claims, statements, and documents)</li>
+        <li>Rating Calculator (combined-rating math)</li>
+        <li>Disability search across the bundled 38 CFR Part 4 index</li>
+        <li>Local AI tools that already downloaded their model</li>
+      </ul>
+
+      <h2>What needs the network</h2>
+      <ul>
+        <li>Cloud AI (Gemini, Anthropic) and VA-API lookups</li>
+        <li>Downloading new AI models</li>
+        <li>Pulling fresh legal-source updates</li>
+      </ul>
+
+      <div class="button-row">
+        <button type="button" onclick="window.location.reload()">
+          Try again
+        </button>
+        <a class="button secondary" href="/">Open Vet-Rate.org</a>
+      </div>
+
+      <footer>
+        Built by a fellow veteran. Your data lives on your device — no
+        accounts, no servers.
+      </footer>
+    </main>
+
+    <script>
+      // Auto-retry once the browser tells us we're back online.
+      window.addEventListener("online", () => {
+        window.location.reload();
+      });
+    </script>
+  </body>
+</html>

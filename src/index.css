@@ -1,0 +1,2825 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   ACCESSIBILITY — prefers-reduced-motion (Sprint 5 / WCAG 2.3.3)
+   Honor the OS-level "Reduce motion" preference. Set every animation /
+   transition to near-zero so vestibular-sensitive users (TBI, migraine,
+   PTSD-related visual hypersensitivity) aren't subjected to motion they
+   didn't ask for. Targets veterans specifically — TBI is high prevalence.
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   MOBILE OPTIMIZATION
+   iOS auto-zoom prevention, touch targets, safe areas
+   ============================================ */
+
+/* Prevent iOS auto-zoom on focus - must be 16px minimum. The rem term lets
+   typed text follow the root size, which grows on very large screens. */
+input:not([type]),
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+input[type="date"],
+input[type="password"],
+textarea,
+select {
+  font-size: max(16px, 1rem) !important;
+}
+
+/* Mobile-friendly touch targets - minimum 44x44px per Apple HIG */
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Safe area insets for notched devices (iPhone X+) */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+}
+
+/* Smooth scrolling handled by scroll-behavior: smooth */
+@media (width <= 767px) {
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Better mobile tap highlighting */
+* {
+  -webkit-tap-highlight-color: rgb(59 130 246 / 10%);
+}
+
+/* Remove default mobile input styling. Checkboxes and radios are excluded:
+   with no native appearance they draw no box and no tick at all (0px wide
+   unless a component sized them, and blank even then). Sliders are excluded
+   too: without it they lose their track and show as a blank filled box. */
+input:not([type="checkbox"], [type="radio"], [type="range"]),
+textarea,
+select {
+  appearance: none;
+}
+
+:where(input[type="range"]) {
+  accent-color: rgb(var(--brand-700));
+}
+
+/* A visible default for every checkbox and radio: the native box and tick, a
+   size that can be seen and hit, and a focus ring. :where() keeps the
+   specificity at zero so a component's own size, colour or sr-only classes
+   still win. */
+:where(input[type="checkbox"], input[type="radio"]) {
+  appearance: auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  accent-color: rgb(var(--brand-700));
+}
+
+:where(input[type="checkbox"], input[type="radio"]):focus-visible {
+  outline: 2px solid rgb(var(--brand-700));
+  outline-offset: 2px;
+}
+
+* {
+  @apply scroll-smooth;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   RESPONSIVE SCROLLING METHODOLOGY
+   Large screens: Fixed header, body+footer scroll together
+   Small screens: Entire page scrolls naturally
+   ============================================ */
+
+/* Large screens (768px+): Fixed header with scrolling body+footer */
+@media (width >= 768px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body > div#root {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* App container wrapper */
+  body > div#root > div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header stays fixed at top */
+  body > div#root > div > header,
+  body > div#root header {
+    flex-shrink: 0;
+    z-index: 50;
+  }
+
+  /* Create a scrollable wrapper for everything after the header */
+  body > div#root > div {
+    position: relative;
+  }
+
+  /* Main + Footer scroll together - wrap them in scroll context */
+  body > div#root > div > main {
+    flex: 1 1 auto;
+  }
+
+  /* Footer is part of the scrollable area */
+  body > div#root > div > footer {
+    flex-shrink: 0;
+  }
+
+  /* The app container minus header scrolls */
+  body > div#root > div.min-h-screen {
+    min-height: 100%;
+    height: 100%;
+  }
+
+  /* Apply overflow to the app container, make header sticky */
+  body > div#root > div.flex-col {
+    overflow: hidden auto;
+  }
+
+  /* Sticky header within scrolling container */
+  body > div#root > div.flex-col > header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: inherit;
+  }
+}
+
+/* Small screens (below 768px): Natural page scrolling */
+@media (width <= 767px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+    overflow: hidden auto;
+  }
+
+  body > div#root {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  body > div#root > div {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  /* Everything scrolls naturally on mobile */
+  body > div#root > div > header {
+    position: relative;
+  }
+}
+
+/* Light mode body background - warm and easy on eyes */
+html:not(.dark) body {
+  background-color: #e9e9e3;
+}
+
+/* Header: flat dark brand bar in BOTH modes. The old `bg-gradient-to-r` was a
+   background-IMAGE axe can't parse, so contrast checks fell through to the light
+   page bg and flagged every white nav label in light mode. A flat var(--va-blue)
+   background is palette-aware and white-text-safe in every palette (enforced by
+   src/__tests__/a11y/palette-contrast.test.js), so all header text passes. High
+   specificity + !important so it wins over the light-mode surface overrides. */
+body header[role="banner"] {
+  background-color: var(--va-blue) !important;
+  background-image: none !important;
+}
+
+/* Dark mode: keep the bar very dark (var(--va-blue) lightens to ~#3d6b1f in dark,
+   too light for the gray-300 subtitle). A deep green matches the dark theme and
+   clears 4.5:1 for white + gray-300 + green-100 header text. */
+html.dark body header[role="banner"] {
+  background-color: #06281c !important;
+}
+
+/* ============================================
+   THEME SYSTEM - Dark Mode & Accessibility
+   Section 508 & WCAG 2.1 AA Compliant
+   ============================================ */
+
+/* Light Mode (Default) - Softer, warmer tones for eye comfort */
+:root {
+  --va-blue: #2d5016;
+  --va-gold: #88b04b;
+  --bg-primary: #e9e9e3; /* Warm muted gray - darker for eye comfort */
+  --bg-secondary: #f2f2ed; /* Soft cream for cards */
+  --bg-tertiary: #dfe1db; /* Muted sage gray */
+  --text-primary: #1a1f16; /* Soft charcoal with green tint */
+  --text-secondary: #3d453d; /* Darker olive gray for better contrast */
+  --text-muted: #5a625a; /* Softer muted text */
+  --border-color: #c8cdc4; /* Soft sage border */
+  --shadow-color: rgb(0 0 0 / 10%);
+}
+
+/* Dark Mode */
+html.dark {
+  --va-blue: #3d6b1f;
+  --va-gold: #a4c76a;
+  --bg-primary: #0f2919;
+  --bg-secondary: #1a3d2e;
+  --bg-tertiary: #2d5936;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --border-color: #374151;
+  --shadow-color: rgb(0 0 0 / 50%);
+}
+
+/* ============================================
+   TBI-COMFORT MODE - "The Night Bunker"
+   Zero blue light, warm amber tones for veterans
+   with TBI, migraines, or light sensitivity
+   ============================================ */
+html.tbi-comfort {
+  --bg-primary: #1a1a16; /* Deep warm charcoal */
+  --bg-secondary: #252520; /* Slightly lighter warm tone */
+  --bg-tertiary: #2f2f28; /* Surface elevation */
+  --text-primary: #e8d5b5; /* Soft amber/parchment text */
+  --text-secondary: #c9b896; /* Muted amber */
+  --text-muted: #a89a78; /* Warm gray */
+  --border-color: #3d3a30; /* Warm dark border */
+  --shadow-color: rgb(0 0 0 / 60%);
+  --accent-primary: #c5a059; /* Service Gold accent */
+  --focus-ring: #e8d5b5; /* Warm focus indicator */
+}
+
+html.tbi-comfort body {
+  background-color: #1a1a16 !important;
+  color: #e8d5b5 !important;
+
+  /* Apply amber filter to reduce blue light */
+  filter: sepia(10%) saturate(90%);
+}
+
+html.tbi-comfort * {
+  border-color: #3d3a30 !important;
+}
+
+/* TBI mode - Override harsh whites and blues */
+html.tbi-comfort .bg-white,
+html.tbi-comfort .bg-gray-50,
+html.tbi-comfort .bg-gray-100 {
+  background-color: #252520 !important;
+}
+
+html.tbi-comfort .text-white,
+html.tbi-comfort .text-gray-900 {
+  color: #e8d5b5 !important;
+}
+
+html.tbi-comfort .text-blue-600,
+html.tbi-comfort .text-blue-700 {
+  color: #c5a059 !important;
+}
+
+html.tbi-comfort .bg-blue-600,
+html.tbi-comfort .bg-blue-700 {
+  background-color: #7a6535 !important;
+}
+
+/* ============================================
+   AAA HIGH CONTRAST MODE
+   WCAG 2.2 Level AAA (7:1 contrast ratios)
+   For users with severe visual impairments
+   ============================================ */
+html.aaa-high-contrast {
+  --bg-primary: #000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  --text-primary: #fff;
+  --text-secondary: #fff;
+  --text-muted: #e0e0e0;
+  --border-color: #fff;
+  --shadow-color: none;
+  --accent-primary: #ff0;
+  --focus-ring: #0ff;
+}
+
+html.aaa-high-contrast body {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+html.aaa-high-contrast * {
+  border-width: 2px !important;
+  border-color: #fff !important;
+}
+
+html.aaa-high-contrast a,
+html.aaa-high-contrast button {
+  text-decoration: underline !important;
+}
+
+html.aaa-high-contrast button:focus,
+html.aaa-high-contrast a:focus,
+html.aaa-high-contrast input:focus,
+html.aaa-high-contrast select:focus,
+html.aaa-high-contrast textarea:focus {
+  outline: 3px solid #0ff !important;
+  outline-offset: 2px !important;
+}
+
+html.aaa-high-contrast .bg-blue-600,
+html.aaa-high-contrast .bg-blue-700,
+html.aaa-high-contrast .bg-green-600,
+html.aaa-high-contrast .bg-green-700 {
+  background-color: #ff0 !important;
+  color: #000 !important;
+}
+
+/* Apply theme variables to Tailwind dark mode */
+html.dark body {
+  background-color: #0f2919; /* forest green-900 */
+  color: #f3f4f6; /* gray-100 */
+}
+
+/* ============================================
+   LIGHT MODE - Softer Color Overrides
+   Replaces harsh whites with warmer, eye-friendly tones
+   ============================================ */
+
+/* Main backgrounds */
+html:not(.dark) .bg-gray-50 {
+  background-color: var(--bg-primary) !important;
+}
+
+html:not(.dark) .bg-white {
+  background-color: var(--bg-secondary) !important;
+}
+
+html:not(.dark) .bg-gray-100 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Card and container backgrounds */
+html:not(.dark) .bg-blue-50 {
+  background-color: #e5ebe0 !important;
+}
+
+html:not(.dark) .bg-green-50,
+html:not(.dark) .bg-emerald-50 {
+  background-color: #e5ebe2 !important;
+}
+
+html:not(.dark) .bg-amber-50,
+html:not(.dark) .bg-yellow-50 {
+  background-color: #edebe0 !important;
+}
+
+html:not(.dark) .bg-purple-50,
+html:not(.dark) .bg-indigo-50 {
+  background-color: #e8e6eb !important;
+}
+
+/* Text on the light theme's surfaces. The overrides above replace white and
+   the -50 tints with cream and sage, which are darker, so the 500-700 text
+   utilities that reach 4.5:1 on white fall short on them (green-600 is 2.7:1,
+   amber-700 4.2:1). In the light theme each family takes the step that
+   reaches 4.5:1 on the darkest of those surfaces.
+
+   A dark tool shown in the light theme (a dialog or panel with a gray-900,
+   gray-800 or slate-800 fill) is the opposite case: there the original,
+   lighter steps are the readable ones, so the same variables are set back,
+   and the muted gray used for .text-gray-500 becomes gray-400. */
+html:not(.dark) {
+  --on-light-green: #166534; /* green-800 */
+  --on-light-emerald: #065f46; /* emerald-800 */
+  --on-light-amber: #92400e; /* amber-800 */
+  --on-light-yellow: #854d0e; /* yellow-800 */
+  --on-light-orange: #9a3412; /* orange-800 */
+  --on-light-red: #b91c1c; /* red-700 */
+  --on-light-blue: rgb(var(--brand-700));
+}
+
+html:not(.dark)
+  :is(
+    .bg-gray-900,
+    .bg-gray-800,
+    .bg-slate-900,
+    .bg-slate-800,
+    .bg-gray-900\/50,
+    .bg-gray-800\/50,
+    .bg-slate-900\/50,
+    .bg-slate-800\/50,
+    .\!bg-gray-900,
+    .\!bg-gray-800,
+    .\!bg-slate-900,
+    .\!bg-slate-800
+  ) {
+  --on-light-green: #4ade80; /* green-400 */
+  --on-light-emerald: #34d399; /* emerald-400 */
+  --on-light-amber: #fbbf24; /* amber-400 */
+  --on-light-yellow: #facc15; /* yellow-400 */
+  --on-light-orange: #fb923c; /* orange-400 */
+  --on-light-red: #f87171; /* red-400 */
+  --on-light-blue: rgb(var(--brand-300));
+  --text-muted: #9ca3af; /* gray-400 */
+}
+
+html:not(.dark) :is(.text-green-600, .text-green-700) {
+  color: var(--on-light-green);
+}
+
+html:not(.dark) :is(.text-emerald-600, .text-emerald-700) {
+  color: var(--on-light-emerald);
+}
+
+html:not(.dark) :is(.text-amber-500, .text-amber-600, .text-amber-700) {
+  color: var(--on-light-amber);
+}
+
+html:not(.dark) :is(.text-yellow-600, .text-yellow-700) {
+  color: var(--on-light-yellow);
+}
+
+html:not(.dark) :is(.text-orange-600, .text-orange-700) {
+  color: var(--on-light-orange);
+}
+
+html:not(.dark) .text-red-600 {
+  color: var(--on-light-red);
+}
+
+/* blue, indigo, sky and cyan all resolve to the brand ramp (tailwind.config.js) */
+html:not(.dark)
+  :is(.text-blue-600, .text-indigo-600, .text-sky-600, .text-cyan-600) {
+  color: var(--on-light-blue);
+}
+
+/* White text on a mid-tone fill. Tailwind's 500 and 600 fills are too light
+   for white text (green-600 is 3.3:1, amber-600 3.2:1, yellow-500 1.9:1). An
+   element that sets both takes the first step of the same family that
+   reaches 4.5:1, in both themes, and its hover step moves with it. */
+.text-white:is(.bg-green-500, .bg-green-600) {
+  background-color: #15803d; /* green-700 */
+}
+
+.text-white:is(.hover\:bg-green-600, .hover\:bg-green-700):hover {
+  background-color: #166534; /* green-800 */
+}
+
+.text-white:is(.bg-amber-500, .bg-amber-600) {
+  background-color: #b45309; /* amber-700 */
+}
+
+.text-white:is(.hover\:bg-amber-600, .hover\:bg-amber-700):hover {
+  background-color: #92400e; /* amber-800 */
+}
+
+.text-white.bg-orange-500 {
+  background-color: #c2410c; /* orange-700 */
+}
+
+.text-white.bg-yellow-500 {
+  background-color: #a16207; /* yellow-700 */
+}
+
+.text-white.bg-teal-500 {
+  background-color: #0f766e; /* teal-700 */
+}
+
+.text-white.bg-red-500 {
+  background-color: #dc2626; /* red-600 */
+}
+
+.text-white.bg-violet-500 {
+  background-color: #7c3aed; /* violet-600 */
+}
+
+.text-white.bg-blue-500 {
+  background-color: rgb(var(--brand-600));
+}
+
+.text-white.bg-gray-400 {
+  background-color: #6b7280; /* gray-500 */
+}
+
+.text-white.bg-purple-500 {
+  background-color: #9333ea; /* purple-600 */
+}
+
+.text-white.hover\:bg-purple-600:hover {
+  background-color: #7e22ce; /* purple-700 */
+}
+
+/* ============================================
+   FOCUS MODE - TBI/ADHD Cognitive Load Reduction
+   Dims distracting elements while keeping core UI visible
+   ============================================ */
+
+/* Base dimming - more targeted approach */
+.focus-mode {
+  --focus-opacity: 0.4;
+  --focus-blur: 0.5px;
+}
+
+/* Dim secondary elements instead of everything */
+.focus-mode .bg-gray-50,
+.focus-mode .bg-gray-100,
+.focus-mode .bg-blue-50,
+.focus-mode .bg-green-50,
+.focus-mode .bg-yellow-50,
+.focus-mode .bg-purple-50,
+.focus-mode .bg-red-50,
+.focus-mode .text-gray-400,
+.focus-mode .text-gray-500 {
+  transition: opacity 0.3s ease;
+  opacity: var(--focus-opacity);
+}
+
+/* Keep essential elements fully visible */
+.focus-mode .focus-exempt,
+.focus-mode .focus-mode-toggle,
+.focus-mode header,
+.focus-mode .modal-content,
+.focus-mode .skip-link,
+.focus-mode .crisis-line,
+.focus-mode button,
+.focus-mode input,
+.focus-mode textarea,
+.focus-mode select,
+.focus-mode label,
+.focus-mode h1,
+.focus-mode h2,
+.focus-mode h3,
+.focus-mode .text-gray-900,
+.focus-mode .text-white {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Enhance focused elements */
+.focus-mode input:focus,
+.focus-mode textarea:focus,
+.focus-mode select:focus,
+.focus-mode button:focus,
+.focus-mode [tabindex]:focus {
+  opacity: 1 !important;
+  filter: none !important;
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 50%);
+}
+
+/* Focused containers get enhanced visibility */
+.focus-mode .focus-container:has(input:focus),
+.focus-mode .focus-container:has(textarea:focus),
+.focus-mode .focus-container:has(select:focus) {
+  opacity: 1 !important;
+  filter: none !important;
+  background-color: rgb(59 130 246 / 5%);
+}
+
+/* Toast notifications and modals stay visible */
+.focus-mode .toast-container,
+.focus-mode .modal-overlay,
+.focus-mode .modal-content {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Text colors - softer contrast */
+html:not(.dark) .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+html:not(.dark) .text-gray-800 {
+  color: #252d22 !important;
+}
+
+html:not(.dark) .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+html:not(.dark) .text-gray-600 {
+  color: #566056 !important;
+}
+
+html:not(.dark) .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Border colors */
+html:not(.dark) .border-gray-200,
+html:not(.dark) .border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+html:not(.dark) .border-blue-200 {
+  border-color: #c5d4bc !important;
+}
+
+/* Shadows - softer */
+html:not(.dark) .shadow-lg {
+  box-shadow:
+    0 10px 15px -3px rgb(45 80 22 / 6%),
+    0 4px 6px -4px rgb(45 80 22 / 4%) !important;
+}
+
+html:not(.dark) .shadow-md {
+  box-shadow:
+    0 4px 6px -1px rgb(45 80 22 / 5%),
+    0 2px 4px -2px rgb(45 80 22 / 3%) !important;
+}
+
+/* Feature card gradients - warmer tones in light mode */
+html:not(.dark) .from-emerald-50,
+html:not(.dark) .from-teal-50 {
+  --tw-gradient-from: #e5ebe2 !important;
+}
+
+html:not(.dark) .to-emerald-50,
+html:not(.dark) .to-teal-50 {
+  --tw-gradient-to: #dce5d8 !important;
+}
+
+html:not(.dark) .from-amber-50,
+html:not(.dark) .from-yellow-50 {
+  --tw-gradient-from: #edebe0 !important;
+}
+
+html:not(.dark) .to-amber-50,
+html:not(.dark) .to-yellow-50 {
+  --tw-gradient-to: #e8e4d8 !important;
+}
+
+html:not(.dark) .from-purple-50,
+html:not(.dark) .from-indigo-50 {
+  --tw-gradient-from: #e8e6eb !important;
+}
+
+html:not(.dark) .to-purple-50,
+html:not(.dark) .to-indigo-50 {
+  --tw-gradient-to: #e0dde6 !important;
+}
+
+html:not(.dark) .from-blue-50 {
+  --tw-gradient-from: #e5ebe0 !important;
+}
+
+html:not(.dark) .to-blue-50 {
+  --tw-gradient-to: #dce5d8 !important;
+}
+
+/* ============================================
+   AFFILIATION PALETTE THEMES (autogenerated)
+   Overrides --va-blue/--va-gold per branch/identity, scoped to
+   html.light.palette-* / html.dark.palette-* (palette applies in
+   light & dark only). Precedence over colorblind/TBI/AAA is enforced
+   in ThemeContext, which omits the palette-* class whenever a
+   colorblind mode is active — so these rules never compete with the
+   colorblind/AAA accent overrides below.
+   The stylesheet is loaded from src/main.jsx (a mid-file CSS @import is
+   invalid and gets dropped by the bundler). Source order no longer
+   matters because precedence is JS-enforced — see
+   docs/AFFILIATION_PALETTES.md §2.
+   ============================================ */
+
+/* ============================================
+   COLOR BLIND MODES
+   WCAG 2.1 AA Compliant Color Alternatives
+   ============================================ */
+
+/* Protanopia (Red-blind) - Uses Blue/Yellow spectrum */
+html.cb-protanopia {
+  --va-blue: #06c;
+  --va-gold: #fc0;
+  --success-color: #0077b6;
+  --warning-color: #f4a261;
+  --error-color: #9d4edd;
+}
+
+html.cb-protanopia .bg-green-600,
+html.cb-protanopia .bg-emerald-600,
+html.cb-protanopia .bg-emerald-700 {
+  background-color: #0077b6 !important;
+}
+
+html.cb-protanopia .bg-red-600,
+html.cb-protanopia .bg-red-500,
+html.cb-protanopia .bg-red-700 {
+  background-color: #9d4edd !important;
+}
+
+html.cb-protanopia .text-green-600,
+html.cb-protanopia .text-emerald-600,
+html.cb-protanopia .text-green-700,
+html.cb-protanopia .text-emerald-700 {
+  color: #0077b6 !important;
+}
+
+html.cb-protanopia .text-red-600,
+html.cb-protanopia .text-red-500,
+html.cb-protanopia .text-red-700 {
+  color: #9d4edd !important;
+}
+
+html.cb-protanopia .border-green-200,
+html.cb-protanopia .border-emerald-200,
+html.cb-protanopia .border-green-500 {
+  border-color: #90e0ef !important;
+}
+
+html.cb-protanopia .border-red-200,
+html.cb-protanopia .border-red-500 {
+  border-color: #d8b4fe !important;
+}
+
+/* Deuteranopia (Green-blind) - Uses Blue/Orange spectrum */
+html.cb-deuteranopia {
+  --va-blue: #003f88;
+  --va-gold: #ff9e00;
+  --success-color: #0077b6;
+  --warning-color: #ff9e00;
+  --error-color: #d00000;
+}
+
+html.cb-deuteranopia .bg-green-600,
+html.cb-deuteranopia .bg-emerald-600,
+html.cb-deuteranopia .bg-emerald-700 {
+  background-color: #0077b6 !important;
+}
+
+html.cb-deuteranopia .text-green-600,
+html.cb-deuteranopia .text-emerald-600,
+html.cb-deuteranopia .text-green-700,
+html.cb-deuteranopia .text-emerald-700 {
+  color: #0077b6 !important;
+}
+
+html.cb-deuteranopia .border-green-200,
+html.cb-deuteranopia .border-emerald-200,
+html.cb-deuteranopia .border-green-500 {
+  border-color: #90e0ef !important;
+}
+
+/* Tritanopia (Blue-blind) - Uses Red/Cyan spectrum */
+html.cb-tritanopia {
+  --va-blue: #009688;
+  --va-gold: #ff5722;
+  --success-color: #00897b;
+  --warning-color: #ff5722;
+  --error-color: #d50000;
+}
+
+html.cb-tritanopia .bg-blue-600,
+html.cb-tritanopia .bg-indigo-600,
+html.cb-tritanopia .bg-blue-700 {
+  background-color: #009688 !important;
+}
+
+html.cb-tritanopia .text-blue-600,
+html.cb-tritanopia .text-indigo-600,
+html.cb-tritanopia .text-blue-700 {
+  color: #009688 !important;
+}
+
+html.cb-tritanopia .border-blue-200,
+html.cb-tritanopia .border-blue-500 {
+  border-color: #80cbc4 !important;
+}
+
+/* High Contrast Mode - Light */
+html.cb-high-contrast {
+  --va-blue: #000080;
+  --va-gold: #c90;
+  --bg-primary: #fff;
+  --bg-secondary: #fff;
+  --bg-tertiary: #f0f0f0;
+  --text-primary: #000;
+  --text-secondary: #1a1a1a;
+  --border-color: #000;
+}
+
+html.cb-high-contrast body {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
+html.cb-high-contrast .bg-white,
+html.cb-high-contrast .bg-gray-50,
+html.cb-high-contrast .bg-gray-100 {
+  background-color: #fff !important;
+}
+
+html.cb-high-contrast .text-gray-600,
+html.cb-high-contrast .text-gray-500,
+html.cb-high-contrast .text-gray-400 {
+  color: #333 !important;
+}
+
+html.cb-high-contrast .text-gray-700,
+html.cb-high-contrast .text-gray-800,
+html.cb-high-contrast .text-gray-900 {
+  color: #000 !important;
+}
+
+/* High Contrast Mode - Dark */
+html.cb-high-contrast.dark {
+  --va-blue: #66b3ff;
+  --va-gold: #ff0;
+  --bg-primary: #000;
+  --bg-secondary: #000;
+  --bg-tertiary: #1a1a1a;
+  --text-primary: #fff;
+  --text-secondary: #f0f0f0;
+  --border-color: #fff;
+}
+
+html.cb-high-contrast.dark body {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+html.cb-high-contrast.dark .bg-white,
+html.cb-high-contrast.dark .bg-gray-50,
+html.cb-high-contrast.dark .bg-gray-100,
+html.cb-high-contrast.dark .bg-gray-800,
+html.cb-high-contrast.dark .bg-gray-900 {
+  background-color: #000 !important;
+}
+
+html.cb-high-contrast.dark .text-gray-300,
+html.cb-high-contrast.dark .text-gray-400 {
+  color: #e0e0e0 !important;
+}
+
+html.cb-high-contrast.dark .text-gray-100,
+html.cb-high-contrast.dark .text-gray-200,
+html.cb-high-contrast.dark .text-white {
+  color: #fff !important;
+}
+
+/* High Contrast - Universal Styles */
+html.cb-high-contrast * {
+  border-width: 2px !important;
+}
+
+html.cb-high-contrast a,
+html.cb-high-contrast
+  button:not(
+    .bg-emerald-600,
+    .bg-amber-600,
+    .bg-blue-600,
+    .bg-green-600,
+    .bg-red-600
+  ) {
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+html.cb-high-contrast button.bg-emerald-600,
+html.cb-high-contrast button.bg-amber-600,
+html.cb-high-contrast button.bg-blue-600,
+html.cb-high-contrast button.bg-green-600 {
+  border: 3px solid #000 !important;
+}
+
+html.cb-high-contrast.dark button.bg-emerald-600,
+html.cb-high-contrast.dark button.bg-amber-600,
+html.cb-high-contrast.dark button.bg-blue-600,
+html.cb-high-contrast.dark button.bg-green-600 {
+  border: 3px solid #fff !important;
+}
+
+html.cb-high-contrast .bg-gradient-to-r,
+html.cb-high-contrast .bg-gradient-to-br {
+  background-image: none !important;
+}
+
+html.cb-high-contrast:not(.dark) .bg-gradient-to-r,
+html.cb-high-contrast:not(.dark) .bg-gradient-to-br {
+  background-color: #f0f0f0 !important;
+  border: 2px solid #000 !important;
+}
+
+html.cb-high-contrast.dark .bg-gradient-to-r,
+html.cb-high-contrast.dark .bg-gradient-to-br {
+  background-color: #1a1a1a !important;
+  border: 2px solid #fff !important;
+}
+
+/* ============================================
+   FONT SIZE ACCESSIBILITY
+   ============================================ */
+
+html.font-small {
+  font-size: 14px;
+}
+
+html.font-normal {
+  font-size: 16px;
+}
+
+html.font-large {
+  font-size: 18px;
+}
+
+html.font-xlarge {
+  font-size: 20px;
+}
+
+/* Very large screens. Above 2560px the root font size grows with the
+   viewport, up to 1.5x at 3840px, so every rem-based width, gap and type size
+   scales together instead of leaving a desktop-sized column in a void. Each
+   user font-size setting keeps its ratio. Below 2560px nothing changes. */
+@media (width >= 2560px) {
+  html,
+  html.font-normal {
+    font-size: clamp(16px, calc(100vw / 160), 24px);
+  }
+
+  html.font-small {
+    font-size: clamp(14px, calc(100vw / 182.857), 21px);
+  }
+
+  html.font-large {
+    font-size: clamp(18px, calc(100vw / 142.222), 27px);
+  }
+
+  html.font-xlarge {
+    font-size: clamp(20px, calc(100vw / 128), 30px);
+  }
+
+  /* Reading measure. Dialogs are wide enough here for lines of 130-200
+     characters. A max-w-* class on the element still wins; list items that
+     carry classes are layout rows, not prose, and are left alone. */
+  p,
+  li:not([class]) {
+    max-width: 70ch;
+  }
+
+  .text-center p,
+  p.text-center {
+    margin-inline: auto;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION — in-app override
+   System-preference variant lives at the top of this file (Sprint 5 / WCAG 2.3.3);
+   this class is applied by ThemeContext when the user toggles the in-app setting.
+   ============================================ */
+
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ============================================
+   FOCUS INDICATORS - Enhanced for Accessibility
+   ============================================ */
+
+/* Focus Visible for Accessibility */
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-va-blue;
+}
+
+html.dark :focus-visible {
+  outline-color: var(--va-gold);
+}
+
+/* Skip Link for Screen Readers */
+.skip-link {
+  position: absolute;
+  top: -2.5rem;
+  left: 0;
+  background-color: var(
+    --va-blue
+  ); /* brand green; was federal #003f87 (RT15-1) */
+
+  color: #fff;
+  padding: 0.5rem 1rem;
+  z-index: 100;
+  transition: all 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================
+   DARK MODE SPECIFIC OVERRIDES
+   ============================================ */
+
+html.dark .bg-white {
+  background-color: #1a3d2e !important; /* forest green-800 */
+}
+
+html.dark .bg-gray-50 {
+  background-color: #0f2919 !important; /* forest green-950 */
+}
+
+html.dark .bg-gray-100 {
+  background-color: #1a3d2e !important; /* forest green-800 */
+}
+
+html.dark .text-gray-900:not(.dark\:text-gray-900, .bg-va-gold) {
+  color: #f3f4f6 !important; /* gray-100 */
+}
+
+html.dark .text-gray-800 {
+  color: #e5e7eb !important; /* gray-200 */
+}
+
+html.dark .text-gray-700 {
+  color: #e5e7eb !important; /* gray-200 */
+}
+
+html.dark .text-gray-600 {
+  color: #e5e7eb !important; /* gray-200 */
+}
+
+html.dark .border-gray-200 {
+  border-color: #374151 !important; /* gray-700 */
+}
+
+html.dark .border-gray-300 {
+  border-color: #4b5563 !important; /* gray-600 */
+}
+
+html.dark .shadow-lg {
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 50%),
+    0 4px 6px -2px rgb(0 0 0 / 40%);
+}
+
+html.dark .shadow-xl {
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 50%),
+    0 10px 10px -5px rgb(0 0 0 / 40%);
+}
+
+/* Dark mode for specific components */
+html.dark .bg-amber-50,
+html.dark .bg-orange-50 {
+  @apply bg-amber-900/30;
+}
+
+html.dark .border-amber-200 {
+  @apply border-amber-700;
+}
+
+html.dark .text-amber-800 {
+  @apply text-amber-200;
+}
+
+html.dark .text-amber-700 {
+  @apply text-amber-300;
+}
+
+html.dark .text-amber-600 {
+  @apply text-amber-400;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-teal-50 {
+  @apply bg-emerald-900/30;
+}
+
+html.dark .border-emerald-200 {
+  @apply border-emerald-700;
+}
+
+html.dark .border-teal-200 {
+  @apply border-teal-700;
+}
+
+html.dark .bg-blue-50,
+html.dark .bg-indigo-50 {
+  @apply bg-blue-900/30;
+}
+
+html.dark .border-blue-200 {
+  @apply border-blue-700;
+}
+
+/* ============================================
+   DARK MODE GRADIENT BACKGROUNDS
+   Override light gradients with dark equivalents
+   ============================================ */
+
+/* Emerald/Teal gradients (Secondary Scout cards) */
+html.dark .bg-gradient-to-br.from-emerald-50.to-teal-50,
+html.dark .bg-gradient-to-r.from-emerald-50.to-teal-50 {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(6 78 59 / 40%),
+    rgb(19 78 74 / 40%)
+  ) !important;
+}
+
+/* Amber/Yellow gradients (C&P Simulator cards) */
+html.dark .bg-gradient-to-br.from-amber-50.to-yellow-50,
+html.dark .bg-gradient-to-r.from-amber-50.to-yellow-50 {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(120 53 15 / 40%),
+    rgb(113 63 18 / 40%)
+  ) !important;
+}
+
+/* Blue/Indigo gradients */
+html.dark .bg-gradient-to-br.from-blue-50.to-indigo-50,
+html.dark .bg-gradient-to-r.from-blue-50.to-indigo-50 {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(30 58 138 / 40%),
+    rgb(49 46 129 / 40%)
+  ) !important;
+}
+
+/* Green gradients */
+html.dark .bg-gradient-to-br.from-green-50.to-emerald-50,
+html.dark .bg-gradient-to-r.from-green-50.to-emerald-50 {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(20 83 45 / 40%),
+    rgb(6 78 59 / 40%)
+  ) !important;
+}
+
+/* Slate gradients (My Packet) */
+html.dark .bg-gradient-to-br.from-slate-50.to-gray-50,
+html.dark .bg-gradient-to-r.from-slate-50.to-gray-50 {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(51 65 85 / 40%),
+    rgb(55 65 81 / 40%)
+  ) !important;
+}
+
+/* Red/Rose gradients (Warnings/Errors) */
+html.dark .bg-gradient-to-br.from-red-50.to-rose-50,
+html.dark .bg-gradient-to-r.from-red-50.to-rose-50 {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(127 29 29 / 40%),
+    rgb(136 19 55 / 40%)
+  ) !important;
+}
+
+/* Orange gradients */
+html.dark .bg-gradient-to-br.from-orange-50.to-amber-50,
+html.dark .bg-gradient-to-r.from-orange-50.to-amber-50 {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(124 45 18 / 40%),
+    rgb(120 53 15 / 40%)
+  ) !important;
+}
+
+/* Icon/Badge backgrounds in dark mode */
+html.dark .bg-emerald-100 {
+  @apply bg-emerald-800/50;
+}
+
+html.dark .bg-amber-100 {
+  @apply bg-amber-800/50;
+}
+
+html.dark .bg-teal-100 {
+  @apply bg-teal-800/50;
+}
+
+html.dark .bg-indigo-100 {
+  @apply bg-indigo-800/50;
+}
+
+html.dark .bg-purple-100 {
+  @apply bg-purple-800/50;
+}
+
+html.dark .bg-slate-100 {
+  @apply bg-emerald-700;
+}
+
+html.dark .bg-orange-100 {
+  @apply bg-orange-800/50;
+}
+
+/* ============================================
+   DARK MODE TEXT CONTRAST FIXES
+   Ensuring WCAG 2.1 AA compliant contrast ratios
+   ============================================ */
+
+/* Blue text - convert to light blue for dark backgrounds */
+html.dark .text-blue-900 {
+  color: #dbeafe !important; /* blue-100 */
+}
+
+html.dark .text-blue-800 {
+  color: #dbeafe !important; /* blue-100 */
+}
+
+html.dark .text-blue-700 {
+  color: #dbeafe !important; /* blue-100 */
+}
+
+html.dark .text-blue-600 {
+  color: #dbeafe !important; /* blue-100 */
+}
+
+/* Green text - convert to light green */
+html.dark .text-green-800 {
+  color: #dcfce7 !important; /* green-100 */
+}
+
+html.dark .text-green-700 {
+  color: #dcfce7 !important; /* green-100 */
+}
+
+html.dark .text-green-600 {
+  color: #dcfce7 !important; /* green-100 */
+}
+
+/* Emerald text - toned down for dark mode */
+html.dark .text-emerald-900 {
+  color: #d1fae5 !important; /* emerald-100 */
+}
+
+html.dark .text-emerald-800 {
+  color: #d1fae5 !important; /* emerald-100 */
+}
+
+html.dark .text-emerald-700 {
+  color: #d1fae5 !important; /* emerald-100 */
+}
+
+html.dark .text-emerald-600 {
+  color: #d1fae5 !important; /* emerald-100 */
+}
+
+/* Teal text - toned down for dark mode */
+html.dark .text-teal-900 {
+  color: #ccfbf1 !important; /* teal-100 */
+}
+
+html.dark .text-teal-800 {
+  color: #ccfbf1 !important; /* teal-100 */
+}
+
+html.dark .text-teal-700 {
+  color: #ccfbf1 !important; /* teal-100 */
+}
+
+/* Purple/Indigo text */
+html.dark .text-purple-800 {
+  color: #f3e8ff !important; /* purple-100 */
+}
+
+html.dark .text-purple-700 {
+  color: #f3e8ff !important; /* purple-100 */
+}
+
+html.dark .text-indigo-800 {
+  color: #e0e7ff !important; /* indigo-100 */
+}
+
+html.dark .text-indigo-700 {
+  color: #e0e7ff !important; /* indigo-100 */
+}
+
+/* Slate text */
+html.dark .text-slate-800 {
+  color: #f1f5f9 !important; /* slate-100 */
+}
+
+html.dark .text-slate-700 {
+  color: #f1f5f9 !important; /* slate-100 */
+}
+
+/* Yellow/Orange warning colors - adjust for visibility */
+html.dark .text-yellow-800 {
+  color: #fef9c3 !important; /* yellow-100 */
+}
+
+html.dark .text-yellow-700 {
+  color: #fef9c3 !important; /* yellow-100 */
+}
+
+html.dark .text-orange-800 {
+  color: #ffedd5 !important; /* orange-100 */
+}
+
+html.dark .text-orange-700 {
+  color: #ffedd5 !important; /* orange-100 */
+}
+
+/* Red error text */
+html.dark .text-red-800 {
+  color: #fee2e2 !important; /* red-100 */
+}
+
+html.dark .text-red-700 {
+  color: #fee2e2 !important; /* red-100 */
+}
+
+html.dark .text-red-600 {
+  color: #fee2e2 !important; /* red-100 */
+}
+
+/* Cyan text */
+html.dark .text-cyan-800 {
+  color: #cffafe !important; /* cyan-100 */
+}
+
+html.dark .text-cyan-700 {
+  color: #cffafe !important; /* cyan-100 */
+}
+
+/* Code blocks in dark mode */
+html.dark code {
+  background-color: #374151; /* gray-700 */
+  color: #f3f4f6; /* gray-100 */
+}
+
+/* Background color overrides for info boxes */
+html.dark .bg-blue-100 {
+  @apply bg-blue-800/50;
+}
+
+html.dark .bg-green-50 {
+  @apply bg-green-900/30;
+}
+
+html.dark .bg-green-100 {
+  @apply bg-green-800/50;
+}
+
+html.dark .border-green-200 {
+  @apply border-green-700;
+}
+
+html.dark .bg-amber-50 {
+  @apply bg-amber-900/30;
+}
+
+html.dark .bg-amber-100 {
+  @apply bg-amber-800/50;
+}
+
+html.dark .border-amber-200 {
+  @apply border-amber-700;
+}
+
+html.dark .bg-yellow-50 {
+  @apply bg-yellow-900/30;
+}
+
+html.dark .bg-yellow-100 {
+  @apply bg-yellow-800/50;
+}
+
+html.dark .bg-red-50 {
+  @apply bg-red-900/30;
+}
+
+html.dark .bg-red-100 {
+  @apply bg-red-800/50;
+}
+
+html.dark .border-red-200 {
+  @apply border-red-700;
+}
+
+/* ============================================
+   FORM ELEMENTS IN DARK MODE
+   ============================================ */
+
+/* Select dropdowns */
+html.dark select {
+  background-color: #2d5936; /* forest green-700 */
+  color: #f3f4f6; /* gray-100 */
+  border-color: #16a34a; /* green-600 */
+}
+
+html.dark select option {
+  background-color: #374151; /* gray-700 */
+  color: #f3f4f6; /* gray-100 */
+}
+
+/* Input fields */
+html.dark input:not([type="checkbox"], [type="radio"]) {
+  background-color: #2d5936; /* forest green-700 */
+  color: #f3f4f6; /* gray-100 */
+  border-color: #16a34a; /* green-600 */
+}
+
+html.dark input::placeholder {
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Textarea */
+html.dark textarea {
+  background-color: #2d5936; /* forest green-700 */
+  color: #f3f4f6; /* gray-100 */
+  border-color: #4b5563; /* gray-600 */
+}
+
+html.dark textarea::placeholder {
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Border overrides for form elements with specific border colors */
+html.dark .border-gray-300 {
+  border-color: #16a34a !important; /* green-600 */
+}
+
+html.dark .border-gray-200 {
+  border-color: #2d5936 !important; /* forest green-700 */
+}
+
+/* ============================================
+   HOVER STATE FIXES FOR DARK MODE
+   Prevent light backgrounds on hover
+   ============================================ */
+
+html.dark .hover\:bg-blue-50:hover {
+  @apply bg-blue-800/50 !important;
+}
+
+html.dark .hover\:bg-blue-100:hover {
+  @apply bg-blue-800/60 !important;
+}
+
+html.dark .hover\:bg-gray-50:hover {
+  background-color: #2d5936 !important; /* forest green-700 */
+}
+
+html.dark .hover\:bg-gray-100:hover {
+  background-color: #16a34a !important; /* green-600 */
+}
+
+html.dark .hover\:bg-red-50:hover {
+  @apply bg-red-900/50 !important;
+}
+
+html.dark .hover\:bg-green-50:hover {
+  @apply bg-green-900/50 !important;
+}
+
+html.dark .hover\:bg-indigo-50:hover {
+  @apply bg-indigo-900/50 !important;
+}
+
+/* Group hover text color - prevent invisible text */
+html.dark .group:hover .group-hover\:text-blue-600 {
+  color: #93c5fd !important; /* blue-300 */
+}
+
+html.dark .group:hover .group-hover\:text-indigo-600 {
+  color: #a5b4fc !important; /* indigo-300 */
+}
+
+/* ============================================
+   BADGE/TAG BACKGROUND COLORS FOR DARK MODE
+   ============================================ */
+
+html.dark .bg-gray-100 {
+  background-color: #2d5936 !important; /* forest green-700 */
+}
+
+html.dark .bg-gray-50 {
+  background-color: #1a3d2e !important; /* forest green-800 */
+}
+
+/* Hover border colors in dark mode */
+html.dark .hover\:border-blue-400:hover {
+  @apply border-blue-500;
+}
+
+html.dark .hover\:border-indigo-300:hover {
+  @apply border-indigo-500;
+}
+
+/* Gray text in dark mode */
+html.dark .text-gray-900:not(.dark\:text-gray-900, .bg-va-gold) {
+  color: #f3f4f6 !important; /* gray-100 */
+}
+
+html.dark .text-gray-800 {
+  color: #e5e7eb !important; /* gray-200 */
+}
+
+html.dark .text-gray-700 {
+  color: #e5e7eb !important; /* gray-200 */
+}
+
+html.dark .text-gray-600 {
+  color: #e5e7eb !important; /* gray-200 */
+}
+
+html.dark .text-gray-500 {
+  color: #e5e7eb !important; /* gray-200 */
+}
+
+/* Links in dark mode - ensure visibility (exclude colored funding card backgrounds) */
+html.dark
+  a:not(
+    .bg-va-gold,
+    .bg-yellow-400,
+    .bg-blue-600,
+    .bg-green-600,
+    .bg-sky-600,
+    .bg-amber-700,
+    .text-white
+  ) {
+  /* blue-200: blue-300 was 4.48:1 on the dark theme's lighter green panels */
+  color: #bfdbfe;
+}
+
+html.dark
+  a:not(
+    .bg-va-gold,
+    .bg-yellow-400,
+    .bg-blue-600,
+    .bg-green-600,
+    .bg-sky-600,
+    .bg-amber-700,
+    .text-white
+  ):hover {
+  color: #dbeafe;
+}
+
+/* Dark scrollbar */
+html.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* ============================================
+   MOBILE SCROLL FIX FOR MODALS
+   Prevents double-scroll and scroll bleed-through
+   ============================================ */
+
+/* Body scroll lock class - applied when modal is open */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* Preserve scroll position when locked */
+body.modal-open-with-position {
+  overflow: hidden !important;
+}
+
+/* Modal backdrop - scrollable container */
+.modal-backdrop {
+  overscroll-behavior: contain; /* Prevent scroll chaining to body */
+  touch-action: pan-y; /* Allow vertical scrolling only */
+}
+
+/* Modal content - prevent nested scroll issues */
+.modal-content {
+  overscroll-behavior: contain;
+}
+
+/* Modal content body - scrollable area inside modal */
+.modal-content > div[class*="overflow-y-auto"] {
+  overscroll-behavior-y: contain;
+}
+
+/* Ensure flex modals work correctly */
+.modal-content.flex {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sticky headers inside modals */
+.modal-content .sticky {
+  position: sticky;
+  z-index: 10;
+}
+
+/* Fix for iOS momentum scrolling issues */
+@supports (-webkit-touch-callout: none) {
+  /* Prevent rubber-banding on iOS when at scroll boundaries */
+  body.modal-open {
+    position: fixed;
+    overflow: hidden;
+  }
+}
+
+/* Utility class for scroll containers inside modals */
+.scroll-container {
+  overscroll-behavior-y: contain;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Sparkle animation for special elements */
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+/* Star twinkle effect */
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* Gentle float animation */
+@keyframes gentle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Shimmer effect for badges */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Heart beat for donation/support buttons */
+@keyframes heart-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.1);
+  }
+
+  35% {
+    transform: scale(0.9);
+  }
+
+  45% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+.animate-sparkle {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.animate-gentle-float {
+  animation: gentle-float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 30%),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-heart-beat {
+  animation: heart-beat 1.5s ease-in-out infinite;
+}
+
+/* Subtle pulse animation for CTA buttons */
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 10%),
+      0 2px 4px -2px rgb(0 0 0 / 10%);
+  }
+
+  50% {
+    box-shadow:
+      0 10px 15px -3px rgb(253 185 19 / 30%),
+      0 4px 6px -4px rgb(253 185 19 / 20%);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+/* Pulse glow animation for Bunker Backup button when unsaved changes exist */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(251 191 36 / 0%);
+  }
+
+  50% {
+    box-shadow: 0 0 20px 3px rgb(251 191 36 / 60%);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VA GLOSSARY TOOLTIPS - "Jargon Decoder"
+   Automatic tooltips for VA acronyms and terminology
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* VA term styling - dotted underline to indicate tooltip */
+.va-term {
+  position: relative;
+  text-decoration: underline dotted theme("colors.blue.500") 1px;
+  text-underline-offset: 3px;
+  cursor: help;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.va-term:hover,
+.va-term:focus {
+  text-decoration-color: theme("colors.blue.700");
+  text-decoration-thickness: 2px;
+}
+
+/* Dark mode adjustments */
+.dark .va-term {
+  text-decoration-color: theme("colors.blue.400");
+}
+
+.dark .va-term:hover,
+.dark .va-term:focus {
+  text-decoration-color: theme("colors.blue.300");
+}
+
+/* The tooltip popup */
+.va-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: theme("colors.gray.900");
+  color: theme("colors.white");
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  width: 280px;
+  max-width: 90vw;
+  z-index: 9999;
+  box-shadow: 0 10px 25px rgb(0 0 0 / 30%);
+  pointer-events: none;
+  animation: tooltip-fade-in 0.15s ease-out;
+}
+
+/* Tooltip arrow */
+.va-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: theme("colors.gray.900");
+}
+
+/* Dark mode tooltip */
+.dark .va-tooltip {
+  background: theme("colors.gray.800");
+  border: 1px solid theme("colors.gray.700");
+}
+
+.dark .va-tooltip::after {
+  border-top-color: theme("colors.gray.800");
+}
+
+/* Tooltip term header */
+.va-tooltip-term {
+  display: block;
+  font-weight: 700;
+  color: theme("colors.blue.400");
+  margin-bottom: 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Position adjustments when tooltip is near edges */
+.va-tooltip.tooltip-right {
+  left: 0;
+  transform: translateX(0) translateY(-8px);
+}
+
+.va-tooltip.tooltip-right::after {
+  left: 20px;
+}
+
+.va-tooltip.tooltip-left {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(-8px);
+}
+
+.va-tooltip.tooltip-left::after {
+  left: auto;
+  right: 20px;
+}
+
+.va-tooltip.tooltip-bottom {
+  bottom: auto;
+  top: 100%;
+  transform: translateX(-50%) translateY(8px);
+}
+
+.va-tooltip.tooltip-bottom::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: theme("colors.gray.900");
+}
+
+.dark .va-tooltip.tooltip-bottom::after {
+  border-bottom-color: theme("colors.gray.800");
+}
+
+/* Fade-in animation */
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+/* Accessibility: Show tooltip on focus for keyboard users */
+.va-term:focus .va-tooltip {
+  display: block;
+}
+
+/* High contrast mode support. "more" is the only spec value for an
+   increased-contrast preference (no-preference | less | more | custom) —
+   "high" is not a value stylelint's media-feature-name-value-no-unknown
+   recognizes and never matches in any browser, so this block was dead. */
+@media (prefers-contrast: more) {
+  .va-term {
+    text-decoration-thickness: 2px;
+  }
+
+  .va-tooltip {
+    border: 2px solid theme("colors.blue.500");
+  }
+}
+
+/* Button Hover States */
+button:not(:disabled) {
+  @apply transition-all duration-200;
+}
+
+button:not(:disabled):hover {
+  @apply transform hover:-translate-y-0.5 shadow-lg;
+}
+
+/* Card Shadows */
+.card-shadow {
+  @apply shadow-md hover:shadow-lg transition-shadow;
+}
+
+/* Utility Classes */
+
+/* RT15-1 (D2 fix): the va-blue/va-gold utilities hardcoded federal #003f87 /
+   #fdb913, so the same brand token rendered TWO different colors and ignored
+   dark mode + every colorblind palette. Bind them to the theme CSS variables
+   (defined per :root / html.dark / colorblind modes) so they are one color,
+   theme-aware, and colorblind-aware. Residual: gold-as-text contrast on light
+   (D1) gets a per-theme --va-gold-text in RT15-8. */
+.text-va-blue {
+  color: var(--va-blue);
+}
+
+.bg-va-blue {
+  background-color: var(--va-blue);
+}
+
+.text-va-gold {
+  color: var(--va-gold);
+}
+
+.bg-va-gold {
+  background-color: var(--va-gold);
+}
+
+/* Form Inputs */
+input[type="text"],
+input[type="search"],
+textarea,
+select {
+  @apply transition-colors duration-200;
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  @apply border-va-blue ring-2 ring-va-blue ring-opacity-20;
+}
+
+/* Links */
+a {
+  @apply transition-colors duration-200;
+}
+
+/* Responsive Typography */
+@media (width <= 640px) {
+  h1 {
+    @apply text-2xl;
+  }
+
+  h2 {
+    @apply text-xl;
+  }
+
+  h3 {
+    @apply text-lg;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABLET OPTIMIZATION - "The iPad General"
+   Optimized for iPad, Android tablets, and Surface devices (768px-1366px)
+   v1.4.0 - Proper tablet breakpoints and orientation handling
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Tablet Portrait Mode (768px - 1024px) */
+@media (width >= 768px) and (width <= 1024px) and (orientation: portrait) {
+  /* Optimal 2-column grid for tablet portrait */
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3,
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px;
+  }
+
+  /* Modal optimization - not full screen, but substantial */
+  .modal-content {
+    max-width: 90vw;
+    max-height: 85vh;
+    margin: auto;
+    border-radius: 16px;
+  }
+
+  /* Better spacing for tablet reading */
+  .container,
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl,
+  .max-w-4xl {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  /* Touch targets slightly smaller than phone but still touch-friendly */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+  }
+}
+
+/* Tablet Landscape Mode (1024px - 1366px) - iPad Pro, Surface, etc. */
+@media (width >= 1024px) and (width <= 1366px) and (orientation: landscape) {
+  /* 3-column grid for tablet landscape */
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  /* Modal slightly narrower in landscape */
+  .modal-content {
+    max-width: 75vw;
+    max-height: 90vh;
+    margin: auto;
+    border-radius: 16px;
+  }
+
+  /* Sidebar-friendly layout */
+  .container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+/* iPad/Tablet Touch Optimization */
+@media (hover: none) and (pointer: coarse) and (width >= 768px) {
+  /* Larger touch targets on tablets */
+  button:not(.icon-button),
+  a:not(.icon-link),
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  /* Form inputs comfortable for touch */
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  select,
+  textarea {
+    min-height: max(44px, 2.75rem);
+    font-size: max(16px, 1rem);
+    padding: 0.625rem 0.875rem;
+  }
+
+  /* Better scrolling on touch devices */
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto {
+    scroll-behavior: smooth;
+  }
+
+  /* Disable hover effects that stick on touch */
+  button:hover,
+  a:hover {
+    transform: none;
+  }
+}
+
+/* iPad-specific fixes (iPadOS 13+ reports as Mac) */
+@supports (-webkit-touch-callout: none) {
+  @media (width >= 768px) {
+    /* Fix for iPad viewport height issues */
+    .min-h-screen {
+      min-height: -webkit-fill-available;
+    }
+
+    /* Safe area padding for iPad with notch/home indicator */
+    .modal-content {
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+
+    /* Better scroll momentum handled by modern iOS */
+    .modal-content,
+    .sidebar,
+    .overflow-auto {
+      scroll-behavior: smooth;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE-FIRST OPTIMIZATION - "The Platinum Standard"
+   Optimized for 90% mobile user base (320-440px screens)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Touch-Optimized Interactions */
+@media (width <= 768px) {
+  /* Minimum touch target size: 48x48px (WCAG AAA) */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Larger tap padding for interactive elements */
+  button,
+  a {
+    padding: 12px 16px;
+  }
+
+  /* Increase form input sizes */
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  select,
+  textarea {
+    min-height: 48px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 12px 16px;
+  }
+
+  /* Better spacing for mobile readability */
+  .container,
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl,
+  .max-w-4xl {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Optimize modal sizes for mobile */
+  .modal-content {
+    max-height: 90vh;
+    max-height: 90dvh; /* dynamic viewport — keeps footer above the URL bar */
+    border-radius: 16px 16px 0 0;
+  }
+
+  /* Better line height for reading on small screens */
+  p,
+  li {
+    line-height: 1.7;
+  }
+
+  /* No rule makes a bare <table> its own scroller here. "display: block;
+     overflow-x: auto" on the table took the scrolling away from its wrapper,
+     and a table cannot take keyboard focus, so wide tables could not be
+     scrolled without a pointer. A wide table goes inside
+     components/common/ScrollRegion, which is named and focusable. */
+}
+
+/* Progressive Disclosure - Collapsible Sections */
+.mobile-collapse {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.mobile-collapse.collapsed {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.mobile-collapse.expanded {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+/* Mobile-Optimized Cards */
+@media (width <= 768px) {
+  .tool-card,
+  .card {
+    margin-bottom: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  }
+
+  /* Stack elements vertically on mobile */
+  .flex-row-mobile {
+    flex-direction: column;
+  }
+
+  /* Full-width buttons on mobile */
+  .btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Smooth Scrolling for Mobile */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent horizontal scroll issues */
+body {
+  overflow-x: hidden;
+}
+
+/* Mobile-Friendly Focus States */
+@media (width <= 768px) {
+  *:focus {
+    outline: 3px solid var(--va-gold);
+    outline-offset: 2px;
+  }
+
+  /* Remove hover states on mobile (they stick on tap) */
+  @media (hover: none) {
+    button:hover,
+    a:hover {
+      transform: none;
+    }
+  }
+}
+
+/* Bottom Navigation Safe Area (for iOS notch) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-nav,
+  .mobile-footer {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Optimize Grid Layouts for Mobile.
+   Every forced track is minmax(0, 1fr), never a bare 1fr: 1fr means
+   minmax(auto, 1fr), which will not let a grid child be narrower than its
+   widest unwrappable content, so one long row made a whole dialog scroll
+   sideways (the calculator's columns were 501px wide in a 358px body). */
+@media (width <= 640px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px;
+  }
+
+  /* Single column for tool cards */
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Mobile Typography Enhancements */
+@media (width <= 768px) {
+  /* Optimize reading width */
+  p {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  /* Better contrast for small screens */
+  .text-gray-600 {
+    color: #4b5563 !important;
+  }
+
+  html.dark .text-gray-600 {
+    color: #d1d5db !important;
+  }
+}
+
+/* Mobile Loading States */
+@media (width <= 768px) {
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Swipe Gestures Helper */
+.swipeable {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+/* Mobile-Optimized Modals */
+@media (width <= 768px) {
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-height: 92vh;
+    max-height: 92dvh; /* dynamic viewport — keeps footer above the URL bar */
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+  }
+
+  /* Sticky header in modals */
+  .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: inherit;
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Pull-to-Refresh Indicator Area */
+@media (width <= 768px) {
+  body::before {
+    content: "";
+    display: block;
+    height: 20px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   MODAL TAB OPTIMIZATION - "No More Smooshed Tabs"
+   Fixes cramped tabs in all modal components
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* Hide scrollbars while maintaining functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+}
+
+@supports (scrollbar-width: none) {
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tab Navigation - Mobile Optimized */
+@media (width <= 640px) {
+  /* Tab buttons in modals */
+  nav button[role="tab"],
+  nav button:has(span) {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 70px;
+  }
+
+  /* Tab containers should scroll smoothly */
+  nav {
+    scroll-behavior: smooth;
+  }
+
+  /* Ensure tab text doesn't wrap awkwardly */
+  nav button {
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
+
+/* Modal Content Padding - More breathing room on mobile */
+@media (width <= 768px) {
+  .modal-content > div:not(.modal-header, .modal-footer) {
+    padding: 16px;
+  }
+
+  /* Modal headers - reduce padding on very small screens */
+  .modal-header {
+    padding: 12px 16px;
+  }
+
+  /* Better spacing in stat grids */
+  .grid-cols-4 > div,
+  .grid-cols-3 > div,
+  .grid-cols-2 > div {
+    padding: 12px 8px;
+  }
+}
+
+/* Form Elements in Modals - Mobile Friendly */
+@media (width <= 768px) {
+  /* Dropdowns and selects */
+  .modal-content select {
+    font-size: 16px;
+    padding: 12px;
+    background-position: right 8px center;
+  }
+
+  /* Number inputs */
+  .modal-content input[type="number"] {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  /* Radio and checkbox labels */
+  .modal-content label:has(input[type="radio"]),
+  .modal-content label:has(input[type="checkbox"]) {
+    padding: 12px;
+    font-size: 0.875rem;
+  }
+}
+
+/* Tab Badges - Better visibility on mobile */
+@media (width <= 640px) {
+  nav button span:last-child:not(:only-child) {
+    font-size: 0.625rem;
+    padding: 2px 6px;
+    font-weight: 700;
+  }
+}
+
+/* Stat Cards in Modals - Stack nicely on mobile */
+@media (width <= 640px) {
+  .grid.grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px;
+  }
+
+  /* Very small screens - single column for clarity */
+  @media (width <= 360px) {
+    .grid.grid-cols-4,
+    .grid.grid-cols-3 {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+  }
+}
+
+/* Action Buttons in Modals - Full width stack on mobile.
+   `:not(.modal-header *)` scopes this to body/footer action rows only - the
+   bare `.modal-content .flex.gap-2 > button` descendant selector doesn't
+   distinguish a footer's Save/Cancel row from a header's title+close-X row,
+   so it was force-widening close buttons to 120px and pushing them off the
+   right edge of the viewport on 22 tool dialogs (N10, QA final9). */
+@media (width <= 640px) {
+  .modal-content .flex.gap-2 > button:not(.modal-header *),
+  .modal-content .flex.gap-3 > button:not(.modal-header *) {
+    /* No min-width: a 120px floor also caught icon buttons in "flex gap-2"
+       rows and pushed their neighbours off a 390px screen. Each button still
+       grows to share the row and cannot shrink below its own content. */
+    flex: 1;
+  }
+
+  /* If too many buttons, stack them */
+  .modal-content .flex.gap-2:has(> button:nth-child(3)):not(.modal-header *),
+  .modal-content .flex.gap-3:has(> button:nth-child(3)):not(.modal-header *) {
+    flex-direction: column;
+  }
+
+  .modal-content
+    .flex.gap-2:has(> button:nth-child(3)):not(.modal-header *)
+    > button,
+  .modal-content
+    .flex.gap-3:has(> button:nth-child(3)):not(.modal-header *)
+    > button {
+    width: 100%;
+  }
+}
+
+/* Table Responsiveness in Modals */
+@media (width <= 768px) {
+  .modal-content table {
+    font-size: 0.875rem;
+  }
+
+  .modal-content th,
+  .modal-content td {
+    padding: 8px 4px;
+  }
+
+  /* Hide less important columns on small screens */
+  .modal-content table th:last-child,
+  .modal-content table td:last-child {
+    position: sticky;
+    right: 0;
+    background: inherit;
+  }
+}
+
+/* List Items in Modals - Better spacing */
+@media (width <= 768px) {
+  .modal-content ul > li,
+  .modal-content ol > li {
+    padding: 8px 0;
+    line-height: 1.6;
+  }
+}
+
+/* Progress Bars and Meters - Full width on mobile */
+@media (width <= 768px) {
+  .modal-content .w-32,
+  .modal-content .w-40,
+  .modal-content .w-48 {
+    width: 100% !important;
+  }
+}
+
+/* Icon Sizes in Tabs - Consistent on mobile */
+@media (width <= 640px) {
+  nav button svg,
+  nav button [class*="icon"] {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   S9 MOBILE SAFETY-NET — audit cycle S9–S17 (2026-05-31)
+   Cross-cutting mobile fixes that belong to no single component. See
+   docs/SPRINT_PLAN_S9-S17.md. Fuller de-dup of the legacy mobile blob above
+   is deferred to S10's per-cluster refactor.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Dynamic viewport height for the ~90 legacy `max-h-[Nvh]` modal panels that
+   set the cap via a Tailwind utility (not the `.modal-content` class). Mobile
+   browsers shrink the visual viewport when the URL bar shows, so a `90vh`
+   panel can push its action bar below the toolbar; `dvh` tracks the *visible*
+   height. Declared after the Tailwind utilities so it wins on a specificity
+   tie; browsers without `dvh` silently keep the original `vh`. `dvh === vh` on
+   desktop, so this is safe at every width. */
+.max-h-\[60vh\] {
+  max-height: 60dvh;
+}
+
+.max-h-\[70vh\] {
+  max-height: 70dvh;
+}
+
+.max-h-\[80vh\] {
+  max-height: 80dvh;
+}
+
+.max-h-\[90vh\] {
+  max-height: 90dvh;
+}
+
+.max-h-\[95vh\] {
+  max-height: 95dvh;
+}
+
+/* Lift the bottom-left floating buttons clear of the 70px MobileBottomNav
+   (`md:hidden`, so phones only) plus the iOS home-indicator safe area. Two
+   tiers keep the AI bubble (lower) and the bug button (upper) from stacking on
+   top of each other. */
+@media (width <= 767px) {
+  .above-mobile-nav {
+    bottom: calc(70px + env(safe-area-inset-bottom) + 1rem) !important;
+  }
+
+  .above-mobile-nav-stacked {
+    bottom: calc(70px + env(safe-area-inset-bottom) + 5.5rem) !important;
+  }
+}
+
+/* Hide every floating shell overlay - AI Navigator FAB (above-mobile-nav),
+   Bug Squasher (above-mobile-nav-stacked), SecurityBadge (above-mobile-nav),
+   and the Luna toast (luna-toast) - whenever a dialog or alertdialog is open,
+   at every width (`:has()` re-evaluates live, so this also catches a toast
+   that opens while a dialog is already up). aria-modal dialogs expect
+   background content to be inert; display:none achieves that without JS.
+   One selector list for every floating widget, not per-widget zone tuning:
+   the first version only matched `role="dialog"`, which CrisisModal's
+   `role="alertdialog"` skipped, and was mobile-only, which missed the FAB/
+   SecurityBadge sitting over ClaimNavigator/AboutUs at 1440px (N11, QA
+   final9). Quick Exit is deliberately not in this list - it's the panic-exit
+   safety net and stays visible/reachable while any dialog is open (see
+   QuickExitButton.jsx's own top-left reposition below `sm`). */
+body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
+  .above-mobile-nav,
+body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
+  .above-mobile-nav-stacked,
+body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
+  .hide-when-dialog-open,
+body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
+  .luna-toast {
+  display: none;
+}
+
+/* The docked AI assistant spans the phone width, so the floating privacy
+   badge and the AI launcher would sit on its Send button. They step aside
+   while it is open. */
+@media (width <= 767px) {
+  body:has([data-docked-assistant]) .above-mobile-nav,
+  body:has([data-docked-assistant]) .above-mobile-nav-stacked {
+    display: none;
+  }
+}
+
+/* Print Styles */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT OPTIMIZATION - "The Paper General"
+   Makes generated documents print like professional legal submissions
+   ═══════════════════════════════════════════════════════════════════════ */
+@media print {
+  /* Hide all UI chrome - navigation, buttons, sidebars */
+  .no-print,
+  header,
+  nav,
+  footer,
+  button,
+  .sidebar,
+  .donate-button,
+  .buy-me-coffee,
+  .modal-close,
+  .tooltip,
+  .va-term,
+  .ai-warning-banner,
+  .draft-watermark,
+  .certification-checkbox,
+  [class*="button"],
+  [class*="btn-"] {
+    @apply hidden !important;
+  }
+
+  /* Force professional document styling */
+  body {
+    @apply bg-white !important;
+
+    color: #000 !important;
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important; /* Double spacing */
+    margin: 1in !important; /* Standard 1-inch margins */
+  }
+
+  /* Print-friendly typography */
+  * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Maintain structure of output containers */
+  .prose,
+  .statement-output,
+  [class*="statement"],
+  [class*="letter"],
+  [class*="document"] {
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    color: #000 !important;
+  }
+
+  /* Headers in documents */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Times New Roman", Times, serif !important;
+    color: #000 !important;
+    font-weight: bold !important;
+    break-after: avoid !important;
+  }
+
+  h1 {
+    font-size: 16pt !important;
+  }
+
+  h2 {
+    font-size: 14pt !important;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: 12pt !important;
+  }
+
+  /* Preserve whitespace formatting */
+  pre {
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    white-space: pre-wrap !important;
+    color: #000 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  /* Avoid breaking elements across pages */
+  p,
+  blockquote,
+  ul,
+  ol {
+    break-inside: avoid !important;
+  }
+
+  /* Keep critical sections together */
+  .statement-section,
+  .nexus-letter,
+  .doctor-note {
+    break-inside: avoid !important;
+  }
+
+  /* Signature blocks should stay together */
+  .signature-block {
+    break-inside: avoid !important;
+    margin-top: 2em !important;
+  }
+
+  /* Remove shadows from containers */
+  .print\:shadow-none {
+    @apply shadow-none;
+  }
+
+  /* Links should look normal on paper */
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+
+  a[href]::after {
+    content: none !important; /* Don't print URLs */
+  }
+}

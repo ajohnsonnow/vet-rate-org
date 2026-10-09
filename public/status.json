@@ -1,0 +1,13 @@
+{
+  "system_status": "nominal",
+  "ai_enabled": true,
+  "maintenance_message": "",
+  "min_client_version": "1.0.0",
+  "features": {
+    "local_ai": true,
+    "cloud_ai": true,
+    "blue_button": true,
+    "crisis_line": true
+  },
+  "last_updated": "2026-01-21T00:00:00Z"
+}

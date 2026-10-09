@@ -1,0 +1,243 @@
+{
+  "state": "Maine",
+  "stateCode": "ME",
+  "officialSource": "https://www.maine.gov/veterans/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "me-property_tax_exemption-veteran-property-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Veteran Property Tax Exemption",
+      "description": "Maine provides a property tax exemption of $6,000 from the just value of a veteran's home for veterans who served during a recognized war period and are 62 years or older, or who are receiving a 100% disability rating from the VA, or who became 100% disabled while serving. Veterans who received a federal grant for a specially adapted housing unit are eligible for an enhanced exemption of $50,000 from the just value of their home. Applicants must file the Veteran Exemption Application with supporting documentation (DD-214 or VA benefit summary letter) with the municipal assessor no later than April 1.",
+      "value": "$6,000 exemption from just value (standard); $50,000 exemption for specially adapted housing grant recipients",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Veteran served during a recognized war period and is 62+, OR is 100% disabled (any cause of qualifying disability), OR became 100% disabled while serving",
+          "Enhanced $50,000 exemption requires a federal grant for specially adapted housing",
+          "Application with DD-214 or VA benefit summary letter must be filed with municipal assessor by April 1"
+        ]
+      },
+      "application": {
+        "agency": "Maine Revenue Services",
+        "form": "Veteran Exemption Application",
+        "url": "https://www.maine.gov/revenue/sites/maine.gov.revenue/files/inline-files/veteranapp.pdf",
+        "documentation": [
+          "DD Form 214 or Certificate of Release/Discharge from Active Duty",
+          "VA benefit summary letter (if applicable)"
+        ]
+      },
+      "legalCitation": "36 M.R.S. §§ 651-684",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.maine.gov/revenue/taxes/tax-relief-credits-programs/property-tax-relief-programs/property-tax-exemptions",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "me-license_plate-disabled-veteran-license-plate-fee-exempt",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate (Fee-Exempt)",
+      "description": "Maine offers Disabled Veteran license plates to veterans who are 100% service-connected disabled and in receipt of 100% VA benefits, where the disability is permanent and total, and separately to veterans with loss of, or loss of use of, both legs. Both categories are exempt from excise tax, registration fees, and title fees for vehicles under 26,000 lbs. registered weight. A qualifying veteran who elects a different plate style instead of the Disabled Veteran plate must pay the standard registration fee.",
+      "value": "Exempt from excise tax, registration fees, and title fees",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "100% service-connected disability rating that is permanent and total, OR loss/loss of use of both legs",
+          "Vehicle registered weight under 26,000 lbs.",
+          "Must display the Disabled Veteran plate to receive the fee exemption"
+        ]
+      },
+      "application": {
+        "agency": "Maine Bureau of Motor Vehicles",
+        "form": "PS-18 Application for Disability Plates",
+        "url": "https://www.maine.gov/sos/bmv/registration/availablevet.html",
+        "documentation": [
+          "VA documentation verifying 100% permanent and total service-connected disability"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.maine.gov/sos/bmv/registration/availablevet.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "me-recreation-disabled-veteran-hunting-fishing-trapping-licens",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Hunting, Fishing & Trapping License",
+      "description": "Maine issues a complimentary lifetime license to fish, trap, and hunt to veterans honorably discharged from the U.S. Armed Forces or National Guard with a service-connected disability rating of 50% or more, who are residents of Maine, New Hampshire, Vermont, Rhode Island, Texas, or another state with a reciprocal agreement. The license includes archery, muzzleload, bear, migratory bird, pheasant, spring/fall wild turkey, coyote night hunt, crossbow, one expanded archery antlerless deer permit, one expanded archery either-sex permit, and (upon meeting qualifications) a guide license. The license remains valid for the holder's lifetime provided residency requirements under Title 12, section 10001(53) continue to be met.",
+      "value": "Complimentary lifetime hunting, fishing, and trapping license bundle",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge from U.S. Armed Forces or National Guard",
+          "Service-connected disability rating of 50% or more",
+          "Resident of Maine or a reciprocal state (NH, VT, RI, TX, or others with reciprocal agreements)",
+          "Lottery permits (e.g., moose, antlerless deer) still require separate application"
+        ]
+      },
+      "application": {
+        "agency": "Bureau of Maine Veterans' Services / Maine Department of Inland Fisheries and Wildlife",
+        "form": "Disabled Veteran Hunting & Fishing License Application",
+        "url": "https://www.maine.gov/veterans/forms/disabled-veteran-hunting-fishing-license",
+        "documentation": [
+          "VA documentation of service-connected disability rating of 50% or more",
+          "Proof of residency (driver's license)"
+        ]
+      },
+      "legalCitation": "12 M.R.S. § 10001(53)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.maine.gov/veterans/node/125",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "me-education_tuition-veterans-dependents-educational-benefits-vdeb",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Veterans Dependents Educational Benefits (VDEB)",
+      "description": "Maine provides a 100% waiver of tuition and all mandatory fees at University of Maine System schools, Maine Community Colleges, and Maine Maritime Academy for the spouse or dependent of a veteran who has a 100% total permanent service-connected disability rating, or who died in the line of duty or from a service-connected disability, or who was totally and permanently disabled from a service-connected disability at time of death, or an active-duty member who has been listed for more than 90 days as missing in action, captured, or forcibly detained/interned. The veteran must have entered service from Maine or have been a Maine resident for the five years immediately preceding application, and the dependent must apply for a Federal Pell Grant as a condition of the waiver.",
+      "value": "100% waiver of tuition and all mandatory fees",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Veteran entered service from Maine or was a Maine resident for 5 years preceding application",
+          "Dependent must apply for a Federal Pell Grant (20 U.S.C. § 1070a)",
+          "Child dependents have 10 academic years from first entrance to complete 120 credit hours",
+          "Must maintain at least a 2.0 GPA to continue receiving benefits"
+        ]
+      },
+      "application": {
+        "agency": "Bureau of Maine Veterans' Services",
+        "form": null,
+        "url": "https://www.maine.gov/veterans/benefits/education/veterans-dependents-educational-benefits",
+        "documentation": [
+          "VA disability rating documentation or death/MIA/POW documentation",
+          "Proof of Maine residency history"
+        ]
+      },
+      "legalCitation": "37-B M.R.S. § 505(2)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.maine.gov/veterans/benefits/education/veterans-dependents-educational-benefits",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "me-hiring_preference-state-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veterans' Preference",
+      "description": "Under 5 M.R.S. § 7054-B, a veteran (defined as a person honorably discharged, other than dishonorably, from active duty in the U.S. Armed Forces, Reserves, or National Guard) who meets the minimum qualifications for a State of Maine job is guaranteed an interview for that position. The preference also extends to Gold Star spouses (surviving spouse of a veteran eligible for a Gold Star lapel pin under 10 U.S.C. § 1126), who must submit DD Form 1300. In any state workforce reduction, veterans and Gold Star spouses are retained in preference to other employees in the same classification with equal seniority, status, and performance reviews.",
+      "value": "Guaranteed interview for qualified veterans applying to State of Maine jobs; retention preference during reductions in force",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable (or other than dishonorable) discharge from active duty, Reserves, or National Guard",
+          "Gold Star spouse preference requires DD Form 1300 documentation"
+        ]
+      },
+      "application": {
+        "agency": "Maine Bureau of Human Resources",
+        "form": "DD Form 1300 (Gold Star spouse preference only)",
+        "url": "https://www.maine.gov/bhr/state-jobs/veterans-preference-in-job-applications",
+        "documentation": [
+          "DD-214 or equivalent discharge documentation",
+          "DD Form 1300 (for Gold Star spouse preference)"
+        ]
+      },
+      "legalCitation": "5 M.R.S. § 7054-B",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.maine.gov/bhr/state-jobs/veterans-preference-in-job-applications",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "me-state_veterans_home-maine-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Maine Veterans' Homes",
+      "description": "Maine Veterans' Homes (MVH) operates six long-term and skilled nursing care facilities in Augusta, Bangor, Caribou, Machias, Scarborough, and South Paris, serving approximately 600 Maine veterans, their spouses, and Gold Star parents. MVH was created by the Maine Legislature in 1977 and continues to operate as an independent nonprofit whose Board of Trustees is appointed by the Governor and must be honorably discharged war veterans. Detailed medical-admission eligibility and per-diem cost information is published on the separate mainevets.org site rather than on maine.gov.",
+      "value": "Long-term, short-term, and skilled nursing care at six state-chartered veterans' homes",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Board of Trustees appointed by the Governor, required to be honorably discharged war veterans",
+          "Serves veterans, spouses, and Gold Star parents",
+          "Specific medical admission criteria and cost schedules are set by MVH, not detailed on maine.gov"
+        ]
+      },
+      "application": {
+        "agency": "Maine Veterans' Homes (chartered by the Maine Legislature) / Bureau of Maine Veterans' Services",
+        "form": null,
+        "url": "https://mainevets.org/",
+        "documentation": ["DD-214 or other proof of military service"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://mainevets.org/about-mvh/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "me-housing-saluteme-salute-home-again-mortgage-discount",
+      "benefitType": "housing",
+      "category": "Housing",
+      "name": "SaluteME / Salute Home Again Mortgage Discount",
+      "description": "MaineHousing (the Maine State Housing Authority) offers qualified active-duty service members, veterans, and retired military personnel a 0.50% interest-rate discount off its First Home Loan 30-year fixed rate through the SaluteME program. The related Salute Home Again option waives the standard first-time homebuyer requirement, allowing eligible veterans who previously owned a home to still qualify. Applicants must have served on active duty for 180 days or served within a war zone; qualifying National Guard service also counts. Loans feature little or no down payment when combined with a government guaranty (FHA/RD/VA) or MaineHousing-approved private mortgage insurance.",
+      "value": "0.50% interest-rate discount on MaineHousing First Home Loan; first-time-homebuyer requirement waived under Salute Home Again",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "180+ days of active duty service, or service within a war zone, or qualifying National Guard service",
+          "Must apply through a MaineHousing-approved lender",
+          "Household income and purchase price limits apply per standard MaineHousing First Home Loan program rules"
+        ]
+      },
+      "application": {
+        "agency": "MaineHousing (Maine State Housing Authority)",
+        "form": null,
+        "url": "https://www.mainehousing.org/programs-services/homebuyer/saluteme",
+        "documentation": [
+          "DD-214 or proof of qualifying active duty/National Guard service"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.mainehousing.org/programs-services/homebuyer/saluteme",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

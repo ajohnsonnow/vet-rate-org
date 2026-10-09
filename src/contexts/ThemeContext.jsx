@@ -1,0 +1,297 @@
+import { createContext, useContext, useState, useEffect } from "react";
+import {
+  getModalClasses,
+  getSectionClasses,
+  getHeaderGradient,
+  getDropdownClasses,
+  getColorClass,
+  BASE_COLORS,
+  TEXT_COLORS,
+  STATUS_COLORS,
+  BUTTON_COLORS,
+  BORDER_COLORS,
+} from "../utils/colorSchemas";
+import { PALETTES, VALID_PALETTES } from "../config/affiliations.js";
+
+const ThemeContext = createContext();
+
+export const THEME_MODES = {
+  LIGHT: "light",
+  DARK: "dark",
+  TBI_COMFORT: "tbi-comfort", // "The Night Bunker" - Zero blue light
+  AAA_CONTRAST: "aaa-high-contrast", // WCAG AAA 7:1 contrast
+};
+
+export const COLOR_BLIND_MODES = {
+  NONE: "none",
+  PROTANOPIA: "protanopia", // Red-blind
+  DEUTERANOPIA: "deuteranopia", // Green-blind
+  TRITANOPIA: "tritanopia", // Blue-blind
+  HIGH_CONTRAST: "high-contrast",
+};
+
+function applyThemeToDocument(
+  theme,
+  colorBlindMode,
+  reducedMotion,
+  fontSize,
+  palette,
+) {
+  const root = document.documentElement;
+
+  // Remove all theme classes
+  root.classList.remove("light", "dark", "tbi-comfort", "aaa-high-contrast");
+
+  // Apply the correct theme class
+  if (theme === THEME_MODES.TBI_COMFORT) {
+    root.classList.add("tbi-comfort");
+  } else if (theme === THEME_MODES.AAA_CONTRAST) {
+    root.classList.add("aaa-high-contrast");
+  } else {
+    root.classList.add(theme);
+  }
+
+  // Remove all color blind classes
+  Object.values(COLOR_BLIND_MODES).forEach((mode) => {
+    root.classList.remove(`cb-${mode}`);
+  });
+  if (colorBlindMode !== COLOR_BLIND_MODES.NONE) {
+    root.classList.add(`cb-${colorBlindMode}`);
+  }
+
+  // Reduced motion
+  if (reducedMotion) {
+    root.classList.add("reduce-motion");
+  } else {
+    root.classList.remove("reduce-motion");
+  }
+
+  // Font size
+  root.classList.remove(
+    "font-small",
+    "font-normal",
+    "font-large",
+    "font-xlarge",
+  );
+  root.classList.add(`font-${fontSize}`);
+
+  // Affiliation palette — remove any previous palette-* class, then apply.
+  // Precedence (docs/AFFILIATION_PALETTES.md §2): accessibility outranks branding.
+  // A palette only applies in plain light/dark with no colorblind mode active; the
+  // colorblind / TBI / AAA modes keep their purpose-built accents untouched.
+  PALETTES.forEach(({ id }) => root.classList.remove(`palette-${id}`));
+  if (palette !== "default" && colorBlindMode === COLOR_BLIND_MODES.NONE) {
+    root.classList.add(`palette-${palette}`);
+  }
+
+  // Save to localStorage
+  localStorage.setItem("vet-rate-theme", theme);
+  localStorage.setItem("vet-rate-color-blind-mode", colorBlindMode);
+  localStorage.setItem("vet-rate-reduced-motion", reducedMotion.toString());
+  localStorage.setItem("vet-rate-font-size", fontSize);
+  localStorage.setItem("vet-rate-palette", palette);
+}
+
+function useSystemThemeSync(setTheme) {
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e) => {
+      if (!localStorage.getItem("vet-rate-theme")) {
+        setTheme(e.matches ? THEME_MODES.DARK : THEME_MODES.LIGHT);
+      }
+    };
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [setTheme]);
+}
+
+function useSystemReducedMotionSync(setReducedMotion) {
+  // Listen for system reduced-motion changes (parallels color-scheme above).
+  // If the user hasn't set an in-app override, mirror their OS preference
+  // live — so toggling "Reduce motion" in System Settings updates the app
+  // without a reload. Vestibular accessibility matters more than persistence.
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleChange = (e) => {
+      if (!localStorage.getItem("vet-rate-reduced-motion")) {
+        setReducedMotion(e.matches);
+      }
+    };
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, [setReducedMotion]);
+}
+
+function buildToggleTheme(setTheme) {
+  return () => {
+    setTheme((prev) =>
+      prev === THEME_MODES.LIGHT ? THEME_MODES.DARK : THEME_MODES.LIGHT,
+    );
+  };
+}
+
+function buildCycleTheme(theme, setTheme) {
+  return () => {
+    const modes = [
+      THEME_MODES.LIGHT,
+      THEME_MODES.DARK,
+      THEME_MODES.TBI_COMFORT,
+      THEME_MODES.AAA_CONTRAST,
+    ];
+    const currentIndex = modes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setTheme(modes[nextIndex]);
+  };
+}
+
+function buildSetPalette(setPaletteState) {
+  return (id) => {
+    if (VALID_PALETTES.has(id)) {
+      setPaletteState(id);
+    }
+  };
+}
+
+function buildThemeContextValue({
+  theme,
+  setTheme,
+  toggleTheme,
+  cycleTheme,
+  isDark,
+  isTbiComfort,
+  isAaaContrast,
+  colorBlindMode,
+  setColorBlindMode,
+  reducedMotion,
+  setReducedMotion,
+  fontSize,
+  setFontSize,
+  palette,
+  setPalette,
+}) {
+  return {
+    theme,
+    setTheme,
+    toggleTheme,
+    cycleTheme,
+    isDark,
+    isTbiComfort,
+    isAaaContrast,
+    colorBlindMode,
+    setColorBlindMode,
+    reducedMotion,
+    setReducedMotion,
+    fontSize,
+    setFontSize,
+    palette,
+    setPalette,
+    PALETTES,
+    // Theme mode constants
+    THEME_MODES,
+    // Color utility functions
+    getModalClasses: () => getModalClasses(theme, colorBlindMode),
+    getSectionClasses: () => getSectionClasses(theme, colorBlindMode),
+    getHeaderGradient: (type) => getHeaderGradient(type, theme, colorBlindMode),
+    getDropdownClasses: () => getDropdownClasses(theme, colorBlindMode),
+    getColorClass: (colorObj) => getColorClass(colorObj, theme, colorBlindMode),
+    // Direct color access
+    colors: {
+      base: BASE_COLORS,
+      text: TEXT_COLORS,
+      status: STATUS_COLORS,
+      button: BUTTON_COLORS,
+      border: BORDER_COLORS,
+    },
+  };
+}
+
+export function ThemeProvider({ children }) {
+  // Initialize from localStorage or default to dark mode
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem("vet-rate-theme");
+    if (saved) return saved;
+    // Default to dark theme instead of checking system preference
+    return THEME_MODES.DARK;
+  });
+
+  const [colorBlindMode, setColorBlindMode] = useState(() => {
+    return (
+      localStorage.getItem("vet-rate-color-blind-mode") ||
+      COLOR_BLIND_MODES.NONE
+    );
+  });
+
+  const [reducedMotion, setReducedMotion] = useState(() => {
+    const saved = localStorage.getItem("vet-rate-reduced-motion");
+    if (saved) return saved === "true";
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
+
+  const [fontSize, setFontSize] = useState(() => {
+    return localStorage.getItem("vet-rate-font-size") || "normal";
+  });
+
+  const [palette, setPaletteState] = useState(() => {
+    const saved = localStorage.getItem("vet-rate-palette");
+    return saved && VALID_PALETTES.has(saved) ? saved : "default";
+  });
+
+  // Apply theme to document
+  useEffect(() => {
+    applyThemeToDocument(
+      theme,
+      colorBlindMode,
+      reducedMotion,
+      fontSize,
+      palette,
+    );
+  }, [theme, colorBlindMode, reducedMotion, fontSize, palette]);
+
+  useSystemThemeSync(setTheme);
+  useSystemReducedMotionSync(setReducedMotion);
+
+  const toggleTheme = buildToggleTheme(setTheme);
+  // Cycle through all theme modes
+  const cycleTheme = buildCycleTheme(theme, setTheme);
+  const setPalette = buildSetPalette(setPaletteState);
+
+  const isDark =
+    theme === THEME_MODES.DARK ||
+    theme === THEME_MODES.TBI_COMFORT ||
+    theme === THEME_MODES.AAA_CONTRAST;
+  const isTbiComfort = theme === THEME_MODES.TBI_COMFORT;
+  const isAaaContrast = theme === THEME_MODES.AAA_CONTRAST;
+
+  const value = buildThemeContextValue({
+    theme,
+    setTheme,
+    toggleTheme,
+    cycleTheme,
+    isDark,
+    isTbiComfort,
+    isAaaContrast,
+    colorBlindMode,
+    setColorBlindMode,
+    reducedMotion,
+    setReducedMotion,
+    fontSize,
+    setFontSize,
+    palette,
+    setPalette,
+  });
+
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+}
+
+export default ThemeContext;

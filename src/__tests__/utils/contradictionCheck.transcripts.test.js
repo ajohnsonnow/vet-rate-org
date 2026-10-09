@@ -1,0 +1,268 @@
+/**
+ * The contradiction rules over every recorded evaluation answer. Each hit
+ * listed here was read by hand and is a real contradiction of the verified
+ * text; a new hit on these runs is either a new false positive or a rule
+ * that got better, and has to be read before the list changes.
+ */
+import { describe, it, expect } from "vitest";
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { findContradictions } from "../../utils/contradictionCheck";
+import { detectReferenceTopics } from "../../utils/verifiedReference";
+import { answerChecksApply } from "../../utils/answerCheckRoutes";
+
+const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
+const LAST_REVIEWED_RUN = "run_2026-10-06_071544";
+const ALL_TOPICS = [
+  "secondary",
+  "toxic-exposure",
+  "herbicide",
+  "pact-act",
+  "tdiu",
+  "decision-review",
+  "supplemental",
+  "next-claim-step",
+  "intent-to-file",
+];
+
+const golden = Object.fromEntries(
+  readFileSync("src/__tests__/agentic/golden-set.jsonl", "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .map((c) => [c.id, c]),
+);
+
+function shownAnswers() {
+  return readdirSync(TRANSCRIPT_DIR)
+    .filter((name) => name.endsWith(".jsonl"))
+    .filter(
+      (name) => name.slice(0, LAST_REVIEWED_RUN.length) <= LAST_REVIEWED_RUN,
+    )
+    .sort((a, b) => a.localeCompare(b))
+    .flatMap((name) =>
+      readFileSync(path.join(TRANSCRIPT_DIR, name), "utf8")
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => JSON.parse(line))
+        .filter((r) => r.type === "case" && !r.calculatorReplacement)
+        .map((r) => ({ run: name.slice(15, 21), ...r })),
+    );
+}
+
+const conditionsOf = (record) => golden[record.id]?.conditions ?? null;
+const isDecoderCase = (record) => golden[record.id]?.entry === "decodeDecision";
+
+// The rule that runs on every answer is measured over every response, with
+// its own pinned list, in contradictionCheck.ratings.test.js.
+const EVERY_ANSWER_RULE = "ratings-added-together";
+
+function hitsFor(record, topics) {
+  const conditions = conditionsOf(record);
+  return findContradictions(record.response, {
+    topics,
+    hasConditions: Array.isArray(conditions) && conditions.length > 0,
+    question: record.input,
+  })
+    .filter((hit) => hit.rule !== EVERY_ANSWER_RULE)
+    .map((hit) => `${record.run} ${record.id} ${hit.rule}`);
+}
+
+function decoderFieldHits(record) {
+  const decoded = JSON.parse(record.response);
+  return Object.entries(decoded).flatMap(([field, value]) =>
+    [value]
+      .flat()
+      .filter((text) => typeof text === "string")
+      .flatMap((text) => findContradictions(text, { topics: ALL_TOPICS }))
+      .map((hit) => `${record.run} ${record.id} ${field} ${hit.rule}`),
+  );
+}
+
+// True contradictions, all recorded with the Nexus Builder's tool id (cases
+// a20 and a29 put a question to a writer tool). In the app that tool's text
+// is a draft, so no block is added to it.
+const WRITER_ROUTE_HITS = [
+  "135040 a29 secondary-barred",
+  "210108 a29 secondary-barred",
+  "002046 a29 secondary-barred",
+  "022302 a29 ratings-higher-of-two",
+  "033751 a29 secondary-barred",
+  "034657 a20 ratings-higher-of-two",
+];
+
+// True contradictions the rules no longer reach, given up so that no rule
+// fires on a true sentence (QA review, 2026-10-06): "new and material" with
+// no review topic, and a wrong service date in a sentence naming no place.
+const GIVEN_UP = [
+  "071859 a28 new-and-material-standard",
+  "074624 a28 new-and-material-standard",
+  "105010 a18 new-and-material-standard",
+  "034657 a16 coverage-date-for-wrong-place",
+  "045832 a17 new-and-material-standard",
+];
+
+// Requests ("Please provide ... documentation regarding toxic exposure"),
+// which QA judged questionable as statements of law. A request is no longer
+// read as an assertion, so these two answers get no block.
+const REQUESTS_NO_LONGER_FLAGGED = [
+  "135040 a16 presumptive-needs-exposure-proof",
+  "000820 a27 presumptive-needs-exposure-proof",
+];
+
+const PROSE_HITS = [
+  "071859 a11 bilateral-same-side",
+  "071859 a13 tdiu-from-percentages",
+  "071859 a16 presumptive-needs-exposure-proof",
+  "074624 a11 bilateral-same-side",
+  "074624 a13 tdiu-from-percentages",
+  "074624 a18 form-for-another-filing",
+  "074624 a27 presumptive-needs-exposure-proof",
+  "081228 a16 presumptive-needs-exposure-proof",
+  "081228 a25 tdiu-from-percentages",
+  "090513 a16 presumptive-needs-exposure-proof",
+  "094601 a16 presumptive-needs-exposure-proof",
+  "094601 a26 higher-level-review-new-evidence",
+  "110055 a26 new-and-material-standard",
+  "124154 a13 tdiu-from-percentages",
+  "124154 a24 bilateral-same-side",
+  "125630 a13 bilateral-same-side",
+  "125630 a25 tdiu-from-percentages",
+  "125630 a26 new-and-material-standard",
+  "135040 a13 tdiu-from-percentages",
+  "135040 a26 new-and-material-standard",
+  "135040 a26 intent-to-file-for-filed-claim",
+  "135908 a15 bilateral-same-side",
+  "135908 a26 new-and-material-standard",
+  "201248 a13 tdiu-from-percentages",
+  "210108 a13 tdiu-from-percentages",
+  "210108 a16 coverage-date-for-wrong-place",
+  "210108 a26 new-and-material-standard",
+  "210108 a26 intent-to-file-for-filed-claim",
+  "210108 a27 presumptive-needs-proof",
+  "221648 a26 new-and-material-standard",
+  "221648 a26 intent-to-file-for-filed-claim",
+  "230321 a26 intent-to-file-for-filed-claim",
+  "231514 a26 intent-form-as-application",
+  "231514 a30 year-from-receiving-a-form",
+  "000014 a15 tdiu-wrong-single-threshold",
+  "000014 a15 year-from-receiving-a-form",
+  "000014 a26 form-for-another-filing",
+  "000820 a16 coverage-date-for-wrong-place",
+  "000820 a26 intent-to-file-for-filed-claim",
+  "002046 a26 intent-to-file-for-filed-claim",
+  "002046 a27 presumptive-needs-exposure-proof",
+  "012539 a30 intent-form-as-application",
+  "013549 a26 intent-to-file-for-filed-claim",
+  "013549 a30 intent-form-as-application",
+  "015232 a26 intent-to-file-for-filed-claim",
+  "021103 a26 form-for-another-filing",
+  "021103 a26 intent-form-as-application",
+  "021103 a26 intent-to-file-for-filed-claim",
+  "031715 a15 intent-paragraph-for-supplemental-claim",
+  "031715 a26 intent-to-file-for-filed-claim",
+  "032917 a26 intent-paragraph-for-supplemental-claim",
+  "032917 a30 intent-form-as-application",
+  "033751 a26 intent-to-file-for-filed-claim",
+  "034657 a04 form-for-another-filing",
+  "034657 a15 tdiu-wrong-single-threshold",
+  "034657 a30 intent-form-as-application",
+  "045147 a15 new-claim-to-reopen",
+  "045147 a15 new-and-material-standard",
+  "045147 a16 coverage-date-for-wrong-place",
+  "045147 a26 appeal-said-to-need-new-evidence",
+  "045147 a27 coverage-date-for-wrong-place",
+  "045832 a15 tdiu-barred-by-any-employment",
+  "045832 a17 bilateral-same-side",
+  "045832 a21 tdiu-threshold-omits-forty",
+  "045832 a30 year-from-receiving-a-form",
+  "045832 a30 intent-form-as-application",
+  "070838 a15 new-and-material-standard",
+  "070838 a26 intent-to-file-for-filed-claim",
+  "071544 a18 form-for-another-filing",
+  "071544 a30 intent-form-as-application",
+];
+
+describe("contradiction rules over the recorded evaluation answers", () => {
+  const answers = shownAnswers();
+  const prose = answers.filter((record) => !isDecoderCase(record));
+
+  it("reads every answer that was shown to the user", () => {
+    expect(answers).toHaveLength(1280);
+    expect(prose).toHaveLength(1259);
+  });
+
+  const topicsOf = (record) =>
+    detectReferenceTopics(record.input, record.toolId, {
+      conditions: conditionsOf(record),
+    });
+
+  it("flags only real contradictions, each on the topic of its own question", () => {
+    const flagged = prose
+      .filter((record) => answerChecksApply({ toolId: record.toolId }))
+      .flatMap((record) => hitsFor(record, topicsOf(record)));
+    expect(flagged).toEqual(PROSE_HITS);
+    expect(flagged.filter((hit) => GIVEN_UP.includes(hit))).toEqual([]);
+    expect(
+      flagged.filter((hit) => REQUESTS_NO_LONGER_FLAGGED.includes(hit)),
+    ).toEqual([]);
+  });
+
+  it("no longer corrects these, because the tool they ran in writes drafts", () => {
+    const off = prose
+      .filter((record) => !answerChecksApply({ toolId: record.toolId }))
+      .flatMap((record) => hitsFor(record, topicsOf(record)));
+    expect(off).toEqual(WRITER_ROUTE_HITS);
+  });
+});
+
+describe("contradiction rules outside the topic of the question", () => {
+  const answers = shownAnswers();
+  const prose = answers.filter((record) => !isDecoderCase(record));
+
+  it("no longer reaches four real a18 contradictions, because a18 raises no topic", () => {
+    const a18 = prose
+      .filter((record) => record.id === "a18")
+      .flatMap((record) => hitsFor(record, ALL_TOPICS));
+    expect(a18).toEqual([
+      "071859 a18 higher-level-review-new-evidence",
+      "074624 a18 form-for-another-filing",
+      "105010 a18 new-and-material-standard",
+      "110822 a18 new-and-material-standard",
+      "071544 a18 form-for-another-filing",
+    ]);
+  });
+
+  // Case a28 recounts older Board decisions. With every topic on, the rule
+  // reaches only the two answers that go on to advise the reader in the old
+  // words ("Ensure you submit new and material evidence to reopen the claim").
+  it("reads past recounted Board orders to the advice, even with every topic on", () => {
+    const outside = prose
+      .flatMap((record) => hitsFor(record, ALL_TOPICS))
+      .filter((hit) => hit.includes(" a28 "));
+    expect(outside).toEqual([
+      "071859 a28 new-and-material-standard",
+      "074624 a28 new-and-material-standard",
+    ]);
+  });
+
+  it("flags the wrong filing instructions in the Decision Decoder's own fields", () => {
+    const flagged = answers.filter(isDecoderCase).flatMap(decoderFieldHits);
+    expect(flagged).toEqual([
+      "213230 t08 action_plan files-statement-of-the-case",
+      "213230 t08 action_plan higher-level-review-at-the-board",
+      "213230 t08 appeal_options files-statement-of-the-case",
+      "221648 t08 deadline_warning supplemental-claim-deadline",
+      "231514 t08 action_plan form-for-another-filing",
+      "000014 t08 deadline_warning review-period-from-wrong-day",
+      "002046 t08 action_plan higher-level-review-new-evidence",
+      "002046 t08 action_plan higher-level-review-hearing",
+      "014319 t08 action_plan review-period-from-wrong-day",
+      "021103 t08 action_plan form-for-another-filing",
+      "022302 t08 action_plan form-for-another-filing",
+      "032917 t08 action_plan form-for-another-filing",
+      "033751 t08 action_plan higher-level-review-new-evidence",
+      "045832 t08 action_plan form-for-another-filing",
+    ]);
+  });
+});

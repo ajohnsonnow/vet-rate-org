@@ -1,0 +1,415 @@
+import { describe, it, expect } from "vitest";
+import {
+  buildDocumentFindings,
+  buildAllDocumentFindings,
+  buildConditionSynthesis,
+  buildPacketTldr,
+  buildPacketSummary,
+  getStatedCombinedRating,
+} from "../../utils/packetSummary";
+
+const dd214Doc = {
+  id: "doc_1",
+  fileName: "williams_dd214.pdf",
+  uploadDate: "2026-07-30T18:04:11.000Z",
+  pageCount: 2,
+  fileSize: 240_000,
+  classification: "DD214",
+  extractedData: {
+    branch: "Army",
+    rank: "SGT",
+    entryDate: "2010-06-01",
+    separationDate: "2015-05-30",
+    characterOfService: "Honorable",
+    mos: [{ code: "11B", title: "Infantryman" }],
+    awards: ["Army Commendation Medal", "Army Commendation Medal"],
+  },
+};
+
+const cFileDoc = {
+  id: "doc_2",
+  fileName: "cfile_2000.pdf",
+  uploadDate: "2026-07-30T20:00:00.000Z",
+  pageCount: 2000,
+  classification: "C_FILE_MEDICAL",
+  extractedData: {
+    summary: "Consolidated claims file.",
+    claimNumber: "C-12345678",
+    conditions: ["Tinnitus", "Lumbar strain"],
+    potential_claims: [{ name: "Sleep apnea secondary to PTSD" }],
+    timeline: [{ date: "2016-02-02", description: "C&P exam" }],
+    segments: [{ type: "DD214" }, { type: "STR" }, { type: "RATING_DECISION" }],
+    inventory: { inventory: [{ id: "segment_1" }, { id: "segment_2" }] },
+    codeSheet: { conditions: [{ name: "TINNITUS (SERVICE CONNECTED)" }] },
+  },
+};
+
+const documentsByCategory = {
+  dd214s: {
+    label: "DD-214 Service Records",
+    icon: "🎖️",
+    documents: [dd214Doc],
+    count: 1,
+  },
+  cFiles: {
+    label: "VA Claims & Decisions",
+    icon: "📋",
+    documents: [cFileDoc],
+    count: 1,
+  },
+  blueButtonReports: {
+    label: "Blue Button",
+    icon: "🏥",
+    documents: [],
+    count: 0,
+  },
+};
+
+const vkb = {
+  serviceHistory: { separationDate: "2015-05-30" },
+  medicalConditions: {
+    current: [
+      {
+        name: "Tinnitus",
+        ratedPercentage: 10,
+        serviceConnected: true,
+        source: "C-File Analysis",
+      },
+      { name: "Lumbar strain", ratedPercentage: 20, serviceConnected: true },
+      { name: "Migraine", source: "Manual entry" },
+    ],
+  },
+  evidenceTimeline: [
+    { date: "2016-02-02", eventType: "exam", description: "C&P exam" },
+    {
+      date: "2017-01-01",
+      eventType: "decision",
+      description: "Rating decision",
+    },
+  ],
+};
+
+describe("buildDocumentFindings", () => {
+  it("extracts scalar fields under stable display labels", () => {
+    const findings = buildDocumentFindings(dd214Doc, {
+      key: "dd214s",
+      label: "DD-214 Service Records",
+      icon: "🎖️",
+    });
+    const byLabel = Object.fromEntries(
+      findings.scalars.map((s) => [s.label, s.value]),
+    );
+
+    expect(byLabel.Branch).toBe("Army");
+    expect(byLabel.Rank).toBe("SGT");
+    expect(byLabel["Character of service"]).toBe("Honorable");
+    expect(findings.categoryLabel).toBe("DD-214 Service Records");
+    expect(findings.analyzedOn).toBe("2026-07-30");
+  });
+
+  it("renders object-shaped and string-shaped list items alike, deduped", () => {
+    const findings = buildDocumentFindings(dd214Doc);
+    const lists = Object.fromEntries(
+      findings.lists.map((l) => [l.label, l.values]),
+    );
+
+    expect(lists.MOS).toEqual(["11B - Infantryman"]);
+    expect(lists.Awards).toEqual(["Army Commendation Medal"]);
+  });
+
+  it("omits fields that are absent rather than emitting empty rows", () => {
+    const findings = buildDocumentFindings({ fileName: "bare.pdf" });
+    expect(findings.scalars).toEqual([]);
+    expect(findings.lists).toEqual([]);
+    expect(findings.findingCount).toBe(0);
+    expect(findings.fileName).toBe("bare.pdf");
+  });
+
+  it("merges Code Sheet conditions with narrative conditions without duplicating", () => {
+    const findings = buildDocumentFindings(cFileDoc);
+    // "Tinnitus" and "TINNITUS (SERVICE CONNECTED)" are distinct raw strings;
+    // uniqueLabels is case-insensitive but not parenthetical-aware, so the
+    // Code Sheet variant is kept as its own label here.
+    expect(findings.conditions).toContain("Tinnitus");
+    expect(findings.conditions).toContain("Lumbar strain");
+    expect(findings.segmentCount).toBe(3);
+    expect(findings.inventoryCount).toBe(2);
+    expect(findings.timelineCount).toBe(1);
+    expect(findings.potentialClaims).toEqual(["Sleep apnea secondary to PTSD"]);
+  });
+
+  it("surfaces a parse failure instead of rendering an empty card", () => {
+    const findings = buildDocumentFindings({
+      fileName: "broken.pdf",
+      extractedData: { raw: "text", parseError: "parseCFileDocument threw" },
+    });
+    expect(findings.parseError).toBe("parseCFileDocument threw");
+  });
+
+  it("rejects non-condition OCR fragments (page numbers, punctuation runs, stray letters, run-on sentences) from the conditions list", () => {
+    const findings = buildDocumentFindings({
+      fileName: "noisy.pdf",
+      extractedData: {
+        conditions: ["Tinnitus", "13.", "----", "N", "A".repeat(150)],
+      },
+    });
+    expect(findings.conditions).toEqual(["Tinnitus"]);
+  });
+
+  it("keeps a long re-characterized VA condition name but not long run-on text", () => {
+    const longVaName =
+      "cervical strain, degenerative arthritis of the cervical spine, thoracic spine curvature with mild scoliosis, radiating pain affecting the upper back and shoulders (previously rated as neck sprain) (claimed as whiplash injury, upper back cervicothoracic spine)";
+    const runOn = `Evidence reviewed (VA exam). ${"The examiner noted pain. ".repeat(8)}`;
+    const findings = buildDocumentFindings({
+      fileName: "letter.pdf",
+      extractedData: { conditions: [longVaName, runOn] },
+    });
+    expect(findings.conditions).toEqual([longVaName]);
+  });
+});
+
+describe("buildDocumentFindings: calculated entry date", () => {
+  it("does not flag a printed entry date as calculated", () => {
+    const findings = buildDocumentFindings(dd214Doc);
+    const enteredService = findings.scalars.find(
+      (s) => s.label === "Entered service",
+    );
+    expect(enteredService.value).toBe("2010-06-01");
+    expect(enteredService.derived).toBe(false);
+  });
+
+  it("flags an NGB-22's calculated entry date (separation date minus net service)", () => {
+    const findings = buildDocumentFindings({
+      fileName: "ngb22.pdf",
+      extractedData: {
+        formType: "NGB22",
+        serviceStartDate: "2012-03-14",
+        serviceStartDateDerived: true,
+        separationDate: "2020-03-14",
+      },
+    });
+    const enteredService = findings.scalars.find(
+      (s) => s.label === "Entered service",
+    );
+    expect(enteredService.value).toBe("2012-03-14");
+    expect(enteredService.derived).toBe(true);
+  });
+});
+
+describe("buildAllDocumentFindings", () => {
+  it("flattens every category and skips empty ones", () => {
+    const all = buildAllDocumentFindings(documentsByCategory);
+    expect(all).toHaveLength(2);
+    expect(all.map((d) => d.categoryKey)).toEqual(["dd214s", "cFiles"]);
+  });
+
+  it("returns an empty list when the VKB read has not resolved", () => {
+    expect(buildAllDocumentFindings(null)).toEqual([]);
+  });
+});
+
+describe("buildConditionSynthesis", () => {
+  it("links each condition to the documents that mention it", () => {
+    const docs = buildAllDocumentFindings(documentsByCategory);
+    const conditions = buildConditionSynthesis(vkb, docs);
+    const tinnitus = conditions.find((c) => c.key === "tinnitus");
+
+    expect(tinnitus.ratedPercentage).toBe(10);
+    expect(tinnitus.serviceConnected).toBe(true);
+    expect(tinnitus.documents).toContain("cfile_2000.pdf");
+    expect(tinnitus.documentCount).toBe(1);
+  });
+
+  it("collapses casing and parenthetical variants onto one condition", () => {
+    const conditions = buildConditionSynthesis(vkb, [
+      { fileName: "a.pdf", conditions: ["TINNITUS"], categoryLabel: "C-File" },
+      {
+        fileName: "b.pdf",
+        conditions: ["Tinnitus (Service Connected)"],
+        categoryLabel: "C-File",
+      },
+    ]);
+    const tinnitus = conditions.filter((c) => c.key === "tinnitus");
+
+    expect(tinnitus).toHaveLength(1);
+    expect(tinnitus[0].documentCount).toBe(2);
+  });
+
+  it("keeps a stored condition with no supporting document, at zero", () => {
+    const conditions = buildConditionSynthesis(vkb, []);
+    const migraine = conditions.find((c) => c.key === "migraine");
+
+    expect(migraine).toBeDefined();
+    expect(migraine.documentCount).toBe(0);
+    expect(migraine.sources).toContain("Manual entry");
+  });
+
+  it("sorts most-corroborated first", () => {
+    const docs = buildAllDocumentFindings(documentsByCategory);
+    const counts = buildConditionSynthesis(vkb, docs).map(
+      (c) => c.documentCount,
+    );
+    expect(counts).toEqual([...counts].sort((a, b) => b - a));
+  });
+
+  it("dedupes an OCR-dropped-space variant onto the same clean-spaced condition", () => {
+    // A missing space isn't a whitespace RUN, so a plain collapse-whitespace
+    // pass can't unify these -- both read letter-for-letter identical once
+    // spaces are stripped entirely.
+    const conditions = buildConditionSynthesis(vkb, [
+      {
+        fileName: "a.pdf",
+        conditions: ["Dyspepsia and functional bowel disorder"],
+        categoryLabel: "C-File",
+      },
+      {
+        fileName: "b.pdf",
+        conditions: ["Dyspepsiaand functional bowel disorder"],
+        categoryLabel: "C-File",
+      },
+    ]);
+    const matches = conditions.filter(
+      (c) => c.key === "dyspepsiaandfunctionalboweldisorder",
+    );
+
+    expect(matches).toHaveLength(1);
+    expect(matches[0].documentCount).toBe(2);
+  });
+});
+
+describe("buildPacketTldr", () => {
+  it("counts documents, pages, conditions and timeline events from stored data", () => {
+    const docs = buildAllDocumentFindings(documentsByCategory);
+    const conditions = buildConditionSynthesis(vkb, docs);
+    const tldr = buildPacketTldr(vkb, docs, conditions);
+
+    expect(tldr.stats.documents).toBe(2);
+    expect(tldr.stats.pages).toBe(2002);
+    expect(tldr.stats.timelineEvents).toBe(2);
+    expect(tldr.stats.rated).toBe(2);
+    expect(tldr.headline).toContain("2 documents");
+    expect(tldr.isEmpty).toBe(false);
+    expect(tldr.bullets.length).toBeGreaterThan(0);
+  });
+
+  it("reports an empty packet honestly rather than inventing a summary", () => {
+    const tldr = buildPacketTldr({}, [], []);
+    expect(tldr.isEmpty).toBe(true);
+    expect(tldr.headline).toBe("No documents analyzed yet.");
+    expect(tldr.bullets).toEqual([]);
+  });
+
+  it("flags conditions with no supporting document as a gap", () => {
+    const conditions = buildConditionSynthesis(vkb, []);
+    const tldr = buildPacketTldr(vkb, [], conditions);
+    expect(tldr.gaps.join(" ")).toContain("no supporting document");
+  });
+
+  it("flags a missing DD-214 and a missing separation date", () => {
+    const tldr = buildPacketTldr({}, [], []);
+    expect(tldr.gaps).toContain("No DD-214 or service record on file.");
+    expect(tldr.gaps).toContain(
+      "Separation date is not recorded in your service history.",
+    );
+  });
+
+  it("does not flag a missing separation date when a service period on file has an end date, the same source BDDBuilder uses (regression D13)", () => {
+    const tldr = buildPacketTldr(
+      {
+        serviceHistory: {
+          servicePeriods: [
+            {
+              serviceStartDate: "2010-01-01",
+              serviceEndDate: "2014-01-01",
+              branch: "Army",
+            },
+          ],
+        },
+      },
+      [],
+      [],
+    );
+    expect(tldr.gaps).not.toContain(
+      "Separation date is not recorded in your service history.",
+    );
+  });
+
+  it("does not flag a missing DD-214 when one is on file", () => {
+    const docs = buildAllDocumentFindings(documentsByCategory);
+    const tldr = buildPacketTldr(vkb, docs, []);
+    expect(tldr.gaps).not.toContain("No DD-214 or service record on file.");
+  });
+
+  it("counts documents that stored raw text only", () => {
+    const docs = buildAllDocumentFindings({
+      otherEvidence: {
+        label: "Other",
+        icon: "📄",
+        documents: [
+          { fileName: "x.pdf", extractedData: { parseError: "boom" } },
+        ],
+        count: 1,
+      },
+    });
+    const tldr = buildPacketTldr(vkb, docs, []);
+    expect(tldr.stats.unparsed).toBe(1);
+    expect(tldr.gaps.join(" ")).toContain("stored raw text only");
+  });
+});
+
+describe("buildPacketSummary", () => {
+  it("returns documents, conditions and tldr in one pass", () => {
+    const summary = buildPacketSummary(vkb, documentsByCategory);
+    expect(summary.documents).toHaveLength(2);
+    expect(summary.conditions.length).toBeGreaterThan(0);
+    expect(summary.tldr.stats.documents).toBe(2);
+  });
+
+  it("survives a null VKB and a null document map", () => {
+    const summary = buildPacketSummary(null, null);
+    expect(summary.documents).toEqual([]);
+    expect(summary.conditions).toEqual([]);
+    expect(summary.tldr.isEmpty).toBe(true);
+  });
+});
+
+describe("getStatedCombinedRating", () => {
+  it("returns the newest letter's stated rating with its date and source", () => {
+    expect(
+      getStatedCombinedRating({
+        vaClaimsHistory: {
+          currentCombinedRating: 80,
+          currentCombinedRatingDate: "February 4, 2024",
+          currentCombinedRatingDateKind: "letter",
+          currentCombinedRatingSource: "letter.pdf",
+        },
+      }),
+    ).toEqual({
+      rating: 80,
+      date: "February 4, 2024",
+      dateKind: "letter",
+      source: "letter.pdf",
+    });
+  });
+
+  it("returns null when no letter stated a combined rating", () => {
+    expect(getStatedCombinedRating({ vaClaimsHistory: {} })).toBeNull();
+    expect(getStatedCombinedRating(null)).toBeNull();
+  });
+});
+
+describe("buildPacketTldr: rated conditions", () => {
+  it("lists the highest-rated conditions first", () => {
+    const rated = [
+      { name: "Rhinitis", ratedPercentage: 0 },
+      { name: "Tinnitus", ratedPercentage: 10 },
+      { name: "PTSD", ratedPercentage: 50 },
+      { name: "Spine", ratedPercentage: 20 },
+    ];
+    const tldr = buildPacketTldr({}, [], rated);
+    const bullet = tldr.bullets.find((b) => b.icon === "📊");
+    expect(bullet.text).toBe(
+      "Rated conditions on file: PTSD (50%), Spine (20%), Tinnitus (10%).",
+    );
+  });
+});

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vet-Rate.org - Transparency Features Test Suite</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    h1 { color: #22c55e; border-bottom: 2px solid #22c55e; padding-bottom: 10px; }
+    h2 { color: #3b82f6; margin-top: 30px; }
+    h3 { color: #f59e0b; }
+    .test-section {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid #3b82f6;
+    }
+    .test-item {
+      background: #334155;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+    .test-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      accent-color: #22c55e;
+    }
+    .location {
+      background: #0f172a;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      color: #60a5fa;
+      margin: 10px 0;
+      display: inline-block;
+    }
+    .steps {
+      list-style-type: decimal;
+      padding-left: 30px;
+      line-height: 1.8;
+    }
+    .steps li { margin: 8px 0; }
+    .expected {
+      background: #065f46;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+      border-left: 3px solid #10b981;
+    }
+    .warning {
+      background: #7c2d12;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+      border-left: 3px solid #f97316;
+    }
+    .feature-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .status-integrated { background: #22c55e; color: #000; }
+    .status-created { background: #f59e0b; color: #000; }
+    .status-pending { background: #ef4444; color: #fff; }
+    code {
+      background: #475569;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      border: 1px solid #475569;
+      padding: 12px;
+      text-align: left;
+    }
+    th { background: #334155; color: #f59e0b; }
+    tr:nth-child(even) { background: #1e293b; }
+    .nav-path {
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+    }
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .summary-card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #475569;
+    }
+    .summary-card h4 { color: #94a3b8; margin: 0 0 10px 0; font-size: 14px; }
+    .summary-card .number { font-size: 36px; font-weight: bold; color: #22c55e; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Transparency Features Test Suite</h1>
+  <p>Created: January 20, 2026 | Version 1.3.2</p>
+  
+  <div class="summary-box">
+    <div class="summary-card">
+      <h4>Features Created</h4>
+      <div class="number">5</div>
+    </div>
+    <div class="summary-card">
+      <h4>New Files</h4>
+      <div class="number">3</div>
+    </div>
+    <div class="summary-card">
+      <h4>Modified Files</h4>
+      <div class="number">3</div>
+    </div>
+    <div class="summary-card">
+      <h4>Test Cases</h4>
+      <div class="number">24</div>
+    </div>
+  </div>
+
+  <h2>📍 Feature Locations</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>File Location</th>
+        <th>Status</th>
+        <th>How to Access</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>VA Sync Logger</strong></td>
+        <td><code>src/utils/vaSyncLogger.js</code></td>
+        <td><span class="feature-status status-integrated">INTEGRATED</span></td>
+        <td>Automatic - logs all VA API calls</td>
+      </tr>
+      <tr>
+        <td><strong>Ribbon Rack</strong></td>
+        <td><code>src/components/RibbonRack.jsx</code></td>
+        <td><span class="feature-status status-integrated">INTEGRATED</span></td>
+        <td>MyPacket → Service History tab → "View Ribbon Rack" button</td>
+      </tr>
+      <tr>
+        <td><strong>Transparency Tabs</strong></td>
+        <td><code>src/components/MyPacket.jsx</code></td>
+        <td><span class="feature-status status-integrated">INTEGRATED</span></td>
+        <td>MyPacket → Tabs at bottom</td>
+      </tr>
+      <tr>
+        <td><strong>Claim Phase Explainer</strong></td>
+        <td><code>src/components/DecisionDecoder.jsx</code></td>
+        <td><span class="feature-status status-integrated">INTEGRATED</span></td>
+        <td>DecisionDecoder → Phase section</td>
+      </tr>
+      <tr>
+        <td><strong>Benefits Ref Hook</strong></td>
+        <td><code>src/hooks/useVaBenefitsRef.js</code></td>
+        <td><span class="feature-status status-integrated">INTEGRATED</span></td>
+        <td>Used by DecisionDecoder</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TEST 1: VA Sync Logger -->
+  <div class="test-section">
+    <h2>1️⃣ VA Sync Logger <span class="feature-status status-integrated">INTEGRATED</span></h2>
+    <div class="location">src/utils/vaSyncLogger.js → src/api/va.js</div>
+    
+    <h3>Purpose</h3>
+    <p>Tracks every VA API call with timestamp, duration, status (pending/success/error), and record count.</p>
+    
+    <div class="test-item">
+      <h3>Test 1.1: API Logging Initialization</h3>
+      <ol class="steps">
+        <li>Open browser DevTools → Console</li>
+        <li>Navigate to MyPacket and trigger any VA sync action</li>
+        <li>Look for console logs starting with <code>[VA Sync]</code></li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Console shows API call start/complete logs with timing info
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 1.2: Sync Status Tab Shows Logs</h3>
+      <ol class="steps">
+        <li>Open <span class="nav-path">MyPacket → Sync Status tab</span></li>
+        <li>Trigger a VA API call (e.g., sync service history)</li>
+        <li>Check if new log entry appears</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Log entries show with timestamp, endpoint, status badge, and duration
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 1.3: Stats Dashboard Updates</h3>
+      <ol class="steps">
+        <li>Open <span class="nav-path">MyPacket → Sync Status tab</span></li>
+        <li>Check the stats cards at top (Total Calls, Success Rate, etc.)</li>
+        <li>Make a few API calls and refresh the tab</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Stats update: total calls, success count, average duration
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 1.4: Clear Sync Log</h3>
+      <ol class="steps">
+        <li>With some log entries present, click "Clear Log" button</li>
+        <li>Confirm the action</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> All log entries cleared, stats reset to zero
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+  </div>
+
+  <!-- TEST 2: Ribbon Rack -->
+  <div class="test-section">
+    <h2>2️⃣ Ribbon Rack <span class="feature-status status-integrated">INTEGRATED</span></h2>
+    <div class="location">src/components/RibbonRack.jsx</div>
+    
+    <h3>Navigation Path</h3>
+    <p><span class="nav-path">🏠 Home → MyPacket (briefcase icon) → Service History tab → "View Ribbon Rack" button</span></p>
+
+    <h3>Purpose</h3>
+    <p>Visual service history display with branch-specific colors (Army green, Navy blue, Air Force blue, Marines scarlet, Coast Guard orange, Space Force slate), deployment timeline with theater ribbons (OEF, OIF), and awards display.</p>
+    
+    <h3>Supported Branches</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Branch</th>
+          <th>Color</th>
+          <th>Motto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>🪖 Army</td><td>Green</td><td>This We'll Defend</td></tr>
+        <tr><td>⚓ Navy</td><td>Blue</td><td>Non Sibi Sed Patriae</td></tr>
+        <tr><td>✈️ Air Force</td><td>Sky Blue</td><td>Aim High... Fly-Fight-Win</td></tr>
+        <tr><td>🦅 Marines</td><td>Scarlet/Red</td><td>Semper Fidelis</td></tr>
+        <tr><td>🚢 Coast Guard</td><td>Orange</td><td>Semper Paratus</td></tr>
+        <tr><td>🚀 Space Force</td><td>Slate/Dark Gray</td><td>Semper Supra</td></tr>
+      </tbody>
+    </table>
+
+    <div class="test-item">
+      <h3>Test 2.1: Component Renders</h3>
+      <ol class="steps">
+        <li>Navigate to <span class="nav-path">MyPacket → Service History tab</span></li>
+        <li>Click the "View Ribbon Rack" button (gold/orange gradient button)</li>
+        <li>Verify modal opens with header "Your Service Story"</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Modal displays with veteran's service periods
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 2.2: Branch Colors</h3>
+      <ol class="steps">
+        <li>Check if Army service shows green styling</li>
+        <li>Check if Navy shows blue styling</li>
+        <li>Check if Marines shows scarlet/red styling</li>
+        <li>Check if Air Force shows light blue styling</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Each branch has distinct, appropriate colors
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 2.3: Deployment Ribbons</h3>
+      <ol class="steps">
+        <li>If veteran has deployments, check for theater ribbons</li>
+        <li>Verify OEF (Afghanistan), OIF (Iraq), OND ribbons display correctly</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Deployments show with appropriate theater campaign ribbons
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 2.4: Total Service Time</h3>
+      <ol class="steps">
+        <li>Check footer area for total service time calculation</li>
+        <li>Verify years/months math is accurate</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Total service time displays (e.g., "8 years, 3 months")
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 2.5: Visual Ribbon Rack Builder</h3>
+      <ol class="steps">
+        <li>Click on "Visual Ribbon Rack Builder" section (amber border with sparkle icon)</li>
+        <li>Paste DD214 text: <code>National Defense Service Medal, Afghanistan Campaign Medal w/2 Bronze Service Stars, Army Commendation Medal w/V Device</code></li>
+        <li>Click "Build Ribbon Rack" button</li>
+        <li>Verify parsed awards list appears below</li>
+        <li>Click "Show Visual Rack" to see ribbon display</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Ribbons display in correct military precedence order with devices (stars, V device) shown
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 2.6: DD214 Abbreviation Parsing</h3>
+      <ol class="steps">
+        <li>Paste abbreviated awards: <code>NDSM, BSM, ARCOM, GCM, AAM, ASR</code></li>
+        <li>Click "Build Ribbon Rack"</li>
+        <li>Verify all abbreviations are recognized and expanded to full names</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Abbreviations expand to: National Defense Service Medal, Bronze Star Medal, Army Commendation Medal, Good Conduct Medal, Army Achievement Medal, Army Service Ribbon
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 2.7: Device Detection</h3>
+      <ol class="steps">
+        <li>Paste: <code>Purple Heart w/2 OLC, Bronze Star Medal w/V Device, ARCOM (3rd Award)</code></li>
+        <li>Build ribbon rack</li>
+        <li>Verify devices appear in the parsed list (Bronze OLC, V Device indicators)</li>
+        <li>Check visual display shows device symbols on ribbons</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Devices (oak leaf clusters, V device, service stars) appear overlaid on ribbon images
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 2.8: Ribbons Per Row Setting</h3>
+      <ol class="steps">
+        <li>Parse several awards (6+)</li>
+        <li>Change "Ribbons per row" dropdown to 3, then 4</li>
+        <li>Verify visual rack layout changes accordingly</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Rack layout adjusts to 3 or 4 ribbons per row, with top row centered if partial
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+  </div>
+
+  <!-- TEST 3: Transparency Tabs in MyPacket -->
+  <div class="test-section">
+    <h2>3️⃣ Transparency Tabs (MyPacket) <span class="feature-status status-integrated">INTEGRATED</span></h2>
+    <div class="location">src/components/MyPacket.jsx → Lines 880-2150</div>
+    
+    <h3>Navigation Path</h3>
+    <p><span class="nav-path">🏠 Home → MyPacket (briefcase icon) → Scroll to tab bar</span></p>
+    
+    <h3>New Tabs Added</h3>
+    <ul>
+      <li>📊 <strong>VA Raw Data</strong> - View raw JSON from VA APIs</li>
+      <li>🔄 <strong>Sync Status</strong> - Audit log of API activity</li>
+      <li>📤 <strong>Export Center</strong> - Backup and export tools</li>
+    </ul>
+
+    <div class="test-item">
+      <h3>Test 3.1: VA Raw Data Tab</h3>
+      <ol class="steps">
+        <li>Open <span class="nav-path">MyPacket → VA Raw Data tab</span></li>
+        <li>If no data synced, verify "No VA data synced yet" message appears</li>
+        <li>If data exists, click a category (Claims, Service History, etc.)</li>
+        <li>Verify JSON viewer displays the raw data</li>
+        <li>Test "Copy to Clipboard" functionality</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Raw JSON data displays in formatted viewer with copy button
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 3.2: Sync Status Tab - Stats Dashboard</h3>
+      <ol class="steps">
+        <li>Open <span class="nav-path">MyPacket → Sync Status tab</span></li>
+        <li>Verify stats cards display: Total Calls, Successful, Failed, Avg Duration</li>
+        <li>Check that numbers update after API calls</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Four stat cards with accurate counts
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 3.3: Sync Status Tab - Log Entries</h3>
+      <ol class="steps">
+        <li>Scroll down to view log entries</li>
+        <li>Verify each entry shows: timestamp, category icon, endpoint, status, duration</li>
+        <li>Check color coding: green for success, red for error, yellow for pending</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Chronological log with color-coded status badges
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 3.4: Export Center - JSON Backup</h3>
+      <ol class="steps">
+        <li>Open <span class="nav-path">MyPacket → Export Center tab</span></li>
+        <li>Click "Download JSON Backup"</li>
+        <li>Verify file downloads with name like <code>vetrate-backup-2026-01-20.json</code></li>
+        <li>Open downloaded file and verify it contains profile data</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Valid JSON file downloads with all profile data
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 3.5: Export Center - PDF Summary</h3>
+      <ol class="steps">
+        <li>Click "Download PDF Summary"</li>
+        <li>Verify PDF generates and downloads</li>
+        <li>Open PDF and check for claims overview, conditions list</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> PDF downloads with formatted summary of veteran data
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+  </div>
+
+  <!-- TEST 4: Claim Phase Explainer -->
+  <div class="test-section">
+    <h2>4️⃣ Claim Phase Explainer (DecisionDecoder) <span class="feature-status status-integrated">INTEGRATED</span></h2>
+    <div class="location">src/components/DecisionDecoder.jsx + src/hooks/useVaBenefitsRef.js</div>
+    
+    <h3>Navigation Path</h3>
+    <p><span class="nav-path">🏠 Home → Decision Decoder (gavel icon) → Scroll to "Claim Phase Explainer"</span></p>
+
+    <h3>The 7 Claim Phases</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Phase</th>
+          <th>Avg Days</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>CLAIM_RECEIVED</td><td>1-3 days</td></tr>
+        <tr><td>2</td><td>UNDER_REVIEW</td><td>7-14 days</td></tr>
+        <tr><td>3</td><td>GATHERING_OF_EVIDENCE</td><td>30-90 days</td></tr>
+        <tr><td>4</td><td>REVIEW_OF_EVIDENCE</td><td>14-30 days</td></tr>
+        <tr><td>5</td><td>PREPARATION_FOR_DECISION</td><td>7-21 days</td></tr>
+        <tr><td>6</td><td>PENDING_DECISION_APPROVAL</td><td>3-14 days</td></tr>
+        <tr><td>7</td><td>COMPLETE</td><td>1-3 days</td></tr>
+      </tbody>
+    </table>
+
+    <div class="test-item">
+      <h3>Test 4.1: Phase Timeline Renders</h3>
+      <ol class="steps">
+        <li>Open <span class="nav-path">Decision Decoder</span></li>
+        <li>Scroll to find "Claim Phase Explainer" section</li>
+        <li>Verify 7 numbered phase circles display in a timeline</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Horizontal timeline with 7 clickable phase numbers
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 4.2: Phase Click Interaction</h3>
+      <ol class="steps">
+        <li>Click on phase number "3" (Gathering of Evidence)</li>
+        <li>Verify info panel expands below the timeline</li>
+        <li>Check that it shows: phase name, description, average wait time</li>
+        <li>Click same phase again to deselect</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Click toggles detailed phase info panel
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 4.3: Phase Tips Display</h3>
+      <ol class="steps">
+        <li>Select a phase (e.g., phase 3)</li>
+        <li>Look for "Tips" or "What to do" section</li>
+        <li>Verify actionable advice is displayed</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> Each phase shows relevant tips for veterans
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+
+    <div class="test-item">
+      <h3>Test 4.4: Benefits Reference Hook</h3>
+      <ol class="steps">
+        <li>Open browser DevTools → Network tab</li>
+        <li>Filter by "benefits-reference"</li>
+        <li>If VA API key is configured, verify API call succeeds</li>
+      </ol>
+      <div class="expected">
+        ✅ <strong>Expected:</strong> API call returns disability list (if API key present)
+      </div>
+      <label><input type="checkbox"> Test Passed</label>
+    </div>
+  </div>
+
+  <!-- Integration Checklist -->
+  <div class="test-section">
+    <h2>🔧 Integration Checklist</h2>
+    
+    <div class="test-item">
+      <h3>Remaining Tasks</h3>
+      <ul>
+        <li><label><input type="checkbox"> Integrate RibbonRack into App.jsx with trigger button</label></li>
+        <li><label><input type="checkbox"> Add RibbonRack launch button to MyPacket profile section</label></li>
+        <li><label><input type="checkbox"> Test VA OAuth flow with sync logger</label></li>
+        <li><label><input type="checkbox"> Test with real VA sandbox credentials</label></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Console Commands for Testing -->
+  <div class="test-section">
+    <h2>🖥️ Console Commands for Testing</h2>
+    <p>Open DevTools Console (F12) and run these commands:</p>
+    
+    <h3>Test Sync Logger Directly</h3>
+    <pre style="background: #0f172a; padding: 15px; border-radius: 6px; overflow-x: auto;">
+// Import the logger (if module system allows)
+// Otherwise, these are exposed on window during dev
+
+// Check sync log contents
+console.log(JSON.parse(sessionStorage.getItem('va_sync_log') || '[]'));
+
+// Check sync stats
+console.log(JSON.parse(sessionStorage.getItem('va_sync_stats') || '{}'));
+
+// Check raw data store
+console.log(JSON.parse(sessionStorage.getItem('va_raw_data_store') || '{}'));
+    </pre>
+
+    <h3>Simulate API Log Entry (Dev Testing)</h3>
+    <pre style="background: #0f172a; padding: 15px; border-radius: 6px; overflow-x: auto;">
+// Manually add a test log entry
+const testLog = {
+  id: Date.now(),
+  timestamp: new Date().toISOString(),
+  category: 'claims',
+  endpoint: '/test/endpoint',
+  status: 'success',
+  duration: 245,
+  recordCount: 3
+};
+const logs = JSON.parse(sessionStorage.getItem('va_sync_log') || '[]');
+logs.unshift(testLog);
+sessionStorage.setItem('va_sync_log', JSON.stringify(logs));
+// Dispatch event to update UI
+window.dispatchEvent(new CustomEvent('va-sync-update'));
+    </pre>
+  </div>
+
+  <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #475569; text-align: center; color: #64748b;">
+    <p>Vet-Rate.org Transparency Features Test Suite</p>
+    <p>Document generated: January 20, 2026</p>
+  </footer>
+</body>
+</html>

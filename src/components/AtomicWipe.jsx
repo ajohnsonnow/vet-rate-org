@@ -1,0 +1,550 @@
+/**
+ * Vet-Rate.org - Atomic Wipe (Panic Button)
+ * Copyright (c) 2024-2026 Anthony Johnson
+ *
+ * AAAAA Design System - "The Panic Button"
+ *
+ * A single-click feature that immediately clears all local storage,
+ * IndexedDB, and cache, restoring the app to a clean state for maximum privacy.
+ *
+ * Use cases:
+ * - User needs to quickly clear sensitive data
+ * - Shared/public computer usage
+ * - Privacy-conscious data clearing
+ */
+
+import { logger } from "../utils/logger";
+import { useState } from "react";
+import { useTheme } from "../contexts/ThemeContext";
+import ResponsiveModal from "./common/ResponsiveModal";
+import { removeBeforeUnloadWarning } from "../utils/dataPersistence";
+import { stopAutoBackup } from "../utils/autoBackup";
+import { clearAllImportMarkers } from "../utils/importProgressMarker";
+import {
+  broadcastDataWipe,
+  broadcastWipePending,
+} from "../utils/dataWipeChannel";
+
+// Decision B: every "Clear All Data"/"Clear Data" control in the app (VKB
+// Viewer, The Bunker) deletes this same full scope via wipeAllLocalData - the
+// confirm text they show must say exactly that, not a narrower subset, since
+// a veteran reading it needs to know nothing survives anywhere it can be
+// clicked from.
+export const FULL_DATA_DELETE_CONFIRM_TEXT =
+  "This permanently deletes EVERYTHING Vet-Rate.org has about you on this " +
+  "device: your records, profile, and service history; My Packet documents; " +
+  "the knowledge base; your timeline; saved claims and conditions; local AI " +
+  "models and vector databases; preferences and settings; and all cached or " +
+  "offline data. This does not redirect you anywhere and cannot be undone.";
+
+function clearLocalAndSessionStorage() {
+  clearAllImportMarkers();
+  // 1. Clear all localStorage
+  // eslint-disable-next-line no-console
+  console.log("🔥 Clearing localStorage...");
+  localStorage.clear();
+
+  // 2. Clear all sessionStorage
+  // eslint-disable-next-line no-console
+  console.log("🔥 Clearing sessionStorage...");
+  sessionStorage.clear();
+}
+
+function clearCookies() {
+  // 3. Clear cookies
+  // eslint-disable-next-line no-console
+  console.log("Clearing cookies...");
+  document.cookie.split(";").forEach((c) => {
+    const cookieName = c.replace(/^ +/, "").replace(/=.*/, "");
+    // Expire cookie with all security attributes to ensure deletion
+    document.cookie =
+      cookieName +
+      "=;expires=" +
+      new Date(0).toUTCString() +
+      ";path=/;Secure;SameSite=Lax";
+  });
+}
+
+function deleteDatabaseModern(dbName) {
+  // eslint-disable-next-line no-console
+  console.log(`  Deleting database: ${dbName}`);
+  return new Promise((resolve) => {
+    const req = window.indexedDB.deleteDatabase(dbName);
+    req.onsuccess = () => resolve();
+    req.onerror = () => resolve();
+    req.onblocked = () => {
+      // eslint-disable-next-line no-console
+      console.log(`  Database ${dbName} blocked, forcing...`);
+      setTimeout(resolve, 100);
+    };
+  });
+}
+
+function deleteDatabaseFallback(dbName) {
+  return new Promise((resolve) => {
+    try {
+      const req = window.indexedDB.deleteDatabase(dbName);
+      req.onsuccess = () => {
+        // eslint-disable-next-line no-console
+        console.log(`  Deleted: ${dbName}`);
+        resolve();
+      };
+      req.onerror = () => resolve();
+      req.onblocked = () => {
+        setTimeout(resolve, 100);
+      };
+    } catch (err) {
+      console.error(`  Failed to delete database ${dbName}:`, err);
+      resolve();
+    }
+  });
+}
+
+async function clearIndexedDbModern() {
+  const databases = await window.indexedDB.databases();
+  const deletePromises = databases
+    .filter((db) => db.name)
+    .map((db) => deleteDatabaseModern(db.name));
+  await Promise.all(deletePromises);
+}
+
+async function clearIndexedDbFallback() {
+  // Fallback: delete known database names, for the rare browser without
+  // indexedDB.databases() (clearIndexedDbModern's path, used everywhere
+  // else). Audited against every indexedDB.open(name, ...) call site in
+  // src/ (2026-09-27) - this list must stay in sync with that grep, since
+  // unlike the modern path it cannot discover a database it doesn't already
+  // know the name of.
+  // eslint-disable-next-line no-console
+  console.log("  Using fallback database deletion...");
+  const knownDbs = [
+    "vetrate-storage",
+    "vetrate-ai-models",
+    "vetrate-vectors",
+    "voy-vectors",
+    "transformers-cache",
+    "onnx-models",
+    "webllm-cache",
+    "vet-rate-cache",
+    "keyval-store", // idb-keyval default DB - src/utils/storage.js's primary packet/claims store
+    "VetRateVKB", // src/utils/veteranKnowledgeBase.js - the Veteran Knowledge Base
+    "VetRateAutoBackup", // src/utils/autoBackup.js
+    "VetRateBugSquasher", // src/utils/bugReportStorage.js
+    "vet-rate-dbq-cache", // src/utils/dbqOfflineStorage.js
+    "VetRate_DKB", // src/utils/dkbIndexedDB.js
+    "VetRateFeatureRequests", // src/utils/featureRequestStorage.js
+    "VetRateMyPacket", // src/utils/myPacketManager.js
+    "VetRate_CFileStream", // src/utils/pdfExtractor.js
+    "VetRate_UserDocVectors", // src/utils/userDocSemanticIndex.js
+  ];
+  const deletePromises = knownDbs.map(deleteDatabaseFallback);
+  await Promise.all(deletePromises);
+}
+
+export async function clearIndexedDb() {
+  // 4. Clear IndexedDB (Vector Store, AI Models, etc.)
+  // eslint-disable-next-line no-console
+  console.log("🔥 Clearing IndexedDB...");
+  if (!window.indexedDB) return;
+
+  try {
+    // Try modern API first
+    if (window.indexedDB.databases) {
+      await clearIndexedDbModern();
+    } else {
+      await clearIndexedDbFallback();
+    }
+  } catch (e) {
+    console.error("  IndexedDB cleanup error:", e);
+  }
+}
+
+async function clearCacheStorage() {
+  // 5. Clear Cache Storage (PWA caches)
+  // eslint-disable-next-line no-console
+  console.log("🔥 Clearing Cache Storage...");
+  if (!("caches" in window)) return;
+
+  try {
+    const cacheNames = await caches.keys();
+    const deletePromises = cacheNames.map((cacheName) => {
+      // eslint-disable-next-line no-console
+      console.log(`  Deleting cache: ${cacheName}`);
+      return caches.delete(cacheName);
+    });
+    await Promise.all(deletePromises);
+  } catch (e) {
+    console.error("  Cache cleanup error:", e);
+  }
+}
+
+async function unregisterServiceWorkers() {
+  // 6. Unregister Service Workers
+  // eslint-disable-next-line no-console
+  console.log("🔥 Unregistering Service Workers...");
+  if (!("serviceWorker" in navigator)) return;
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    const unregisterPromises = registrations.map((registration) => {
+      // eslint-disable-next-line no-console
+      console.log("  Unregistering service worker");
+      return registration.unregister();
+    });
+    await Promise.all(unregisterPromises);
+  } catch (e) {
+    console.error("  Service worker cleanup error:", e);
+  }
+}
+
+export function forceReloadWithCacheBypass() {
+  // Build from pathname/search only (not the raw href) so this is never
+  // read as "unsanitized location input flows back into window.location".
+  const separator = window.location.search ? "&" : "?";
+  window.location.href =
+    window.location.pathname +
+    window.location.search +
+    separator +
+    "nocache=" +
+    Date.now();
+}
+
+function disableBeforeUnloadPrompt() {
+  // clearLocalAndSessionStorage() below deletes vetrate_data_hash, which
+  // makes dataPersistence.hasUnsavedChanges() read as true from that point
+  // on - so the reload a few lines down would otherwise trip the browser's
+  // native "Leave site?" prompt on every wipe, even for a veteran who had
+  // fully backed up. If they choose Stay, the reload never happens: the
+  // IndexedDB deletes already issued stay pending behind this tab's own open
+  // connections, and the in-memory caches they fed survive right along with
+  // them. Disabling the guard up front - the same way the panic redirect
+  // does - means the reload this wipe promised actually happens.
+  removeBeforeUnloadWarning();
+  window.onbeforeunload = null;
+}
+
+/**
+ * The full local-data wipe, shared by every caller that needs to delete
+ * everything a veteran's browser holds (Atomic Wipe's own confirm flow,
+ * VKBViewer's "Clear All Data" - see D13/decision B). Callers that also want
+ * a hard reload or a UI progress flag layer that on top; this function is
+ * just the deletion itself, so the list of what gets cleared lives in
+ * exactly one place.
+ */
+export async function wipeAllLocalData() {
+  disableBeforeUnloadPrompt();
+  // Stop before clearing storage: a debounced backup already scheduled by a
+  // write from moments earlier fires on its own timer regardless of how
+  // thoroughly storage gets cleared next, and would otherwise write a fresh
+  // snapshot right back after this wipe (D13-8).
+  stopAutoBackup();
+
+  clearLocalAndSessionStorage();
+  clearCookies();
+  await clearIndexedDb();
+  await clearCacheStorage();
+  await unregisterServiceWorkers();
+
+  logger.info("✅ Wipe complete!");
+}
+
+/**
+ * The full, cross-tab-safe data wipe. Every "Clear All Data"/"Atomic Wipe"
+ * entry point (this component, VKBViewer, The Bunker) should call this
+ * rather than sequencing wipeAllLocalData/broadcastDataWipe/
+ * forceReloadWithCacheBypass itself - a bare wipeAllLocalData() ->
+ * broadcastDataWipe() sequence leaves a real window open: every OTHER tab
+ * keeps running normally for as long as THIS tab's own wipeAllLocalData()
+ * takes (IndexedDB deletes alone can block ~100ms+ per open connection in
+ * another tab), and whatever any of them write during that window lands in
+ * storage AFTER this tab's own clear already ran, surviving every tab's
+ * reload.
+ *
+ * Two things narrow that window, on both ends of it. broadcastWipePending()
+ * tells other tabs to stop their own debounced auto-backup writes as early
+ * as possible - before this tab has cleared anything at all, not after.
+ * The second wipeAllLocalData() pass right before reload re-clears whatever
+ * still landed despite that - a write already in flight when the pending
+ * signal arrives, or from this tab's own timers. Neither closes the window
+ * completely (there is no cross-tab "stop everything now" primitive), but
+ * together they shrink it from "the whole first wipe's duration" to
+ * whatever's left on either side of it.
+ *
+ * onError, if given, is only for the FIRST wipeAllLocalData() call - the
+ * caller's chance to tell a veteran their data may not be fully gone before
+ * the reload carries any status UI away. The close-out re-wipe below always
+ * proceeds regardless (logging only), since it exists precisely to catch
+ * what the first pass might have missed.
+ */
+export async function performFullDataWipe(onWipeComplete, onError) {
+  broadcastWipePending();
+
+  try {
+    await wipeAllLocalData();
+    onWipeComplete?.();
+  } catch (error) {
+    console.error("Error during data wipe:", error);
+    onError?.(error);
+  }
+
+  // Decision B: propagate to every other open tab - without this, a second
+  // tab keeps every in-memory cache (vkbCache and siblings) fed from the
+  // data this wipe just deleted, and can re-save it right back into storage.
+  broadcastDataWipe();
+
+  // Best-effort only: a deleteDatabase() call that resolved via the
+  // "blocked, forcing" escape hatch above (deleteDatabaseModern's onblocked)
+  // can leave the real browser-level delete still pending underneath, which
+  // then blocks THIS pass's deleteDatabase() call for that same name
+  // indefinitely - no onsuccess/onerror/onblocked ever fires again, since
+  // the browser serializes delete requests per database name and the first
+  // one never actually finished. Racing it against a bounded timeout
+  // restores forceReloadWithCacheBypass's original guarantee (it must always
+  // run) without giving up the re-wipe when it does finish in time.
+  await Promise.race([
+    wipeAllLocalData().catch((error) => {
+      console.error("Error during pre-reload re-wipe:", error);
+    }),
+    new Promise((resolve) => setTimeout(resolve, 3000)),
+  ]);
+  forceReloadWithCacheBypass();
+}
+
+async function handleAtomicWipe(setIsWiping, onWipeComplete) {
+  setIsWiping(true);
+  await performFullDataWipe(onWipeComplete);
+}
+
+export default function AtomicWipe({ compact = false, onWipeComplete }) {
+  const { isDark, isTbiComfort } = useTheme();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isWiping, setIsWiping] = useState(false);
+
+  return (
+    <>
+      <AtomicWipeTrigger
+        compact={compact}
+        isDark={isDark}
+        isTbiComfort={isTbiComfort}
+        onOpen={() => setShowConfirm(true)}
+      />
+
+      {showConfirm && (
+        <ConfirmModal
+          isDark={isDark || isTbiComfort}
+          isWiping={isWiping}
+          onConfirm={() => handleAtomicWipe(setIsWiping, onWipeComplete)}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function AtomicWipeTrigger({ compact, isDark, isTbiComfort, onOpen }) {
+  if (compact) {
+    return (
+      <button
+        onClick={onOpen}
+        className={`
+          text-xs font-bold uppercase tracking-tight px-2 py-1 rounded border
+          ${
+            isDark || isTbiComfort
+              ? "text-red-400 border-red-800 hover:bg-red-900/30 hover:border-red-600"
+              : "text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+          }
+          focus:outline-none focus:ring-2 focus:ring-red-500
+          transition-colors
+        `}
+        aria-label="Clear Data - permanently erase all local data"
+      >
+        🔥 Clear Data
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={onOpen}
+      className={`
+        flex items-center gap-2 px-4 py-3 rounded-xl font-bold min-h-touch
+        ${
+          isDark || isTbiComfort
+            ? "bg-red-900/30 border border-red-800 text-red-400 hover:bg-red-900/50 hover:border-red-600"
+            : "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300"
+        }
+        focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2
+        transition-colors
+      `}
+      aria-label="Atomic Wipe - permanently erase all local data"
+    >
+      <span className="text-xl">🔥</span>
+      <div className="text-left">
+        <span className="block text-sm font-bold">Atomic Wipe</span>
+        <span
+          className={`block text-xs ${isDark || isTbiComfort ? "text-red-400" : "text-red-500"}`}
+        >
+          Clear All Local Data
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function AtomicWipeHeader() {
+  return (
+    <div className="p-6 bg-red-50 dark:bg-red-900/30 border-b border-red-100 dark:border-red-900">
+      <div className="flex items-center gap-4">
+        <span className="text-4xl">⚠️</span>
+        <div>
+          <h2
+            id="atomic-wipe-title"
+            className="text-xl font-black text-red-700 dark:text-red-400"
+          >
+            ATOMIC WIPE
+          </h2>
+          <p className="text-sm text-red-600 dark:text-red-300/70">
+            This action cannot be undone
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AtomicWipeFooter({ isWiping, onConfirm, onCancel }) {
+  return (
+    <div className="flex gap-3">
+      <button
+        onClick={onCancel}
+        disabled={isWiping}
+        className="flex-1 px-4 py-3 rounded-xl font-medium min-h-touch bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 dark:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={onConfirm}
+        disabled={isWiping}
+        className="flex-1 px-4 py-3 rounded-xl font-bold min-h-touch bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {isWiping ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg
+              className="animate-spin w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            Wiping...
+          </span>
+        ) : (
+          "🔥 Confirm Wipe"
+        )}
+      </button>
+    </div>
+  );
+}
+
+function AtomicWipeBody() {
+  return (
+    <>
+      <p className="text-sm text-slate-700 dark:text-gray-300 mb-4">
+        This will permanently delete:
+      </p>
+
+      <ul className="text-sm text-slate-600 dark:text-gray-400 space-y-2 mb-6">
+        <li className="flex items-center gap-2">
+          <span className="text-red-500">✗</span> All saved conditions and
+          claims data
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="text-red-500">✗</span> Local AI models and vector
+          databases
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="text-red-500">✗</span> All preferences and settings
+        </li>
+        <li className="flex items-center gap-2">
+          <span className="text-red-500">✗</span> Cached files and offline data
+        </li>
+      </ul>
+
+      <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">
+        <p className="text-xs text-amber-700 dark:text-amber-300">
+          <strong>Note:</strong> If you want to keep your data, use &quot;Export
+          Backup&quot; in The Bunker first.
+        </p>
+      </div>
+    </>
+  );
+}
+
+function ConfirmModal({ isWiping, onConfirm, onCancel }) {
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onCancel}
+      dismissable={false}
+      size="sm"
+      zIndex={100}
+      labelledBy="atomic-wipe-title"
+      header={<AtomicWipeHeader />}
+      footer={
+        <AtomicWipeFooter
+          isWiping={isWiping}
+          onConfirm={onConfirm}
+          onCancel={onCancel}
+        />
+      }
+    >
+      <AtomicWipeBody />
+    </ResponsiveModal>
+  );
+}
+
+/**
+ * Privacy Notice for The Bunker
+ */
+export function BunkerPrivacyNotice() {
+  const { isDark, isTbiComfort } = useTheme();
+
+  return (
+    <div
+      className={`
+      p-4 rounded-xl border
+      ${isDark || isTbiComfort ? "bg-gray-800/50 border-gray-700" : "bg-slate-50 border-slate-200"}
+    `}
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">🔒</span>
+        <div>
+          <h3
+            className={`font-bold ${isDark || isTbiComfort ? "text-white" : "text-slate-900"}`}
+          >
+            Security Protocol
+          </h3>
+          <p
+            className={`text-sm ${isDark || isTbiComfort ? "text-gray-400" : "text-slate-600"} mt-1`}
+          >
+            Your data is currently stored in your browser&apos;s local sandbox.
+            Exporting a backup creates a private file on your computer.
+            Vet-Rate.org never sees, stores, or transmits this data.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

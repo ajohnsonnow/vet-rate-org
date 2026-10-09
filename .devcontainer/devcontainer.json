@@ -1,0 +1,29 @@
+{
+  "name": "vet-rate-org-official",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.11" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "editorconfig.editorconfig",
+        "bradlc.vscode-tailwindcss",
+        "ms-playwright.playwright",
+        "vitest.explorer",
+        "davidanson.vscode-markdownlint",
+        "redhat.vscode-yaml",
+        "github.vscode-github-actions"
+      ]
+    }
+  },
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": { "label": "Vite dev server", "onAutoForward": "openBrowser" }
+  },
+  "postCreateCommand": "npm ci && npx playwright install --with-deps chromium firefox",
+  "remoteUser": "node"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "sharp-noop",
+  "version": "0.34.5",
+  "description": "No-op stub for sharp. @huggingface/transformers lists sharp as a dependency but the browser build already stubs it at bundle time — it is never loaded in browser WebGPU workers. This stub eliminates the @img/sharp-*-x64 LGPL native binaries from node_modules without affecting any runtime behaviour.",
+  "main": "index.js",
+  "license": "MIT"
+}

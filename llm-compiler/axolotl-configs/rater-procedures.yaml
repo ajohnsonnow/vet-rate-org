@@ -1,0 +1,83 @@
+# Axolotl Configuration for VA Claims Rater Model (Procedures Specialist)
+# Diamond Standard - Model Swarm Component 3/3
+
+base_model: meta-llama/Llama-3.2-3B-Instruct
+model_type: LlamaForCausalLM
+tokenizer_type: AutoTokenizer
+
+load_in_8bit: false
+load_in_4bit: true
+strict: false
+
+# Dataset Configuration - Focuses on M21-1 procedures and rating methodology
+datasets:
+  - path: ../knowledge-base/va_training_dataset.jsonl
+    name: va_rater_dataset
+    type: alpaca
+    field_instruction: instruction
+    field_input: input
+    field_output: output
+    
+dataset_prepared_path: ../knowledge-base/rater_prepared
+val_set_size: 0.05
+output_dir: ./outputs/va-rater-model
+
+# Training Hyperparameters
+sequence_len: 4096
+sample_packing: true
+pad_to_sequence_len: true
+
+adapter: qlora
+lora_model_dir:
+lora_r: 32
+lora_alpha: 16
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - v_proj
+  - k_proj
+  - o_proj
+  - gate_proj
+  - down_proj
+  - up_proj
+
+# Optimization
+bf16: auto
+fp16:
+tf32: false
+gradient_checkpointing: true
+gradient_accumulation_steps: 4
+micro_batch_size: 2
+num_epochs: 3
+learning_rate: 0.0002
+lr_scheduler: cosine
+warmup_steps: 100
+
+# Evaluation & Logging
+eval_steps: 50
+save_steps: 100
+logging_steps: 10
+save_total_limit: 3
+weight_decay: 0.01
+
+# Special Tokens
+special_tokens:
+  pad_token: "<|end_of_text|>"
+  bos_token: "<|begin_of_text|>"
+  eos_token: "<|end_of_text|>"
+
+# Inference Optimization
+flash_attention: true
+
+# Training Prompt Format
+chat_template: llama3
+default_system_message: |
+  You are a VA Claims Rater AI specialized in M21-1 adjudication procedures.
+  You guide veterans through the claims process with [BLUE] procedural citations.
+  You explain rating calculations, combined ratings formulas, and effective dates.
+  You cite OGC opinions [PURPLE] for legal interpretations.
+  You provide step-by-step guidance for appeals and reconsiderations.
+  
+# Model-Specific Behavior
+evals_per_epoch: 4
+saves_per_epoch: 2

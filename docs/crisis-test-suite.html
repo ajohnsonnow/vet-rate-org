@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisis Interceptor Test Suite - Vet-Rate.org</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-case {
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8fafc;
+            border-radius: 4px;
+        }
+        .test-case.pass {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        .test-case.fail {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .test-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        button.danger {
+            background: #dc2626;
+        }
+        button.danger:hover {
+            background: #991b1b;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .result.safe {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .result.crisis {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        code {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .badge.critical { background: #fecaca; color: #991b1b; }
+        .badge.high { background: #fed7aa; color: #9a3412; }
+        .badge.medium { background: #fef08a; color: #854d0e; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 Crisis Interceptor Test Suite</h1>
+        <p>Vet-Rate.org Safety System Validation</p>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Automated Test Cases</h2>
+        <p>These test cases validate the crisis detection patterns:</p>
+        <button onclick="runAutomatedTests()">Run All Tests</button>
+        <div id="automated-results" style="margin-top: 20px;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>✍️ Manual Input Testing</h2>
+        <p>Test custom text to see if the crisis interceptor catches it:</p>
+        <textarea class="test-input" id="manual-input" rows="4" placeholder="Type or paste text to test..."></textarea>
+        <button onclick="testManualInput()">Test Input</button>
+        <div id="manual-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 System Statistics</h2>
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <script>
+        // Mock crisis detection function (in production, import from crisisInterceptor.js)
+        const CRISIS_PATTERNS = {
+            critical: [
+                /\b(kill|end|take)\s+(my|own)\s+(life|self)\b/i,
+                /\bcommit\s+suicide\b/i,
+                /\bsuicide\s+plan\b/i,
+                /\bhurt\s+myself\b/i,
+                /\bkill\s+myself\b/i,
+                /\bend\s+it\s+all\b/i,
+                /\bbetter\s+off\s+dead\b/i,
+                /\bwant\s+to\s+die\b/i,
+                /\bwish\s+I\s+(was|were)\s+dead\b/i,
+                /\bno\s+reason\s+to\s+(live|keep going)\b/i,
+                /\bcan'?t\s+(take\s+it|go\s+on)\s+anymore\b/i,
+            ],
+            high: [
+                /\bsuicidal\s+(thought|idea)/i,
+                /\bthink(ing)?\s+about\s+(death|dying|suicide)\b/i,
+                /\bwriting\s+(a\s+)?suicide\s+note\b/i,
+                /\bburden\s+to\s+(everyone|my family)\b/i,
+            ],
+            medium: [
+                /\bcan'?t\s+take\s+(this|the pain)\s+anymore\b/i,
+                /\bno\s+hope\b/i,
+                /\beveryone\s+would\s+be\s+better\s+off\b/i,
+                /\bgiving\s+up\b/i,
+            ]
+        };
+
+        function detectCrisis(text) {
+            if (!text) return { isCrisis: false, severity: null };
+            
+            const normalized = text.toLowerCase().trim();
+            
+            for (const pattern of CRISIS_PATTERNS.critical) {
+                if (pattern.test(normalized)) {
+                    return { isCrisis: true, severity: 'critical', pattern: pattern.toString() };
+                }
+            }
+            
+            for (const pattern of CRISIS_PATTERNS.high) {
+                if (pattern.test(normalized)) {
+                    return { isCrisis: true, severity: 'high', pattern: pattern.toString() };
+                }
+            }
+            
+            for (const pattern of CRISIS_PATTERNS.medium) {
+                if (pattern.test(normalized)) {
+                    return { isCrisis: true, severity: 'medium', pattern: pattern.toString() };
+                }
+            }
+            
+            return { isCrisis: false, severity: null };
+        }
+
+        // Test cases
+        const testCases = [
+            { text: "I can't take this anymore, I want to end it all", shouldTrigger: true, severity: 'critical', category: 'Direct self-harm intent' },
+            { text: "I'm thinking about suicide", shouldTrigger: true, severity: 'high', category: 'Suicidal ideation' },
+            { text: "Everyone would be better off if I was dead", shouldTrigger: true, severity: 'critical', category: 'Suicidal statement' },
+            { text: "I want to kill myself", shouldTrigger: true, severity: 'critical', category: 'Direct self-harm' },
+            { text: "No reason to keep going", shouldTrigger: true, severity: 'critical', category: 'Loss of purpose' },
+            { text: "I'm a burden to my family", shouldTrigger: true, severity: 'high', category: 'Burden belief' },
+            { text: "I have severe PTSD and anxiety", shouldTrigger: false, severity: null, category: 'Medical condition' },
+            { text: "My back pain is killing me", shouldTrigger: false, severity: null, category: 'Figurative language' },
+            { text: "I'm stressed about my claim", shouldTrigger: false, severity: null, category: 'General stress' },
+            { text: "Depression makes it hard to get out of bed", shouldTrigger: false, severity: null, category: 'Symptom description' },
+            { text: "I can't take the pain anymore", shouldTrigger: true, severity: 'medium', category: 'Severe distress' },
+            { text: "No hope left for me", shouldTrigger: true, severity: 'medium', category: 'Hopelessness' },
+        ];
+
+        function runAutomatedTests() {
+            const resultsDiv = document.getElementById('automated-results');
+            resultsDiv.innerHTML = '';
+            
+            let passed = 0;
+            let failed = 0;
+            
+            testCases.forEach((testCase, index) => {
+                const result = detectCrisis(testCase.text);
+                const success = result.isCrisis === testCase.shouldTrigger;
+                
+                if (success) passed++;
+                else failed++;
+                
+                const testDiv = document.createElement('div');
+                testDiv.className = `test-case ${success ? 'pass' : 'fail'}`;
+                testDiv.innerHTML = `
+                    <strong>Test ${index + 1}</strong> ${success ? '✅' : '❌'}
+                    <span class="badge ${testCase.severity || 'safe'}">${testCase.category}</span>
+                    <br>
+                    <code>"${testCase.text.substring(0, 60)}${testCase.text.length > 60 ? '...' : ''}"</code>
+                    <br>
+                    Expected: ${testCase.shouldTrigger ? `CRISIS (${testCase.severity})` : 'SAFE'} | 
+                    Got: ${result.isCrisis ? `CRISIS (${result.severity})` : 'SAFE'}
+                `;
+                resultsDiv.appendChild(testDiv);
+            });
+            
+            updateStats(passed, failed);
+        }
+
+        function testManualInput() {
+            const input = document.getElementById('manual-input').value;
+            const resultDiv = document.getElementById('manual-result');
+            
+            if (!input.trim()) {
+                resultDiv.innerHTML = '<div class="result">Please enter some text to test.</div>';
+                return;
+            }
+            
+            const result = detectCrisis(input);
+            
+            if (result.isCrisis) {
+                resultDiv.innerHTML = `
+                    <div class="result crisis">
+                        <strong>🚨 CRISIS DETECTED</strong>
+                        <br>Severity: ${result.severity.toUpperCase()}
+                        <br>Action: Block AI call, show Veterans Crisis Line (988-1)
+                        <br>Pattern: <code>${result.pattern}</code>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result safe">
+                        <strong>✅ SAFE</strong>
+                        <br>No crisis language detected. Text can proceed to AI processing.
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats(passed, failed) {
+            const statsDiv = document.getElementById('stats');
+            const total = passed + failed;
+            const accuracy = ((passed / total) * 100).toFixed(1);
+            
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${total}</div>
+                    <div>Total Tests</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="stat-value">${passed}</div>
+                    <div>Passed</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    <div class="stat-value">${failed}</div>
+                    <div>Failed</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <div class="stat-value">${accuracy}%</div>
+                    <div>Accuracy</div>
+                </div>
+            `;
+        }
+
+        // Run tests on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🧪 Crisis Interceptor Test Suite Ready');
+            console.log('Run automated tests or test custom input above');
+        });
+    </script>
+</body>
+</html>

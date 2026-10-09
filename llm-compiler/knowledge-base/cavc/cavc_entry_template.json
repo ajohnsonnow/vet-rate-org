@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CAVC Decision Entry Template",
+  "description": "Template for adding CAVC decisions to the Diamond Knowledge Base",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "case_number", "citation", "title", "decision_date", "source", "source_url"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^cavc_\\d{2,4}_\\d{3,4}$",
+        "description": "Unique ID: cavc_YY_XXXX (e.g., cavc_21_1234)"
+      },
+      "type": {
+        "type": "string",
+        "const": "cavc_decision",
+        "description": "Always 'cavc_decision'"
+      },
+      "case_number": {
+        "type": "string",
+        "pattern": "^\\d{2,4}-\\d{3,4}$",
+        "description": "CAVC case number (e.g., 21-1234)"
+      },
+      "citation": {
+        "type": "string",
+        "description": "Full citation: 'Veteran v. McDonough, CAVC No. XX-XXXX (Year)'"
+      },
+      "title": {
+        "type": "string",
+        "description": "Case name: 'Veteran v. McDonough'"
+      },
+      "veteran_name": {
+        "type": "string",
+        "description": "Veteran's surname (e.g., 'Smith')"
+      },
+      "decision_date": {
+        "type": "string",
+        "format": "date",
+        "description": "Decision date: YYYY-MM-DD"
+      },
+      "decision_type": {
+        "type": "string",
+        "enum": ["precedential", "non-precedential", "summary"],
+        "description": "Type of decision - precedential decisions carry binding authority"
+      },
+      "holding": {
+        "type": "string",
+        "description": "Summary of the court's holding in 1-3 sentences"
+      },
+      "key_points": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Array of key legal points from the decision"
+      },
+      "relevant_conditions": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Array of medical conditions discussed (e.g., ['PTSD', 'Sleep Apnea'])"
+      },
+      "diagnostic_codes": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^DC \\d{4}[A-Z]?$"
+        },
+        "description": "Array of diagnostic codes referenced (e.g., ['DC 9411', 'DC 6847'])"
+      },
+      "cfr_citations": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^38 CFR"
+        },
+        "description": "Array of 38 CFR sections cited"
+      },
+      "source": {
+        "type": "string",
+        "const": "U.S. Court of Appeals for Veterans Claims",
+        "description": "Always 'U.S. Court of Appeals for Veterans Claims'"
+      },
+      "source_url": {
+        "type": "string",
+        "format": "uri",
+        "description": "URL to the decision on uscourts.cavc.gov"
+      },
+      "full_text_path": {
+        "type": "string",
+        "description": "Relative path to full text file (e.g., 'decisions/case_21-1234.txt')"
+      },
+      "summary": {
+        "type": "string",
+        "maxLength": 500,
+        "description": "Brief summary of the decision (max 500 characters)"
+      },
+      "impact": {
+        "type": "string",
+        "enum": ["high", "medium", "low"],
+        "description": "Impact level on veterans (high = affects many claims)"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Searchable tags (e.g., ['secondary_connection', 'nexus', 'tdiu'])"
+      },
+      "scraped_at": {
+        "type": "string",
+        "format": "date-time",
+        "description": "When this entry was created (ISO 8601)"
+      },
+      "verified": {
+        "type": "boolean",
+        "const": true,
+        "description": "Always true for official CAVC decisions"
+      },
+      "data_source": {
+        "type": "string",
+        "const": "OFFICIAL - uscourts.cavc.gov",
+        "description": "Always 'OFFICIAL - uscourts.cavc.gov'"
+      },
+      "hierarchy_level": {
+        "type": "integer",
+        "const": 2,
+        "description": "Always 2 (judicial precedent)"
+      },
+      "color_code": {
+        "type": "string",
+        "const": "GREEN",
+        "description": "Always 'GREEN' (court decisions)"
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "cavc_21_1234",
+      "type": "cavc_decision",
+      "case_number": "21-1234",
+      "citation": "Smith v. McDonough, CAVC No. 21-1234 (2024)",
+      "title": "Smith v. McDonough",
+      "veteran_name": "Smith",
+      "decision_date": "2024-03-15",
+      "decision_type": "precedential",
+      "holding": "The Court held that VA must consider secondary service connection when a service-connected mental health condition leads to sleep apnea through weight gain and medication side effects.",
+      "key_points": [
+        "Mental health conditions can cause secondary physical conditions",
+        "Chain of causation must be fully considered",
+        "Medical nexus opinion required to establish each link",
+        "VA cannot deny based on one weak link in the causal chain"
+      ],
+      "relevant_conditions": [
+        "PTSD",
+        "Depression",
+        "Sleep Apnea",
+        "Obesity"
+      ],
+      "diagnostic_codes": [
+        "DC 9411",
+        "DC 9434",
+        "DC 6847"
+      ],
+      "cfr_citations": [
+        "38 CFR § 3.310(a)",
+        "38 CFR § 4.130"
+      ],
+      "source": "U.S. Court of Appeals for Veterans Claims",
+      "source_url": "https://www.uscourts.cavc.gov/decisions/21-1234.pdf",
+      "full_text_path": "decisions/case_21-1234.txt",
+      "summary": "CAVC ruled that VA must consider the full causal chain when mental health conditions lead to secondary physical conditions like sleep apnea. Each link requires medical nexus evidence.",
+      "impact": "high",
+      "tags": [
+        "secondary_connection",
+        "ptsd",
+        "sleep_apnea",
+        "nexus",
+        "causal_chain",
+        "medication_side_effects"
+      ],
+      "scraped_at": "2026-01-26T16:00:00Z",
+      "verified": true,
+      "data_source": "OFFICIAL - uscourts.cavc.gov",
+      "hierarchy_level": 2,
+      "color_code": "GREEN"
+    }
+  ]
+}

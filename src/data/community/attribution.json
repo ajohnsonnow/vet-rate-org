@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-01-23",
+  "sources": [
+    {
+      "source_id": "veteransbenefitskb",
+      "source_name": "Veterans Benefits Knowledge Base",
+      "source_url": "https://www.veteransbenefitskb.com",
+      "copyright": "© 2020-2026 Veterans Benefits Knowledge Base, all rights reserved",
+      "permission_granted": false,
+      "permission_date": null,
+      "contact_persons": ["l8tn8", "SSG_Rock"],
+      "contact_method": "Reddit DM via r/VeteransBenefits",
+      "proposed_usage": "Index articles, short summaries, link to full content",
+      "license_terms": null,
+      "status": "pending",
+      "notes": "Email drafted, awaiting send"
+    },
+    {
+      "source_id": "raterhq",
+      "source_name": "Rater HQ: After Dark",
+      "source_url": "https://www.youtube.com/@RaterHQ",
+      "channel_id": "UCZuS2HdSXFb-UdcZUmDjMvQ",
+      "copyright": "© Rater HQ: After Dark",
+      "permission_granted": false,
+      "permission_date": null,
+      "contact_persons": ["Unknown - likely current/former RVSR"],
+      "contact_method": "YouTube channel About page or video comment",
+      "proposed_usage": "Embed videos with full credit, link to channel",
+      "license_terms": null,
+      "status": "pending",
+      "notes": "Email drafted, need to find contact email"
+    },
+    {
+      "source_id": "reddit-veteransbenefits",
+      "source_name": "r/VeteransBenefits",
+      "source_url": "https://www.reddit.com/r/VeteransBenefits",
+      "copyright": "Individual users retain copyright",
+      "permission_granted": false,
+      "permission_date": null,
+      "contact_persons": ["Reddit API Team"],
+      "contact_method": "Reddit Developer Application",
+      "proposed_usage": "Aggregate high-upvote posts with attribution",
+      "license_terms": "Reddit API Terms of Service",
+      "status": "pending_api_access",
+      "notes": "Need verified email to create Reddit app"
+    }
+  ],
+  "safe_sources": [
+    {
+      "source_id": "va-gov",
+      "source_name": "VA.gov",
+      "source_url": "https://www.va.gov",
+      "copyright": "Public Domain (US Government)",
+      "permission_granted": true,
+      "notes": "Federal government content is public domain"
+    },
+    {
+      "source_id": "ecfr",
+      "source_name": "Electronic Code of Federal Regulations",
+      "source_url": "https://www.ecfr.gov",
+      "copyright": "Public Domain (US Government)",
+      "permission_granted": true,
+      "notes": "38 CFR freely available"
+    },
+    {
+      "source_id": "federal-register",
+      "source_name": "Federal Register",
+      "source_url": "https://www.federalregister.gov",
+      "copyright": "Public Domain (US Government)",
+      "permission_granted": true,
+      "notes": "VA rule changes and notices"
+    }
+  ]
+}

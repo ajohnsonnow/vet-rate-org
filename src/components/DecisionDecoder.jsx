@@ -1,0 +1,1914 @@
+import { logger } from "../utils/logger";
+import { useState, useEffect, useRef } from "react";
+import ReportBugLink from "./ReportBugLink";
+import BuyMeCoffee from "./BuyMeCoffee";
+import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import DecisionReviewOptions, {
+  FieldCorrections,
+} from "./DecisionReviewOptions";
+import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
+import { getAIStatus } from "../utils/unifiedAIService";
+import {
+  getDecodeTimeoutMs,
+  recordDecodeDuration,
+  SLOW_NOTICE_AFTER_MS,
+} from "../utils/decodeTiming";
+import { buildDocumentOffDeviceNotice } from "../utils/aiDataClassPolicy";
+import { AIStatusBadge } from "./AIModeSelector";
+import { LLMRecommendationBadge } from "./LLMRecommendation";
+import SmartAILoadButton from "./SmartAILoadButton";
+import SmallModelCaveat from "./SmallModelCaveat";
+import {
+  SMALL_MODEL_FALLBACK_NOTE,
+  patternMatchDenial,
+} from "../utils/decisionPatternReading";
+import { readingWithoutModel } from "../utils/decisionDecodeAsShown";
+import { useVaBenefitsRef } from "../hooks/useVaBenefitsRef";
+import {
+  analyzePDF,
+  analyzeImage,
+  OCR_STATES,
+  formatFileSize,
+  isImageFile,
+  isPDFFile,
+} from "../utils/ocr";
+
+function getFileRowBorderClass(fileEntry) {
+  if (fileEntry.error) {
+    return "border-red-200 dark:border-red-700";
+  }
+  if (fileEntry.extractedText) {
+    return "border-green-200 dark:border-green-700";
+  }
+  return "border-purple-200 dark:border-purple-700";
+}
+
+function getFileRowIconBgClass(fileEntry) {
+  if (fileEntry.processing) {
+    return "bg-purple-100 dark:bg-purple-800";
+  }
+  if (fileEntry.error) {
+    return "bg-red-100 dark:bg-red-800";
+  }
+  return "bg-green-100 dark:bg-green-800";
+}
+
+function getFileTypeIcon(fileEntry) {
+  if (fileEntry.processing) {
+    return (
+      <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+    );
+  }
+  if (fileEntry.fileType === "pdf") {
+    return <span className="text-sm">📄</span>;
+  }
+  return <span className="text-sm">📷</span>;
+}
+
+function UploadedFileRow({ fileEntry, onRemove }) {
+  return (
+    <div
+      className={`border rounded-lg p-3 bg-white dark:bg-gray-800 ${getFileRowBorderClass(fileEntry)}`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div
+            className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${getFileRowIconBgClass(fileEntry)}`}
+          >
+            {getFileTypeIcon(fileEntry)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
+              {fileEntry.file.name}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {formatFileSize(fileEntry.file.size)}
+              {fileEntry.extractedText && !fileEntry.error && (
+                <span className="text-green-600 dark:text-green-400 ml-2">
+                  ✓ {fileEntry.extractedText.length} chars
+                </span>
+              )}
+              {fileEntry.error && (
+                <span className="text-red-600 dark:text-red-400 ml-2">
+                  ✗ {fileEntry.error}
+                </span>
+              )}
+            </p>
+            {fileEntry.coverageNote && !fileEntry.error && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                📄 {fileEntry.coverageNote}
+              </p>
+            )}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onRemove(fileEntry.id)}
+          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0"
+          aria-label="Remove file"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Image Preview (collapsed) */}
+      {fileEntry.fileType === "image" && fileEntry.preview && (
+        <div className="mt-2 rounded overflow-hidden border border-gray-200 dark:border-gray-700">
+          <img
+            src={fileEntry.preview}
+            alt="Preview"
+            className="max-h-24 w-full object-contain bg-gray-50 dark:bg-gray-900"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getOcrProgressMessage(ocrProgress) {
+  if (ocrProgress.state === OCR_STATES.LOADING) {
+    return "Loading file...";
+  }
+  if (ocrProgress.state === OCR_STATES.EXTRACTING_TEXT) {
+    return "Extracting text...";
+  }
+  if (ocrProgress.state === OCR_STATES.OCR_IN_PROGRESS) {
+    return "Running OCR...";
+  }
+  return ocrProgress.message || "Processing...";
+}
+
+// Keyword-based fallback used when no AI model is loaded. Each `test`
+// receives the raw denial text plus its lowercased form.
+const CIRCUIT_OPEN_RE = /AI_CIRCUIT_OPEN/;
+
+// Several failed or timed-out tries in a row pause the AI for a short while;
+// the service's own wording is about cloud settings, which does not apply to
+// an on-device decode.
+export const CIRCUIT_PAUSED_MESSAGE =
+  "The on-device AI did not finish the last few tries, so it is paused for about half a minute. Your text is still here. Wait a moment and try again, or paste only the Decision and Reasons for Decision sections.";
+
+function getDecodeErrorMessage(err, timeoutMs) {
+  if (CIRCUIT_OPEN_RE.test(err.message || "")) return CIRCUIT_PAUSED_MESSAGE;
+  if (/TIMEOUT|timed out/i.test(err.message || "")) {
+    return (
+      `⏱️ The AI request timed out after ${Math.round(timeoutMs / 1000)} seconds. This usually means:\n\n` +
+      "• The AI model is still loading (wait a few more seconds and try again)\n" +
+      "• This browser or computer runs the on-device AI slowly (a second try is allowed more time)\n" +
+      '• Your document is too large (try pasting only the "Reasons for Decision" section)\n\n' +
+      "Please try again with a shorter excerpt, or wait for the AI model to fully load."
+    );
+  }
+  if (
+    err.message &&
+    (err.message.includes("warming up") || err.message.includes("loading"))
+  ) {
+    return "🔄 AI model is still loading. Please wait for it to fully initialize (check the badge above) and try again.";
+  }
+  return (
+    "❌ An error occurred during decoding: " +
+    (err.message || "Unknown error. Please try again.")
+  );
+}
+
+function applyPatternMatchFallback(denialText, setResults, setError) {
+  const matched = patternMatchDenial(denialText);
+  if (!matched) {
+    setError(
+      "No AI available and no recognizable denial patterns detected. Load the Warrant Council AI above for a full analysis.",
+    );
+    return;
+  }
+  setResults({
+    ...matched,
+    _usedFallback: true,
+    _fallbackReason: "pattern_match",
+    _fallbackNote:
+      "AI is not loaded. This analysis uses keyword pattern matching - load the Warrant Council AI for a complete, personalized translation.",
+  });
+}
+
+// Robust timeout that WILL reject even if the raced promise hangs.
+function createDecodeTimeout(ms, message) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return { timeoutPromise, clear: () => clearTimeout(timeoutId) };
+}
+
+// ADR-009: only an off-device AI is configured - a decision letter is a
+// document, so it stays on-device only. Run the same pattern-match reader
+// already used when no AI is configured at all, and show a plain notice
+// instead of a dead end.
+export const NOTHING_FOUND_MESSAGE =
+  "The built-in reader found no decision language in this text, so there is nothing to translate yet. If this is a VA decision letter, paste the Decision and Reasons for Decision sections, or load an on-device AI to read the whole document.";
+
+export function applyOffDeviceFallback(denialText, providerLabel, setResults) {
+  const matched = patternMatchDenial(denialText);
+  setResults({
+    ...(matched || { plain_english: NOTHING_FOUND_MESSAGE }),
+    _usedFallback: true,
+    _fallbackReason: "off_device_blocked",
+    _fallbackNote: buildDocumentOffDeviceNotice(providerLabel),
+  });
+}
+
+// ADR-010 section 9: the small-model reading lives in
+// utils/decisionDecodeAsShown.js, shared with the evaluation runner.
+export { SMALL_MODEL_FALLBACK_NOTE };
+
+const RESULT_FIELDS = [
+  "decision_type",
+  "plain_english",
+  "va_reasoning",
+  "favorable_findings",
+  "missing_elements",
+  "action_plan",
+  "deadline_warning",
+];
+
+export const EMPTY_RESULT_MESSAGE =
+  "The AI finished but did not return anything readable, so there is no result to show. Please try again, or paste only the Decision and Reasons for Decision sections.";
+
+function hasReadableResult(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  return RESULT_FIELDS.some((field) => {
+    const value = data[field];
+    return Array.isArray(value) ? value.length > 0 : Boolean(value);
+  });
+}
+
+function applyDecodeResponse(response, denialText, setResults, setError) {
+  if (response.success && !hasReadableResult(response.data)) {
+    setError(EMPTY_RESULT_MESSAGE);
+    return;
+  }
+  if (response.success) {
+    setResults({
+      ...response.data,
+      // Pass through fallback info to show helpful notice
+      _usedFallback: response.usedFallback,
+      _fallbackReason: response.fallbackReason,
+      _fallbackNote: response.fallbackNote,
+      // Pass through truncation info to show helpful notice
+      _wasTruncated: response.wasTruncated,
+      _truncationNote: response.truncationNote,
+    });
+    return;
+  }
+  if (response.isOffDeviceBlocked) {
+    applyOffDeviceFallback(denialText, response.providerLabel, setResults);
+    return;
+  }
+  // Check for context overflow error - show helpful message
+  if (response.isContextOverflow) {
+    setError(response.error);
+    return;
+  }
+  if (CIRCUIT_OPEN_RE.test(response.error || "")) {
+    setError(CIRCUIT_PAUSED_MESSAGE);
+    return;
+  }
+  setError(response.error || "Failed to decode decision. Please try again.");
+}
+
+function logDecodeError(err) {
+  // Better error logging - serialize the full error properly
+  const errorDetails = {
+    message: err.message,
+    name: err.name,
+    stack: err.stack,
+    ...(err.response && { response: err.response }),
+  };
+  console.error("[DecisionDecoder] Decode error:", errorDetails);
+}
+
+const TIMED_OUT_RE = /TIMEOUT|timed out/i;
+
+// Runs one AI decode against a time budget scaled to this engine's measured
+// pace. A completed on-device decode teaches the next budget; a timeout is a
+// lower bound on the pace, so the retry gets more room.
+async function runTimedDecode(denialText, timeoutMs) {
+  const { timeoutPromise, clear } = createDecodeTimeout(
+    timeoutMs,
+    `TIMEOUT: AI request exceeded ${Math.round(timeoutMs / 1000)} second limit`,
+  );
+  const startedAt = Date.now();
+  try {
+    // eslint-disable-next-line no-console
+    console.log(
+      "[DecisionDecoder] Starting AI decode with",
+      denialText.length,
+      "characters",
+    );
+    const response = await Promise.race([
+      decodeDecision(denialText, { timeout: timeoutMs }),
+      timeoutPromise,
+    ]);
+    // Model output is identifier-bearing free text: log its shape only.
+    logger.info("[DecisionDecoder] AI response", {
+      success: Boolean(response?.success),
+    });
+    if (response?.success && !response.usedFallback) {
+      recordDecodeDuration(Date.now() - startedAt);
+    } else if (TIMED_OUT_RE.test(response?.error || "")) {
+      recordDecodeDuration(timeoutMs);
+    }
+    return response;
+  } catch (err) {
+    if (TIMED_OUT_RE.test(err?.message || "")) {
+      recordDecodeDuration(timeoutMs);
+    }
+    throw err;
+  } finally {
+    clear();
+  }
+}
+
+function useElapsedWhile(active) {
+  const [elapsedMs, setElapsedMs] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      setElapsedMs(0);
+      return undefined;
+    }
+    const startedAt = Date.now();
+    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return elapsedMs;
+}
+
+// Owns the decode request lifecycle (pattern-match fallback + AI call with
+// timeout) so the component doesn't carry this async state machine inline.
+export function useDecisionDecode() {
+  const [results, setResults] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [budgetMs, setBudgetMs] = useState(null);
+  const elapsedMs = useElapsedWhile(isLoading);
+
+  const handleDecode = async (denialText) => {
+    if (!denialText.trim()) {
+      setError("Please paste your denial letter or decision text first.");
+      return;
+    }
+
+    if (denialText.trim().length < 50) {
+      setError(
+        "The text seems too short. Please paste more of the denial letter.",
+      );
+      return;
+    }
+
+    if (!isAIAvailable()) {
+      applyPatternMatchFallback(denialText, setResults, setError);
+      return;
+    }
+
+    const withoutModel = readingWithoutModel(denialText);
+    if (withoutModel) {
+      setError(null);
+      setResults(withoutModel);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setResults(null);
+    const timeoutMs = getDecodeTimeoutMs();
+    setBudgetMs(timeoutMs);
+
+    try {
+      const response = await runTimedDecode(denialText, timeoutMs);
+      applyDecodeResponse(response, denialText, setResults, setError);
+    } catch (err) {
+      logDecodeError(err);
+      setError(getDecodeErrorMessage(err, timeoutMs));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { results, isLoading, error, handleDecode, elapsedMs, budgetMs };
+}
+
+// ADR-008: a real dropped file's own name commonly carries the veteran's
+// own surname/first name (VA's own export naming convention) - this text
+// becomes `denialText`, sent straight to the AI via decodeDecision, so the
+// label here must be structural (index + type + upload date), never the
+// raw fileName, matching the same neutral-label convention
+// myPacketManager.js's _neutralDocLabel already uses for AI-context text.
+function _neutralDroppedFileLabel(f, index) {
+  const typeLabel = f.fileType === "pdf" ? "PDF" : "Image";
+  const date = (f.addedAt || "").split("T")[0] || "unknown date";
+  return `Document ${index + 1} (${typeLabel}, ${date})`;
+}
+
+// Joins extracted text from all successfully processed files into one blob.
+// `excludeProcessing` additionally drops files still mid-OCR. Exported for
+// D16-6's own regression test (see processFile above).
+export function computeCombinedText(
+  fileList,
+  { excludeProcessing = false } = {},
+) {
+  return fileList
+    .filter((f) => f.extractedText && (!excludeProcessing || !f.processing))
+    .map(
+      (f, idx) =>
+        `--- ${_neutralDroppedFileLabel(f, idx)} ---\n${f.extractedText}`,
+    )
+    .join("\n\n");
+}
+
+function updateCombinedText({ setUploadedFiles, setDenialText }) {
+  setUploadedFiles((prev) => {
+    const combinedText = computeCombinedText(prev);
+    // Use setTimeout to avoid state update during render
+    setTimeout(() => {
+      if (combinedText) {
+        setDenialText(combinedText);
+      }
+    }, 0);
+    return prev;
+  });
+}
+
+async function extractFileTextAndPreview(file, fileType, setOcrProgress) {
+  if (fileType === "pdf") {
+    const result = await analyzePDF(file, (progress) => {
+      setOcrProgress(progress);
+    });
+    return {
+      extractedText: result.text || "",
+      preview: null,
+      error: null,
+      // D-4: tell the veteran exactly how many pages were read, OCR'd and
+      // skipped - advancedOCR.js already computes this note, it just never
+      // reached the UI.
+      coverageNote: result.coverageNote || null,
+    };
+  }
+
+  // Create preview for images
+  const preview = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+
+  const result = await analyzeImage(file, (progress) => {
+    setOcrProgress(progress);
+  });
+
+  return { extractedText: result.text || "", preview, error: null };
+}
+
+// Exported for D16-6's own regression tests (Drop-In File accepting a real
+// PDF/image File object, and computeCombinedText's neutral AI-context
+// labeling) - not part of the component's public interface otherwise.
+export async function processFile(
+  file,
+  {
+    setUploadedFiles,
+    setOcrProgress,
+    setCurrentProcessingFile,
+    setFileError,
+    setDenialText,
+  },
+) {
+  // Determine file type. D16-6: isPDFFile/isImageFile match against a
+  // filename string (a `.pdf$`/image-extension regex) - passing the File
+  // object itself here coerced it to "[object File]" via the regex's
+  // implicit toString(), so every drop was rejected as "Unsupported file".
+  let fileType = null;
+  if (isPDFFile(file.name)) {
+    fileType = "pdf";
+  } else if (isImageFile(file.name)) {
+    fileType = "image";
+  } else {
+    setFileError(
+      `Unsupported file: ${file.name}. Use PDF or image (PNG, JPG, JPEG, GIF, BMP, WEBP).`,
+    );
+    return;
+  }
+
+  // Create file entry with pending status
+  const fileId = `${file.name}-${Date.now()}`;
+  const newFileEntry = {
+    id: fileId,
+    file,
+    fileType,
+    addedAt: new Date().toISOString(),
+    preview: null,
+    extractedText: "",
+    coverageNote: null,
+    error: null,
+    processing: true,
+  };
+
+  // Add to list immediately (shows processing state)
+  setUploadedFiles((prev) => [...prev, newFileEntry]);
+  setCurrentProcessingFile(file.name);
+
+  try {
+    const { extractedText, preview, error, coverageNote } =
+      await extractFileTextAndPreview(file, fileType, setOcrProgress);
+    if (error) {
+      newFileEntry.error = error;
+    }
+
+    // Update file entry with results
+    setUploadedFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId
+          ? {
+              ...f,
+              extractedText,
+              preview,
+              coverageNote: coverageNote || null,
+              processing: false,
+              error: extractedText ? null : "No text extracted",
+            }
+          : f,
+      ),
+    );
+
+    // Update combined denial text
+    updateCombinedText({ setUploadedFiles, setDenialText });
+  } catch (err) {
+    console.error("File processing error:", err);
+    setUploadedFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId
+          ? { ...f, processing: false, error: "Failed to process file" }
+          : f,
+      ),
+    );
+  }
+
+  setOcrProgress(null);
+  setCurrentProcessingFile(null);
+}
+
+// Process multiple files sequentially
+async function processMultipleFiles(files, ctx) {
+  const { uploadedFiles, setFileError } = ctx;
+  setFileError(null);
+
+  for (const file of files) {
+    // Check for duplicates
+    const isDuplicate = uploadedFiles.some(
+      (f) => f.file.name === file.name && f.file.size === file.size,
+    );
+    if (isDuplicate) {
+      continue; // Skip duplicates
+    }
+
+    await processFile(file, ctx);
+  }
+}
+
+// Owns all File Drop-In (PDF/image OCR) state, handlers, and effects so the
+// component doesn't carry this subsystem inline.
+function useFileDropIn(setDenialText) {
+  const [uploadedFiles, setUploadedFiles] = useState([]); // Array of { file, fileType, preview, extractedText, error }
+  const [ocrProgress, setOcrProgress] = useState(null);
+  const [currentProcessingFile, setCurrentProcessingFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [fileError, setFileError] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const fileCtx = {
+    uploadedFiles,
+    setUploadedFiles,
+    setOcrProgress,
+    setCurrentProcessingFile,
+    setFileError,
+    setDenialText,
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      await processMultipleFiles(Array.from(files), fileCtx);
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await processMultipleFiles(Array.from(files), fileCtx);
+    }
+  };
+
+  // Effect to update combined text when files change
+  useEffect(() => {
+    const combinedText = computeCombinedText(uploadedFiles, {
+      excludeProcessing: true,
+    });
+    if (combinedText && uploadedFiles.some((f) => !f.processing)) {
+      setDenialText(combinedText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uploadedFiles]);
+
+  const handleRemoveFile = (fileId) => {
+    setUploadedFiles((prev) => {
+      const updated = prev.filter((f) => f.id !== fileId);
+      setTimeout(() => setDenialText(computeCombinedText(updated)), 0);
+      return updated;
+    });
+  };
+
+  const handleClearAllFiles = () => {
+    setUploadedFiles([]);
+    setOcrProgress(null);
+    setDenialText("");
+    setFileError(null);
+    setCurrentProcessingFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  return {
+    uploadedFiles,
+    ocrProgress,
+    currentProcessingFile,
+    isDragging,
+    fileError,
+    fileInputRef,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleFileChange,
+    handleRemoveFile,
+    handleClearAllFiles,
+  };
+}
+
+function FileDropZone({ fileDropIn }) {
+  const {
+    isDragging,
+    fileInputRef,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleFileChange,
+  } = fileDropIn;
+
+  return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- drag-and-drop target; the nested "browse" button provides the keyboard-accessible equivalent
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
+        isDragging
+          ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+          : "border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/10"
+      }`}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.webp,image/*"
+        onChange={handleFileChange}
+        multiple
+        className="hidden"
+      />
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center">
+          <svg
+            className="w-6 h-6 text-purple-600 dark:text-purple-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            />
+          </svg>
+        </div>
+        <div>
+          <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
+            Drop files here or{" "}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-purple-600 dark:text-purple-400 hover:underline"
+            >
+              browse
+            </button>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            📄 PDFs • 📷 Images • 📸 Screenshots -{" "}
+            <strong>Multiple files supported!</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const FileErrorNotice = ({ fileError }) => {
+  if (!fileError) return null;
+
+  return (
+    <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+      <div className="flex items-start gap-2">
+        <svg
+          className="w-5 h-5 text-red-500 shrink-0 mt-0.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <p className="text-sm text-red-700 dark:text-red-300">{fileError}</p>
+      </div>
+    </div>
+  );
+};
+
+const OcrProgressIndicator = ({ ocrProgress, currentProcessingFile }) => {
+  if (!ocrProgress || !currentProcessingFile) return null;
+
+  return (
+    <div className="mt-3 border border-purple-200 dark:border-purple-700 rounded-xl p-4 bg-purple-50 dark:bg-purple-900/20">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="animate-spin rounded-full h-5 w-5 border-2 border-purple-600 border-t-transparent"></div>
+        <span className="font-medium text-purple-800 dark:text-purple-200 text-sm">
+          Processing: {currentProcessingFile}
+        </span>
+      </div>
+      <p className="text-xs text-purple-600 dark:text-purple-400 mb-2">
+        {getOcrProgressMessage(ocrProgress)}
+      </p>
+      {ocrProgress.progress > 0 && (
+        <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-1.5">
+          <div
+            className="bg-purple-600 h-1.5 rounded-full transition-all duration-300"
+            style={{ width: `${ocrProgress.progress}%` }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const UploadedFilesSummary = ({
+  uploadedFiles,
+  denialText,
+  handleRemoveFile,
+  handleClearAllFiles,
+}) => {
+  if (uploadedFiles.length === 0) return null;
+
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          📁 Uploaded Files ({uploadedFiles.length})
+        </span>
+        <button
+          type="button"
+          onClick={handleClearAllFiles}
+          className="text-xs text-red-600 dark:text-red-400 hover:underline"
+        >
+          Clear all
+        </button>
+      </div>
+
+      {uploadedFiles.map((fileEntry) => (
+        <UploadedFileRow
+          key={fileEntry.id}
+          fileEntry={fileEntry}
+          onRemove={handleRemoveFile}
+        />
+      ))}
+
+      {/* Combined Text Summary */}
+      {denialText && uploadedFiles.some((f) => f.extractedText) && (
+        <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+          <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+            <span className="text-green-500">✓</span>
+            <span className="text-sm font-medium">
+              Combined text ready - {denialText.length} total characters from{" "}
+              {uploadedFiles.filter((f) => f.extractedText).length} file(s)
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+function FileDropInPanel({ fileDropIn, denialText }) {
+  const {
+    uploadedFiles,
+    ocrProgress,
+    currentProcessingFile,
+    fileError,
+    handleRemoveFile,
+    handleClearAllFiles,
+  } = fileDropIn;
+
+  return (
+    <div>
+      {/* Drop Zone - always visible for adding more files */}
+      <FileDropZone fileDropIn={fileDropIn} />
+
+      {/* Global Error */}
+      <FileErrorNotice fileError={fileError} />
+
+      {/* OCR Progress (while processing) */}
+      <OcrProgressIndicator
+        ocrProgress={ocrProgress}
+        currentProcessingFile={currentProcessingFile}
+      />
+
+      {/* Uploaded Files List */}
+      <UploadedFilesSummary
+        uploadedFiles={uploadedFiles}
+        denialText={denialText}
+        handleRemoveFile={handleRemoveFile}
+        handleClearAllFiles={handleClearAllFiles}
+      />
+
+      {/* Privacy Note */}
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+        🔒 All files processed locally in your browser - nothing is sent to any
+        server.
+      </p>
+    </div>
+  );
+}
+
+const DecisionDecoderFooter = ({ onClose, results }) => (
+  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <BuyMeCoffee show={results !== null} trigger="decision-decoder" />
+    <button
+      type="button"
+      onClick={onClose}
+      className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+    >
+      Close
+    </button>
+  </div>
+);
+
+const DecisionDecoderHeader = ({ onClose, onReportBug, onOpenAISettings }) => (
+  <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+
+    <HeaderCloseSlot
+      className="relative"
+      close={
+        <button
+          type="button"
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-3xl">🔓</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="decoder-title"
+            className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
+          >
+            Decision Decoder{""}
+            <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
+              AI
+            </span>
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              BETA
+            </span>
+          </h2>
+          <p className="text-rose-100 text-sm sm:text-base mt-1">
+            The Denial Translator • VA Legalese → Plain English
+          </p>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <LLMRecommendationBadge toolId="decision-decoder" />
+        <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Decision Decoder"
+          />
+        )}
+      </div>
+    </HeaderCloseSlot>
+  </div>
+);
+
+const InputMethodTabs = ({ inputMethod, setInputMethod }) => (
+  <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700">
+    <button
+      type="button"
+      onClick={() => setInputMethod("paste")}
+      className={`px-4 py-2 text-sm font-semibold transition-colors ${
+        inputMethod === "paste"
+          ? "text-amber-600 dark:text-amber-400 border-b-2 border-amber-600 dark:border-amber-400"
+          : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+      }`}
+    >
+      📋 Paste Text
+    </button>
+    <button
+      type="button"
+      onClick={() => setInputMethod("file")}
+      className={`px-4 py-2 text-sm font-semibold transition-colors ${
+        inputMethod === "file"
+          ? "text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400"
+          : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+      }`}
+    >
+      📷 Drop-In File
+    </button>
+  </div>
+);
+
+const PasteTextInput = ({ denialText, setDenialText }) => (
+  <>
+    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      📄 Paste Your VA Decision Letter
+    </label>
+    <textarea
+      value={denialText}
+      onChange={(e) => setDenialText(e.target.value)}
+      placeholder={`Paste the relevant paragraphs from your VA decision letter here...
+
+Example: "The evidence does not establish a nexus between your current lumbar spine condition and your service-connected right knee disability. While the medical evidence shows a current diagnosis of lumbar degenerative disc disease, there is no competent medical evidence linking this condition to your service or to your service-connected disabilities."`}
+      rows={14}
+      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none font-mono text-sm"
+    />
+    <div className="flex items-center justify-between mt-2">
+      <span className="text-xs text-gray-500 dark:text-gray-400">
+        {denialText.length} characters
+      </span>
+      <button
+        type="button"
+        onClick={() => setDenialText("")}
+        className="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+      >
+        Clear
+      </button>
+    </div>
+  </>
+);
+
+const DecodeButton = ({ isLoading, denialText, handleDecode }) => (
+  <button
+    type="button"
+    onClick={() => handleDecode(denialText)}
+    disabled={isLoading || !denialText.trim()}
+    className="w-full mt-4 px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+  >
+    {isLoading ? (
+      <>
+        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          />
+        </svg>
+        <span>Decoding...</span>
+      </>
+    ) : (
+      <>
+        <span>🔓</span>
+        <span>Decode This Decision</span>
+      </>
+    )}
+  </button>
+);
+
+const DecisionDecoderInputSection = ({
+  inputMethod,
+  setInputMethod,
+  denialText,
+  setDenialText,
+  fileDropIn,
+  isLoading,
+  handleDecode,
+}) => (
+  <div>
+    {/* Input Method Tabs */}
+    <InputMethodTabs
+      inputMethod={inputMethod}
+      setInputMethod={setInputMethod}
+    />
+
+    {/* Paste Text Input */}
+    {inputMethod === "paste" && (
+      <PasteTextInput denialText={denialText} setDenialText={setDenialText} />
+    )}
+
+    {/* File Drop-In (PDF or Image) - MULTI-FILE SUPPORT */}
+    {inputMethod === "file" && (
+      <FileDropInPanel fileDropIn={fileDropIn} denialText={denialText} />
+    )}
+
+    <DecodeButton
+      isLoading={isLoading}
+      denialText={denialText}
+      handleDecode={handleDecode}
+    />
+
+    {/* Privacy Note */}
+    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+      🔒 Your decision letter is processed securely and never stored on our
+      servers.
+    </p>
+  </div>
+);
+
+const ResultsErrorNotice = ({ error, onRetry, isLoading }) => {
+  if (!error) return null;
+
+  return (
+    <div
+      role="alert"
+      className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg mb-4"
+    >
+      <div className="flex items-center gap-2">
+        <svg
+          className="w-5 h-5 text-red-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span className="text-red-700 dark:text-red-300 whitespace-pre-line">
+          {error}
+        </span>
+      </div>
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={isLoading}
+          className="mt-3 min-h-[44px] px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold"
+        >
+          Try again
+        </button>
+      )}
+    </div>
+  );
+};
+
+const SMALL_MODEL_NOTICE_TITLE =
+  "Pattern-match reading: this device's AI model was not used";
+
+const SmallModelFallbackNotice = ({ results }) => {
+  if (results._fallbackReason !== "small_model") return null;
+  return (
+    <div
+      role="note"
+      aria-label={SMALL_MODEL_NOTICE_TITLE}
+      className="rounded-lg border-2 border-amber-700 bg-amber-50 p-3 text-amber-950 dark:border-amber-400 dark:bg-amber-950 dark:text-amber-50"
+    >
+      <p className="text-sm font-semibold">{SMALL_MODEL_NOTICE_TITLE}</p>
+      <p className="mt-1 text-sm">{results._fallbackNote}</p>
+    </div>
+  );
+};
+
+const PatternMatchFallbackNotice = ({ results }) => {
+  if (!results._usedFallback || results._fallbackReason !== "pattern_match") {
+    return null;
+  }
+
+  return (
+    <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+      <div className="flex items-start gap-2">
+        <span className="text-amber-500">🔍</span>
+        <div>
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            Pattern-Match Analysis (No AI Loaded)
+          </p>
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+            {results._fallbackNote}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ADR-009: shown when only an off-device AI was configured, so the
+// pattern-match reader ran instead of sending the letter off-device.
+export const OffDeviceFallbackNotice = ({ results }) => {
+  if (
+    !results._usedFallback ||
+    results._fallbackReason !== "off_device_blocked"
+  ) {
+    return null;
+  }
+
+  return (
+    <div
+      className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg"
+      role="status"
+    >
+      <div className="flex items-start gap-2">
+        <span className="text-amber-500" aria-hidden="true">
+          🔒
+        </span>
+        <div>
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            On-Device AI Only
+          </p>
+          {/* text-amber-700, not -600: #d97706 on #fffbeb is ~3.07:1, below
+              the 4.5:1 AA minimum for small text - #b45309 clears it (~4.85:1). */}
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+            {results._fallbackNote}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CloudAIFallbackNotice = ({ results }) => {
+  if (
+    !results._usedFallback ||
+    results._fallbackReason !== "context_overflow"
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+      <div className="flex items-start gap-2">
+        <span className="text-blue-500">☁️</span>
+        <div>
+          <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+            Processed with Cloud AI
+          </p>
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+            {results._fallbackNote ||
+              "This request was too long for the AI model on this device, so Cloud AI answered instead."}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TruncationNotice = ({ results }) => {
+  if (!results._wasTruncated) return null;
+
+  return (
+    <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+      <div className="flex items-start gap-2">
+        <span className="text-amber-500">✂️</span>
+        <div>
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            Large Document Trimmed
+          </p>
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+            {results._truncationNote ||
+              "Your document was condensed to fit within AI limits. The beginning and end were analyzed (where key decisions are usually found)."}
+          </p>
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+            💡 Tip: For more complete analysis, paste only the &quot;Reasons for
+            Decision&quot; section.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DecisionTypeBadge = ({ results }) => {
+  if (!results.decision_type) return null;
+
+  return (
+    <div
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm border ${getDecisionTypeColor(results.decision_type)}`}
+    >
+      {results.decision_type === "Full Denial" && "❌"}
+      {results.decision_type === "Partial Denial" && "⚠️"}
+      {results.decision_type === "Mixed Decision" && "🔀"}
+      {results.decision_type === "Reduction" && "📉"}
+      {results.decision_type === "Deferred" && "⏳"}
+      {results.decision_type === "Granted" && "✅"}
+      {results.decision_type === "Rating Continued" && "↔️"}
+      {results.decision_type}
+    </div>
+  );
+};
+
+const PlainEnglishSection = ({ results }) => {
+  if (!results.plain_english) return null;
+
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+      <h4 className="font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2 mb-2">
+        <span>💬</span> In Plain English
+      </h4>
+      <p className="text-blue-700 dark:text-blue-300">
+        {results.plain_english}
+      </p>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="plain_english"
+      />
+    </div>
+  );
+};
+
+const VaReasoningSection = ({ results }) => {
+  if (!results.va_reasoning) return null;
+
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+      <h4 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-2">
+        <span>🏛️</span> Why the VA Made This Decision
+      </h4>
+      <p className="text-sm text-gray-700 dark:text-gray-300">
+        {results.va_reasoning}
+      </p>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="va_reasoning"
+      />
+    </div>
+  );
+};
+
+const FavorableFindingsSection = ({ results }) => {
+  if (!results.favorable_findings || results.favorable_findings.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-700">
+      <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2 mb-3">
+        <span>🏆</span> Favorable Findings (Already Established)
+      </h4>
+      <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-2 italic">
+        The VA has already accepted these facts - you do NOT need to prove them
+        again!
+      </p>
+      <ul className="space-y-2">
+        {results.favorable_findings.map((finding) => (
+          <li key={finding} className="flex items-start gap-2">
+            <span className="text-emerald-500 mt-0.5">✓</span>
+            <span className="text-sm text-emerald-700 dark:text-emerald-300">
+              {finding}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="favorable_findings"
+      />
+    </div>
+  );
+};
+
+const MissingElementsSection = ({ results }) => {
+  if (!results.missing_elements || results.missing_elements.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-700">
+      <h4 className="font-semibold text-red-800 dark:text-red-200 flex items-center gap-2 mb-3">
+        <span>🚨</span> What&apos;s Missing From Your Claim
+      </h4>
+      <ul className="space-y-2">
+        {results.missing_elements.map((element) => (
+          <li key={element} className="flex items-start gap-2">
+            <span className="text-red-500 mt-0.5">•</span>
+            <span className="text-sm text-red-700 dark:text-red-300">
+              {element}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="missing_elements"
+      />
+    </div>
+  );
+};
+
+const ActionPlanSection = ({ results }) => {
+  if (!results.action_plan || results.action_plan.length === 0) return null;
+
+  return (
+    <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-700">
+      <h4 className="font-semibold text-green-800 dark:text-green-200 flex items-center gap-2 mb-3">
+        <span>✅</span> Your Action Plan
+      </h4>
+      <ol className="space-y-3">
+        {results.action_plan.map((step, index) => (
+          <li key={step} className="flex items-start gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+              {index + 1}
+            </span>
+            <span className="text-sm text-green-700 dark:text-green-300">
+              {step}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="action_plan"
+      />
+    </div>
+  );
+};
+
+const DeadlineWarningSection = ({ results }) => {
+  if (!results.deadline_warning) return null;
+
+  return (
+    <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-xl p-4 border-2 border-yellow-400 dark:border-yellow-600">
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">⏰</span>
+        <div>
+          <h4 className="font-bold text-yellow-800 dark:text-yellow-200">
+            Important Deadline
+          </h4>
+          <p className="text-sm text-yellow-700 dark:text-yellow-300">
+            {results.deadline_warning}
+          </p>
+          <FieldCorrections
+            corrections={results.review_corrections}
+            field="deadline_warning"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ResultsContent = ({ results }) => {
+  if (!results) return null;
+
+  return (
+    <div className="space-y-4">
+      {/* Pattern-Match Fallback Notice (when AI is not loaded) */}
+      <PatternMatchFallbackNotice results={results} />
+
+      <SmallModelFallbackNotice results={results} />
+
+      {/* On-Device-Only Fallback Notice (when only an off-device AI is configured) */}
+      <OffDeviceFallbackNotice results={results} />
+
+      {/* Cloud AI Fallback Notice (when document was too large for Local AI) */}
+      <CloudAIFallbackNotice results={results} />
+
+      {/* Document Truncation Notice (when document was trimmed to fit Local AI) */}
+      <TruncationNotice results={results} />
+
+      {/* Decision Type Badge */}
+      <DecisionTypeBadge results={results} />
+
+      {/* Plain English Translation */}
+      <PlainEnglishSection results={results} />
+
+      {/* VA's Reasoning */}
+      <VaReasoningSection results={results} />
+
+      {/* Favorable Findings - What the VA Already Conceded */}
+      <FavorableFindingsSection results={results} />
+
+      {/* Missing Elements */}
+      <MissingElementsSection results={results} />
+
+      {/* Action Plan */}
+      <ActionPlanSection results={results} />
+
+      {/* Review options: verified regulation text, not model output */}
+      <DecisionReviewOptions corrections={results.review_corrections} />
+
+      {/* Deadline Warning */}
+      <DeadlineWarningSection results={results} />
+    </div>
+  );
+};
+
+export const DecodeProgressNotice = ({ elapsedMs, budgetMs }) => {
+  const seconds = Math.floor((elapsedMs || 0) / 1000);
+  const slow = (elapsedMs || 0) >= SLOW_NOTICE_AFTER_MS;
+  return (
+    <div
+      role="status"
+      className="mt-4 text-xs text-amber-600 dark:text-amber-400"
+    >
+      <p>
+        {slow
+          ? `Still working (${seconds} s). On-device AI is slower in some browsers and on some computers.`
+          : `Working... ${seconds} s. This usually takes 10-30 seconds.`}
+      </p>
+      {slow && budgetMs && (
+        <p className="mt-1">
+          Waiting up to {Math.round(budgetMs / 1000)} seconds in total, then you
+          can try again.
+        </p>
+      )}
+    </div>
+  );
+};
+
+const DecodingLoadingState = ({ elapsedMs, budgetMs }) => (
+  <div className="h-full flex items-center justify-center py-12 text-center">
+    <div className="max-w-sm">
+      <div className="relative mb-6">
+        <div className="text-6xl animate-pulse">🔓</div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-20 h-20 border-4 border-amber-200 dark:border-amber-800 border-t-amber-500 rounded-full animate-spin"></div>
+        </div>
+      </div>
+      <p className="text-lg font-medium text-amber-700 dark:text-amber-300">
+        AI is analyzing your decision...
+      </p>
+      <p className="text-sm mt-2 text-gray-600 dark:text-gray-400">
+        Translating VA legalese into plain English
+      </p>
+      <div className="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-500">
+        <p className="flex items-center justify-center gap-2">
+          <span className="animate-pulse">📝</span> Identifying decision type...
+        </p>
+        <p className="flex items-center justify-center gap-2">
+          <span className="animate-pulse">🔍</span> Finding missing elements...
+        </p>
+        <p className="flex items-center justify-center gap-2">
+          <span className="animate-pulse">📋</span> Building your action plan...
+        </p>
+      </div>
+      <DecodeProgressNotice elapsedMs={elapsedMs} budgetMs={budgetMs} />
+    </div>
+  </div>
+);
+
+const DecoderEmptyState = () => (
+  <div className="h-full flex items-center justify-center py-12 text-center text-gray-500 dark:text-gray-400">
+    <div>
+      <div className="text-6xl mb-4">🔓</div>
+      <p className="text-lg font-medium">Ready to Decode</p>
+      <p className="text-sm mt-2">
+        Paste your VA decision letter and click &quot;Decode&quot; to translate
+      </p>
+    </div>
+  </div>
+);
+
+const DecisionDecoderResultsSection = ({
+  error,
+  results,
+  isLoading,
+  onRetry,
+  elapsedMs,
+  budgetMs,
+}) => (
+  <div>
+    <ResultsErrorNotice error={error} onRetry={onRetry} isLoading={isLoading} />
+
+    {results && <SmallModelCaveat className="mb-4" />}
+    <ResultsContent results={results} />
+
+    {/* Loading State - Shows progress while AI is working */}
+    {isLoading && (
+      <DecodingLoadingState elapsedMs={elapsedMs} budgetMs={budgetMs} />
+    )}
+
+    {/* Empty State */}
+    {!results && !isLoading && !error && <DecoderEmptyState />}
+  </div>
+);
+
+const DecisionDecoderInfoBanner = () => (
+  <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700 rounded-xl">
+    <div className="flex items-start gap-3">
+      <span className="text-2xl">📬</span>
+      <div>
+        <h3 className="font-bold text-amber-800 dark:text-amber-200">
+          Got a Confusing VA Letter?
+        </h3>
+        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+          VA decisions are written in complex legal language. Paste the key
+          paragraphs below and we&apos;ll translate what they&apos;re{" "}
+          <em>actually</em> saying, what&apos;s missing from your claim, and
+          exactly what you need to do next.
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+function getDecisionTypeColor(type) {
+  switch (type?.toLowerCase()) {
+    case "full denial":
+      return "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700";
+    case "partial denial":
+      return "bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700";
+    case "mixed decision":
+      return "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700";
+    case "reduction":
+      return "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700";
+    case "deferred":
+      return "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700";
+    case "granted":
+      return "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700";
+    case "rating continued":
+      return "bg-sky-100 dark:bg-sky-900/50 text-sky-900 dark:text-sky-100 border-sky-300 dark:border-sky-600";
+    default:
+      return "bg-gray-100 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700";
+  }
+}
+
+/**
+ * DecisionDecoder Component - "The Denial Translator"
+ *
+ * WHY: VA denial letters are written in legalese. A veteran reads:
+ * "The evidence does not establish a nexus between your current condition
+ * and your service-connected disability."
+ * And thinks: "WTF does that mean?"
+ *
+ * THIS TOOL: Translates it into:
+ * - PLAIN ENGLISH: "They're saying your doctor didn't explicitly say 'X caused Y.'"
+ * - MISSING ELEMENT: "A Nexus Letter from a doctor."
+ * - ACTION PLAN: "Get a Nexus Letter from a private physician, or request an Independent Medical Opinion."
+ */
+
+const CommonDenialReasonsReference = () => (
+  <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-xl">
+    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+      <span>📚</span> Common VA Denial Language
+    </h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-red-600 dark:text-red-400 font-medium mb-1">
+          &quot;No nexus established&quot;
+        </p>
+        <p className="text-gray-600 dark:text-gray-400">
+          = They need a doctor&apos;s letter connecting your condition to
+          service
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-red-600 dark:text-red-400 font-medium mb-1">
+          &quot;Not incurred in service&quot;
+        </p>
+        <p className="text-gray-600 dark:text-gray-400">
+          = They didn&apos;t find evidence in your service records
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-red-600 dark:text-red-400 font-medium mb-1">
+          &quot;No current disability&quot;
+        </p>
+        <p className="text-gray-600 dark:text-gray-400">
+          = Need a current diagnosis from a doctor
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+        <p className="text-red-600 dark:text-red-400 font-medium mb-1">
+          &quot;Not at least as likely as not&quot;
+        </p>
+        <p className="text-gray-600 dark:text-gray-400">
+          = The examiner said less than 50% chance of connection
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const PhaseTimeline = ({ phases, selectedPhase, setSelectedPhase }) => (
+  <div className="relative mb-6">
+    <div className="absolute top-4 left-0 right-0 h-1 bg-teal-200 dark:bg-teal-800 rounded"></div>
+    <div className="flex justify-between relative">
+      {phases.map((phase) => (
+        <button
+          type="button"
+          key={phase.key}
+          onClick={() =>
+            setSelectedPhase(selectedPhase?.key === phase.key ? null : phase)
+          }
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10 transition-all ${
+            selectedPhase?.key === phase.key
+              ? "bg-teal-600 text-white ring-4 ring-teal-300 dark:ring-teal-700 scale-110"
+              : "bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-400 border-2 border-teal-300 dark:border-teal-600 hover:bg-teal-100 dark:hover:bg-teal-900"
+          }`}
+          aria-label={phase.name}
+        >
+          {phase.phase}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+const SelectedPhaseDetails = ({ selectedPhase }) => {
+  if (!selectedPhase) {
+    return (
+      <p className="text-center text-teal-600 dark:text-teal-400 text-sm py-4">
+        👆 Click a phase number above to see detailed information
+      </p>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-teal-200 dark:border-teal-700 animate-fadeIn">
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h5 className="font-bold text-teal-800 dark:text-teal-200 text-lg">
+            Phase {selectedPhase.phase}: {selectedPhase.name}
+          </h5>
+          <p className="text-teal-600 dark:text-teal-400 text-sm">
+            {selectedPhase.shortDesc}
+          </p>
+        </div>
+        <span className="bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs px-2 py-1 rounded-full">
+          ⏱️ {selectedPhase.avgDays}
+        </span>
+      </div>
+
+      <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">
+        {selectedPhase.longDesc}
+      </p>
+
+      <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 mb-3">
+        <h6 className="font-semibold text-blue-800 dark:text-blue-200 text-sm mb-1">
+          🎯 What You Should Do
+        </h6>
+        <p className="text-blue-700 dark:text-blue-300 text-sm">
+          {selectedPhase.whatNext}
+        </p>
+      </div>
+
+      {selectedPhase.tips && selectedPhase.tips.length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-900/30 rounded-lg p-3">
+          <h6 className="font-semibold text-amber-800 dark:text-amber-200 text-sm mb-2">
+            💡 Pro Tips
+          </h6>
+          <ul className="space-y-1">
+            {selectedPhase.tips.map((tip) => (
+              <li
+                key={tip}
+                className="text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2"
+              >
+                <span>•</span> {tip}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ClaimPhaseExplainer = ({
+  showPhaseExplainer,
+  setShowPhaseExplainer,
+  selectedPhase,
+  setSelectedPhase,
+  getAllClaimPhases,
+}) => (
+  <div className="mt-6 p-4 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-xl border border-teal-200 dark:border-teal-700">
+    <button
+      type="button"
+      onClick={() => setShowPhaseExplainer(!showPhaseExplainer)}
+      className="w-full flex items-center justify-between"
+    >
+      <h4 className="font-semibold text-teal-800 dark:text-teal-200 flex items-center gap-2">
+        <span>📊</span> Claim Status Phase Explainer{""}
+        <span className="text-xs bg-teal-200 dark:bg-teal-800 text-teal-900 dark:text-teal-100 px-2 py-0.5 rounded-full">
+          VA Reference Data
+        </span>
+      </h4>
+      <svg
+        className={`w-5 h-5 text-teal-600 dark:text-teal-400 transition-transform ${showPhaseExplainer ? "rotate-180" : ""}`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    </button>
+
+    {showPhaseExplainer && (
+      <div className="mt-4">
+        <p className="text-sm text-teal-700 dark:text-teal-300 mb-4">
+          Wondering what your claim status means? Click a phase to learn what
+          the VA is doing and what you should expect.
+        </p>
+
+        {/* Phase Timeline */}
+        <PhaseTimeline
+          phases={getAllClaimPhases()}
+          selectedPhase={selectedPhase}
+          setSelectedPhase={setSelectedPhase}
+        />
+
+        {/* Selected Phase Details */}
+        <SelectedPhaseDetails selectedPhase={selectedPhase} />
+      </div>
+    )}
+  </div>
+);
+
+// aiStatus used to be set once at mount and only refreshed inside
+// SmartAILoadButton's onLoadComplete, so it never noticed AI becoming
+// available any other way (AI settings, a cloud key entered, a model loaded
+// elsewhere) or becoming unavailable again. Polls the same way
+// DD214Analyzer.jsx's useDD214AIStatus and BlueButtonXRay.jsx's
+// useAIStatusPolling already do.
+// Exported for this hook's own regression test - not part of the
+// component's public interface otherwise.
+export function useAIStatusPolling() {
+  const [aiStatus, setAIStatus] = useState(() => getAIStatus());
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setAIStatus(getAIStatus()), 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return { aiStatus, setAIStatus };
+}
+
+const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
+  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
+
+  const [denialText, setDenialText] = useState("");
+  const { aiStatus, setAIStatus } = useAIStatusPolling();
+  const { results, isLoading, error, handleDecode, elapsedMs, budgetMs } =
+    useDecisionDecode();
+  const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
+  const [selectedPhase, setSelectedPhase] = useState(null);
+  const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'file'
+
+  const fileDropIn = useFileDropIn(setDenialText);
+
+  // Benefits Reference hook for claim phase explanations
+  const { getAllClaimPhases } = useVaBenefitsRef();
+
+  const footer = <DecisionDecoderFooter onClose={onClose} results={results} />;
+
+  const header = (
+    <DecisionDecoderHeader
+      onClose={onClose}
+      onReportBug={onReportBug}
+      onOpenAISettings={onOpenAISettings}
+    />
+  );
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="2xl"
+      labelledBy="decoder-title"
+      header={header}
+      footer={footer}
+    >
+      {/* Content */}
+      {/* Info Banner */}
+      <DecisionDecoderInfoBanner />
+
+      {/* Smart AI Load Button */}
+      {!aiStatus.anyAvailable && (
+        <div className="mb-6">
+          <SmartAILoadButton
+            toolId="decision-decoder"
+            onLoadComplete={(model) => {
+              logger.info("Smart AI loaded for Decision Decoder", {
+                model: model?.name,
+              });
+              setAIStatus(getAIStatus());
+            }}
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Input Section */}
+        <DecisionDecoderInputSection
+          inputMethod={inputMethod}
+          setInputMethod={setInputMethod}
+          denialText={denialText}
+          setDenialText={setDenialText}
+          fileDropIn={fileDropIn}
+          isLoading={isLoading}
+          handleDecode={handleDecode}
+        />
+
+        {/* Results Section */}
+        <DecisionDecoderResultsSection
+          error={error}
+          results={results}
+          isLoading={isLoading}
+          onRetry={() => handleDecode(denialText)}
+          elapsedMs={elapsedMs}
+          budgetMs={budgetMs}
+        />
+      </div>
+
+      {/* Common Denial Reasons Reference */}
+      <CommonDenialReasonsReference />
+
+      {/* Claim Phase Explainer - Powered by Benefits Reference Data */}
+      <ClaimPhaseExplainer
+        showPhaseExplainer={showPhaseExplainer}
+        setShowPhaseExplainer={setShowPhaseExplainer}
+        selectedPhase={selectedPhase}
+        setSelectedPhase={setSelectedPhase}
+        getAllClaimPhases={getAllClaimPhases}
+      />
+    </ResponsiveModal>
+  );
+};
+
+export default DecisionDecoder;

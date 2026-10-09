@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "generated_at": "2026-07-20T21:19:57.420Z",
+  "embedding_model": "Xenova/bge-small-en-v1.5",
+  "embedding_dim": 384,
+  "shard_count": 8,
+  "shards": [
+    {
+      "id": "ecfr",
+      "layout": "legal-index",
+      "path": "/legal-index/v0.1.0",
+      "authority_tier": "statutory",
+      "tier_rank": 1,
+      "embedding_model": "Xenova/bge-small-en-v1.5",
+      "embedding_dim": 384,
+      "entry_count": 1060,
+      "bytes": 407040,
+      "min_device_tier": "mobile",
+      "parts": [
+        {
+          "chunks": "chunks/ecfr.jsonl",
+          "vectors": "vectors/ecfr.bin",
+          "count": 1060,
+          "bytes": 407040
+        }
+      ]
+    },
+    {
+      "id": "fedcir",
+      "layout": "shard",
+      "path": "/dkb-index/fedcir",
+      "authority_tier": "judicial_federal_circuit",
+      "tier_rank": 2,
+      "embedding_model": "Xenova/bge-small-en-v1.5",
+      "embedding_dim": 384,
+      "entry_count": 7233,
+      "bytes": 2777472,
+      "min_device_tier": "mobile",
+      "parts": [
+        {
+          "chunks": "chunks.part0.jsonl",
+          "vectors": "vectors.part0.bin",
+          "count": 7233,
+          "bytes": 2777472
+        }
+      ]
+    },
+    {
+      "id": "cavc",
+      "layout": "shard",
+      "path": "/dkb-index/cavc",
+      "authority_tier": "judicial",
+      "tier_rank": 3,
+      "embedding_model": "Xenova/bge-small-en-v1.5",
+      "embedding_dim": 384,
+      "entry_count": 11920,
+      "bytes": 4577280,
+      "min_device_tier": "mobile",
+      "parts": [
+        {
+          "chunks": "chunks.part0.jsonl",
+          "vectors": "vectors.part0.bin",
+          "count": 11920,
+          "bytes": 4577280
+        }
+      ]
+    },
+    {
+      "id": "bva",
+      "layout": "shard",
+      "path": "/dkb-index/bva",
+      "authority_tier": "administrative_precedent",
+      "tier_rank": 4,
+      "embedding_model": "Xenova/bge-small-en-v1.5",
+      "embedding_dim": 384,
+      "entry_count": 116165,
+      "bytes": 44607360,
+      "min_device_tier": "laptop",
+      "parts": [
+        {
+          "chunks": "chunks.part0.jsonl",
+          "vectors": "vectors.part0.bin",
+          "count": 68266,
+          "bytes": 26214144
+        },
+        {
+          "chunks": "chunks.part1.jsonl",
+          "vectors": "vectors.part1.bin",
+          "count": 47899,
+          "bytes": 18393216
+        }
+      ]
+    },
+    {
+      "id": "ogc",
+      "layout": "shard",
+      "path": "/dkb-index/ogc",
+      "authority_tier": "policy",
+      "tier_rank": 5,
+      "embedding_model": "Xenova/bge-small-en-v1.5",
+      "embedding_dim": 384,
+      "entry_count": 893,
+      "bytes": 342912,
+      "min_device_tier": "mobile",
+      "parts": [
+        {
+          "chunks": "chunks.part0.jsonl",
+          "vectors": "vectors.part0.bin",
+          "count": 893,
+          "bytes": 342912
+        }
+      ]
+    },
+    {
+      "id": "m21_1",
+      "layout": "shard",
+      "path": "/dkb-index/m21_1",
+      "authority_tier": "procedural",
+      "tier_rank": 6,
+      "embedding_model": "Xenova/bge-small-en-v1.5",
+      "embedding_dim": 384,
+      "entry_count": 4720,
+      "bytes": 1812480,
+      "min_device_tier": "mobile",
+      "parts": [
+        {
+          "chunks": "chunks.part0.jsonl",
+          "vectors": "vectors.part0.bin",
+          "count": 4720,
+          "bytes": 1812480
+        }
+      ]
+    },
+    {
+      "id": "m21_5",
+      "layout": "shard",
+      "path": "/dkb-index/m21_5",
+      "authority_tier": "procedural",
+      "tier_rank": 6,
+      "embedding_model": "Xenova/bge-small-en-v1.5",
+      "embedding_dim": 384,
+      "entry_count": 453,
+      "bytes": 173952,
+      "min_device_tier": "mobile",
+      "parts": [
+        {
+          "chunks": "chunks.part0.jsonl",
+          "vectors": "vectors.part0.bin",
+          "count": 453,
+          "bytes": 173952
+        }
+      ]
+    },
+    {
+      "id": "m21_4",
+      "layout": "shard",
+      "path": "/dkb-index/m21_4",
+      "authority_tier": "reference",
+      "tier_rank": 7,
+      "embedding_model": "Xenova/bge-small-en-v1.5",
+      "embedding_dim": 384,
+      "entry_count": 341,
+      "bytes": 130944,
+      "min_device_tier": "mobile",
+      "parts": [
+        {
+          "chunks": "chunks.part0.jsonl",
+          "vectors": "vectors.part0.bin",
+          "count": 341,
+          "bytes": 130944
+        }
+      ]
+    }
+  ]
+}

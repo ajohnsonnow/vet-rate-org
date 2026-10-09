@@ -1,0 +1,276 @@
+{
+  "state": "Illinois",
+  "stateCode": "IL",
+  "officialSource": "https://veterans.illinois.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "il-property_tax_exemption-standard-homestead-exemption-for-veterans-with-d",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Standard Homestead Exemption for Veterans with Disabilities (SHEVD)",
+      "description": "Illinois reduces the equalized assessed value (EAV) of a disabled veteran's primary residence on a sliding scale tied to VA service-connected disability rating: $2,500 off EAV at 30-49%, $5,000 off EAV at 50-69%, and the first $250,000 of EAV exempt entirely at 70% or higher. The exemption must be filed for annually with the county assessor.",
+      "value": "$2,500 EAV reduction (30-49% disability); $5,000 EAV reduction (50-69% disability); first $250,000 of EAV exempt (70%+ disability)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 30,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Illinois resident who served on active duty, state active duty, Illinois National Guard, or U.S. Reserve Forces",
+          "Service-connected disability of at least 30% certified by the U.S. Department of Veterans Affairs",
+          "Own and occupy the property as primary residence",
+          "Property's total EAV must be less than $250,000 (after excluding portion used for commercial purposes)",
+          "Annual re-filing required (application due by county-set deadline, commonly cited as July 1)"
+        ]
+      },
+      "application": {
+        "agency": "Illinois Department of Revenue / County Chief County Assessment Office",
+        "form": "PTAX-342 (Application for Standard Homestead Exemption for Veterans with Disabilities)",
+        "url": "https://tax.illinois.gov/localgovernments/property/disabledveteraninfo.html",
+        "documentation": [
+          "VA disability rating letter",
+          "DD214",
+          "Proof of Illinois residency and property ownership"
+        ]
+      },
+      "legalCitation": "35 ILCS 200/15-169",
+      "authorityTier": "reference",
+      "sourceUrl": "https://tax.illinois.gov/localgovernments/property/taxrelief.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "il-state_veterans_home-illinois-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Illinois Veterans' Homes",
+      "description": "The Illinois Department of Veterans' Affairs (IDVA) operates five state veterans homes serving aged and disabled veterans and their eligible spouses, ranging from independent domiciliary living (Anna and Quincy) to 24/7 skilled nursing care (all five locations). Specific admission eligibility criteria (residency period, service era, income) are set by application review and were not fully itemized on the page reviewed.",
+      "value": "Long-term domiciliary and skilled nursing care at state-subsidized rates",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must have been a resident of the State of Illinois at the time of entering military service (for housing benefit eligibility)",
+          "Aged and/or disabled veteran, or eligible spouse"
+        ]
+      },
+      "application": {
+        "agency": "Illinois Department of Veterans' Affairs (IDVA)",
+        "form": "IDVA Homes Admission Application",
+        "url": "https://veterans.illinois.gov/services-benefits/homes/homes.html",
+        "documentation": ["DD214", "Admission Application form for the Homes"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.illinois.gov/services-benefits/homes/homes.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "il-education_tuition-illinois-veteran-grant-ivg",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Illinois Veteran Grant (IVG)",
+      "description": "The IVG pays tuition and mandatory fees at Illinois state-supported colleges, universities, and community colleges for eligible veterans, for up to the equivalent of four academic years of full-time enrollment. There is no minimum VA disability rating requirement; eligibility instead depends on service length, discharge status, and residency.",
+      "value": "Full tuition and mandatory fees at Illinois public colleges/universities/community colleges, up to 4 years full-time equivalent",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged veteran (or serving) with at least one full year of active duty in the U.S. Armed Forces",
+          "Resided in Illinois six months before entering service, OR Illinois resident at least 15 consecutive years after leaving active duty",
+          "Return to Illinois within six months of discharge (or currently reside in Illinois; exceptions for active-duty enrollees and military spouses)",
+          "Application must reach ISAC by the last scheduled day of classes for the term requested"
+        ]
+      },
+      "application": {
+        "agency": "Illinois Student Assistance Commission (ISAC) / Illinois Department of Veterans' Affairs",
+        "form": "IVG Program Application",
+        "url": "https://veterans.illinois.gov/services-benefits/education/illinois-veterans-grant.html",
+        "documentation": ["DD214", "Proof of Illinois residency"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.illinois.gov/services-benefits/education/illinois-veterans-grant.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "il-education_tuition-deceased-disabled-and-mia-pow-veterans-dependent",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Deceased, Disabled, and MIA/POW Veterans' Dependents Scholarship",
+      "description": "Covers full tuition and mandatory fees for up to 4 years (120 semester hours) at Illinois public colleges/universities for the spouse or child of a veteran who is MIA, was a POW, died of service-connected causes, or is rated 100% permanent and totally disabled (including 100% due to unemployability) by the VA. This benefits the veteran's dependents, not the veteran directly.",
+      "value": "Full tuition and mandatory fees at Illinois public colleges/universities, up to 4 years/120 semester hours, expires 12 years after enrollment start",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Veteran was Illinois resident at time of entering active duty",
+          "Applicant is spouse, natural/adopted/stepchild (under 18 at marriage/adoption), or minor child under court-ordered guardianship of the qualifying veteran",
+          "Veteran must be MIA, POW, died of service-connected cause, or VA-rated 100% permanent and totally disabled (including due to unemployability)"
+        ]
+      },
+      "application": {
+        "agency": "Illinois Student Assistance Commission (ISAC) / Illinois Department of Veterans' Affairs",
+        "form": "MIA/POW Scholarship Application (studentportal.isac.org)",
+        "url": "https://veterans.illinois.gov/services-benefits/education/mia-pow-scholarship.html",
+        "documentation": [
+          "Veteran's DD214",
+          "USDVA award/rating letter",
+          "Birth/marriage certificate or adoption decree",
+          "College acceptance/registration proof"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.illinois.gov/services-benefits/education/mia-pow-scholarship.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "il-hiring_preference-veterans-preference-points-for-state-of-illinois",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veterans Preference Points for State of Illinois Employment",
+      "description": "Qualified veterans applying for State of Illinois civil service jobs receive additional points added to their passing examination score, administered by the CMS Veterans Outreach Program, with certification requiring a DD-214 and (for disability-based preference) a VA award letter. This research confirmed the existence and general process of the program on the official careers.illinois.gov page, but could not independently confirm the exact numeric point values or the specific statutory citation from a directly-fetched official source (ilga.gov statute pages timed out/404'd on every attempt), so those figures are omitted rather than guessed.",
+      "value": null,
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorably discharged veteran, or qualifying National Guard/Reserve member with at least 6 months of service",
+          "Additional/enhanced preference documented for veterans with service-connected disability and Purple Heart recipients",
+          "Certify eligibility via DD-214 (or NGB-22) and, for disability preference, a VA award letter, through the CMS self-service portal"
+        ]
+      },
+      "application": {
+        "agency": "Illinois Department of Central Management Services (CMS), Veterans Outreach Program",
+        "form": null,
+        "url": "https://careers.illinois.gov/employment-resources/vetsopgm.html",
+        "documentation": [
+          "DD214 or NGB-22",
+          "VA disability award letter (for disability-based preference)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://careers.illinois.gov/employment-resources/vetsopgm.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "il-license_plate-disabled-veteran-license-plates",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plates",
+      "description": "The Illinois Secretary of State offers Disabled Veteran license plates for veterans with a service-connected disability certified by a licensed physician, allowing use of accessible parking spaces. This research located the official ilsos.gov program page but could not successfully load its content directly (repeated fetch timeouts), so exact cost and eligibility details below are unconfirmed and should be verified directly at ilsos.gov before being presented as fact to a veteran.",
+      "value": null,
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Physician certification of service-connected disability qualifying for disabled plates/placard",
+          "Honorable or under-honorable-conditions discharge per DD214"
+        ]
+      },
+      "application": {
+        "agency": "Illinois Secretary of State",
+        "form": "VSD 756",
+        "url": "https://www.ilsos.gov/departments/vehicles/license-plate-guide/military/disabled-vet.html",
+        "documentation": [
+          "DD214",
+          "Disabled Veteran Certification for Parking Placard/Plates (physician-completed)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.ilsos.gov/departments/vehicles/license-plate-guide/military/disabled-vet.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "unverified"
+    },
+    {
+      "id": "il-other-veteran-designation-on-driver-s-license-or-state",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "Veteran Designation on Driver's License or State ID",
+      "description": "Honorably discharged veterans can add a 'Veteran' designation to their Illinois driver's license or state ID card, verified by the Secretary of State against IDVA records. Adding the designation is free at a regular renewal; getting it added before a scheduled renewal costs a small fee.",
+      "value": "Free at scheduled renewal; $5 (driver's license) or $10 (state ID) if updated before scheduled renewal; free for veterans over 65 on state ID",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged U.S. veteran",
+          "Provide DD214, DD Form 2 (Retired), federal Veterans ID Card, or VA summary of benefits letter"
+        ]
+      },
+      "application": {
+        "agency": "Illinois Secretary of State / Illinois Department of Veterans' Affairs",
+        "form": null,
+        "url": "https://veterans.illinois.gov/services-benefits/veteran-driver-s-license.html",
+        "documentation": [
+          "DD214, DD Form 2 (Retired), federal Veterans Identification Card, or VA summary of benefits letter"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.illinois.gov/services-benefits/veteran-driver-s-license.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "il-recreation-free-hunting-and-fishing-license-for-disabled-ve",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Free Hunting and Fishing License for Disabled Veterans",
+      "description": "Illinois veterans who receive 10% or greater VA service-connected compensation, or a total disability pension, get a free lifetime (one-time issue, no expiration) hunting and fishing license and are exempt from the habitat stamp fee, regardless of state of residency.",
+      "value": "Free hunting/fishing license (one-time issue, no expiration); habitat stamp fee waived",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 10,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Present DD214, IDVA-issued Disability Affidavit, and current verification of VA compensation/pension"
+        ]
+      },
+      "application": {
+        "agency": "Illinois Department of Veterans' Affairs / Illinois Department of Natural Resources",
+        "form": "Disability Affidavit for Illinois Hunting and Fishing Privilege",
+        "url": "https://veterans.illinois.gov/services-benefits/permits.html",
+        "documentation": [
+          "DD214",
+          "Disability Affidavit (from IDVA local Veteran Service Office)",
+          "Current VA compensation/pension verification"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.illinois.gov/services-benefits/permits.html",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

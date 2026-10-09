@@ -1,0 +1,7 @@
+Contact: mailto:security@{{PROJECT_EMAIL_DOMAIN}}
+Contact: https://github.com/{{GITHUB_ORG}}/{{REPO_NAME}}/security/advisories/new
+Expires: {{EXPIRES_DATE}}
+Preferred-Languages: en
+Canonical: https://{{PROJECT_DOMAIN}}/.well-known/security.txt
+Policy: https://github.com/{{GITHUB_ORG}}/{{REPO_NAME}}/blob/main/SECURITY.md
+Acknowledgments: https://github.com/{{GITHUB_ORG}}/{{REPO_NAME}}/blob/main/SECURITY.md#recognition

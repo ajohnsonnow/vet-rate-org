@@ -1,0 +1,33 @@
+[extend]
+useDefault = true
+
+[allowlist]
+  description = "test fixtures and obviously fake credentials"
+  regexes = [
+    '''(?i)fake[_-]?(api[_-]?key|secret|token|password)''',
+    '''(?i)test[_-]?(key|token|pass)''',
+    '''(?i)example[_-]?(key|token|secret)''',
+    '''CHANGEME''',
+    '''YOUR_API_KEY''',
+  ]
+  paths = [
+    '''src[/\\]__tests__[/\\]''',
+    '''tests[/\\]''',
+    '''src[/\\].+\.test\.(js|jsx|ts|tsx)$''',
+    '''src[/\\].+\.spec\.(js|jsx|ts|tsx)$''',
+    '''node_modules''',
+    '''dist''',
+    '''coverage''',
+  ]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''(?i)sk-ant-[a-zA-Z0-9-_]{20,}'''
+tags = ["anthropic", "api-key"]
+
+[[rules]]
+id = "azure-connection-string"
+description = "Azure storage connection string"
+regex = '''DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[^;]+'''
+tags = ["azure", "connection-string"]

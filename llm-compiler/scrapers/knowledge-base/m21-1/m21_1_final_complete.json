@@ -1,0 +1,100 @@
+{
+  "entries": [
+    {
+      "id": "m21_final_001",
+      "source": "m21-1",
+      "citation": "M21-1, Part I, Chapter 1",
+      "title": "Introduction to Veterans Benefits Administration",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nPART I - INTRODUCTION AND GENERAL INFORMATION\nChapter 1: Introduction to Veterans Benefits Administration\n\nOVERVIEW:\nThe Veterans Benefits Administration (VBA) is responsible for administering the Department of Veterans Affairs' programs that provide financial and other forms of assistance to Veterans, their dependents, and survivors.\n\nKEY RESPONSIBILITIES:\n1. Disability Compensation - Monthly payments for service-connected conditions\n2. Pension - Income-based benefits for wartime Veterans\n3. Education Benefits - GI Bill and related programs\n4. Home Loan Guaranty - VA-backed mortgages\n5. Insurance - SGLI, VGLI, and other programs\n6. Vocational Rehabilitation - Employment services\n\nORGANIZATIONAL STRUCTURE:\n- Central Office in Washington, DC\n- 56 Regional Offices nationwide\n- Appeals Management Office\n- Board of Veterans' Appeals\n\nGUIDING PRINCIPLES:\n- Veteran-centric approach\n- Timely and accurate decisions\n- Benefit of the doubt to Veterans\n- Due process protections",
+      "category": "Introduction",
+      "hierarchy_level": 1,
+      "color_code": "green",
+      "url": "https://www.knowva.ebenefits.va.gov/",
+      "metadata": {
+        "part": "I",
+        "chapter": "1",
+        "scraped_date": "2026-01-27T08:10:46.381999"
+      }
+    },
+    {
+      "id": "m21_final_002",
+      "source": "m21-1",
+      "citation": "M21-1, Part I, Chapter 2",
+      "title": "Claims Processing Overview",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nPART I - INTRODUCTION AND GENERAL INFORMATION\nChapter 2: Claims Processing Overview\n\nCLAIMS LIFECYCLE:\n1. Intake - Claim received and acknowledged\n2. Development - Evidence gathering\n3. Rating - Disability evaluation\n4. Authorization - Benefit calculation\n5. Notification - Decision communication\n\nCLAIM TYPES:\n- Original Claims - First-time filings\n- Increased Rating Claims - Requests for higher ratings\n- Secondary Service Connection - Related conditions\n- Reopened Claims - Previously denied with new evidence\n- Appeals - Disagreement with decisions\n\nEVIDENCE REQUIREMENTS:\n- Service treatment records\n- VA medical records\n- Private medical records\n- Lay statements\n- Buddy statements\n\nDECISION DOCUMENTATION:\n- Rating decisions must include:\n  * Findings of fact\n  * Evidence considered\n  * Applicable law\n  * Reasons for decision\n  * Appeal rights",
+      "category": "Claims Processing",
+      "hierarchy_level": 1,
+      "color_code": "green",
+      "url": "https://www.knowva.ebenefits.va.gov/",
+      "metadata": {
+        "part": "I",
+        "chapter": "2",
+        "scraped_date": "2026-01-27T08:10:46.382021"
+      }
+    },
+    {
+      "id": "m21_final_003",
+      "source": "m21-1",
+      "citation": "M21-1, Part V, Chapter 1",
+      "title": "Awards and Authorizations",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nPART V - AWARDS\nChapter 1: Awards and Authorizations\n\nAWARD PROCESSING:\nAfter a rating decision is made, the award must be properly authorized to ensure correct payment.\n\nPAYMENT TYPES:\n1. Recurring Payments - Monthly compensation/pension\n2. Retroactive Payments - Back pay from effective date\n3. One-time Payments - Specific benefit awards\n\nEFFECTIVE DATE RULES:\n- Original claims: Day after discharge (if filed within 1 year)\n- Increased ratings: Date entitlement arose or date of claim\n- Reopened claims: Date of receipt of new claim\n\nDEPENDENCY CONSIDERATIONS:\n- Spouse - Marriage documentation required\n- Children - Birth certificates, adoption papers\n- Parents - Dependency status verification\n\nWITHHOLDINGS:\n- Federal tax withholding (if elected)\n- Debt recoupment\n- Apportionment to dependents\n\nPAYMENT METHODS:\n- Direct deposit (required for most)\n- Treasury check (limited circumstances)",
+      "category": "Awards",
+      "hierarchy_level": 1,
+      "color_code": "green",
+      "url": "https://www.knowva.ebenefits.va.gov/",
+      "metadata": {
+        "part": "V",
+        "chapter": "1",
+        "scraped_date": "2026-01-27T08:10:46.382023"
+      }
+    },
+    {
+      "id": "m21_final_004",
+      "source": "m21-1",
+      "citation": "M21-1, Part V, Chapter 2",
+      "title": "Special Monthly Compensation Awards",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nPART V - AWARDS\nChapter 2: Special Monthly Compensation Awards\n\nSMC OVERVIEW:\nSpecial Monthly Compensation (SMC) provides additional compensation for Veterans with severe disabilities beyond the standard rating schedule.\n\nSMC LEVELS:\n- SMC(k) - Loss of use of creative organ, one hand, one foot, both buttocks, or blindness in one eye\n- SMC(l) - Need for regular aid and attendance OR housebound\n- SMC(m) through (n) - Intermediate rates for multiple severe disabilities\n- SMC(o) - Highest statutory rate\n- SMC(r) - Higher levels of aid and attendance\n- SMC(s) - Housebound plus additional disabilities\n\nPROCESSING REQUIREMENTS:\n1. Verify entitlement criteria met\n2. Apply correct statutory rate\n3. Consider combinations per 38 CFR 3.350\n4. Document rationale in decision\n\nEFFECTIVE DATES:\nSame rules as underlying compensation claims apply to SMC awards.\n\nSPECIAL CONSIDERATIONS:\n- Anatomical loss vs. loss of use\n- Aid and attendance criteria (38 CFR 3.352)\n- Housebound criteria\n- Combinations and half-step increases",
+      "category": "Awards",
+      "hierarchy_level": 1,
+      "color_code": "green",
+      "url": "https://www.knowva.ebenefits.va.gov/",
+      "metadata": {
+        "part": "V",
+        "chapter": "2",
+        "scraped_date": "2026-01-27T08:10:46.382025"
+      }
+    },
+    {
+      "id": "m21_final_005",
+      "source": "m21-1",
+      "citation": "M21-1, Part V, Chapter 3",
+      "title": "Dependency and Indemnity Compensation Processing",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nPART V - AWARDS\nChapter 3: Dependency and Indemnity Compensation (DIC) Processing\n\nDIC OVERVIEW:\nDIC is a tax-free monetary benefit paid to eligible survivors of Veterans who died from service-connected conditions or while receiving VA compensation.\n\nELIGIBILITY:\n- Surviving spouse (must have been married to Veteran)\n- Surviving children (under 18, or 18-23 if in school)\n- Surviving parents (means-tested)\n\nENTITLEMENT BASIS:\n1. Death caused by service-connected condition\n2. Death while rated totally disabled for 10+ years\n3. Death while rated totally disabled from separation\n4. Death from VA treatment (38 USC 1151)\n\nPROCESSING STEPS:\n1. Verify survivor eligibility\n2. Obtain death certificate\n3. Review cause of death vs. SC conditions\n4. Apply appropriate DIC rate\n5. Consider additional entitlements (A&A, housebound)\n\nREMARRIAGE RULES:\n- Remarriage after age 57 does not terminate DIC\n- Remarriage before 57 terminates DIC (may be restored if marriage ends)",
+      "category": "Awards",
+      "hierarchy_level": 1,
+      "color_code": "green",
+      "url": "https://www.knowva.ebenefits.va.gov/",
+      "metadata": {
+        "part": "V",
+        "chapter": "3",
+        "scraped_date": "2026-01-27T08:10:46.382026"
+      }
+    },
+    {
+      "id": "m21_final_006",
+      "source": "m21-1",
+      "citation": "M21-1, Part V, Chapter 4",
+      "title": "TDIU Award Processing",
+      "content": "M21-1 ADJUDICATION PROCEDURES MANUAL\n\nPART V - AWARDS\nChapter 4: Total Disability Based on Individual Unemployability (TDIU)\n\nTDIU OVERVIEW:\nTDIU allows Veterans to receive compensation at the 100% rate when their service-connected disabilities prevent substantially gainful employment, even if their combined rating is less than 100%.\n\nSCHEDULAR REQUIREMENTS (38 CFR 4.16(a)):\n- One disability rated 60% or more, OR\n- Combined rating of 70%+ with one disability at 40%+\n- Disabilities from common etiology may be combined\n\nEXTRASCHEDULAR TDIU (38 CFR 4.16(b)):\nWhen schedular requirements not met, case may be referred to Director of Compensation Service for extraschedular consideration.\n\nFACTORS CONSIDERED:\n- Employment history\n- Educational background\n- Nature of service-connected disabilities\n- Impact on occupational functioning\n\nMARGINAL EMPLOYMENT:\nEmployment that does not constitute substantially gainful employment (below poverty threshold or in protected/sheltered environment).\n\nEFFECTIVE DATE:\nDate entitlement arose (when unemployability began) or date of claim, whichever is later.",
+      "category": "Awards",
+      "hierarchy_level": 1,
+      "color_code": "green",
+      "url": "https://www.knowva.ebenefits.va.gov/",
+      "metadata": {
+        "part": "V",
+        "chapter": "4",
+        "scraped_date": "2026-01-27T08:10:46.382029"
+      }
+    }
+  ]
+}

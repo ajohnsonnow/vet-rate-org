@@ -1,0 +1,243 @@
+{
+  "state": "Wisconsin",
+  "stateCode": "WI",
+  "officialSource": "https://dva.wi.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "wi-property_tax_exemption-veterans-and-surviving-spouses-property-tax-cred",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Veterans and Surviving Spouses Property Tax Credit",
+      "description": "Wisconsin provides a refundable state income tax credit equal to 100% of the property taxes paid during the year on an eligible veteran's or unremarried surviving spouse's principal Wisconsin residence, including up to one acre of land. To qualify as a veteran, the applicant must have served honorably on active duty, either entered service as a Wisconsin resident or have lived in Wisconsin for 5+ consecutive years after entering service, currently reside in Wisconsin, and have a 100% VA service-connected disability rating (schedular or on an Individual Unemployability basis). Surviving spouses qualify through several pathways (spouse of a 100%-rated veteran who was a WI resident at death, spouse of a veteran who died in the line of duty as a WI resident, or a DIC recipient meeting the same service/residency tests), provided they remain unremarried. Note: because this is a refundable income-tax credit rather than an assessed-value exemption, and the underlying statute (Wis. Stat. 71.07(6e)) was not read in full text this session (only the DOR FAQ summary and WDVA program page were), the precise statutory wording of edge-case eligibility pathways (e.g. exact DIC-recipient tax-year cutoff) is not independently confirmed beyond what the FAQ page states.",
+      "value": "100% of property taxes paid on the veteran's or surviving spouse's principal Wisconsin residence, including up to 1 acre of land",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge",
+          "Wisconsin residency at entry into active duty, OR 5+ consecutive years of Wisconsin residency after entry into active duty",
+          "Currently a Wisconsin resident",
+          "Property must be the claimant's principal dwelling",
+          "Eligibility must first be certified by the Wisconsin Department of Veterans Affairs (WDVA) before claiming the credit on a tax return"
+        ]
+      },
+      "application": {
+        "agency": "Wisconsin Department of Revenue (administers the credit); Wisconsin Department of Veterans Affairs (certifies eligibility)",
+        "form": "WDVA B0106 (certification/application booklet)",
+        "url": "https://dva.wi.gov/services/housing-and-financial-services/property-tax-credit/",
+        "documentation": [
+          "VA letter documenting 100% service-connected disability rating or Individual Unemployability determination",
+          "WDVA eligibility certification",
+          "Proof of Wisconsin residency history"
+        ]
+      },
+      "legalCitation": "Wis. Stat. §§ 71.07(6e), 73.03",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.revenue.wi.gov/Pages/FAQS/ise-vetqual.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wi-state_veterans_home-wisconsin-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Wisconsin Veterans Homes",
+      "description": "The Wisconsin Department of Veterans Affairs operates three state veterans homes — at Chippewa Falls, King, and Union Grove — providing 24-hour skilled nursing care to veterans, their spouses, and Gold Star Parents. Union Grove additionally offers a range of care levels from assisted living to specialized memory care, and King offers some domiciliary care on its Rainbow Lake campus. Detailed admission criteria (specific medical qualification standards, income/asset tests, and exact residency rules) are not published in readable form on the official WDVA overview pages fetched this session; those pages direct applicants to contact the homes or WDVA directly (1-800-WIS-VETS) for admission specifics, so those details are not independently confirmed here.",
+      "value": "24-hour skilled nursing care; assisted-living and memory-care options at Union Grove; some domiciliary care at King",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Open to veterans, spouses, Gold Star Family members, and unremarried widow(er)s of veterans",
+          "Specific medical/financial admission criteria not confirmed against a directly-read official source this session"
+        ]
+      },
+      "application": {
+        "agency": "Wisconsin Department of Veterans Affairs",
+        "form": null,
+        "url": "https://dva.wi.gov/services/wisconsin-veterans-homes/",
+        "documentation": [
+          "DD-214 or other proof of military service",
+          "Medical records for admission review"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dva.wi.gov/services/wisconsin-veterans-homes/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wi-education_tuition-wisconsin-gi-bill-tuition-and-fee-remission",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Wisconsin GI Bill (Tuition and Fee Remission)",
+      "description": "The Wisconsin GI Bill is a state-funded program (separate from the federal GI Bill) providing full tuition and segregated-fee remission for eligible veterans and their dependents for up to eight semesters or 128 credits, whichever is greater, at any University of Wisconsin System or Wisconsin Technical College System school, covering associate through doctoral study. Eligible veterans must currently live in Wisconsin and either have been a Wisconsin resident at entry into active duty or have resided in Wisconsin for at least 3 consecutive years before enrolling. Spouses/children of a veteran who died in the line of duty, or of a veteran with a combined VA service-connected disability rating of 30% or greater, may also qualify for full remission. This is distinct from Wisconsin's separate, income-capped Veteran Education Reimbursement Grant program administered under Wis. Stat. § 45.20; the exact statutory citation specific to the tuition-remission program itself was not confirmed against a directly-read statute this session (the WDVA program page does not cite one), so no legal citation is given here to avoid conflating it with the reimbursement-grant statute.",
+      "value": "Full tuition and segregated-fee remission for up to 8 semesters or 128 credits at UW System or Wisconsin Technical College System schools",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge and qualifying service (e.g., 90+ days active duty during wartime, or 2 consecutive years during peacetime, or a qualifying separation)",
+          "Wisconsin residency at entry into active duty, or 3+ consecutive years of Wisconsin residency before enrolling",
+          "Dependents: spouse/child of a veteran killed in the line of duty, or of a veteran with a 30%+ combined VA disability rating"
+        ]
+      },
+      "application": {
+        "agency": "Wisconsin Department of Veterans Affairs",
+        "form": "WDVA Form 2030 (application); WDVA Form 2029 (post-approval school certification)",
+        "url": "https://dva.wi.gov/benefits/education/wi-gi-bill/",
+        "documentation": [
+          "DD-214 showing character of service",
+          "Proof of Wisconsin residency",
+          "VA disability rating letter (for dependent eligibility pathway)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dva.wi.gov/benefits/education/wi-gi-bill/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wi-hiring_preference-state-employment-veteran-s-preference-and-non-co",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veteran's Preference and Non-Competitive Appointment",
+      "description": "Wisconsin gives veterans preference in state civil service hiring, and separately offers a Veterans Non-Competitive Appointment Program allowing veterans with a service-connected disability rating of 30% or greater (documented by the VA within the last 12 months, with an honorable or qualifying discharge and no punitive discharge) to be appointed to state positions without competing through the standard examination process. Multiple secondary sources (county veteran-service and benefits-aggregator pages) describe a specific points-added structure for the competitive-preference track — commonly cited as 10 points for veterans, 15 points for veterans with a disability rating under 30%, 20 points for a rating of 30% or greater, and 10 points for the spouse of a 70%+ disabled veteran or an unremarried surviving spouse of a veteran killed in action or who died of a service-connected disability — but this exact point structure could not be independently confirmed against a directly-read official Wisconsin state source in this session: the state's own Division of Personnel Management veteran-hiring page does not itself state a point table, and the underlying PDF forms/handbook chapter (DOA-15529, WHRH Chapter 204) could not be parsed as readable text via the fetch tool used. It is presented here as unconfirmed rather than settled fact; only the non-competitive appointment program's 30%-disability threshold was confirmed directly.",
+      "value": "Non-competitive state-employment appointment eligibility for veterans with a 30%+ VA service-connected disability rating; a separate points-added preference exists for competitive civil-service exams (exact point values not independently confirmed this session)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 30,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge (no punitive discharge)",
+          "For non-competitive appointment: 30%+ VA service-connected disability rating documented within the last 12 months",
+          "Applicant must not currently hold a permanent state position or have restoration rights to one"
+        ]
+      },
+      "application": {
+        "agency": "Wisconsin Department of Administration, Division of Personnel Management",
+        "form": null,
+        "url": "https://dpm.wi.gov/Pages/Job_Seekers/VeteranHiring.aspx",
+        "documentation": [
+          "DD-214",
+          "VA disability rating letter dated within the past 12 months (for non-competitive appointment)"
+        ]
+      },
+      "legalCitation": "Wis. Stat. § 230.16",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dpm.wi.gov/Pages/Job_Seekers/VeteranHiring.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wi-license_plate-disabled-veteran-parking-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran Parking License Plate",
+      "description": "Wisconsin issues a Disabled Veteran parking license plate to veterans certified by an authorized VA health care specialist as having a permanent disability incurred in active U.S. military service that limits or impairs the ability to walk (e.g., cannot walk 200 feet without resting, requires a mobility aid, has a qualifying cardiac or lung condition). The plate authorizes parking in spaces reserved for disabled/veteran plates, exemption from posted time limits of a half-hour or more, and free parking at metered spaces with a half-hour-or-more limit, and it is valid in all 50 states and Puerto Rico. Beyond the standard annual vehicle registration fee, no separate plate-issuance fee is described on the official application page (only an optional $15 personalization fee); this plate is mail-only via WisDOT and is not available at DMV service centers. Wisconsin also offers several other military-themed plates (U.S. Veteran motorcycle plate, National Guard plate, Medal of Honor plate, ex-POW plate, and others) that were not individually verified in this session.",
+      "value": "Disabled Veteran parking plate; no separate plate-issuance fee beyond standard annual vehicle registration; grants reserved parking, time-limit exemptions, and free metered parking",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Permanent disability incurred during active U.S. military service that limits or impairs the ability to walk, certified by an authorized VA health care specialist",
+          "Registration in Wisconsin"
+        ]
+      },
+      "application": {
+        "agency": "Wisconsin Department of Transportation, Division of Motor Vehicles",
+        "form": "MV2172",
+        "url": "https://wisconsindot.gov/Pages/dmv/vehicles/dsbld-prkg/dvetplat.aspx",
+        "documentation": [
+          "Form MV2172 with VA health care specialist certification section completed",
+          "Vehicle title or registration documentation"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://wisconsindot.gov/Pages/dmv/vehicles/dsbld-prkg/dvetplat.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wi-recreation-veteran-hunting-fishing-license-benefits",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Veteran Hunting/Fishing License Benefits",
+      "description": "Wisconsin gives two distinct recreational licensing benefits to veterans, both administered through the DNR in coordination with WDVA. First, under 2013 Wisconsin Act 20, a recently separated Wisconsin resident veteran who was honorably discharged within the past 365 days and served during a designated war period (including operations after 9/11/2001) may receive one complimentary small game, archery, gun deer, or annual fishing license, redeemed via a WDVA-issued voucher code within 365 days of discharge. Second, Wisconsin offers a discounted $3 annual Resident Veteran's Disabled Fishing License to veterans who are receiving VA disability compensation for a service-connected disability of 70% or greater, are rated individually unemployable, or receive non-service-connected VA pension benefits.",
+      "value": "One free hunting/fishing license (choice of small game, archery, gun deer, or annual fishing) for recently separated veterans; $3 annual Resident Veteran's Disabled Fishing License for veterans with a 70%+ service-connected rating, Individual Unemployability, or non-service-connected VA pension",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 70,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Free one-time license: honorable discharge within the past 365 days, service during a designated war period, Wisconsin residency",
+          "Discounted disabled fishing license: 70%+ service-connected VA disability rating, Individual Unemployability rating, or non-service-connected VA pension"
+        ]
+      },
+      "application": {
+        "agency": "Wisconsin Department of Natural Resources, in coordination with the Wisconsin Department of Veterans Affairs",
+        "form": "WDVA 2240 (free license eligibility) or application via MyWisVets.com",
+        "url": "https://dnr.wisconsin.gov/permits/veterans.html",
+        "documentation": [
+          "DD-214",
+          "VA disability rating letter (for the discounted disabled fishing license)"
+        ]
+      },
+      "legalCitation": "2013 Wisconsin Act 20",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dnr.wisconsin.gov/permits/veterans.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wi-other-military-retirement-pay-state-income-tax-exempti",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "Military Retirement Pay State Income Tax Exemption",
+      "description": "Wisconsin fully exempts military retirement pay from state income tax. All retirement payments received from the U.S. military retirement system — including Survivor Benefit Plan and Retired Serviceman's Family Protection Plan payments — are exempt from Wisconsin income tax, along with retired-pay-equivalent payments related to Coast Guard, NOAA commissioned corps, and Public Health Service commissioned corps service. This exemption is separate from (and in addition to) the fact that VA disability compensation itself is not counted as taxable income at the federal level and therefore is not included in Wisconsin's income-tax base either. The subtraction is claimed on Schedule SB (Form 1) or Schedule M (Form 1NPR) and cannot exceed the amount of retirement pay included in federal adjusted gross income.",
+      "value": "100% exemption of military retirement pay (including SBP payments) from Wisconsin state income tax",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applies to retirees receiving payments from the U.S. military retirement system, DFAS, or qualifying Coast Guard/NOAA/PHS commissioned-corps retired pay"
+        ]
+      },
+      "application": {
+        "agency": "Wisconsin Department of Revenue",
+        "form": "Schedule SB (Form 1) or Schedule M (Form 1NPR)",
+        "url": "https://www.revenue.wi.gov/Pages/FAQS/pcs-military.aspx",
+        "documentation": ["1099-R showing military retirement income"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.revenue.wi.gov/Pages/FAQS/pcs-military.aspx",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

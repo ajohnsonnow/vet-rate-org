@@ -1,0 +1,20 @@
+# Legal documents - verbatim copies, do not lint
+LICENSE
+
+# YAML policy files and gitignore-syntax files - not markdown, but have # comments parsed as headings
+.snyk
+.dcignore
+.aiignore
+
+# Third-party content
+node_modules/
+dist/
+dist-supplylocker/
+.venv/
+.claude-tools/
+
+# Outside the live app build - same boundary as eslint.config.mjs ignores
+archive/
+audit/
+llm-compiler/
+test-results/

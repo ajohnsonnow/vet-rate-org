@@ -1,0 +1,231 @@
+{
+  "state": "North Carolina",
+  "stateCode": "NC",
+  "officialSource": "https://www.milvets.nc.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "nc-property_tax_exemption-disabled-veteran-property-tax-exclusion",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran Property Tax Exclusion",
+      "description": "Excludes the first $45,000 of the appraised value of a permanent residence owned by a veteran with a 100% permanent and total service-connected disability (or who received specially adapted housing benefits under 38 U.S.C. 2101). Also available to certain never-remarried surviving spouses.",
+      "value": "$45,000 exclusion of appraised real property value",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable or under-honorable-conditions discharge",
+          "Disability must be permanent and total service-connected, or veteran received specially adapted housing benefits under 38 U.S.C. 2101",
+          "Must own and occupy the property as a permanent residence",
+          "Application (Form AV-9 with Form NCDVA-9 certification) must be filed with the county tax assessor by June 1 of the tax year"
+        ]
+      },
+      "application": {
+        "agency": "County Tax Assessor, certification by NC Dept. of Military & Veterans Affairs Veterans Service Officer",
+        "form": "NCDVA-9 (certification) filed with Form AV-9 (Application for Property Tax Relief)",
+        "url": "https://www.ncdor.gov/taxes-forms/property-tax/property-tax-forms/ncdva-9-certification-disabled-veterans-property-tax-exclusion",
+        "documentation": [
+          "VA disability rating letter",
+          "DD-214",
+          "Form NCDVA-9 certified by a Veterans Service Officer"
+        ]
+      },
+      "legalCitation": "N.C. Gen. Stat. § 105-277.1C",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.milvets.nc.gov/benefits-services/veterans-property-tax-relief",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nc-state_veterans_home-nc-state-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "NC State Veterans Homes",
+      "description": "North Carolina operates skilled-nursing State Veterans Homes in Black Mountain, Fayetteville, Kernersville, Kinston, and Salisbury, totaling 449 skilled care beds, providing nursing care, therapy, and on-site VA benefits assistance to eligible veterans. The official page does not itself publish detailed admission eligibility criteria (discharge status, residency length, medical-need referral); those specifics must be confirmed directly with NCDMVA or the individual facility.",
+      "value": null,
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Contact NCDMVA (toll-free 844-624-8387) or the individual facility for specific admission/eligibility criteria"
+        ]
+      },
+      "application": {
+        "agency": "NC Department of Military & Veterans Affairs",
+        "form": null,
+        "url": "https://www.milvets.nc.gov/state-veterans-homes",
+        "documentation": []
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.milvets.nc.gov/state-veterans-homes",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nc-education_tuition-nc-scholarship-for-children-of-wartime-veterans",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "NC Scholarship for Children of Wartime Veterans",
+      "description": "State-funded scholarship for children of deceased, disabled, combat, or POW/MIA veterans whose qualifying service occurred during a period of war. Provides up to eight academic semesters over an eight-year period at North Carolina schools. The official page does not state a specific dollar award amount.",
+      "value": "Up to 8 academic semesters over 8 years at NC schools; dollar amount not published",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applicant must be under age 25 at time of application",
+          "Applicant must be domiciled and a resident of North Carolina",
+          "Veteran parent was an NC legal resident at entry into military service, OR the applicant was born in NC and has been continuously resident since birth"
+        ]
+      },
+      "application": {
+        "agency": "NC Department of Military & Veterans Affairs",
+        "form": null,
+        "url": "https://scholarships.milvets.nc.gov/",
+        "documentation": []
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.milvets.nc.gov/benefits-services/scholarships",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nc-hiring_preference-veterans-employment-preference-state-government",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veterans Employment Preference (State Government)",
+      "description": "NC law grants eligible veterans (and eligible National Guard members, spouses of disabled veterans, and certain surviving spouses/dependents) preference in employment with every North Carolina state department, agency, and institution, applying to initial hiring, promotions, reassignments, and transfers.",
+      "value": "Hiring/promotion preference for state government positions",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Discharge other than dishonorable",
+          "Service during a recognized period of war, or a campaign/expedition for which a DoD campaign badge or medal is authorized",
+          "Applies to NC state department/agency/institution positions"
+        ]
+      },
+      "application": {
+        "agency": "NC Office of State Human Resources (OSHR)",
+        "form": null,
+        "url": "https://oshr.nc.gov/hr-governance/policies/veterans-national-guard-preference-policy",
+        "documentation": ["DD-214"]
+      },
+      "legalCitation": "N.C. Gen. Stat. §§ 126-4(4), 128-15; 25 NCAC 01H .1100",
+      "authorityTier": "reference",
+      "sourceUrl": "https://oshr.nc.gov/hr-governance/policies/veterans-national-guard-preference-policy",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nc-license_plate-disabled-veteran-partially-disabled-veteran-lice",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran / Partially Disabled Veteran License Plate",
+      "description": "NC issues a Disabled Veteran plate at no additional charge to veterans with a combined VA disability rating of 100%, or who receive Individual Unemployability paid at the 100% rate; veterans with other disability ratings may receive a Partially Disabled Veteran plate. Verified through a VA Rating Letter no more than one year old and certification by an NCDMVA Accredited Service Officer.",
+      "value": "No additional plate fee for the Disabled Veteran plate",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Disabled Veteran plate requires a combined VA rating of 100%, or Individual Unemployability paid at the 100% rate; other ratings receive the Partially Disabled Veteran plate",
+          "VA Rating Letter dated within the last year",
+          "Certification of Section 3 by an NCDMVA Accredited Service Officer",
+          "Form MVR-33A"
+        ]
+      },
+      "application": {
+        "agency": "NC Division of Motor Vehicles, certified by NCDMVA",
+        "form": "MVR-33A",
+        "url": "https://www.milvets.nc.gov/benefits-services/military-and-veteran-license-plates",
+        "documentation": ["DD-214 or VA Rating Letter", "MVR-33A form"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.milvets.nc.gov/benefits-services/military-and-veteran-license-plates",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nc-recreation-lifetime-hunting-fishing-license-for-disabled-ve",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Lifetime Hunting & Fishing License for Disabled Veterans",
+      "description": "NC residents who are 50% or more disabled, as determined by the U.S. Department of Veterans Affairs, qualify for a lifetime combination hunting and fishing license, valid for life so long as the individual remains 50% or more disabled. The official page did not state a specific license fee.",
+      "value": "Lifetime combination hunting & fishing license (fee not published on official page)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must remain 50% or more disabled to retain validity",
+          "Certification from the Department of Veterans Affairs must be submitted with the application",
+          "Application must be submitted by mail or in person only"
+        ]
+      },
+      "application": {
+        "agency": "NC Wildlife Resources Commission",
+        "form": null,
+        "url": "https://www.ncwildlife.gov/license/disabledvetapplicationpdf/download",
+        "documentation": ["VA certification of disability rating"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.ncwildlife.gov/outdoors/accessible-opportunities/disabled-licenses",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "nc-other-military-retirement-pay-state-income-tax-deducti",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "Military Retirement Pay State Income Tax Deduction",
+      "description": "For tax years beginning on or after January 1, 2022, North Carolina allows eligible retired servicemembers who served at least 20 years, or who were medically retired under 10 U.S.C. Chapter 61, to deduct their military retirement pay (and Survivor Benefit Plan payments to eligible beneficiaries) from NC taxable income. Chapter 61 severance pay does not qualify. This benefits many medically-retired disabled veterans.",
+      "value": "Full deduction of qualifying military retirement pay/SBP payments from NC taxable income",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Served at least 20 years in the uniformed services, OR medically retired under 10 U.S.C. Chapter 61 (Chapter 61 severance pay is excluded)",
+          "Deduction limited to the extent payments are included in federal adjusted gross income",
+          "Claimed on Form D-400 Schedule S",
+          "Applies to taxable years beginning on or after January 1, 2022"
+        ]
+      },
+      "application": {
+        "agency": "NC Department of Revenue",
+        "form": "D-400 Schedule S",
+        "url": "https://www.ncdor.gov/taxes-forms/individual-income-tax/filing-topics/military-retirement",
+        "documentation": []
+      },
+      "legalCitation": "N.C. Gen. Stat. § 105-153.5(b)(5a)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.ncdor.gov/taxes-forms/individual-income-tax/filing-topics/military-retirement",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

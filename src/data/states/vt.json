@@ -1,0 +1,174 @@
+{
+  "state": "Vermont",
+  "stateCode": "VT",
+  "officialSource": "https://veterans.vermont.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "vt-property_tax_exemption-veterans-property-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Veterans Property Tax Exemption",
+      "description": "Vermont law (32 V.S.A. §3802(11)) sets a minimum $10,000 property tax exemption on both the municipal and education grand lists for qualifying veterans; a town may vote at an annual or special meeting to increase the exemption up to $40,000 of appraisal value. Veterans qualify via VA disability compensation for a 50% or higher rating, VA Non-Service-Connected (Improved) Pension, or permanent medical military retirement pay. Application based on permanent disability is filed with the Office of Veterans Affairs before May 1 of the first year the exemption is sought and remains on the grand list until the property's title transfers. Note: this session's direct WebFetch of veterans.vermont.gov and tax.vermont.gov pages returned HTTP 403 and the legislature.vermont.gov statute page returned a certificate error; the figures below are corroborated across multiple independent WebSearch queries directly quoting the named official pages, but were not read via a successful direct fetch this session.",
+      "value": "Minimum $10,000 exemption of appraisal value; towns may vote to increase up to $40,000",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Qualifies via 50%+ VA disability compensation, VA Non-Service-Connected (Improved) Pension, or permanent medical military retirement pay",
+          "Application for permanent-disability basis must be filed with the Office of Veterans Affairs before May 1 of the first qualifying year",
+          "Remains on the grand list until property title transfers"
+        ]
+      },
+      "application": {
+        "agency": "Vermont Office of Veterans Affairs / Town Lister or Assessor",
+        "form": null,
+        "url": "https://veterans.vermont.gov/office-veterans-affairs/programs-administered-office-veterans-affairs/property-tax-exemption",
+        "documentation": [
+          "VA disability rating letter (50%+) or Non-Service-Connected Pension award, or proof of permanent medical military retirement"
+        ]
+      },
+      "legalCitation": "32 V.S.A. §3802(11)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.vermont.gov/office-veterans-affairs/programs-administered-office-veterans-affairs/property-tax-exemption",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "vt-vehicle_registration-disabled-veteran-motor-vehicle-registration-fee-",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Disabled Veteran Motor Vehicle Registration Fee Exemption",
+      "description": "Vermont waives all registration fees for an honorably discharged veteran of the U.S. Armed Forces who is a Vermont resident, for a motor vehicle the veteran acquired with financial assistance from the U.S. Department of Veterans Affairs (or a replacement vehicle owned during the veteran's lifetime), when the application is accompanied by a copy of an approved VA Form 21-4502 certifying entitlement to that financial assistance. Note: this session's direct WebFetch of dmv.vermont.gov was blocked (HTTP 403); the figures below are corroborated via independent WebSearch queries quoting the named official page and the underlying statute.",
+      "value": "Full exemption from motor vehicle registration fees",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Vehicle must have been acquired with VA financial assistance (or be a lifetime replacement of such a vehicle)",
+          "Application must include an approved VA Form 21-4502"
+        ]
+      },
+      "application": {
+        "agency": "Vermont Department of Motor Vehicles",
+        "form": "VS-113",
+        "url": "https://dmv.vermont.gov/military",
+        "documentation": [
+          "Approved VA Form 21-4502 certifying entitlement to VA vehicle financial assistance"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dmv.vermont.gov/military",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "vt-recreation-free-permanent-hunting-fishing-license-for-disab",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Free Permanent Hunting/Fishing License for Disabled Veterans",
+      "description": "A Vermont resident veteran who is, or ever has been, 60 percent or more disabled due to a service-connected disability may receive a free permanent fishing license, or a free permanent combination hunting and fishing license if otherwise eligible for a hunting license. Non-resident veterans from states with reciprocal privileges for Vermont residents (currently New Hampshire and Maine) may receive a free one-year license upon presentation of a VA certificate. A VA verification letter (summary of benefits) is required. Note: this session's direct WebFetch of vtfishandwildlife.com was blocked (HTTP 403); details are corroborated via independent WebSearch queries quoting the named official page.",
+      "value": "Free permanent fishing license, or free permanent combination hunting/fishing license, for 60%+ disabled resident veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 60,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Non-resident veterans from reciprocal states (NH, ME) may receive a free one-year license",
+          "VA verification letter (summary of benefits) required"
+        ]
+      },
+      "application": {
+        "agency": "Vermont Fish & Wildlife Department",
+        "form": null,
+        "url": "https://www.vtfishandwildlife.com/licenses-and-lotteries/license-center/other-licenses/permanent-licenses-for-people-with-disabilities",
+        "documentation": [
+          "VA verification letter (summary of benefits) confirming 60%+ service-connected disability"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.vtfishandwildlife.com/licenses-and-lotteries/license-center/other-licenses/permanent-licenses-for-people-with-disabilities",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "vt-hiring_preference-state-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veterans' Preference",
+      "description": "Vermont adds preference points to the competitive exam scores of eligible veterans of the U.S. Armed Forces under 20 V.S.A. §1543 and 3 V.S.A. §310(f). An eligible veteran is any person who served in the U.S. Armed Forces for at least 90 days and was separated under honorable or other acceptable conditions; additional preference points may be claimed with a service-connected disability. Vermont law also allows veterans eligible for the preference to apply and compete for vacant positions otherwise open only to current state employees ('State promotional only'). Note: this session's direct WebFetch of humanresources.vermont.gov was blocked (HTTP 403); details are corroborated via independent WebSearch queries quoting the named official page.",
+      "value": "Preference points added to competitive state exam scores; additional points for service-connected disability",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "At least 90 days of U.S. Armed Forces service, separated under honorable or other acceptable conditions",
+          "Additional points available with a service-connected disability"
+        ]
+      },
+      "application": {
+        "agency": "Vermont Department of Human Resources",
+        "form": null,
+        "url": "https://humanresources.vermont.gov/labor-relations/equal-opportunity/veterans-preference",
+        "documentation": [
+          "DD-214 or proof of qualifying service",
+          "VA disability rating documentation for additional preference points"
+        ]
+      },
+      "legalCitation": "20 V.S.A. §1543; 3 V.S.A. §310(f)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://humanresources.vermont.gov/labor-relations/equal-opportunity/veterans-preference",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "vt-state_veterans_home-vermont-veterans-home",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Vermont Veterans' Home",
+      "description": "The Vermont Veterans' Home in Bennington provides skilled nursing care, physical/speech/occupational and specialized therapy, medical social work services, nutrition services, podiatry care, dental care, and transportation to medical appointments. Eligible veterans served at least 90 days in the U.S. Armed Forces and were discharged under honorable conditions; Vermont residents have first priority for admission, though veterans from other states may apply. Gold Star parents and spouses of qualified veterans are also eligible. The facility accepts Medicare and Vermont/New York Medicaid. Note: this session's direct WebFetch of vvh.vermont.gov was blocked (HTTP 403); details are corroborated via independent WebSearch queries quoting the named official page.",
+      "value": "Skilled nursing care and related therapeutic/medical services",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "At least 90 days of U.S. Armed Forces service, discharged under honorable conditions",
+          "Vermont residents have first priority; out-of-state veterans may apply",
+          "Gold Star parents and spouses of qualified veterans also eligible"
+        ]
+      },
+      "application": {
+        "agency": "Vermont Veterans' Home",
+        "form": "VA Form 1010EZ plus VVH application",
+        "url": "https://vvh.vermont.gov/admissions",
+        "documentation": [
+          "DD-214 or VA HINQ",
+          "Current medical information",
+          "Advance Directives (if applicable)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://vvh.vermont.gov/admissions/eligibility",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

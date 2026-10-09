@@ -1,0 +1,173 @@
+{
+  "state": "Rhode Island",
+  "stateCode": "RI",
+  "officialSource": "https://vets.ri.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "ri-property_tax_exemption-veterans-property-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Veterans Property Tax Exemption",
+      "description": "Rhode Island sets statutory minimum property tax exemption amounts for veterans (including disabled veterans), widow(er)s of veterans, and Gold Star parents under RI General Law 44-3-4, but each city and town sets its actual exemption amount by local ordinance and may vote to increase it substantially above the state minimum — the exact dollar amount therefore varies by municipality. Eligible veterans must have a discharge status other than dishonorable and served during a recognized wartime period (WWII, Korea, Vietnam, or a recognized conflict after Vietnam).",
+      "value": "Property tax exemption on assessed value; exact dollar amount varies by city/town ordinance",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Discharge status other than dishonorable",
+          "Service during a recognized wartime period (WWII, Korea, Vietnam, or a recognized post-Vietnam conflict)",
+          "Exemption amount and eligibility details vary by municipality"
+        ]
+      },
+      "application": {
+        "agency": "Rhode Island Office of Veterans Services / Town/City Tax Assessor",
+        "form": null,
+        "url": "https://vets.ri.gov/i-am-find-your-benefits/world-war-ii-korean-war-veteran/property-tax-exemptions",
+        "documentation": ["DD-214 (military discharge document)"]
+      },
+      "legalCitation": "RI General Law 44-3-4; RI General Law 44-3-4.2; RI General Law 44-3-5",
+      "authorityTier": "reference",
+      "sourceUrl": "https://vets.ri.gov/i-am-find-your-benefits/world-war-ii-korean-war-veteran/property-tax-exemptions",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ri-education_tuition-disabled-veterans-tuition-waiver",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Disabled Veterans Tuition Waiver",
+      "description": "Rhode Island permanent residents who are veterans with a 10-100% VA service-connected disability rating receive free tuition at Rhode Island's public colleges and universities (Community College of Rhode Island, Rhode Island College, and University of Rhode Island). The waiver covers tuition only — fees associated with tuition continue to be charged. Applicants must first apply for and use financial aid; any scholarship aid awarded is applied to tuition in lieu of the waiver and reduces the waiver by the award amount. Recently-dated evidence of veteran status with a minimum 10% disability rating must be submitted to the Bursar's Office.",
+      "value": "Free tuition (fees not included) at CCRI, Rhode Island College, and URI",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 10,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Rhode Island permanent resident",
+          "Must apply for and use financial aid first; scholarship aid reduces the waiver",
+          "Recently-dated evidence of veteran status with 10%+ disability required"
+        ]
+      },
+      "application": {
+        "agency": "Rhode Island Office of Veterans Services / Bursar's Office at enrolling institution",
+        "form": null,
+        "url": "https://vets.ri.gov/i-am-find-your-benefits/world-war-ii-korean-war-veteran/disabled-veterans-tuition-waiver",
+        "documentation": [
+          "Recently-dated evidence of veteran status with a minimum 10% service-connected disability rating"
+        ]
+      },
+      "legalCitation": "RI General Law 30-30.1-1",
+      "authorityTier": "reference",
+      "sourceUrl": "https://vets.ri.gov/i-am-find-your-benefits/world-war-ii-korean-war-veteran/disabled-veterans-tuition-waiver",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ri-hiring_preference-state-of-ri-veterans-hiring-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State of RI Veterans' Hiring Preference",
+      "description": "Rhode Island grants a 5-point credit on competitive civil service entrance exams to eligible veterans, and a 10-point credit to eligible disabled veterans; a passing score must be achieved before the preference is applied. A veteran must have an other-than-dishonorable discharge and 30+ days of active duty service (other than training), or have been discharged because of a service-connected disability, or be a National Guard/Reserve retiree with 20+ years of service. A disabled veteran must additionally be a war veteran (hold a campaign ribbon or expeditionary medal) with an Honorable or General discharge and a VA service-connected disability rating.",
+      "value": "5-point credit on competitive civil service entrance exams for veterans; 10-point credit for disabled veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Other-than-dishonorable discharge and 30+ days active duty (non-training), OR discharge for service-connected disability, OR National Guard/Reserve retiree with 20+ years",
+          "Disabled veteran tier requires war veteran status (campaign ribbon/expeditionary medal) with Honorable or General discharge and VA service-connected rating",
+          "Must achieve a passing score before preference is applied"
+        ]
+      },
+      "application": {
+        "agency": "Rhode Island Office of Veterans Services / RI Division of Human Resources",
+        "form": null,
+        "url": "https://vets.ri.gov/i-am-find-your-benefits/world-war-ii-korean-war-veteran/state-ri-veterans-hiring-preference",
+        "documentation": [
+          "DD-214 or proof of qualifying discharge and service",
+          "VA disability rating documentation for the 10-point disabled-veteran tier"
+        ]
+      },
+      "legalCitation": "RI General Law 36-4-19",
+      "authorityTier": "reference",
+      "sourceUrl": "https://vets.ri.gov/i-am-find-your-benefits/world-war-ii-korean-war-veteran/state-ri-veterans-hiring-preference",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ri-vehicle_registration-disabled-veteran-motor-vehicle-registration-fee-",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Disabled Veteran Motor Vehicle Registration Fee Exemption",
+      "description": "Rhode Island veterans who, during wartime service, lost or lost the use of one or both arms, hands, feet, or legs; or received a VA grant for a specially adapted vehicle; or have a VA combined service-connected disability rating of 100%; or have been rated individually unemployable due to a service-connected disability, are completely exempt from the fee for annual registration and license to operate that motor vehicle. Certification of eligibility from the VA or other satisfactory documentation is required. The exemption applies to automobiles or commercial vehicles weighing 12,000 lbs or less.",
+      "value": "Complete exemption from the annual motor vehicle registration and operating license fee",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Vehicle must be an automobile or commercial vehicle weighing 12,000 lbs or less",
+          "Certification of eligibility from the VA or other satisfactory documentation required"
+        ]
+      },
+      "application": {
+        "agency": "Rhode Island Division of Motor Vehicles",
+        "form": "TR-1",
+        "url": "https://dmv.ri.gov/registrations-plates-titles/license-plates/veteran-plates",
+        "documentation": [
+          "Discharge papers (DD-214) or equivalent military documentation",
+          "VA certification of 100% combined service-connected disability, individual unemployability, specially adapted vehicle grant, or qualifying loss of limb"
+        ]
+      },
+      "legalCitation": "RIGL 31-6-8",
+      "authorityTier": "reference",
+      "sourceUrl": "https://webserver.rilegislature.gov/Statutes/TITLE31/31-6/31-6-8.HTM",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ri-recreation-free-hunting-and-fishing-license-for-100-disable",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Free Hunting and Fishing License for 100% Disabled Veterans",
+      "description": "Rhode Island veterans with 100% disability status from the Department of Veterans Affairs receive a permanent, no-cost license for freshwater fishing, hunting, or a freshwater fishing/hunting combo — the permanent license does not require annual renewal. These veterans are also exempt from needing a license for saltwater fishing, though they must have documentation of the qualifying VA decision available while fishing. Applicants must bring photo ID and an original document of the final VA disability decision to the RI Department of Environmental Management to apply in person, or submit those items by mail.",
+      "value": "Free permanent hunting/fishing license (no renewal required); saltwater fishing license not required",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Original document of the VA's final disability decision required at application and while fishing (saltwater)",
+          "Photo ID required"
+        ]
+      },
+      "application": {
+        "agency": "Rhode Island Department of Environmental Management (DEM)",
+        "form": null,
+        "url": "https://dem.ri.gov/about-us/dem-offices/boating-registration-licenses/rhode-island-outdoors",
+        "documentation": [
+          "Photo ID",
+          "Original document of the VA's final disability decision(s) on agency letterhead"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dem.ri.gov/about-us/dem-offices/boating-registration-licenses/rhode-island-outdoors",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

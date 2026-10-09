@@ -1,0 +1,58 @@
+/**
+ * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Unauthorized copying, use, or distribution is strictly prohibited.
+ * See src/COPYRIGHT.js for full license terms.
+ */
+
+import AnimatedBug from "./AnimatedBug";
+
+/**
+ * ReportBugLink - A standardized, small bug report button for module headers
+ *
+ * This component provides a consistent "Report Bug" link that can be placed
+ * in the header of any module/modal for easy access to the Bug Squasher.
+ *
+ * @param {function} onClick - Handler to open the Bug Squasher modal
+ * @param {string} variant - 'light' (for dark headers) or 'dark' (for light headers)
+ * @param {string} moduleName - Optional module name to pre-fill in bug report
+ */
+function ReportBugLink({ onClick, variant = "light", moduleName = "" }) {
+  const handleClick = (e) => {
+    e.stopPropagation();
+    // Store the module name in sessionStorage for the bug report
+    if (moduleName) {
+      sessionStorage.setItem("bugReport_currentModule", moduleName);
+    }
+    // Only call onClick if it's provided
+    if (onClick && typeof onClick === "function") {
+      onClick();
+    }
+  };
+
+  const baseStyles =
+    "inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded transition-all";
+
+  const variantStyles =
+    variant === "light"
+      ? "text-white hover:bg-white/10"
+      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700";
+
+  const ariaLabel = moduleName
+    ? `Report a bug in ${moduleName}`
+    : "Report a bug";
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`${baseStyles} ${variantStyles}`}
+      aria-label={ariaLabel}
+    >
+      <span>🐛</span>
+      <span>Bug?</span>
+      <AnimatedBug size="xs" />
+    </button>
+  );
+}
+
+export default ReportBugLink;
