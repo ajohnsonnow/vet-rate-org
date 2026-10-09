@@ -33,7 +33,7 @@ jobs:
   # --------------------------------------------------------------------- sbom --
   sbom:
     name: Generate SBOM (CycloneDX + SPDX)
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 15
     permissions:
       contents: write # attach SBOM to releases on tag pushes
@@ -61,7 +61,7 @@ jobs:
   provenance:
     name: SLSA build provenance
     if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 20
     permissions:
       id-token: write # OIDC token for Sigstore signing
@@ -77,7 +77,7 @@ jobs:
           if [ -f package.json ] && jq -e '.scripts.build' package.json > /dev/null; then
             npm ci && npm run build
             mkdir -p release-artifacts
-            tar -czf release-artifacts/Vet-Rate.org-${GITHUB_REF_NAME}.tar.gz dist/
+            tar -czf "release-artifacts/Vet-Rate.org-${GITHUB_REF_NAME}.tar.gz" dist/
           else
             echo "::warning::No build script found — add project-specific build steps here."
             mkdir -p release-artifacts
@@ -97,7 +97,7 @@ jobs:
   dast-baseline:
     name: DAST baseline (OWASP ZAP, informational)
     if: vars.STAGING_URL != ''
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 30
     continue-on-error: true
     env:
@@ -115,7 +115,7 @@ jobs:
   security-headers:
     name: Security headers check (informational)
     if: vars.STAGING_URL != ''
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 5
     continue-on-error: true
     steps:
@@ -146,7 +146,7 @@ jobs:
   # ----------------------------------------------------------------- full-sast --
   full-sast-semgrep:
     name: Full SAST (Semgrep, whole codebase)
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 30
     container:
       image: semgrep/semgrep # pinact: pin to image digest
@@ -174,7 +174,7 @@ jobs:
   # -------------------------------------------------------------- license-scan --
   license-scan:
     name: License scan (fail on copyleft in prod deps)
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -194,7 +194,7 @@ jobs:
   # ---------------------------------------------------------------- smoke-test --
   smoke-test:
     name: Smoke test
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -222,7 +222,7 @@ jobs:
   # --------------------------------------------------------- post-deploy-notify --
   post-deploy-notify:
     name: Release gate summary
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 5
     if: always()
     needs:

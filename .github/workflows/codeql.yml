@@ -6,33 +6,40 @@
 # requirements.txt, *.csproj, go.mod) and builds the analysis matrix
 # dynamically — the same file works unchanged across all repos.
 #
-# Callable as a reusable workflow (workflow_call) from pr-checks.yml and
-# release-gates.yml, and also runs standalone on push/schedule so new CVE
-# queries re-scan existing code weekly.
+# Callable as a reusable workflow (workflow_call) from pr-checks.yml (on PRs)
+# and release-gates.yml (on push to main) — that is the only way this runs
+# on a commit. It also runs standalone weekly (schedule) so new CVE queries
+# re-scan existing code, and on workflow_dispatch for a manual re-run.
 #
 # PINNING: run `pinact run` to pin @vN tags to SHAs before production use.
 
 name: CodeQL Analysis
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master, develop]
+  # Deliberately no push/pull_request triggers. pr-checks.yml (on PRs) and
+  # release-gates.yml (on push to main) both reach this workflow through
+  # workflow_call already, so a direct trigger here analysed — and billed —
+  # every commit twice (RT13-2, docs/RED_TEAM_AUDIT_2026-06.md:274; see
+  # docs/CI_MINUTES.md).
   schedule:
     - cron: "0 6 * * 1" # Mondays 06:00 UTC — catches newly published queries/CVEs
   workflow_call: # allows pr-checks.yml / release-gates.yml to invoke this
+  workflow_dispatch:
 
 permissions:
   actions: read
   contents: read
   security-events: write # upload SARIF to the GitHub Security tab
 
+concurrency:
+  group: codeql-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   # ---------------------------------------------------------- detect-languages --
   detect-languages:
     name: Detect CodeQL languages
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 5
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
@@ -76,7 +83,7 @@ jobs:
     name: Analyze (${{ matrix.language }})
     needs: detect-languages
     if: needs.detect-languages.outputs.any == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 45 # compiled-language autobuilds can be slow
 
     strategy:

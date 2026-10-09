@@ -34,7 +34,7 @@ permissions: {}
 jobs:
   build:
     name: Build + SBOM
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -86,7 +86,7 @@ jobs:
   publish:
     name: Cosign + Publish Release
     needs: [build]
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
       contents: write # create/upload release assets
@@ -112,7 +112,7 @@ jobs:
               "${f}"
           done
           echo "=== Signed artifacts: ==="
-          ls -la *.sig *.pem
+          ls -la ./*.sig ./*.pem
 
       - name: Create GitHub Release with signed artifacts
         env:
