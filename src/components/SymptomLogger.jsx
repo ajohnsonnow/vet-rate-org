@@ -1769,8 +1769,20 @@ function _computeSymptomStats(logs, symptomType) {
   };
 }
 
+function _readStoredSymptomLogs() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return [];
+  try {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) return parsed;
+    console.error("Symptom logs are not a list; leaving them untouched.");
+  } catch (e) {
+    console.error("Failed to parse symptom logs:", e);
+  }
+  return [];
+}
+
 function useSymptomLoggerInitEffects({
-  setLogs,
   setSymptomType,
   setNewLog,
   setActiveTab,
@@ -1781,16 +1793,6 @@ function useSymptomLoggerInitEffects({
   }, [setAIStatus]);
 
   useEffect(() => {
-    const savedLogs = localStorage.getItem(STORAGE_KEY);
-    if (savedLogs) {
-      try {
-        setLogs(JSON.parse(savedLogs));
-      } catch (e) {
-        console.error("Failed to parse symptom logs:", e);
-        setLogs([]);
-      }
-    }
-
     const prefillData = localStorage.getItem("vetrate_symptom_prefill");
     if (prefillData) {
       try {
@@ -1981,7 +1983,8 @@ function useSymptomLoggerHandlers({
 
 function useSymptomLoggerState() {
   const symptomLoggerContentRef = useRef(null);
-  const [logs, setLogs] = useState([]);
+  const [loadedLogs] = useState(_readStoredSymptomLogs);
+  const [logs, setLogs] = useState(loadedLogs);
   const [activeTab, setActiveTab] = useState("log"); // 'log', 'history', 'export'
   const [symptomType, setSymptomType] = useState("migraine");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
@@ -1996,7 +1999,6 @@ function useSymptomLoggerState() {
   const [newLog, setNewLog] = useState(_newSymptomLogFormState());
 
   useSymptomLoggerInitEffects({
-    setLogs,
     setSymptomType,
     setNewLog,
     setActiveTab,
@@ -2004,8 +2006,9 @@ function useSymptomLoggerState() {
   });
 
   useEffect(() => {
+    if (logs === loadedLogs) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-  }, [logs]);
+  }, [logs, loadedLogs]);
 
   const stats = useMemo(
     () => _computeSymptomStats(logs, symptomType),
