@@ -82,7 +82,11 @@ import {
 import { sanitizeParserFields } from "../utils/dd214ParserTextGuards";
 import { parseModelJsonReply } from "../utils/dd214JsonReply";
 import { loadKnownIdentifierSourcesChecked } from "../utils/dd214KnownIdentifierSources";
-import { awardNotesText, awardsRowText } from "../utils/dd214AwardRowText";
+import {
+  awardNotesText,
+  awardNumberText,
+  awardsRowText,
+} from "../utils/dd214AwardRowText";
 import {
   applyParserValues,
   buildValueSources,
@@ -2360,7 +2364,7 @@ function DD214CombatServiceSection({ analysisResult, t }) {
   );
 }
 
-function DD214AwardsSection({ analysisResult, t }) {
+export function DD214AwardsSection({ analysisResult, t }) {
   if (!analysisResult.awards || analysisResult.awards.length === 0) return null;
   return (
     <div>
@@ -2382,6 +2386,11 @@ function DD214AwardsSection({ analysisResult, t }) {
               {award.isCombat && "⚔️ "}
               {award.name}
             </p>
+            {awardNumberText(award) && (
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {awardNumberText(award)}
+              </p>
+            )}
             {award.devices && award.devices.length > 0 && (
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 {t("dd214Analyzer", "with")} {award.devices.join(", ")}
