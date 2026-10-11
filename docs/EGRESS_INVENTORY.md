@@ -1,6 +1,6 @@
 # Egress Inventory — every network destination the app can reach
 
-> RT1-6 deliverable for the red-team audit ([RED_TEAM_AUDIT_2026-06.md](./RED_TEAM_AUDIT_2026-06.md)).
+> RT1-6 deliverable for the red-team audit (`RED_TEAM_AUDIT_2026-06.md`).
 > The CSP `connect-src` / `script-src` / `style-src` allowlists in [index.html](../index.html) are the
 > **authoritative, browser-enforced** list of origins the app can talk to. This doc maps each one to
 > _what data, which direction, what triggers it, and whether it's disclosed_ — so the privacy policy and

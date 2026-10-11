@@ -39,32 +39,32 @@ Wikimedia Commons rate-limited our automated downloads. For the remaining badges
 
 ### Navy Insignia
 
-1. **Navy SEAL Trident**: <https://commons.wikimedia.org/wiki/File:United_States_Navy_SEALs_Trident_insignia.svg>
-2. **Naval Aviator**: <https://commons.wikimedia.org/wiki/File:Naval_Aviator_Badge.svg>
-3. **Submarine Warfare**: <https://commons.wikimedia.org/wiki/File:Submarine_Warfare_insignia.svg>
-4. **Enlisted Surface Warfare**: <https://commons.wikimedia.org/wiki/File:ESWS_pin.svg>
+1. **Navy SEAL Trident**: `File:United_States_Navy_SEALs_Trident_insignia.svg`
+2. **Naval Aviator**: `File:Naval_Aviator_Badge.svg`
+3. **Submarine Warfare**: `File:Submarine_Warfare_insignia.svg`
+4. **Enlisted Surface Warfare**: `File:ESWS_pin.svg`
 
 ### Air Force Badges
 
 1. **Senior Pilot**: <https://commons.wikimedia.org/wiki/File:Senior_Pilot_USAF_Wings.svg>
-2. **Pilot Wings**: <https://commons.wikimedia.org/wiki/File:Pilot_badge_(United_States).svg>
-3. **Pararescue**: <https://commons.wikimedia.org/wiki/File:USAF_-_Occupational_Badge_-_Pararescue.svg>
-4. **Combat Controller**: <https://commons.wikimedia.org/wiki/File:USAF_-_Occupational_Badge_-_Combat_Control.svg>
+2. **Pilot Wings**: `File:Pilot_badge_(United_States).svg`
+3. **Pararescue**: `File:USAF_-_Occupational_Badge_-_Pararescue.svg`
+4. **Combat Controller**: `File:USAF_-_Occupational_Badge_-_Combat_Control.svg`
 
 ### Space Force
 
-1. **Space Operations**: <https://commons.wikimedia.org/wiki/File:Space_Operations_Badge.svg>
+1. **Space Operations**: `File:Space_Operations_Badge.svg`
 
 ### Coast Guard
 
-1. **Cutterman**: <https://commons.wikimedia.org/wiki/File:USCG_Cutterman_Insignia.png>
-2. **Rescue Swimmer**: <https://commons.wikimedia.org/wiki/File:USCG_Rescue_Swimmer.png>
+1. **Cutterman**: `File:USCG_Cutterman_Insignia.png`
+2. **Rescue Swimmer**: `File:USCG_Rescue_Swimmer.png`
 
 ### Marksmanship
 
-1. **Expert Marksman**: <https://commons.wikimedia.org/wiki/File:US_Army_Expert_Marksmanship_Badge.svg>
-2. **Sharpshooter**: <https://commons.wikimedia.org/wiki/File:US_Army_Sharpshooter_Badge.svg>
-3. **Marksman**: <https://commons.wikimedia.org/wiki/File:US_Army_Marksman_Badge.svg>
+1. **Expert Marksman**: `File:US_Army_Expert_Marksmanship_Badge.svg`
+2. **Sharpshooter**: `File:US_Army_Sharpshooter_Badge.svg`
+3. **Marksman**: `File:US_Army_Marksman_Badge.svg`
 
 ### Driver/Mechanic
 
@@ -72,9 +72,9 @@ Wikimedia Commons rate-limited our automated downloads. For the remaining badges
 
 ### Tabs (remaining)
 
-1. **Special Forces Tab**: <https://commons.wikimedia.org/wiki/File:Special_Forces_Tab.svg>
-2. **Sapper Tab**: <https://commons.wikimedia.org/wiki/File:Sapper_Tab.svg>
-3. **Mountain Tab**: <https://commons.wikimedia.org/wiki/File:Mountain_Tab.svg>
+1. **Special Forces Tab**: `File:Special_Forces_Tab.svg`
+2. **Sapper Tab**: `File:Sapper_Tab.svg`
+3. **Mountain Tab**: `File:Mountain_Tab.svg`
 
 ## Image Locations
 
