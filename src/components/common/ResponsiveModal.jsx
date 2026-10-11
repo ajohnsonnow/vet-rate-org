@@ -89,6 +89,23 @@ function ModalHeader({ header, title, titleId, showClose, onClose }) {
   );
 }
 
+// role="none": a <footer> outside a sectioning element maps to the
+// contentinfo landmark, and the page already has one (AppFooter).
+function ModalFooter({ children }) {
+  if (!children) return null;
+  return (
+    <footer
+      role="none"
+      className="modal-footer sticky bottom-0 z-10 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95"
+      style={{
+        paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+      }}
+    >
+      {children}
+    </footer>
+  );
+}
+
 // A dialog that brings its own surface (a dark tool passes "!bg-gray-900")
 // must not also carry bg-white: the light theme repaints every .bg-white
 // with !important, which left dark-styled content on a cream panel.
@@ -200,16 +217,7 @@ export default function ResponsiveModal({
           {children}
         </div>
 
-        {footer && (
-          <footer
-            className="modal-footer sticky bottom-0 z-10 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95"
-            style={{
-              paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
-            }}
-          >
-            {footer}
-          </footer>
-        )}
+        <ModalFooter>{footer}</ModalFooter>
       </div>
     </div>
   );

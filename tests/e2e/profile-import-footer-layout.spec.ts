@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { test, expect, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import { dismissDisclaimer } from "./helpers";
 
 /**
@@ -147,3 +148,33 @@ for (const width of [390, 1440, 3840]) {
     expect(scroll.scrollWidth).toBeLessThanOrEqual(scroll.clientWidth);
   });
 }
+
+test("import review dialog has no axe violations: every value input is named, one contentinfo", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name === "mobile-chrome",
+    "the mobile device tier cannot load an on-device engine by design",
+  );
+  test.setTimeout(90000);
+  await openReviewScreen(page, 1440);
+
+  const review = page.locator(
+    '[role="dialog"][aria-labelledby="profile-import-title"]',
+  );
+  await expect(review).toBeVisible();
+  expect(await review.getByRole("textbox").count()).toBeGreaterThan(0);
+
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .include('[role="dialog"][aria-labelledby="profile-import-title"]')
+    .analyze();
+  expect(
+    results.violations.map((v) => `${v.id}: ${v.nodes.length} node(s)`),
+  ).toEqual([]);
+
+  const pageWide = await new AxeBuilder({ page })
+    .withRules(["landmark-no-duplicate-contentinfo"])
+    .analyze();
+  expect(pageWide.violations.map((v) => v.id)).toEqual([]);
+});

@@ -219,8 +219,9 @@ here so they're not lost.
    this reverses [CRYPTO_AUDIT §7](./CRYPTO_AUDIT.md)'s prior "no transport
    surface" rationale for skipping AES-KW; the real threat is at-rest, not
    transport. Being addressed by a passphrase-anchored KEK that wraps the DEK
-   plus `debugDump` redaction (S16 commit F; design
-   `S16_ROTATION_DEAUTH_DESIGN.md`).
+   plus `debugDump` redaction (S16 commit F; the design
+   document, `S16_ROTATION_DEAUTH_DESIGN.md`, is not part of the public
+   repository).
 
 9. **cloudSync falls back to a hardcoded low-entropy key.** With no passphrase,
    `saveBackupToGoogleDrive` / `restoreBackupFromGoogleDrive` derive the key

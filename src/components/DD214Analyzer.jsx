@@ -2384,7 +2384,13 @@ export function DD214AwardsSection({ analysisResult, t }) {
         🎖️ {t("dd214Analyzer", "awardsDecorations")} (
         {analysisResult.awards.length})
       </h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+      <div
+        role="region"
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+        tabIndex={0}
+        aria-label={`${t("dd214Analyzer", "awardsDecorations")} (${analysisResult.awards.length})`}
+        className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto"
+      >
         {analysisResult.awards.map((award) => (
           <div
             key={award.name}

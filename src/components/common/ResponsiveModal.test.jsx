@@ -103,3 +103,10 @@ describe("ResponsiveModal", () => {
     expect(overlay.className).not.toContain("bg-black/60");
   });
 });
+
+describe("ResponsiveModal footer landmark", () => {
+  it("does not expose the footer slot as a second contentinfo landmark", () => {
+    renderModal({ footer: <button>Save</button> });
+    expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
+  });
+});

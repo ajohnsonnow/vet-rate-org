@@ -4135,11 +4135,6 @@ export const removeDutyStation = (stationId) => {
   }
 };
 
-/**
- * Add an award
- * @param {Object} award - Award data
- * @returns {string|null} New award ID or null on error
- */
 const AWARD_NOTES_MAX = 500;
 
 // autoNotes is the exact note the app generated when it wrote the award's
@@ -4149,8 +4144,9 @@ const AWARD_NOTES_MAX = 500;
 function _mergeAwardNotes(existing, award) {
   const incoming = sanitizeString(award.notes || "", AWARD_NOTES_MAX);
   const incomingAuto =
-    typeof award.autoNotes === "string"
-      ? sanitizeString(award.autoNotes, AWARD_NOTES_MAX)
+    typeof award.autoNotes === "string" &&
+    sanitizeString(award.autoNotes, AWARD_NOTES_MAX) === incoming
+      ? incoming
       : undefined;
   if (
     existing.autoNotes !== undefined &&
@@ -4177,6 +4173,11 @@ function _mergeAwardNotes(existing, award) {
   }
 }
 
+/**
+ * Add an award
+ * @param {Object} award - Award data
+ * @returns {string|null} New award ID or null on error
+ */
 export const addAward = (award) => {
   try {
     const history = getServiceHistory();

@@ -2,11 +2,11 @@
 
 ## Quick Links
 
-- **🚀 `Get Started`** - Implementation checklist
+- **🚀 Get Started** - Implementation checklist (not part of the public repository; the [Quick Start](DYNAMIC_STATS_GUIDE.md#quick-start) section of the guide covers setup)
 - **📖 [Complete Guide](DYNAMIC_STATS_GUIDE.md)** - Full API documentation
-- **🎨 `Examples`** - Real component examples
-- **📊 `Visual Flow`** - System architecture diagram
-- **📋 `Summary`** - Executive overview
+- **🎨 Examples** - Real component examples (not part of the public repository; see [Working Examples](../src/components/examples/DynamicCopyExamples.jsx))
+- **📊 Visual Flow** - System architecture diagram (not part of the public repository; the guide has an [Architecture](DYNAMIC_STATS_GUIDE.md#architecture) section)
+- **📋 Summary** - Executive overview (not part of the public repository; the guide opens with an [Overview](DYNAMIC_STATS_GUIDE.md#overview))
 
 ---
 
@@ -45,10 +45,10 @@ src/
 docs/
   DYNAMIC_STATS_GUIDE.md   # You are here (index)
 
-DYNAMIC_STATS_CHECKLIST.md # Quick start guide
-MIGRATION_EXAMPLE.md        # Before/after comparisons
-DYNAMIC_STATS_SUMMARY.md    # Executive summary
-VISUAL_FLOW.md              # Architecture diagram
+DYNAMIC_STATS_CHECKLIST.md # Quick start guide (not in the public repository)
+MIGRATION_EXAMPLE.md        # Before/after comparisons (not in the public repository)
+DYNAMIC_STATS_SUMMARY.md    # Executive summary (not in the public repository)
+VISUAL_FLOW.md              # Architecture diagram (not in the public repository)
 ```
 
 ---
@@ -94,13 +94,13 @@ npm run update-stats
 
 Start here if you're just learning about the system:
 
-1. **`DYNAMIC_STATS_SUMMARY.md`**
+1. **`DYNAMIC_STATS_SUMMARY.md`** (not part of the public repository)
    - Executive overview
    - What problem it solves
    - Quick examples
    - 5-minute read
 
-2. **`VISUAL_FLOW.md`**
+2. **`VISUAL_FLOW.md`** (not part of the public repository)
    - Visual architecture
    - Data flow diagrams
    - Before/after comparisons
@@ -110,13 +110,13 @@ Start here if you're just learning about the system:
 
 Read these when you're ready to integrate:
 
-1. **`DYNAMIC_STATS_CHECKLIST.md`**
+1. **`DYNAMIC_STATS_CHECKLIST.md`** (not part of the public repository)
    - Step-by-step setup
    - Testing instructions
    - Quick wins
    - Troubleshooting
 
-2. **`MIGRATION_EXAMPLE.md`**
+2. **`MIGRATION_EXAMPLE.md`** (not part of the public repository)
    - Real code from your project
    - DisclaimerSplash.jsx example
    - AboutUs.jsx example
@@ -368,7 +368,6 @@ If something's unclear:
 
 1. Check [DYNAMIC_STATS_GUIDE.md](DYNAMIC_STATS_GUIDE.md) for details
 2. Review [Working Examples](../src/components/examples/DynamicCopyExamples.jsx)
-3. See `MIGRATION_EXAMPLE.md` for real code
 
 ---
 
@@ -378,7 +377,7 @@ If something's unclear:
 README.md → update-stats.js → projectStats.json → useDynamicCopy() → Components
 ```
 
-See `VISUAL_FLOW.md` for detailed diagrams.
+The guide's [Architecture](DYNAMIC_STATS_GUIDE.md#architecture) section describes the flow in more detail.
 
 ---
 
@@ -424,4 +423,4 @@ function MyComponent() {
 
 ---
 
-🎉 **You're all set!** Start with `DYNAMIC_STATS_CHECKLIST.md`
+🎉 **You're all set!** Start with the [Quick Start](DYNAMIC_STATS_GUIDE.md#quick-start) in the guide

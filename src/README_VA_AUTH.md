@@ -14,8 +14,8 @@ src/
 │   └── useVaAuth.js                  # Main authentication hook
 ├── components/
 │   ├── VaAuthCallback.jsx            # OAuth callback handler (with React Router)
-│   ├── VaAuthCallbackNoRouter.jsx    # OAuth callback handler (no router)
-│   └── VaLoginButton.jsx             # Pre-built login/logout button
+│   ├── VaAuthCallbackNoRouter.jsx    # OAuth callback handler (no router; not in the public repository)
+│   └── VaLoginButton.jsx             # Pre-built login/logout button (not in the public repository)
 ├── examples/
 │   └── VaAuthIntegrationExample.jsx  # Complete integration examples
 └── docs/
@@ -62,12 +62,12 @@ src/
    - Shows loading/success/error states
    - Automatic redirect after success
 
-2. **`VaAuthCallbackNoRouter.jsx`**
+2. **`VaAuthCallbackNoRouter.jsx`** (not part of the public repository)
    - No React Router required
    - Same functionality as above
    - Works with single-page apps
 
-3. **`VaLoginButton.jsx`**
+3. **`VaLoginButton.jsx`** (not part of the public repository)
    - Pre-styled login/logout button
    - Shows user info when authenticated
    - Handles loading and error states

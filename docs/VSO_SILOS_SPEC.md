@@ -177,7 +177,7 @@ A _switch_ goes from A to B. A _lock_ is the same sequence with `to = from`. Bot
   It also asks for the device passphrase (brief B §3.6), then switches into an empty workspace.
 
 - **Label rules (Q6):** Initials are letters only, 1–4 characters, with periods allowed. The case reference is up to 24 characters of `A–Z a–z 0–9 space - _ / # .`.
-  - _Blocked:_ any SSN-shaped value (`\d{3}[-\s]?\d{2}[-\s]?\d{4}`) or 8–9 digits in a row with an optional `C` prefix (a VA file number), in either field. The error text says why.
+  - _Blocked:_ any SSN-shaped value (`\d{3}[-\s]?\d{2}[-\s]?\d{4}`) or 7–9 digits in a row with an optional `C` prefix (a VA file number), in either field. The error text says why.
   - _Warned, not blocked:_ a case reference that looks like a name (two or more capitalised alphabetic words): "Don't use full names. Use your organisation's case number."
 - **Renaming:** changes the registry fields only. The same rules apply.
 - **Retention reminder (Q5):**

@@ -10,7 +10,7 @@
 
 ### Method
 
-Programmatic structural audit of `llm-compiler/knowledge-base/diamond_knowledge_base.json` — the corpus is too large (130K entries) for manual line-by-line review, so this audit checks: (1) recurrence of the exact fabrication signature from the January incident below, (2) key uniqueness, (3) category-count consistency against the file's own declared metadata, (4) source/URL-domain consistency, (5) exact-content duplication. This is **not** a claim that every entry's substantive content is factually correct — that would require per-entry verification against each cited primary source, out of scope for a single sprint on a 130K-entry corpus. It **is** a claim that the corpus is free of the specific known fabrication pattern, and a precise accounting of every structural defect found.
+Programmatic structural audit of `llm-compiler/knowledge-base/diamond_knowledge_base.json` (the file is not part of the public repository) — the corpus is too large (130K entries) for manual line-by-line review, so this audit checks: (1) recurrence of the exact fabrication signature from the January incident below, (2) key uniqueness, (3) category-count consistency against the file's own declared metadata, (4) source/URL-domain consistency, (5) exact-content duplication. This is **not** a claim that every entry's substantive content is factually correct — that would require per-entry verification against each cited primary source, out of scope for a single sprint on a 130K-entry corpus. It **is** a claim that the corpus is free of the specific known fabrication pattern, and a precise accounting of every structural defect found.
 
 ### Summary
 
@@ -51,7 +51,7 @@ Content-length medians by category: BVA ~500 chars, CAVC ~244 chars, M21-1 ~404 
 
 ### Finding 5 — BVA coverage is narrower than the corpus's own framing suggests (informational)
 
-The 116,209 raw BVA entries only span VA sitemap years `vetapp23`/`vetapp24`/`vetapp25` (calendar 2023–2025) plus 44 hand-curated "landmark" precedential case summaries (e.g. _Caluza v. Brown_, tagged `category: "BVA Precedential"` — a good existing pattern to extend in Sprint S32's authority-tier tagging). The archive audit (`archive/DIAMOND_KB_COMPREHENSIVE_AUDIT_JAN_2026.md`) noted BVA sitemaps go back to 2020; this scrape did not reach 2020–2022. Not a fabrication issue, but the "116,209 BVA entries" figure should not be read as "all available BVA decisions" — it's 3 years of a wider window.
+The 116,209 raw BVA entries only span VA sitemap years `vetapp23`/`vetapp24`/`vetapp25` (calendar 2023–2025) plus 44 hand-curated "landmark" precedential case summaries (e.g. _Caluza v. Brown_, tagged `category: "BVA Precedential"` — a good existing pattern to extend in Sprint S32's authority-tier tagging). The archive audit (`archive/DIAMOND_KB_COMPREHENSIVE_AUDIT_JAN_2026.md`, which is not part of the public repository) noted BVA sitemaps go back to 2020; this scrape did not reach 2020–2022. Not a fabrication issue, but the "116,209 BVA entries" figure should not be read as "all available BVA decisions" — it's 3 years of a wider window.
 
 ### What did NOT reproduce from the January incident
 

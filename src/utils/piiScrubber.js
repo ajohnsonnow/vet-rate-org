@@ -7,7 +7,8 @@
  * server for analysis.
  *
  * Veteran-specific PII categories handled in addition to standard:
- *   - VA file number (legacy "C" file numbers + 8–9 digit standalones)
+ *   - VA file number (legacy "C" file numbers of 7–9 digits, labelled
+ *     7–9 digit numbers, + 8–9 digit standalones in aggressive mode)
  *   - EDIPI / DOD ID (10 digits)
  *   - MRN (medical record number)
  *
@@ -190,7 +191,7 @@ const PII_PATTERNS = {
   // EDIPI / DOD ID — exactly 10 digits, no separators. Runs before SSN.
   edipi: /\b\d{10}\b/g,
 
-  // VA file numbers — "C" prefix with 8–9 digits is canonical legacy form.
+  // VA file numbers — "C" prefix with 7–9 digits is canonical legacy form.
   // D15-1c: OCR'd/typed file numbers commonly re-group the digits with
   // spaces or hyphens between EVERY digit ("C 12 345 678"), not just after
   // the "C" - `\d(?:[-\s]?\d){7,8}` allows an optional single separator
@@ -205,7 +206,13 @@ const PII_PATTERNS = {
   // file number's first group is 1-3 digits, never 4, so this doesn't
   // narrow the D15-1c case above.
   // Standalone 8–9 digit IDs go through `vaFileStandalone` in aggressive mode.
-  vaFile: /\bC[-\s]?(?!\d{4}[-\s]\d{2,4}\b)\d(?:[-\s]?\d){7,8}\b/gi,
+  // A 7-digit file number is only matched contiguous ("C1234567",
+  // "C-1234567"): a re-grouped 7-digit run ("C 555 1234") is the shape of a
+  // phone fragment or part number, so the per-digit separator tolerance
+  // stays at 8-9 digits. A labelled 7-digit number ("File Number: 1234567")
+  // is already caught by the label rules, and a bare 7-digit run is never
+  // redacted (claim amounts, regulation numbers).
+  vaFile: /\bC[-\s]?(?:(?!\d{4}[-\s]\d{2,4}\b)\d(?:[-\s]?\d){7,8}|\d{7})\b/gi,
   vaFileStandalone: /\b\d{8,9}\b/g,
 
   // SSN — XXX-XX-XXXX is the canonical form. The bare 9-digit form is
