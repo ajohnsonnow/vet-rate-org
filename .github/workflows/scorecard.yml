@@ -25,9 +25,15 @@ on:
 # Default-deny; the job elevates only what it needs.
 permissions: read-all
 
+concurrency:
+  group: scorecard-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   analysis:
     name: Scorecard analysis
+    # Literal on purpose: the OpenSSF publish verifier statically requires one
+    # hosted Ubuntu label, so this job is exempt from the RUNNER_LABEL opt-in.
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -43,7 +49,7 @@ jobs:
           persist-credentials: false # Scorecard requirement — no ambient token
 
       - name: Run Scorecard
-        uses: ossf/scorecard-action@62b2cac7ed8198b15735ed49ab1e5cf35480ba46 # v2.4.0
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
         with:
           results_file: results.sarif
           results_format: sarif

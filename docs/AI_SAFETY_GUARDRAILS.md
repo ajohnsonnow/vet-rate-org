@@ -376,4 +376,4 @@ warningResponses.forEach((response) => {
 
 ## Questions?
 
-See [aiSystemPrompts.js](../utils/aiSystemPrompts.js) for the full implementation.
+See [aiSystemPrompts.js](../src/utils/aiSystemPrompts.js) for the full implementation.

@@ -27,28 +27,28 @@ src/
 
 ### Core Files
 
-1. **[vaAuth.js](src/config/vaAuth.js)** - Configuration
+1. **[vaAuth.js](config/vaAuth.js)** - Configuration
    - Environment detection (sandbox vs production)
    - OAuth endpoints
    - Scopes configuration
    - Storage key constants
    - Configuration validation
 
-2. **[pkce.js](src/utils/pkce.js)** - PKCE Implementation
+2. **[pkce.js](utils/pkce.js)** - PKCE Implementation
    - `generateCodeVerifier()` - Creates secure random verifier
    - `generateCodeChallenge()` - SHA-256 hash of verifier
    - `generateState()` - CSRF protection token
    - `generatePKCEPair()` - Generates both at once
    - Uses native Web Crypto API (no dependencies!)
 
-3. **[VaAuthContext.jsx](src/contexts/VaAuthContext.jsx)** - State Management
+3. **[VaAuthContext.jsx](contexts/VaAuthContext.jsx)** - State Management
    - `VaAuthProvider` - Context provider component
    - `useVaAuthContext()` - Context hook
    - Token storage & retrieval
    - Authentication state
    - Token expiration checking
 
-4. **[useVaAuth.js](src/hooks/useVaAuth.js)** - Main Hook
+4. **[useVaAuth.js](hooks/useVaAuth.js)** - Main Hook
    - `login()` - Initiates OAuth flow
    - `logout()` - Revokes token and clears state
    - `handleCallback()` - Processes OAuth redirect
@@ -57,17 +57,17 @@ src/
 
 ### UI Components
 
-1. **[VaAuthCallback.jsx](src/components/VaAuthCallback.jsx)**
+1. **[VaAuthCallback.jsx](auth/VaAuthCallback.jsx)**
    - Requires React Router
    - Shows loading/success/error states
    - Automatic redirect after success
 
-2. **[VaAuthCallbackNoRouter.jsx](src/components/VaAuthCallbackNoRouter.jsx)**
+2. **`VaAuthCallbackNoRouter.jsx`**
    - No React Router required
    - Same functionality as above
    - Works with single-page apps
 
-3. **[VaLoginButton.jsx](src/components/VaLoginButton.jsx)**
+3. **`VaLoginButton.jsx`**
    - Pre-styled login/logout button
    - Shows user info when authenticated
    - Handles loading and error states
@@ -75,23 +75,23 @@ src/
 
 ### Documentation & Examples
 
-1. **[VA_AUTH_QUICK_START.md](docs/VA_AUTH_QUICK_START.md)**
+1. **[VA_AUTH_QUICK_START.md](../docs/VA_AUTH_QUICK_START.md)**
    - 5-minute setup guide
    - No React Router required
    - Step-by-step instructions
    - Common use cases
 
-2. **[VA_AUTH_INTEGRATION.md](docs/VA_AUTH_INTEGRATION.md)**
+2. **[VA_AUTH_INTEGRATION.md](../docs/VA_AUTH_INTEGRATION.md)**
    - Comprehensive documentation
    - Security best practices
    - API reference
    - Troubleshooting guide
 
-3. **[VaAuthIntegrationExample.jsx](src/examples/VaAuthIntegrationExample.jsx)**
-    - Complete code examples
-    - Protected routes
-    - API requests
-    - Conditional rendering
+3. **[VaAuthIntegrationExample.jsx](examples/VaAuthIntegrationExample.jsx)**
+   - Complete code examples
+   - Protected routes
+   - API requests
+   - Conditional rendering
 
 ## 🚀 Quick Start
 
@@ -119,21 +119,21 @@ VITE_VA_API_ENV=sandbox
 
 ```jsx
 // main.jsx
-import { VaAuthProvider } from './contexts/VaAuthContext';
+import { VaAuthProvider } from "./contexts/VaAuthContext";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <VaAuthProvider>
       <App />
     </VaAuthProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 
 ### 4. Add Login Button
 
 ```jsx
-import VaLoginButton from './components/VaLoginButton';
+import VaLoginButton from "./components/VaLoginButton";
 
 function Header() {
   return <VaLoginButton />;
@@ -145,11 +145,11 @@ function Header() {
 **Without React Router:**
 
 ```jsx
-import VaAuthCallbackNoRouter from './components/VaAuthCallbackNoRouter';
+import VaAuthCallbackNoRouter from "./components/VaAuthCallbackNoRouter";
 
 function App() {
   const urlParams = new URLSearchParams(window.location.search);
-  const isOAuthCallback = urlParams.has('code') && urlParams.has('state');
+  const isOAuthCallback = urlParams.has("code") && urlParams.has("state");
 
   if (isOAuthCallback) {
     return <VaAuthCallbackNoRouter />;
@@ -162,13 +162,13 @@ function App() {
 **With React Router:**
 
 ```jsx
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import VaAuthCallback from './components/VaAuthCallback';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import VaAuthCallback from "./components/VaAuthCallback";
 
 <Routes>
   <Route path="/callback" element={<VaAuthCallback />} />
   {/* Other routes */}
-</Routes>
+</Routes>;
 ```
 
 ## 🔑 API Reference
@@ -178,18 +178,18 @@ import VaAuthCallback from './components/VaAuthCallback';
 ```jsx
 const {
   // State
-  isAuthenticated,  // boolean - Is user logged in?
-  isLoading,        // boolean - Loading auth state?
-  error,            // string|null - Current error message
-  accessToken,      // string|null - OAuth access token
-  userInfo,         // object|null - User profile data
+  isAuthenticated, // boolean - Is user logged in?
+  isLoading, // boolean - Loading auth state?
+  error, // string|null - Current error message
+  accessToken, // string|null - OAuth access token
+  userInfo, // object|null - User profile data
 
   // Methods
-  login,            // () => void - Start OAuth flow
-  logout,           // () => void - Sign out and revoke token
-  handleCallback,   // (code, state) => Promise - Process OAuth callback
+  login, // () => void - Start OAuth flow
+  logout, // () => void - Sign out and revoke token
+  handleCallback, // (code, state) => Promise - Process OAuth callback
   refreshAccessToken, // (refreshToken) => Promise - Refresh token
-  fetchVaApi,       // (endpoint, options) => Promise - Authenticated fetch
+  fetchVaApi, // (endpoint, options) => Promise - Authenticated fetch
 } = useVaAuth();
 ```
 
@@ -223,14 +223,14 @@ When authenticated, `userInfo` contains:
 ### Custom Login Button
 
 ```jsx
-import { useVaAuth } from './hooks/useVaAuth';
+import { useVaAuth } from "./hooks/useVaAuth";
 
 function CustomButton() {
   const { login, logout, isAuthenticated, userInfo } = useVaAuth();
 
   return (
     <button onClick={isAuthenticated ? logout : login}>
-      {isAuthenticated ? `Sign Out ${userInfo?.name}` : 'Sign In'}
+      {isAuthenticated ? `Sign Out ${userInfo?.name}` : "Sign In"}
     </button>
   );
 }
@@ -238,16 +238,16 @@ function CustomButton() {
 
 ### Custom OAuth Scopes
 
-Edit [vaAuth.js](src/config/vaAuth.js):
+Edit [vaAuth.js](config/vaAuth.js):
 
 ```javascript
 export const VA_SCOPES = [
-  'openid',
-  'profile',
-  'offline_access',
-  'claim.read',
+  "openid",
+  "profile",
+  "offline_access",
+  "claim.read",
   // Add more scopes as needed
-].join(' ');
+].join(" ");
 ```
 
 ### Custom Redirect URL
@@ -260,16 +260,16 @@ VITE_VA_REDIRECT_URL=https://vet-rate.org/callback
 
 ## 📊 Available VA.gov Scopes
 
-| Scope | Description |
-|-------|-------------|
-| `openid` | OpenID Connect (required) |
-| `profile` | Basic user profile |
-| `email` | User email address |
-| `offline_access` | Refresh token |
-| `claim.read` | Read VA claims data |
-| `service_history.read` | Military service history |
-| `disability_rating.read` | Disability rating |
-| `veteran_status.read` | Veteran verification |
+| Scope                    | Description               |
+| ------------------------ | ------------------------- |
+| `openid`                 | OpenID Connect (required) |
+| `profile`                | Basic user profile        |
+| `email`                  | User email address        |
+| `offline_access`         | Refresh token             |
+| `claim.read`             | Read VA claims data       |
+| `service_history.read`   | Military service history  |
+| `disability_rating.read` | Disability rating         |
+| `veteran_status.read`    | Veteran verification      |
 
 ## 🧪 Testing
 
@@ -330,9 +330,9 @@ function MyClaims() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchVaApi('https://sandbox-api.va.gov/services/claims/v1/claims')
-        .then(data => setClaims(data))
-        .catch(err => console.error(err));
+      fetchVaApi("https://sandbox-api.va.gov/services/claims/v1/claims")
+        .then((data) => setClaims(data))
+        .catch((err) => console.error(err));
     }
   }, [isAuthenticated, fetchVaApi]);
 
@@ -397,14 +397,10 @@ sessionStorage.clear();
 
 ### Updating Scopes
 
-Edit [vaAuth.js](src/config/vaAuth.js):
+Edit [vaAuth.js](config/vaAuth.js):
 
 ```javascript
-export const VA_SCOPES = [
-  'openid',
-  'profile',
-  'new_scope_here',
-].join(' ');
+export const VA_SCOPES = ["openid", "profile", "new_scope_here"].join(" ");
 ```
 
 ### Switching Environments
@@ -423,7 +419,7 @@ VITE_VA_API_ENV=production
 
 ### Updating Token Storage
 
-Edit [VaAuthContext.jsx](src/contexts/VaAuthContext.jsx) to use localStorage instead of sessionStorage (if needed for persistent login).
+Edit [VaAuthContext.jsx](contexts/VaAuthContext.jsx) to use localStorage instead of sessionStorage (if needed for persistent login).
 
 ## 🎖️ Built for Veterans, by a Veteran
 
