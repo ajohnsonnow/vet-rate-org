@@ -23,7 +23,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-gates-${{ github.ref }}
+  # Runs on main get a group of their own so a third push cannot replace a pending second run.
+  group: release-gates-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
   cancel-in-progress: false # never cancel a release pipeline mid-flight
 
 env:
