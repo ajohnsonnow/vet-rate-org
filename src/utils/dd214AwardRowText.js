@@ -44,7 +44,7 @@ function deviceName(device) {
     : "";
 }
 
-function deviceSummary(devices) {
+function deviceSummary(devices, maxKinds = MAX_DEVICE_KINDS_SHOWN) {
   const counts = new Map();
   for (const device of Array.isArray(devices) ? devices : []) {
     const name = deviceName(device);
@@ -53,8 +53,8 @@ function deviceSummary(devices) {
   const kinds = [...counts].map(([name, count]) =>
     count > 1 ? `${count} ${name}` : name,
   );
-  const shown = kinds.slice(0, MAX_DEVICE_KINDS_SHOWN).join(", ");
-  const hidden = kinds.length - MAX_DEVICE_KINDS_SHOWN;
+  const shown = kinds.slice(0, maxKinds).join(", ");
+  const hidden = kinds.length - maxKinds;
   return hidden > 0 ? `${shown} and ${hidden} more` : shown;
 }
 
@@ -74,6 +74,22 @@ export function awardRowText(award) {
   const numberPart = number ? ` (${number})` : "";
   const devicesPart = devices ? " with " + devices : "";
   return clip(`${name}${numberPart}${devicesPart}`, MAX_AWARD_ROW_CHARS);
+}
+
+/**
+ * Every award that will be saved, one entry each, with its whole name, number
+ * and every device kind: the full list behind the bounded awards row.
+ */
+export function awardFullTexts(awards) {
+  return (Array.isArray(awards) ? awards : []).flatMap((award) => {
+    const name = typeof award?.name === "string" ? award.name.trim() : "";
+    if (name === "") return [];
+    const number = awardNumberText(award);
+    const devices = deviceSummary(award.devices, Infinity);
+    const numberPart = number ? ` (${number})` : "";
+    const devicesPart = devices ? " with " + devices : "";
+    return [name + numberPart + devicesPart];
+  });
 }
 
 /** The awards row: every award's text, one after another, bounded in length. */

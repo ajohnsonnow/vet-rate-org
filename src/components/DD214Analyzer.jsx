@@ -83,6 +83,7 @@ import { sanitizeParserFields } from "../utils/dd214ParserTextGuards";
 import { parseModelJsonReply } from "../utils/dd214JsonReply";
 import { loadKnownIdentifierSourcesChecked } from "../utils/dd214KnownIdentifierSources";
 import {
+  awardFullTexts,
   awardNotesText,
   awardNumberText,
   awardsRowText,
@@ -1031,6 +1032,15 @@ export function _listImportText(result) {
       combatService: combatText,
     }).filter(([, text]) => text !== ""),
   );
+}
+
+// The awards row is bounded; when it hides anything that will be saved, the
+// dialog gets the whole list to show under the tick.
+export function _fullAwardList(result) {
+  const items = awardFullTexts(result?.awards);
+  return items.length > 0 && awardsRowText(result.awards) !== items.join("; ")
+    ? { awards: items }
+    : undefined;
 }
 
 function _ticked(analysisResult, selectedFields, key) {
@@ -3482,6 +3492,10 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
       sourcesForImportRows(analysisResult?.fieldSources, extractedProfileData),
     [analysisResult, extractedProfileData],
   );
+  const fullLists = useMemo(
+    () => _fullAwardList(analysisResult),
+    [analysisResult],
+  );
   // G10: a fresh getVeteranProfile() object every render gave the modal's
   // own reset effect (keyed on this prop's identity) a new reference on
   // every parent re-render, wiping the veteran's in-progress field
@@ -3501,6 +3515,7 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
           <ProfileImportConfirmModal
             extractedData={extractedProfileData}
             fieldSources={fieldSources}
+            fullLists={fullLists}
             currentProfile={currentProfile}
             onConfirm={handleConfirmProfileImport}
             onCancel={handleCancelProfileImport}

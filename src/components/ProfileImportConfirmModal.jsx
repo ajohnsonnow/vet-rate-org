@@ -437,6 +437,34 @@ const SourceNote = ({ source }) => {
   );
 };
 
+// A list row shows a bounded summary, but every item in it is saved when the row
+// is ticked, so the whole list is one disclosure away, where the tick is.
+const FullList = ({ label, items }) => {
+  if (!Array.isArray(items) || items.length === 0) return null;
+  return (
+    <details className="mt-2 text-sm">
+      <summary className="min-h-[44px] cursor-pointer py-2.5 font-medium text-indigo-700 dark:text-indigo-300">
+        Show all {items.length} in {label} that will be saved
+      </summary>
+      <div
+        role="region"
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+        tabIndex={0}
+        aria-label={`All ${items.length} in ${label}`}
+        className="max-h-60 overflow-y-auto rounded bg-gray-100 px-3 py-2 dark:bg-gray-700"
+      >
+        <ul className="list-disc space-y-1 pl-4 text-gray-800 dark:text-gray-200">
+          {items.map((item, index) => (
+            <li key={`${index}-${item}`} className="break-words">
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </details>
+  );
+};
+
 /**
  * Field Row Component - Shows current vs imported value with checkbox
  */
@@ -445,6 +473,7 @@ const FieldRow = ({
   source,
   currentValue,
   importedValue,
+  fullList,
   isSelected,
   onToggle,
   onChange,
@@ -496,6 +525,7 @@ const FieldRow = ({
             isBooleanField={isBooleanField}
             onChange={onChange}
           />
+          <FullList label={label} items={fullList} />
         </div>
       </div>
     </div>
@@ -513,6 +543,7 @@ const FieldCategorySection = ({
   editableData,
   selectedFields,
   fieldSources,
+  fullLists,
   onToggle,
   onChange,
 }) => {
@@ -531,6 +562,7 @@ const FieldCategorySection = ({
             source={fieldSources?.[field]}
             currentValue={formatFieldValue(field, currentProfile[field])}
             importedValue={editableData[field]}
+            fullList={fullLists?.[field]}
             isSelected={selectedFields[field]}
             onToggle={() => onToggle(field)}
             onChange={(value) => onChange(field, value)}
@@ -737,6 +769,7 @@ const CategorySections = ({ categories, ...sectionProps }) =>
 const ProfileImportConfirmModal = ({
   extractedData,
   fieldSources,
+  fullLists,
   currentProfile,
   onConfirm,
   onCancel,
@@ -813,6 +846,7 @@ const ProfileImportConfirmModal = ({
         editableData={editableData}
         selectedFields={selectedFields}
         fieldSources={fieldSources}
+        fullLists={fullLists}
         onToggle={handleFieldToggle}
         onChange={handleFieldChange}
       />
