@@ -124,6 +124,17 @@ describe("readRegistry entry corruption", () => {
     ],
     ["an invalid label", validEntry({ caseRef: "123-45-6789" })],
     ["a non-ISO createdAt", validEntry({ createdAt: "yesterday" })],
+    [
+      "an impossible createdAt day",
+      validEntry({ createdAt: "2026-02-30T00:00:00.000Z" }),
+    ],
+    ["a 24:00 createdAt", validEntry({ createdAt: "2026-03-04T24:00:00Z" })],
+    ["a loose createdAt shape", validEntry({ createdAt: "2026-03-04T::.Z" })],
+    ["a padded initials value", validEntry({ initials: " JD" })],
+    ["a padded caseRef value", validEntry({ caseRef: "CASE-1 " })],
+    ["a compatibility-form caseRef", validEntry({ caseRef: "ＣＡＳＥ-1" })],
+    ["a numeric initials value", validEntry({ initials: 5 })],
+    ["a non-Latin initials value", validEntry({ initials: "\u0410\u0412" })],
     ["a non-ISO lastOpenedAt", validEntry({ lastOpenedAt: 5 })],
     ["a null authAckAt", validEntry({ authAckAt: null })],
     ["a datetime reviewBy", validEntry({ reviewBy: STAMP })],
@@ -165,6 +176,24 @@ describe("readRegistry entry corruption", () => {
 });
 
 describe("writeRegistry", () => {
+  it.each([
+    ["an unknown top-level field", { version: 1, silos: [], extra: 1 }],
+    [
+      "an unknown entry field",
+      { version: 1, silos: [{ ...validEntry(), note: "x" }] },
+    ],
+    [
+      "a missing entry field",
+      { version: 1, silos: [{ ...validEntry(), enc: undefined }] },
+    ],
+    ["a missing silos list", { version: 1 }],
+  ])("throws INVALID for %s", (_n, registry) => {
+    expect(() => writeRegistry(registry)).toThrow(
+      expect.objectContaining({ code: "INVALID" }),
+    );
+    expect(localStorage.getItem(VSO_REGISTRY_KEY)).toBeNull();
+  });
+
   it("round-trips a valid registry", () => {
     const registry = { version: 1, silos: [validEntry()] };
     writeRegistry(registry);
@@ -377,6 +406,21 @@ describe("updateSilo", () => {
     const { id } = add();
     expect(() => updateSilo(id, patch)).toThrow(RegistryError);
     expect(readRegistry().registry.silos[0].enc).toBe("none");
+  });
+});
+
+describe("updateSilo patch shape", () => {
+  it.each([
+    ["null", null],
+    ["a string", "x"],
+    ["an array", []],
+    ["undefined", undefined],
+  ])("throws INVALID, not a TypeError, for a %s patch", (_n, patch) => {
+    const { id } = add();
+    expect(() => updateSilo(id, patch)).toThrow(RegistryError);
+    expect(() => updateSilo(id, patch)).toThrow(
+      expect.objectContaining({ code: "INVALID" }),
+    );
   });
 });
 

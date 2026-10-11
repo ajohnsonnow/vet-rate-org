@@ -5,7 +5,8 @@ export const REGISTRY_VERSION = 1;
 export const ENC_STATES = Object.freeze(["none", "migrating", "complete"]);
 
 const ID_PATTERN = /^[0-9a-f]{12}$/;
-const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/;
+const ISO_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const ENTRY_FIELDS = Object.freeze([
   "id",
@@ -37,10 +38,13 @@ export class RegistryError extends Error {
 }
 
 function isTimestamp(value) {
+  if (typeof value !== "string" || !ISO_TIMESTAMP_PATTERN.test(value)) {
+    return false;
+  }
+  const parsed = new Date(value);
   return (
-    typeof value === "string" &&
-    ISO_TIMESTAMP_PATTERN.test(value) &&
-    !Number.isNaN(Date.parse(value))
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 19) === value.slice(0, 19)
   );
 }
 
@@ -64,7 +68,14 @@ function entryProblem(entry) {
     return "entry has missing or unknown fields";
   }
   if (!ID_PATTERN.test(entry.id)) return "entry id is malformed";
-  if (!validateLabelFields(entry).ok) return "entry label is invalid";
+  const label = validateLabelFields(entry);
+  if (!label.ok) return "entry label is invalid";
+  if (
+    label.value.initials !== entry.initials ||
+    label.value.caseRef !== entry.caseRef
+  ) {
+    return "entry label is not in canonical form";
+  }
   if (!isTimestamp(entry.createdAt)) return "createdAt is not a timestamp";
   if (!isTimestamp(entry.lastOpenedAt)) {
     return "lastOpenedAt is not a timestamp";
@@ -240,6 +251,9 @@ export function addSilo(
 }
 
 export function updateSilo(id, patch) {
+  if (patch === null || typeof patch !== "object" || Array.isArray(patch)) {
+    throw new RegistryError("INVALID", "The update must be an object.");
+  }
   const disallowed = Object.keys(patch).filter(
     (field) => !UPDATABLE_FIELDS.includes(field),
   );

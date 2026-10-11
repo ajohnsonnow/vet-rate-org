@@ -360,6 +360,18 @@ describe("validateLabelFields name-like warnings", () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it.each([
+    ["null", null],
+    ["a string", "JD"],
+    ["a number", 7],
+    ["an array", []],
+  ])("returns required errors, not a TypeError, for %s", (_n, input) => {
+    const result = validateLabelFields(input);
+    expect(result.ok).toBe(false);
+    expect(result.value).toBeNull();
+    expect(result.errors.map((e) => e.code)).toEqual(["required", "required"]);
+  });
+
   it("tolerates being called with no argument", () => {
     const result = validateLabelFields();
     expect(result.ok).toBe(false);

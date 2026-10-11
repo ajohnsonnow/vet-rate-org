@@ -64,7 +64,9 @@ function fieldErrors(field, value, formatPattern, formatMessage) {
  * echo the entered text, and `value` is null unless the fields are accepted,
  * so a rejected SSN-shaped string is not handed back to callers that log.
  */
-export function validateLabelFields({ initials, caseRef } = {}) {
+export function validateLabelFields(fields) {
+  const { initials, caseRef } =
+    fields !== null && typeof fields === "object" ? fields : {};
   const cleanInitials = normalise(initials);
   const cleanCaseRef = normalise(caseRef);
 
