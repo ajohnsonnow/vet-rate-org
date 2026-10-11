@@ -6,6 +6,9 @@ fallback_extensions = ["md"]
 
 exclude_loopback = true
 
+# A rate-limited host is reachable; treat 429 as alive rather than dead.
+accept = ["200..=299", "429"]
+
 exclude = [
   # The AI rule files are mirrored from a sibling repository that is not part of this checkout.
   'best-practices-toolkit',

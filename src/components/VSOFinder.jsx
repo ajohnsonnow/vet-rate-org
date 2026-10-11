@@ -185,6 +185,13 @@ const VSOFinderFooter = ({ t, hasResults, onClose }) => (
   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
     <BuyMeCoffee show={hasResults} trigger="vso-finder" />
     <button
+      type="button"
+      onClick={() => window.dispatchEvent(new CustomEvent("openVsoHelp"))}
+      className="min-h-11 px-2 text-sm text-gray-900 underline hover:text-black dark:text-gray-100 dark:hover:text-white"
+    >
+      {t("vsoFinder", "helpSeveralVeterans")}
+    </button>
+    <button
       onClick={onClose}
       className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
     >
