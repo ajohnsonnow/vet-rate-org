@@ -1,0 +1,12 @@
+# OSV-Scanner configuration. Every entry needs an advisory id, a reason and an
+# expiry no more than 90 days out; remove the entry as soon as a fix ships.
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2027-01-08
+reason = "braces <=3.0.3 has no patched release. Dev-only (markdownlint-cli2 micromatch, tailwindcss chokidar): it expands repo-controlled globs at lint/build time and is not in dist/."
+
+[[IgnoredVulns]]
+id = "GHSA-hp3w-g68c-fv3c"
+ignoreUntil = 2027-01-08
+reason = "sprintf-js <=1.1.3 has no patched release. 1.0.3 is used only by mammoth's CLI (bin/mammoth), 1.1.3 only by node-only onnxruntime-node via global-agent/roarr; neither is in dist/, and a fix would need changes to mammoth or @huggingface/transformers."
