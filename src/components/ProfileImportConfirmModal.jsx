@@ -651,15 +651,15 @@ const ImportHeader = ({
  * Modal footer: cancel + confirm import actions
  */
 const ImportFooter = ({ onCancel, selectedCount, onConfirm }) => (
-  <div className="flex items-center justify-between gap-4">
+  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
     <button
       onClick={onCancel}
-      className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors"
+      className="min-h-[44px] px-4 sm:px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors"
     >
       ✗ Cancel Import
     </button>
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-gray-600 dark:text-gray-400">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+      <span className="min-w-0 text-sm text-gray-600 dark:text-gray-400">
         {selectedCount === 0 ? (
           <span className="text-red-600 dark:text-red-400 font-semibold">
             ⚠️ No fields selected
@@ -674,7 +674,7 @@ const ImportFooter = ({ onCancel, selectedCount, onConfirm }) => (
       <button
         onClick={onConfirm}
         disabled={selectedCount === 0}
-        className={`px-6 py-2.5 font-semibold rounded-lg transition-colors ${
+        className={`min-h-[44px] px-4 sm:px-6 py-2.5 font-semibold rounded-lg transition-colors ${
           selectedCount === 0
             ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed"
             : "bg-indigo-600 hover:bg-indigo-700 text-white"
