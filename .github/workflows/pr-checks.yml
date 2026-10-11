@@ -41,8 +41,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write # PR comments (dependency review, size-limit)
-  security-events: write # SARIF upload (CodeQL via reusable workflow)
 
 concurrency:
   group: pr-checks-${{ github.event.pull_request.number }}
@@ -57,6 +55,9 @@ jobs:
     name: Detect stack & changed files
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read # paths-filter lists the PR's changed files through the API
     outputs:
       has_node: ${{ steps.stack.outputs.has_node }}
       has_python: ${{ steps.stack.outputs.has_python }}
@@ -72,6 +73,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Detect language manifests & npm scripts
         id: stack
@@ -129,11 +132,15 @@ jobs:
     name: Secret scan (gitleaks)
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read # gitleaks-action lists the PR's commits through the API
     steps:
       - name: Checkout (full history for secret scanning)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
@@ -150,10 +157,12 @@ jobs:
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 15
     container:
-      image: semgrep/semgrep # pinact: pin to image digest
+      image: semgrep/semgrep:1.179.0@sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Semgrep scan (diff-aware on PRs)
         run: >
@@ -171,7 +180,8 @@ jobs:
   # ----------------------------------------------------------- sast-codeql --
   sast-codeql:
     name: SAST (CodeQL)
-    uses: ./.github/workflows/codeql.yml
+    # actionlint rejects the '$/' form that zizmor suggests; './' is the documented syntax
+    uses: ./.github/workflows/codeql.yml # zizmor: ignore[self-repository]
     permissions:
       actions: read
       contents: read
@@ -182,9 +192,14 @@ jobs:
     name: SCA (dependency review)
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # comment-summary-in-pr posts the review summary
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Dependency review
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
@@ -200,6 +215,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: OSV-Scanner (fails on known vulnerabilities)
         uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
@@ -218,6 +235,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         if: needs.detect.outputs.has_node == 'true'
@@ -228,7 +247,7 @@ jobs:
 
       - name: Lockfile integrity (npm ci --dry-run)
         if: needs.detect.outputs.has_node == 'true'
-        run: npm ci --dry-run
+        run: npm ci --dry-run --ignore-scripts
 
       - name: actionlint (workflow syntax + shellcheck)
         if: needs.detect.outputs.workflows == 'true'
@@ -253,6 +272,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Check links with lychee
         uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
@@ -270,6 +291,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: markdownlint-cli2
         uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8 # v16.0.0
@@ -286,9 +309,14 @@ jobs:
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 15
     continue-on-error: true
+    permissions:
+      contents: read
+      pull-requests: write # size-limit-action comments the bundle report on the PR
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: size-limit report (comments on PR)
         # CUSTOMIZE: requires "size-limit" config block in package.json
@@ -306,9 +334,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.2.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
           cache: npm
@@ -324,8 +354,10 @@ jobs:
           key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('package-lock.json') }}
 
       - name: Install Playwright browsers
+        env:
+          CACHE_HIT: ${{ steps.playwright-cache.outputs.cache-hit }}
         run: |
-          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+          if [ "$CACHE_HIT" = "true" ]; then
             npx playwright install-deps chromium
           else
             npx playwright install --with-deps chromium

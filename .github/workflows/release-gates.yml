@@ -40,6 +40,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Generate CycloneDX SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
@@ -70,6 +72,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Build release artifacts
         # CUSTOMIZE: replace with the project's real build + package steps
@@ -120,8 +124,9 @@ jobs:
     continue-on-error: true
     steps:
       - name: Check response headers
+        env:
+          URL: ${{ vars.STAGING_URL }}
         run: |
-          URL="${{ vars.STAGING_URL }}"
           HEADERS=$(curl -sIL --max-time 30 "$URL")
           echo "$HEADERS"
           MISSING=""
@@ -149,10 +154,12 @@ jobs:
     runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 30
     container:
-      image: semgrep/semgrep # pinact: pin to image digest
+      image: semgrep/semgrep:1.179.0@sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Semgrep full scan (not diff-aware)
         run: >
@@ -165,7 +172,8 @@ jobs:
 
   full-sast-codeql:
     name: Full SAST (CodeQL)
-    uses: ./.github/workflows/codeql.yml
+    # actionlint rejects the '$/' form that zizmor suggests; './' is the documented syntax
+    uses: ./.github/workflows/codeql.yml # zizmor: ignore[self-repository]
     permissions:
       actions: read
       contents: read
@@ -179,9 +187,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Trivy license scan
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -199,13 +209,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         if: hashFiles('package.json') != ''
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          package-manager-cache: false # this workflow publishes release artifacts; no shared cache
 
       - name: Run smoke test if one exists
         # CUSTOMIZE: standardize on scripts/smoke-test.sh or "test:smoke" npm script

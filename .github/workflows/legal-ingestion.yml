@@ -35,6 +35,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -87,7 +89,10 @@ jobs:
           git checkout -b "$BRANCH"
           git add public/legal-index/
           git commit -m "chore(legal): refresh index → ${VERSION}"
-          git push -u origin "$BRANCH"
+          # checkout runs with persist-credentials: false, so authenticate this one push explicitly
+          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::${AUTH}"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH}" push -u origin "$BRANCH"
           gh pr create \
             --title "chore(legal): refresh index → ${VERSION}" \
             --body-file diff.md \
@@ -97,10 +102,11 @@ jobs:
         if: steps.ingest.outputs.exitcode != '0' && steps.ingest.outputs.exitcode != '2'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INGEST_EXITCODE: ${{ steps.ingest.outputs.exitcode }}
         run: |
           DATE=$(date -u +%Y-%m-%d)
           BODY=$(cat <<EOF
-          The weekly legal-ingestion run exited with code \`${{ steps.ingest.outputs.exitcode }}\`.
+          The weekly legal-ingestion run exited with code \`${INGEST_EXITCODE}\`.
 
           One or more sources (eCFR / M21-1 / CAVC / Fed-Cir) likely returned an unexpected response shape or HTTP error. The index is now stale; in-app legal answers will fall back to the last committed version under \`public/legal-index/\`.
 
