@@ -48,6 +48,7 @@ already have the app running.
 | [WEBGPU_EXPERIMENTAL_SETUP.md](./WEBGPU_EXPERIMENTAL_SETUP.md)     | Enable WebGPU for local-LLM acceleration                          |
 | [PREFLIGHT_EXTRAS.md](./PREFLIGHT_EXTRAS.md)                       | Run the opt-in preflight (markdownlint / knip / license-checker)  |
 | [POST_MORTEM_TEMPLATE.md](./POST_MORTEM_TEMPLATE.md)               | Write a post-mortem after an incident (template, fill-the-blanks) |
+| [SELF_HOSTED_RUNNER.md](./SELF_HOSTED_RUNNER.md)                   | Enable/disable the opt-in self-hosted Actions runner              |
 
 ## 3. Reference — facts you look up
 
@@ -57,10 +58,6 @@ matrices. Read by skimming, not by following start-to-end.
 | Doc                                                                                    | What's in it                                                                                                                                                          |
 | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md)                                               | The 41-row best-practices scoreboard, evidence, severity, target sprint                                                                                               |
-| [RED_TEAM_AUDIT_2026-06.md](./RED_TEAM_AUDIT_2026-06.md)                               | 58-agent red-team audit findings (2026-06-20)                                                                                                                         |
-| [RED-TEAM-AUDIT-2026-06-21.md](./RED-TEAM-AUDIT-2026-06-21.md)                         | Ultra re-verify pass over the 2026-06-20 audit                                                                                                                        |
-| [RED-TEAM-SPRINT-QUEUE.md](./RED-TEAM-SPRINT-QUEUE.md)                                 | Live machine-doable remediation queue from the red-team audits                                                                                                        |
-| [RED-TEAM-HUMAN-TODOS.md](./RED-TEAM-HUMAN-TODOS.md)                                   | Live human-blocked remediation tracker from the red-team audits                                                                                                       |
 | [SPRINT_PLAN.md](./SPRINT_PLAN.md)                                                     | Sprint-by-sprint plan + close dates                                                                                                                                   |
 | [SPRINT_PLAN_S9-S17.md](./SPRINT_PLAN_S9-S17.md)                                       | Mobile + quality-audit remediation cycle (S9–S17, closed)                                                                                                             |
 | [SPRINT_PLAN_S18-S26_KB_INGESTION.md](./SPRINT_PLAN_S18-S26_KB_INGESTION.md)           | Ingestion/chunking/KB cycle: 9 sprints with executing-model assignments                                                                                               |
@@ -76,6 +73,7 @@ matrices. Read by skimming, not by following start-to-end.
 | [CHANGELOG_SYSTEM.md](./CHANGELOG_SYSTEM.md)                                           | How the changelog feed is generated + consumed                                                                                                                        |
 | [DYNAMIC_STATS_INDEX.md](./DYNAMIC_STATS_INDEX.md)                                     | All dynamic stats with their data sources                                                                                                                             |
 | [LEGAL_PAGES_README.md](./LEGAL_PAGES_README.md)                                       | Which CFR Parts + Subparts are mirrored locally                                                                                                                       |
+| [CI_MINUTES.md](./CI_MINUTES.md)                                                       | Which workflow tier runs when, and measured minutes saved per PR/push after the RT13-2 dedupe                                                                         |
 
 ## 4. Explanation — why things are this way
 

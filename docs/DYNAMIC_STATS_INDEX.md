@@ -2,11 +2,11 @@
 
 ## Quick Links
 
-- **🚀 [Get Started](../archive/DYNAMIC_STATS_CHECKLIST.md)** - Implementation checklist
+- **🚀 `Get Started`** - Implementation checklist
 - **📖 [Complete Guide](DYNAMIC_STATS_GUIDE.md)** - Full API documentation
-- **🎨 [Examples](../archive/MIGRATION_EXAMPLE.md)** - Real component examples
-- **📊 [Visual Flow](../archive/VISUAL_FLOW.md)** - System architecture diagram
-- **📋 [Summary](../archive/DYNAMIC_STATS_SUMMARY.md)** - Executive overview
+- **🎨 `Examples`** - Real component examples
+- **📊 `Visual Flow`** - System architecture diagram
+- **📋 `Summary`** - Executive overview
 
 ---
 
@@ -94,13 +94,13 @@ npm run update-stats
 
 Start here if you're just learning about the system:
 
-1. **[DYNAMIC_STATS_SUMMARY.md](../archive/DYNAMIC_STATS_SUMMARY.md)**
+1. **`DYNAMIC_STATS_SUMMARY.md`**
    - Executive overview
    - What problem it solves
    - Quick examples
    - 5-minute read
 
-2. **[VISUAL_FLOW.md](../archive/VISUAL_FLOW.md)**
+2. **`VISUAL_FLOW.md`**
    - Visual architecture
    - Data flow diagrams
    - Before/after comparisons
@@ -110,13 +110,13 @@ Start here if you're just learning about the system:
 
 Read these when you're ready to integrate:
 
-1. **[DYNAMIC_STATS_CHECKLIST.md](../archive/DYNAMIC_STATS_CHECKLIST.md)**
+1. **`DYNAMIC_STATS_CHECKLIST.md`**
    - Step-by-step setup
    - Testing instructions
    - Quick wins
    - Troubleshooting
 
-2. **[MIGRATION_EXAMPLE.md](../archive/MIGRATION_EXAMPLE.md)**
+2. **`MIGRATION_EXAMPLE.md`**
    - Real code from your project
    - DisclaimerSplash.jsx example
    - AboutUs.jsx example
@@ -368,7 +368,7 @@ If something's unclear:
 
 1. Check [DYNAMIC_STATS_GUIDE.md](DYNAMIC_STATS_GUIDE.md) for details
 2. Review [Working Examples](../src/components/examples/DynamicCopyExamples.jsx)
-3. See [MIGRATION_EXAMPLE.md](../archive/MIGRATION_EXAMPLE.md) for real code
+3. See `MIGRATION_EXAMPLE.md` for real code
 
 ---
 
@@ -378,7 +378,7 @@ If something's unclear:
 README.md → update-stats.js → projectStats.json → useDynamicCopy() → Components
 ```
 
-See [VISUAL_FLOW.md](../archive/VISUAL_FLOW.md) for detailed diagrams.
+See `VISUAL_FLOW.md` for detailed diagrams.
 
 ---
 
@@ -424,4 +424,4 @@ function MyComponent() {
 
 ---
 
-🎉 **You're all set!** Start with [DYNAMIC_STATS_CHECKLIST.md](../archive/DYNAMIC_STATS_CHECKLIST.md)
+🎉 **You're all set!** Start with `DYNAMIC_STATS_CHECKLIST.md`

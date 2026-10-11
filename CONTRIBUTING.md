@@ -75,7 +75,7 @@ npm run dev
 
 ```javascript
 // Variables and functions: camelCase
-const searchTerm = 'PTSD';
+const searchTerm = "PTSD";
 function handleSearch(query) {}
 
 // Components: PascalCase
@@ -109,18 +109,14 @@ npm run lint -- --fix
 ```javascript
 // Use functional components
 function MyComponent() {
-  const [state, setState] = useState('');
-  
+  const [state, setState] = useState("");
+
   // Use hooks for side effects
   useEffect(() => {
     // Do something
   }, [dependencies]);
 
-  return (
-    <div className="...">
-      {/* JSX */}
-    </div>
-  );
+  return <div className="...">{/* JSX */}</div>;
 }
 
 // Destructure props
@@ -201,15 +197,8 @@ Edit `src/data/disabilityData.json`:
   "id": 26,
   "diagnosticCode": "5099",
   "conditionName": "New Disability Condition",
-  "aliases": [
-    "Short Name",
-    "Alternative Name"
-  ],
-  "searchTerms": [
-    "searchable",
-    "terms",
-    "keywords"
-  ],
+  "aliases": ["Short Name", "Alternative Name"],
+  "searchTerms": ["searchable", "terms", "keywords"],
   "ecfrUrl": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/...",
   "ratingSchedule": "38 CFR §4.XX",
   "documentationRequirements": "Detailed documentation requirements for medical providers. Include specific tests, measurements, or observations needed.",
@@ -288,20 +277,25 @@ git commit -m "refactor: improve component structure"
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Documentation
 - [ ] Database update
 
 ## Testing
+
 Steps to test:
+
 1. ...
 2. ...
 
 ## Checklist
+
 - [ ] Code follows style guide
 - [ ] Comments added
 - [ ] Documentation updated
@@ -415,7 +409,7 @@ Maintainers will review your PR for:
 
 ## 💬 Questions or Need Help?
 
-- Ask in [GitHub Discussions](https://github.com/yourusername/vet-disability-search/discussions)
+- Ask in [GitHub Issues](https://github.com/ajohnsonnow/vet-rate-org/issues)
 - Email: <support@example.com>
 - Check existing issues for answers
 

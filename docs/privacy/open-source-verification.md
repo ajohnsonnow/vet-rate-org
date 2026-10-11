@@ -630,8 +630,7 @@ sha256sum dist/assets/*
 
 ## Questions?
 
-- 📖 Docs: [vet-rate.org/docs](https://vet-rate.org/docs)
-- 💬 Discussions: [GitHub Discussions](https://github.com/ajohnsonnow/vet-rate-org/discussions)
+- 📖 Docs: [docs/ in the repository](https://github.com/ajohnsonnow/vet-rate-org/tree/main/docs)
 - 🐛 Issues: [GitHub Issues](https://github.com/ajohnsonnow/vet-rate-org/issues)
 
 ---

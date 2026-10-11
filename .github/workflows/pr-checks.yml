@@ -6,8 +6,29 @@
 # the relevant jobs. Safe to propagate unchanged to any repo.
 #
 # Blocking gates:  secret-scan, sast-semgrep, sast-codeql, sca-*, supply-chain,
-#                  lint-and-quality, build, test, markdown-lint
-# Informational:   link-check, perf-budget, visual-regression, ux-perf-check
+#                  markdown-lint
+# Informational:   link-check, perf-budget
+#
+# lint-and-quality, build and test were removed here (RT13-2 dedupe; see
+# docs/CI_MINUTES.md) — ci.yml is the
+# canonical gate for lint/type/test/build/e2e/lighthouse on the same
+# push+pull_request/main events, and was already running them a second time
+# on every commit. The Codecov upload and bundle-budget check those two jobs
+# also carried were relocated into ci.yml's test/build jobs rather than
+# dropped. visual-regression and ux-perf-check were removed too: the former
+# is dead (references a nonexistent playwright-visual.config.ts and failed at
+# its preview-server step on every code-touching PR), the latter is an
+# informational, non-required duplicate of ci.yml's required `lighthouse` job.
+#
+# e2e-user-journeys is KEPT: it runs an explicit list of seven specs, chromium
+# only, against Playwright's own dev server. They are tests/e2e/{ask-the-regs,
+# cfile-canonical-dataflow,document-corpus-import-report,duty-station-map,
+# my-packet-summary,palette-axe,simulators-a11y}.spec.ts, which ci.yml's curated
+# per-gate spec lists never reference. Removing this job would silently drop
+# that coverage. It was repaired on this branch: the old step had no build, ran
+# every project (firefox is not installed here) and used an unreachable preview
+# server. The old step failed on every code-touching PR, so these specs have
+# never run in CI; treat the first run of the repaired step as a trial.
 #
 # PINNING: tags marked "pinact" should be pinned to commit SHAs before
 # production use — run `pinact run` (github.com/suzuki-shunsuke/pinact).
@@ -20,8 +41,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write # PR comments (dependency review, size-limit)
-  security-events: write # SARIF upload (CodeQL via reusable workflow)
 
 concurrency:
   group: pr-checks-${{ github.event.pull_request.number }}
@@ -34,8 +53,11 @@ jobs:
   # ---------------------------------------------------------------- detect --
   detect:
     name: Detect stack & changed files
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read # paths-filter lists the PR's changed files through the API
     outputs:
       has_node: ${{ steps.stack.outputs.has_node }}
       has_python: ${{ steps.stack.outputs.has_python }}
@@ -51,6 +73,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Detect language manifests & npm scripts
         id: stack
@@ -106,13 +130,17 @@ jobs:
   # ----------------------------------------------------------- secret-scan --
   secret-scan:
     name: Secret scan (gitleaks)
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read # gitleaks-action lists the PR's commits through the API
     steps:
       - name: Checkout (full history for secret scanning)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
@@ -126,13 +154,15 @@ jobs:
     name: SAST (Semgrep)
     needs: detect
     if: needs.detect.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 15
     container:
-      image: semgrep/semgrep # pinact: pin to image digest
+      image: semgrep/semgrep:1.179.0@sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Semgrep scan (diff-aware on PRs)
         run: >
@@ -150,7 +180,8 @@ jobs:
   # ----------------------------------------------------------- sast-codeql --
   sast-codeql:
     name: SAST (CodeQL)
-    uses: ./.github/workflows/codeql.yml
+    # actionlint rejects the '$/' form that zizmor suggests; './' is the documented syntax
+    uses: ./.github/workflows/codeql.yml # zizmor: ignore[self-repository]
     permissions:
       actions: read
       contents: read
@@ -159,11 +190,16 @@ jobs:
   # ------------------------------------------------------ sca-dependencies --
   sca-dependency-review:
     name: SCA (dependency review)
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # comment-summary-in-pr posts the review summary
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Dependency review
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
@@ -174,11 +210,13 @@ jobs:
 
   sca-osv-scanner:
     name: SCA (OSV-Scanner)
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: OSV-Scanner (fails on known vulnerabilities)
         uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
@@ -192,11 +230,13 @@ jobs:
     name: Supply chain (lockfile, actionlint, zizmor)
     needs: detect
     if: needs.detect.outputs.workflows == 'true' || needs.detect.outputs.has_node == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         if: needs.detect.outputs.has_node == 'true'
@@ -207,7 +247,7 @@ jobs:
 
       - name: Lockfile integrity (npm ci --dry-run)
         if: needs.detect.outputs.has_node == 'true'
-        run: npm ci --dry-run
+        run: npm ci --dry-run --ignore-scripts
 
       - name: actionlint (workflow syntax + shellcheck)
         if: needs.detect.outputs.workflows == 'true'
@@ -221,106 +261,24 @@ jobs:
           pipx install zizmor
           zizmor --format plain .github/workflows/
 
-  # ------------------------------------------------------- lint-and-quality --
-  lint-and-quality:
-    name: Lint & typecheck
-    needs: detect
-    if: needs.detect.outputs.has_node == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        if: needs.detect.outputs.has_typecheck == 'true'
-        run: npm run typecheck
-
-  # -------------------------------------------------------------------- build --
-  build:
-    name: Build
-    needs: detect
-    if: needs.detect.outputs.has_node == 'true' && needs.detect.outputs.has_build == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Bundle budget check (informational)
-        run: npm run check-bundle-budget
-        continue-on-error: true
-
-  # --------------------------------------------------------------------- test --
-  test:
-    name: Test & coverage
-    needs: detect
-    if: needs.detect.outputs.has_node == 'true' && needs.detect.outputs.has_test == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests with coverage
-        # CUSTOMIZE: adjust if the test runner takes a different coverage flag
-        run: npm test -- --coverage
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-
   # --------------------------------------------------------------- link-check --
   link-check:
     name: Link check (informational)
     needs: detect
     if: needs.detect.outputs.markdown == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 10
     continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Check links with lychee
         uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
         with:
-          args: --no-progress --max-retries 2 './**/*.md'
+          args: --config lychee.toml --no-progress --max-retries 2 './**/*.md'
           fail: true
 
   # ------------------------------------------------------------ markdown-lint --
@@ -328,11 +286,13 @@ jobs:
     name: Markdown lint
     needs: detect
     if: needs.detect.outputs.markdown == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: markdownlint-cli2
         uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8 # v16.0.0
@@ -346,12 +306,17 @@ jobs:
     name: Performance budget (informational)
     needs: detect
     if: needs.detect.outputs.has_size_limit == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 15
     continue-on-error: true
+    permissions:
+      contents: read
+      pull-requests: write # size-limit-action comments the bundle report on the PR
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: size-limit report (comments on PR)
         # CUSTOMIZE: requires "size-limit" config block in package.json
@@ -363,15 +328,17 @@ jobs:
   e2e-user-journeys:
     name: E2E User Journeys
     needs: [detect]
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 30
     if: needs.detect.outputs.code == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.2.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
           cache: npm
@@ -379,17 +346,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Start preview server
-        run: npm run preview & || npm run start &
-
-      - name: Wait for server
-        run: npx wait-on http://localhost:4173 --timeout 60000
+        env:
+          CACHE_HIT: ${{ steps.playwright-cache.outputs.cache-hit }}
+        run: |
+          if [ "$CACHE_HIT" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
 
       - name: Run E2E tests
-        run: npx playwright test --reporter=html,json
+        run: >-
+          npx playwright test --project=chromium --retries=2 --reporter=html,json
+          tests/e2e/ask-the-regs.spec.ts
+          tests/e2e/cfile-canonical-dataflow.spec.ts
+          tests/e2e/document-corpus-import-report.spec.ts
+          tests/e2e/duty-station-map.spec.ts
+          tests/e2e/my-packet-summary.spec.ts
+          tests/e2e/palette-axe.spec.ts
+          tests/e2e/simulators-a11y.spec.ts
 
       - name: Upload HTML report
         if: failure()
@@ -405,116 +388,13 @@ jobs:
           name: test-results
           path: test-results/
 
-  # --------------------------------------------------------- visual-regression --
-  visual-regression:
-    name: Visual Regression
-    needs: [detect]
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    if: needs.detect.outputs.code == 'true'
-    continue-on-error: true # Informational until baseline is stable
-    steps:
-      - name: Checkout (full history for baseline comparison)
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.2.0
-        with:
-          node-version: "22"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Start preview server
-        run: npm run preview & || npm run start &
-
-      - name: Wait for server
-        run: npx wait-on http://localhost:4173 --timeout 60000
-
-      - name: Run visual regression tests
-        run: npx playwright test --config playwright-visual.config.ts
-
-      - name: Upload visual diff artifacts
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: visual-snapshots-diff
-          path: .visual-snapshots/
-
-      - name: Comment diff count on PR
-        if: failure()
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const snapshotDir = '.visual-snapshots';
-            let diffCount = 0;
-            if (fs.existsSync(snapshotDir)) {
-              diffCount = fs.readdirSync(snapshotDir, { recursive: true })
-                .filter(f => f.endsWith('-diff.png')).length;
-            }
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `**Visual Regression:** ${diffCount} snapshot(s) differ from baseline. Review the \`visual-snapshots-diff\` artifact.`
-            });
-
-  # ------------------------------------------------------------ ux-perf-check --
-  ux-perf-check:
-    name: UX Performance Check
-    needs: [detect]
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    if: needs.detect.outputs.code == 'true'
-    continue-on-error: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.2.0
-        with:
-          node-version: "22"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@2f8dda6cf4de7d73b29853c3f29e8b21e7539bf5 # v12.1.0
-        with:
-          configPath: ./lighthouserc.mjs
-          uploadArtifacts: true
-
-      - name: Comment Lighthouse score delta on PR
-        if: failure()
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '**Lighthouse CI failed.** One or more performance scores regressed below the configured thresholds. Check the uploaded Lighthouse artifacts for the full score delta.'
-            });
-
   # ---------------------------------------------------------- required-checks --
-  # Single required status check to configure in branch protection:
-  #   Settings → Branches → Require status checks → "PR gate summary"
+  # Covers the security and docs jobs in this file only. Lint, typecheck, build
+  # and test live in ci.yml, so branch protection must require BOTH
+  # "CI Gate (required check)" and "PR gate summary".
   required-checks:
     name: PR gate summary
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}
     timeout-minutes: 5
     if: always()
     needs:
@@ -524,9 +404,6 @@ jobs:
       - sca-dependency-review
       - sca-osv-scanner
       - supply-chain
-      - lint-and-quality
-      - build
-      - test
       - markdown-lint
     steps:
       - name: Verify all blocking gates passed

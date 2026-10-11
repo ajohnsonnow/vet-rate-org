@@ -14,14 +14,14 @@ Programmatic structural audit of `llm-compiler/knowledge-base/diamond_knowledge_
 
 ### Summary
 
-| Check | Result |
-|---|---|
-| Fabrication signature (fake "BVA YYYY-NNNNN" citations / "[BVA Precedent - GREEN]" boilerplate from the Jan 22 incident) | ✅ **0 matches** across all 130,508 entries |
-| `dkb_id` uniqueness | ✅ **0 collisions** — reliable primary key |
-| `id` uniqueness | ❌ **48,994 duplicates** (37.5% of the corpus) — see below |
-| Category counts vs. `metadata.sources` | ✅ All 11 categories match exactly |
-| `38_cfr` category source-labeling | ❌ **2,943 of 2,953** entries are mislabeled — see below |
-| Exact-content duplication (post-merge residue) | ⚠️ **2,571 entries** (2% of substantive content) in 855 duplicate groups |
+| Check                                                                                                                    | Result                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Fabrication signature (fake "BVA YYYY-NNNNN" citations / "[BVA Precedent - GREEN]" boilerplate from the Jan 22 incident) | ✅ **0 matches** across all 130,508 entries                              |
+| `dkb_id` uniqueness                                                                                                      | ✅ **0 collisions** — reliable primary key                               |
+| `id` uniqueness                                                                                                          | ❌ **48,994 duplicates** (37.5% of the corpus) — see below               |
+| Category counts vs. `metadata.sources`                                                                                   | ✅ All 11 categories match exactly                                       |
+| `38_cfr` category source-labeling                                                                                        | ❌ **2,943 of 2,953** entries are mislabeled — see below                 |
+| Exact-content duplication (post-merge residue)                                                                           | ⚠️ **2,571 entries** (2% of substantive content) in 855 duplicate groups |
 
 ### Finding 1 — `id` field is not a reliable unique key (HIGH severity)
 
@@ -41,7 +41,7 @@ Of the 2,953 entries tagged `source: "38_cfr"` — the "GOLD standard binding re
 
 ### Finding 3 — Residual exact-content duplication (LOW-MEDIUM severity)
 
-2,571 of 127,435 substantive-content entries (content ≥30 chars) are byte-for-byte identical to at least one other entry under a *different* `id`/`citation` — 855 distinct duplicate-content groups, the largest containing 478 entries with the same content. This sits alongside, not in contradiction with, the corpus's own `metadata.deduplication.duplicates_removed: 117193` claim — that number reflects an earlier pre-merge dedup pass (likely against a different, larger raw-scrape format), not a check against the current merged `entries[]` array's exact content.
+2,571 of 127,435 substantive-content entries (content ≥30 chars) are byte-for-byte identical to at least one other entry under a _different_ `id`/`citation` — 855 distinct duplicate-content groups, the largest containing 478 entries with the same content. This sits alongside, not in contradiction with, the corpus's own `metadata.deduplication.duplicates_removed: 117193` claim — that number reflects an earlier pre-merge dedup pass (likely against a different, larger raw-scrape format), not a check against the current merged `entries[]` array's exact content.
 
 **Impact:** minor — 2% residual duplication doesn't materially distort category counts or search results, but is worth cleaning up opportunistically since it inflates effective corpus size for no informational gain. Not remediated this sprint.
 
@@ -51,7 +51,7 @@ Content-length medians by category: BVA ~500 chars, CAVC ~244 chars, M21-1 ~404 
 
 ### Finding 5 — BVA coverage is narrower than the corpus's own framing suggests (informational)
 
-The 116,209 raw BVA entries only span VA sitemap years `vetapp23`/`vetapp24`/`vetapp25` (calendar 2023–2025) plus 44 hand-curated "landmark" precedential case summaries (e.g. *Caluza v. Brown*, tagged `category: "BVA Precedential"` — a good existing pattern to extend in Sprint S32's authority-tier tagging). The archive audit ([archive/DIAMOND_KB_COMPREHENSIVE_AUDIT_JAN_2026.md](../../archive/DIAMOND_KB_COMPREHENSIVE_AUDIT_JAN_2026.md)) noted BVA sitemaps go back to 2020; this scrape did not reach 2020–2022. Not a fabrication issue, but the "116,209 BVA entries" figure should not be read as "all available BVA decisions" — it's 3 years of a wider window.
+The 116,209 raw BVA entries only span VA sitemap years `vetapp23`/`vetapp24`/`vetapp25` (calendar 2023–2025) plus 44 hand-curated "landmark" precedential case summaries (e.g. _Caluza v. Brown_, tagged `category: "BVA Precedential"` — a good existing pattern to extend in Sprint S32's authority-tier tagging). The archive audit (`archive/DIAMOND_KB_COMPREHENSIVE_AUDIT_JAN_2026.md`) noted BVA sitemaps go back to 2020; this scrape did not reach 2020–2022. Not a fabrication issue, but the "116,209 BVA entries" figure should not be read as "all available BVA decisions" — it's 3 years of a wider window.
 
 ### What did NOT reproduce from the January incident
 
@@ -75,11 +75,11 @@ Reproduces all counts in this report. Exits 0 today (all findings above are warn
 
 ### Summary
 
-| Metric | Count |
-|--------|-------|
-| Original entries | 1560 |
-| Fake entries removed | 45 |
-| Verified entries remaining | 1515 |
+| Metric                     | Count |
+| -------------------------- | ----- |
+| Original entries           | 1560  |
+| Fake entries removed       | 45    |
+| Verified entries remaining | 1515  |
 
 ### Fake Data Removed
 
@@ -92,19 +92,19 @@ The following types of fabricated data were identified and removed:
 
 The remaining knowledge base entries come from:
 
-| Source | Verified |
-|--------|----------|
-| eCFR.gov (38 CFR) | Yes |
-| Federal Register | Yes |
-| VA.gov | Yes |
-| Cornell LII | Yes |
-| Data.gov | Yes |
+| Source            | Verified |
+| ----------------- | -------- |
+| eCFR.gov (38 CFR) | Yes      |
+| Federal Register  | Yes      |
+| VA.gov            | Yes      |
+| Cornell LII       | Yes      |
+| Data.gov          | Yes      |
 
 ### Entry Types After Cleaning
 
-| Type | Count |
-|------|-------|
-| unknown | 1515 |
+| Type    | Count |
+| ------- | ----- |
+| unknown | 1515  |
 
 ### Data Authenticity Statement
 

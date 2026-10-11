@@ -251,9 +251,9 @@ function App() {
 
 ## 📚 Related Documentation
 
-- [Crisis Interceptor](../utils/crisisInterceptor.js)
-- [Unified AI Service](../utils/unifiedAIService.js)
-- [Diamond Swarm Architecture](../utils/diamondSwarm.js)
+- [Crisis Interceptor](../src/utils/crisisInterceptor.js)
+- [Unified AI Service](../src/utils/unifiedAIService.js)
+- [Diamond Swarm Architecture](../src/utils/diamondSwarm.js)
 
 ---
 
