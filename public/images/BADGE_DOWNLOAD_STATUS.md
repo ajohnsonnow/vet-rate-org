@@ -35,7 +35,7 @@ d# Badge Image Download Summary
 
 ## Missing - Need Manual Download
 
-Wikimedia Commons rate-limited our automated downloads. For the remaining badges, manually visit these URLs in a browser and right-click > Save Image As:
+Wikimedia Commons rate-limited our automated downloads. For the remaining badges, look up each file below on [Wikimedia Commons](https://commons.wikimedia.org) by its `File:` name, then right-click > Save Image As. Only the first Air Force entry is a full link:
 
 ### Navy Insignia
 
