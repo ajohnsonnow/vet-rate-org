@@ -11521,6 +11521,15 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "Đã lưu. Các trường bạn chọn đã vào hồ sơ của bạn; tài liệu được lưu trong Knowledge Base và My Packet.",
       ko: "저장되었습니다. 선택한 항목은 프로필에 저장되었고, 문서는 지식 베이스와 My Packet에 보관되었습니다.",
     },
+    // Review-dialog footer and long-list disclosure. English only; other
+    // languages fall back to English until they are professionally translated.
+    importCancel: { en: "Cancel Import" },
+    importNoFieldsSelected: { en: "No fields selected" },
+    importReadyOne: { en: "Ready to import {count} field" },
+    importReadyMany: { en: "Ready to import {count} fields" },
+    importSelectedFields: { en: "Import Selected Fields" },
+    listShowAll: { en: "Show all {count} in {label} that will be saved" },
+    listRegionLabel: { en: "All {count} in {label}" },
   },
 
   // Exam Prep Room

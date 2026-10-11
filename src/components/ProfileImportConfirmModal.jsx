@@ -9,6 +9,8 @@
 
 import { useState, useEffect, useId } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { APP_TRANSLATIONS } from "../i18n/translations";
+import { useOptionalLanguage } from "../contexts/LanguageContext";
 import { isSameCalendarDay } from "../utils/serviceEntryDate";
 import {
   VALUE_SOURCE,
@@ -186,6 +188,19 @@ const CATEGORY_SECTIONS = [
   { key: "contact", icon: "📞", title: "Contact Information" },
   { key: "other", icon: "📝", title: "Other Information" },
 ];
+
+// The review dialog is also mounted without a LanguageProvider (unit tests), so
+// it falls back to the English entry directly.
+const useDialogText = () => {
+  const language = useOptionalLanguage();
+  return (key, params = {}) => {
+    if (language) return language.t("dd214Analyzer", key, params);
+    return Object.entries(params).reduce(
+      (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+      APP_TRANSLATIONS.dd214Analyzer[key].en,
+    );
+  };
+};
 
 /**
  * Get field label
@@ -451,17 +466,18 @@ const SourceNote = ({ source }) => {
 // A list row shows a bounded summary, but every item in it is saved when the row
 // is ticked, so the whole list is one disclosure away, where the tick is.
 const FullList = ({ label, items }) => {
+  const text = useDialogText();
   if (!Array.isArray(items) || items.length === 0) return null;
   return (
     <details className="mt-2 text-sm">
       <summary className="min-h-[44px] cursor-pointer py-2.5 font-medium text-indigo-700 dark:text-indigo-300">
-        Show all {items.length} in {label} that will be saved
+        {text("listShowAll", { count: items.length, label })}
       </summary>
       <div
         role="region"
         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
         tabIndex={0}
-        aria-label={`All ${items.length} in ${label}`}
+        aria-label={text("listRegionLabel", { count: items.length, label })}
         className="max-h-60 overflow-y-auto rounded bg-gray-100 px-3 py-2 dark:bg-gray-700"
       >
         <ul className="list-disc space-y-1 pl-4 text-gray-800 dark:text-gray-200">
@@ -695,41 +711,48 @@ const ImportHeader = ({
 /**
  * Modal footer: cancel + confirm import actions
  */
-const ImportFooter = ({ onCancel, selectedCount, onConfirm }) => (
-  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-    <button
-      onClick={onCancel}
-      className="min-h-[44px] px-4 sm:px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors"
-    >
-      ✗ Cancel Import
-    </button>
-    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-      <span className="min-w-0 text-sm text-gray-600 dark:text-gray-400">
-        {selectedCount === 0 ? (
-          <span className="text-red-600 dark:text-red-400 font-semibold">
-            ⚠️ No fields selected
-          </span>
-        ) : (
-          <span>
-            Ready to import {selectedCount} field
-            {selectedCount !== 1 ? "s" : ""}
-          </span>
-        )}
-      </span>
+const ImportFooter = ({ onCancel, selectedCount, onConfirm }) => {
+  const text = useDialogText();
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
       <button
-        onClick={onConfirm}
-        disabled={selectedCount === 0}
-        className={`min-h-[44px] px-4 sm:px-6 py-2.5 font-semibold rounded-lg transition-colors ${
-          selectedCount === 0
-            ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed"
-            : "bg-indigo-600 hover:bg-indigo-700 text-white"
-        }`}
+        onClick={onCancel}
+        className="min-h-[44px] px-4 sm:px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors"
       >
-        ✓ Import Selected Fields
+        ✗ {text("importCancel")}
       </button>
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="min-w-0 text-sm text-gray-600 dark:text-gray-400">
+          {selectedCount === 0 ? (
+            <span className="text-red-600 dark:text-red-400 font-semibold">
+              ⚠️ {text("importNoFieldsSelected")}
+            </span>
+          ) : (
+            <span>
+              {text(
+                selectedCount === 1 ? "importReadyOne" : "importReadyMany",
+                {
+                  count: selectedCount,
+                },
+              )}
+            </span>
+          )}
+        </span>
+        <button
+          onClick={onConfirm}
+          disabled={selectedCount === 0}
+          className={`min-h-[44px] px-4 sm:px-6 py-2.5 font-semibold rounded-lg transition-colors ${
+            selectedCount === 0
+              ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700 text-white"
+          }`}
+        >
+          ✓ {text("importSelectedFields")}
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // A plain truthiness check dropped an explicit `false` (e.g.
 // DD214Analyzer.jsx's serviceStartDateDerived: false, clearing a stale
