@@ -23,6 +23,8 @@ exclude = [
   '^https://knowledge\.va\.gov/',
   '^https://www\.ebenefits\.va\.gov/',
   '^https://www\.index\.va\.gov/',
+  # Army heraldry site resets connections from GitHub-hosted runners.
+  '^https://tioh\.army\.mil/',
 ]
 
 # Meta's Llama model cards and use-policy copies under llm-compiler/models/ carry the upstream
