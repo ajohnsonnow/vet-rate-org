@@ -187,7 +187,7 @@ const VSOFinderFooter = ({ t, hasResults, onClose }) => (
     <button
       type="button"
       onClick={() => window.dispatchEvent(new CustomEvent("openVsoHelp"))}
-      className="min-h-11 px-2 text-sm text-sky-800 underline hover:text-sky-950 dark:text-sky-300 dark:hover:text-sky-100"
+      className="min-h-11 px-2 text-sm text-gray-900 underline hover:text-black dark:text-gray-100 dark:hover:text-white"
     >
       {t("vsoFinder", "helpSeveralVeterans")}
     </button>
