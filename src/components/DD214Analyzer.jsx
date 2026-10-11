@@ -2389,7 +2389,7 @@ export function DD214AwardsSection({ analysisResult, t }) {
         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
         tabIndex={0}
         aria-label={`${t("dd214Analyzer", "awardsDecorations")} (${analysisResult.awards.length})`}
-        className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto"
       >
         {analysisResult.awards.map((award) => (
           <div

@@ -42,6 +42,15 @@ describe("DD214AwardsSection keyboard access", () => {
     expect(region).toHaveFocus();
   });
 
+  // A blue-500 ring measured under 3:1 against the light theme's surface. The
+  // app-wide :focus-visible outline meets it in both themes, so the region
+  // must not replace it.
+  it("keeps the app-wide focus outline", () => {
+    render(<DD214AwardsSection analysisResult={{ awards }} t={t} />);
+    const region = screen.getByRole("region", { name: "Awards (12)" });
+    expect(region.className).not.toMatch(/outline-none|focus(-visible)?:ring/);
+  });
+
   it("renders nothing when there are no awards", () => {
     const { container } = render(
       <DD214AwardsSection analysisResult={{ awards: [] }} t={t} />,
