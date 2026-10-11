@@ -30,6 +30,27 @@ beforeEach(() => {
   localStorage.clear();
 });
 
+describe("an incoming autoNotes that is not the incoming note", () => {
+  it("is not trusted to raise a generated note", () => {
+    fromDocument(2);
+    addAward({
+      name: NAME,
+      notes: "Typed by the veteran",
+      autoNotes: generated(5),
+    });
+    expect(saved().notes).toBe("2nd award");
+    expect(saved().autoNotes).toBe("2nd award");
+  });
+
+  it("is not kept as the copy when the award is first saved", () => {
+    addAward({ name: NAME, notes: "Typed", autoNotes: generated(3) });
+    expect(saved().notes).toBe("Typed");
+    expect(saved()).not.toHaveProperty("autoNotes");
+    addAward({ name: NAME, notes: generated(4), autoNotes: generated(4) });
+    expect(saved().notes).toBe("Typed");
+  });
+});
+
 describe("a second document and a note the app generated", () => {
   it("raises the exact generated note and its copy together", () => {
     fromDocument(2);
