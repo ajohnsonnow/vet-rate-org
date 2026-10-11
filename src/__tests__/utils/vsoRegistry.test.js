@@ -260,6 +260,52 @@ describe("addSilo", () => {
   );
 });
 
+describe("addSilo argument checks", () => {
+  it.each([
+    ["null", null],
+    ["undefined", undefined],
+    ["a string", "JD"],
+    ["a number", 42],
+    ["an array", []],
+  ])("throws the typed error for %s", (_name, value) => {
+    expect(() => addSilo(value, NOW)).toThrow(
+      expect.objectContaining({ name: "RegistryError", code: "INVALID" }),
+    );
+    expect(readRegistry()).toEqual({ state: "absent" });
+  });
+
+  it.each([
+    ["an invalid Date", new Date("not a date")],
+    ["a string", "2026-10-10T00:00:00Z"],
+    ["a number", 1760000000000],
+    ["null", null],
+    ["an object", {}],
+  ])("throws the typed error when now is %s", (_name, now) => {
+    expect(() =>
+      addSilo(
+        { initials: "JD", caseRef: "C1", authorizationAcknowledged: true },
+        now,
+      ),
+    ).toThrow(
+      expect.objectContaining({ name: "RegistryError", code: "INVALID" }),
+    );
+    expect(readRegistry()).toEqual({ state: "absent" });
+  });
+});
+
+describe("addSilo canonical labels", () => {
+  it.each([
+    ["a mark that has no precomposed form", "Q̈.", "Q̈."],
+    ["hyphenated initials", "J.-P.", "J.-P."],
+    ["a decomposed accent", "É", "É"],
+  ])("stores %s in a form the registry re-accepts", (_name, typed, stored) => {
+    const created = add({ initials: typed });
+    expect(created.initials).toBe(stored);
+    expect(readRegistry().state).toBe("ok");
+    expect(readRegistry().registry.silos[0].initials).toBe(stored);
+  });
+});
+
 describe("addSilo label and bookkeeping", () => {
   it("rejects labels the validator blocks, without storing them", () => {
     expect(() => add({ caseRef: "123-45-6789" })).toThrow(

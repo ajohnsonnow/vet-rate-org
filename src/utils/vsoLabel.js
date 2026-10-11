@@ -1,4 +1,8 @@
-const INITIALS_PATTERN = /^(?:(?=\p{L})\p{Script=Latin}\.?){1,4}$/u;
+const MAX_INITIALS = 4;
+// A Latin base letter with up to three combining marks counts as one letter,
+// so accents that NFKC cannot compose into one character (Q + U+0308) pass.
+const INITIAL_RUN = /^(?:(?=\p{L})\p{Script=Latin}\p{M}{0,3}\.?){1,4}$/u;
+const LETTER = /\p{L}/gu;
 const CASE_REF_PATTERN = /^[A-Za-z0-9 \-_/#.]{1,24}$/;
 const DIGIT = /\p{Nd}/gu;
 const SSN_DIGITS = 9;
@@ -8,7 +12,7 @@ const CAPITALISED_WORD = /^[A-Z][a-z]+$/;
 const MESSAGES = Object.freeze({
   required: "Enter a value.",
   initialsFormat:
-    "Use 1 to 4 Latin letters only. Periods are allowed after a letter, for example J.D.",
+    "Use 1 to 4 Latin letters only. Periods are allowed after a letter, for example J.D. A hyphen is allowed after a period, for example J.-P.",
   caseRefFormat:
     "Use up to 24 characters: letters, digits, spaces and - _ / # . only.",
   ssn: "This looks like a Social Security number. Labels are visible on screen and in the workspace list, so use your organisation's own case number instead, with 6 digits or fewer.",
@@ -23,6 +27,20 @@ function normalise(value) {
 
 function digitCount(value) {
   return (value.match(DIGIT) ?? []).length;
+}
+
+// "J.-P." is the one hyphenated form: a single hyphen, only after an initial's
+// period, so a bare "J-D" stays refused.
+function initialsFormatOk(value) {
+  const parts = value.split("-");
+  if (parts.length > 2) return false;
+  if (parts.length === 2 && !parts[0].endsWith(".")) return false;
+  if (!parts.every((part) => INITIAL_RUN.test(part))) return false;
+  return (value.match(LETTER) ?? []).length <= MAX_INITIALS;
+}
+
+function caseRefFormatOk(value) {
+  return CASE_REF_PATTERN.test(value);
 }
 
 function privacyErrors(field, digits) {
@@ -48,12 +66,12 @@ function looksLikeName(caseRef) {
   return false;
 }
 
-function fieldErrors(field, value, formatPattern, formatMessage) {
+function fieldErrors(field, value, formatOk, formatMessage) {
   if (value === "") {
     return [{ field, code: "required", message: MESSAGES.required }];
   }
   const errors = privacyErrors(field, digitCount(value));
-  if (!formatPattern.test(value)) {
+  if (!formatOk(value)) {
     errors.push({ field, code: "format", message: formatMessage });
   }
   return errors;
@@ -73,13 +91,13 @@ export function validateLabelFields(fields) {
   const initialsErrors = fieldErrors(
     "initials",
     cleanInitials,
-    INITIALS_PATTERN,
+    initialsFormatOk,
     MESSAGES.initialsFormat,
   );
   const caseRefErrors = fieldErrors(
     "caseRef",
     cleanCaseRef,
-    CASE_REF_PATTERN,
+    caseRefFormatOk,
     MESSAGES.caseRefFormat,
   );
   const errors = [...initialsErrors, ...caseRefErrors];

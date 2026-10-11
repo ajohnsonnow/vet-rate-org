@@ -206,16 +206,20 @@ function assertReviewBy(reviewBy) {
   }
 }
 
-export function addSilo(
-  {
+export function addSilo(fields, now = new Date()) {
+  if (fields === null || typeof fields !== "object" || Array.isArray(fields)) {
+    throw new RegistryError("INVALID", "The new veteran must be an object.");
+  }
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
+    throw new RegistryError("INVALID", "The timestamp must be a valid Date.");
+  }
+  const {
     initials,
     caseRef,
     reviewBy = null,
     authorizationAcknowledged,
     legacy = false,
-  },
-  now = new Date(),
-) {
+  } = fields;
   if (authorizationAcknowledged !== true) {
     throw new RegistryError(
       "AUTH_REQUIRED",
