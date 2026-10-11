@@ -86,6 +86,7 @@ describe("the import marker", () => {
       owner: expect.any(String),
       heartbeat: expect.any(Number),
       started: expect.any(Number),
+      stampsDocuments: true,
     });
     expect(key).toBe(`${IMPORT_MARKER_KEY_PREFIX}${JSON.parse(stored).id}`);
     expect(stored).not.toMatch(/\.pdf|\.txt|\.docx/i);
@@ -565,83 +566,212 @@ describe("finishing the import that an interrupted one left undone", () => {
   });
 });
 
-describe("the saved count is what is stored when the notice is drawn", () => {
-  const storedAt = (minutesAgo) =>
-    new Date(Date.now() - minutesAgo * 60 * 1000).toISOString();
+const LABELS_20 = Array.from(
+  { length: 20 },
+  (_, i) => `document ${i + 1} (DBQ)`,
+);
 
-  async function stoppedAfterFourMarkerWrites() {
-    const { killEveryPage } = installFakeLocks();
-    const stopped = await loadPage();
-    stopped.startImportMarker(LABELS_8);
-    for (let i = 0; i < 4; i += 1) stopped.recordDocumentSaved();
-    backdate(onlyMarkerId());
-    killEveryPage();
-    return stopped;
-  }
+// One entry per stored document, in the shape addDocumentToVKB writes.
+const stampedBy = (importId, count, from = 0) =>
+  Array.from({ length: count }, (_, i) => ({
+    id: `doc_${from + i}`,
+    uploadDate: new Date().toISOString(),
+    ...(importId && { importId }),
+  }));
 
-  const filedNow = (n) => ({
-    documentation: {
-      dd214s: [{ uploadDate: storedAt(60 * 24) }],
-      otherEvidence: Array.from({ length: n }, () => ({
-        uploadDate: storedAt(1),
-      })),
-    },
+async function killedAfterMarkerWrites(labels, markerWrites) {
+  const { killEveryPage } = installFakeLocks();
+  const stopped = await loadPage();
+  stopped.startImportMarker(labels);
+  for (let i = 0; i < markerWrites; i += 1) stopped.recordDocumentSaved();
+  backdate(onlyMarkerId());
+  killEveryPage();
+  return { stopped, id: onlyMarkerId() };
+}
+
+async function noticeFor(docsFor, labels = LABELS_20, markerWrites = 6) {
+  const { stopped, id } = await killedAfterMarkerWrites(labels, markerWrites);
+  loadVkb.mockResolvedValue({
+    documentation: { dd214s: [], otherEvidence: docsFor(id) },
   });
+  const restarted = await loadPage();
+  const found = await restarted.findInterruptedImport();
+  stopped.clearAllImportMarkers();
+  return { found, restarted };
+}
 
-  it("counts the document filed just before the tab died, read fresh from storage", async () => {
-    const stopped = await stoppedAfterFourMarkerWrites();
-    loadVkb.mockResolvedValue(filedNow(5));
-
-    const restarted = await loadPage();
-
-    expect(await restarted.findInterruptedImport()).toMatchObject({
-      saved: 5,
-      total: 8,
-    });
+describe("the saved count is what this import stored when the notice is drawn", () => {
+  it("asks the store fresh, not its cached copy", async () => {
+    await noticeFor((id) => stampedBy(id, 3));
     expect(loadVkb).toHaveBeenCalledWith(
       expect.objectContaining({ fresh: true }),
     );
-    stopped.clearAllImportMarkers();
   });
 
+  it.each([
+    ["a marker that lags the store by many writes", 6, 15, 15],
+    ["a marker that is current", 6, 6, 6],
+    ["one document filed just before the tab died", 4, 5, 5],
+    ["a store that holds fewer than the marker counts", 6, 2, 2],
+    ["a store that holds none of them", 6, 0, 0],
+  ])(
+    "reports exactly what is stored for %s",
+    async (_name, written, stored, expected) => {
+      const { found } = await noticeFor(
+        (id) => stampedBy(id, stored),
+        LABELS_20,
+        written,
+      );
+
+      expect(found).toMatchObject({ saved: expected, total: 20 });
+    },
+  );
+
+  it("does not count documents filed outside the import", async () => {
+    const { found } = await noticeFor((id) => [
+      ...stampedBy(id, 8),
+      ...stampedBy(undefined, 4, 100),
+      ...stampedBy("another-import", 3, 200),
+    ]);
+
+    expect(found).toMatchObject({ saved: 8, total: 20 });
+  });
+
+  it("counts one stored entry once however often it was filed", async () => {
+    const { found } = await noticeFor((id) => [
+      ...stampedBy(id, 3),
+      ...stampedBy(id, 3),
+    ]);
+
+    expect(found).toMatchObject({ saved: 3, total: 20 });
+  });
+});
+
+describe("the saved count when the store is empty, unreadable or complete", () => {
   it("falls back to the marker's own count when the store cannot be read", async () => {
-    const stopped = await stoppedAfterFourMarkerWrites();
-
+    const { stopped } = await killedAfterMarkerWrites(LABELS_20, 6);
     const restarted = await loadPage();
 
     expect(await restarted.findInterruptedImport()).toMatchObject({
-      saved: 4,
-      total: 8,
+      saved: 6,
+      total: 20,
     });
     stopped.clearAllImportMarkers();
   });
 
-  it("still reports an import when other saves have filled the store to its total", async () => {
-    const stopped = await stoppedAfterFourMarkerWrites();
-    loadVkb.mockResolvedValue(filedNow(8));
+  it("says the stored count in the notice", async () => {
+    const { found, restarted } = await noticeFor((id) => stampedBy(id, 15));
 
-    const restarted = await loadPage();
-
-    expect(await restarted.findInterruptedImport()).toMatchObject({
-      saved: 5,
-      total: 8,
-    });
-    expect(markerKeys()).toHaveLength(1);
-    stopped.clearAllImportMarkers();
+    expect(restarted.describeInterruptedImport(found)).toContain(
+      "15 of 20 documents were saved.",
+    );
   });
 
-  it("drops a marker that itself counts every document", async () => {
-    const { killEveryPage } = installFakeLocks();
-    const stopped = await loadPage();
-    stopped.startImportMarker(LABELS);
-    for (let i = 0; i < 3; i += 1) stopped.recordDocumentSaved();
-    backdate(onlyMarkerId());
-    killEveryPage();
+  it("drops an import whose every document is stored, whatever the marker says", async () => {
+    const { found } = await noticeFor((id) => stampedBy(id, 20));
 
+    expect(found).toBeNull();
+    expect(markerKeys()).toHaveLength(0);
+  });
+
+  it("drops a single-document import once its document is stored", async () => {
+    const { found } = await noticeFor(
+      (id) => stampedBy(id, 1),
+      ["document 1 (DBQ)"],
+      0,
+    );
+
+    expect(found).toBeNull();
+    expect(markerKeys()).toHaveLength(0);
+  });
+
+  it("reports a single-document import whose document was never stored as 0 of 1", async () => {
+    const { found } = await noticeFor(() => [], ["document 1 (DBQ)"], 0);
+
+    expect(found).toMatchObject({ saved: 0, total: 1 });
+  });
+
+  it("drops a marker that itself counts every document when the store cannot be read", async () => {
+    const { stopped } = await killedAfterMarkerWrites(LABELS_8, 8);
     const restarted = await loadPage();
 
     expect(await restarted.findInterruptedImport()).toBeNull();
     expect(markerKeys()).toHaveLength(0);
     stopped.clearAllImportMarkers();
+  });
+
+  it("reports the id of the import this page is running, for the documents it files", async () => {
+    const page = await loadPage();
+    expect(page.activeImportId()).toBeNull();
+    page.startImportMarker(LABELS);
+
+    expect(page.activeImportId()).toBe(onlyMarkerId());
+    page.clearAllImportMarkers();
+  });
+});
+
+// A marker as an older build wrote it: before documents were stamped with the
+// import id, so it has no stampsDocuments field.
+function asOlderBuild(id) {
+  const key = `${PREFIX}${id}`;
+  const marker = JSON.parse(localStorage.getItem(key));
+  Reflect.deleteProperty(marker, "stampsDocuments");
+  localStorage.setItem(key, JSON.stringify(marker));
+}
+
+describe("a notice for an import started by an older build", () => {
+  async function olderNotice(labels, markerWrites, stored) {
+    const { stopped, id } = await killedAfterMarkerWrites(labels, markerWrites);
+    asOlderBuild(id);
+    loadVkb.mockResolvedValue({
+      documentation: { dd214s: [], otherEvidence: stored },
+    });
+    const restarted = await loadPage();
+    const found = await restarted.findInterruptedImport();
+    stopped.clearAllImportMarkers();
+    return found;
+  }
+
+  it("records that its import stamps documents on every new marker", async () => {
+    const page = await loadPage();
+    page.startImportMarker(LABELS);
+
+    const marker = JSON.parse(
+      localStorage.getItem(`${PREFIX}${page.activeImportId()}`),
+    );
+    expect(marker.stampsDocuments).toBe(true);
+    page.clearAllImportMarkers();
+  });
+
+  it("uses the marker's own saved figure, not a count of unstamped documents", async () => {
+    const found = await olderNotice(LABELS_20, 6, stampedBy(undefined, 12));
+
+    expect(found).toMatchObject({ saved: 6, total: 20 });
+  });
+
+  it("does not read 0 of N when the marker saw documents stored", async () => {
+    const found = await olderNotice(LABELS_20, 9, []);
+
+    expect(found.saved).toBe(9);
+  });
+
+  it("never reports more than the total minus one", async () => {
+    const found = await olderNotice(LABELS_20, 19, stampedBy(undefined, 20));
+
+    expect(found).toMatchObject({ saved: 19, total: 20 });
+    expect(found.saved).toBeLessThanOrEqual(found.total - 1);
+  });
+
+  it("drops an older marker that itself counts every document", async () => {
+    const found = await olderNotice(LABELS_8, 8, []);
+
+    expect(found).toBeNull();
+    expect(markerKeys()).toHaveLength(0);
+  });
+
+  it("leaves a marker that stamps documents counting exactly what is stored", async () => {
+    const { found } = await noticeFor((id) => stampedBy(id, 3), LABELS_20, 6);
+
+    expect(found).toMatchObject({ saved: 3, total: 20 });
   });
 });

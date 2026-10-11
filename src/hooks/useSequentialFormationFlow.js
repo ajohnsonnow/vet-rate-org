@@ -42,6 +42,7 @@ import {
 } from "../utils/readFailureMessage";
 import {
   completeImportMarker,
+  activeImportId,
   recordDocumentSaved,
   startImportMarker,
 } from "../utils/importProgressMarker";
@@ -202,7 +203,7 @@ async function runDocumentProcessing(entry, ctx) {
     const result = await processFormationDocument(
       file,
       (progressData) => handleProgressUpdate(progressData, entry, file, ctx),
-      { returnIncompleteSave: true },
+      { returnIncompleteSave: true, importId: activeImportId() },
     );
 
     logger.info("✅ Document processed:", {

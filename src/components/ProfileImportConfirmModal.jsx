@@ -437,6 +437,34 @@ const SourceNote = ({ source }) => {
   );
 };
 
+// A list row shows a bounded summary, but every item in it is saved when the row
+// is ticked, so the whole list is one disclosure away, where the tick is.
+const FullList = ({ label, items }) => {
+  if (!Array.isArray(items) || items.length === 0) return null;
+  return (
+    <details className="mt-2 text-sm">
+      <summary className="min-h-[44px] cursor-pointer py-2.5 font-medium text-indigo-700 dark:text-indigo-300">
+        Show all {items.length} in {label} that will be saved
+      </summary>
+      <div
+        role="region"
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+        tabIndex={0}
+        aria-label={`All ${items.length} in ${label}`}
+        className="max-h-60 overflow-y-auto rounded bg-gray-100 px-3 py-2 dark:bg-gray-700"
+      >
+        <ul className="list-disc space-y-1 pl-4 text-gray-800 dark:text-gray-200">
+          {items.map((item, index) => (
+            <li key={`${index}-${item}`} className="break-words">
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </details>
+  );
+};
+
 /**
  * Field Row Component - Shows current vs imported value with checkbox
  */
@@ -445,6 +473,7 @@ const FieldRow = ({
   source,
   currentValue,
   importedValue,
+  fullList,
   isSelected,
   onToggle,
   onChange,
@@ -496,6 +525,7 @@ const FieldRow = ({
             isBooleanField={isBooleanField}
             onChange={onChange}
           />
+          <FullList label={label} items={fullList} />
         </div>
       </div>
     </div>
@@ -513,6 +543,7 @@ const FieldCategorySection = ({
   editableData,
   selectedFields,
   fieldSources,
+  fullLists,
   onToggle,
   onChange,
 }) => {
@@ -531,6 +562,7 @@ const FieldCategorySection = ({
             source={fieldSources?.[field]}
             currentValue={formatFieldValue(field, currentProfile[field])}
             importedValue={editableData[field]}
+            fullList={fullLists?.[field]}
             isSelected={selectedFields[field]}
             onToggle={() => onToggle(field)}
             onChange={(value) => onChange(field, value)}
@@ -651,15 +683,15 @@ const ImportHeader = ({
  * Modal footer: cancel + confirm import actions
  */
 const ImportFooter = ({ onCancel, selectedCount, onConfirm }) => (
-  <div className="flex items-center justify-between gap-4">
+  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
     <button
       onClick={onCancel}
-      className="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors"
+      className="min-h-[44px] px-4 sm:px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-lg transition-colors"
     >
       ✗ Cancel Import
     </button>
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-gray-600 dark:text-gray-400">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+      <span className="min-w-0 text-sm text-gray-600 dark:text-gray-400">
         {selectedCount === 0 ? (
           <span className="text-red-600 dark:text-red-400 font-semibold">
             ⚠️ No fields selected
@@ -674,7 +706,7 @@ const ImportFooter = ({ onCancel, selectedCount, onConfirm }) => (
       <button
         onClick={onConfirm}
         disabled={selectedCount === 0}
-        className={`px-6 py-2.5 font-semibold rounded-lg transition-colors ${
+        className={`min-h-[44px] px-4 sm:px-6 py-2.5 font-semibold rounded-lg transition-colors ${
           selectedCount === 0
             ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed"
             : "bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -737,6 +769,7 @@ const CategorySections = ({ categories, ...sectionProps }) =>
 const ProfileImportConfirmModal = ({
   extractedData,
   fieldSources,
+  fullLists,
   currentProfile,
   onConfirm,
   onCancel,
@@ -813,6 +846,7 @@ const ProfileImportConfirmModal = ({
         editableData={editableData}
         selectedFields={selectedFields}
         fieldSources={fieldSources}
+        fullLists={fullLists}
         onToggle={handleFieldToggle}
         onChange={handleFieldChange}
       />

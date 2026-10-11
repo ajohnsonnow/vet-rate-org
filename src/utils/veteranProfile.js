@@ -18,6 +18,7 @@ import {
   parseExplicitDate,
 } from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
+import { upgradedGeneratedNote } from "./dd214AwardRowText";
 import {
   PROFILE_CHANGED_EVENT,
   PROFILE_UNREADABLE_EVENT,
@@ -1242,6 +1243,9 @@ function _sanitizeAwards(awards) {
     abbreviation: sanitizeString(a.abbreviation || "", 50),
     dateReceived: a.dateReceived || null,
     notes: sanitizeString(a.notes || "", 500),
+    ...(typeof a.autoNotes === "string" && {
+      autoNotes: sanitizeString(a.autoNotes, 500),
+    }),
     isCombat: !!a.isCombat,
     // FIX-4: structured {type, position} objects, NOT flattened display
     // name strings.
@@ -4136,6 +4140,43 @@ export const removeDutyStation = (stationId) => {
  * @param {Object} award - Award data
  * @returns {string|null} New award ID or null on error
  */
+const AWARD_NOTES_MAX = 500;
+
+// autoNotes is the exact note the app generated when it wrote the award's
+// notes. A later document may raise the number in the note only while the note
+// is still identical to that copy; a note without the copy, or edited by even
+// one character, is never touched.
+function _mergeAwardNotes(existing, award) {
+  const incoming = sanitizeString(award.notes || "", AWARD_NOTES_MAX);
+  const incomingAuto =
+    typeof award.autoNotes === "string"
+      ? sanitizeString(award.autoNotes, AWARD_NOTES_MAX)
+      : undefined;
+  if (
+    existing.autoNotes !== undefined &&
+    existing.notes !== existing.autoNotes
+  ) {
+    return;
+  }
+  if (!existing.notes) {
+    existing.notes = incoming;
+    if (incomingAuto === incoming) existing.autoNotes = incoming;
+    else delete existing.autoNotes;
+    return;
+  }
+  if (existing.autoNotes === undefined) return;
+  if (incomingAuto === undefined) return;
+  const upgraded = upgradedGeneratedNote(
+    existing.notes,
+    incomingAuto,
+    AWARD_NOTES_MAX,
+  );
+  if (upgraded !== null) {
+    existing.notes = upgraded;
+    existing.autoNotes = upgraded;
+  }
+}
+
 export const addAward = (award) => {
   try {
     const history = getServiceHistory();
@@ -4151,7 +4192,7 @@ export const addAward = (award) => {
     if (existing) {
       existing.dateReceived =
         existing.dateReceived || award.dateReceived || null;
-      existing.notes = existing.notes || sanitizeString(award.notes || "", 500);
+      _mergeAwardNotes(existing, award);
       existing.isCombat = existing.isCombat || !!award.isCombat;
       // FIX-4: merge in any new structured devices, deduped by
       // type+position so multiple devices of the same type at different
@@ -4179,13 +4220,19 @@ export const addAward = (award) => {
       name: sanitizeString(award.name || "", 200),
       abbreviation: sanitizeString(award.abbreviation || "", 50),
       dateReceived: award.dateReceived || null,
-      notes: sanitizeString(award.notes || "", 500),
+      notes: sanitizeString(award.notes || "", AWARD_NOTES_MAX),
       isCombat: !!award.isCombat,
       // FIX-4: structured {type, position} objects, NOT flattened display
       // name strings - VisualRibbon switches on device.type.
       devices: _sanitizeDeviceList(award.devices),
       dateAdded: new Date().toISOString(),
     };
+    if (
+      typeof award.autoNotes === "string" &&
+      sanitizeString(award.autoNotes, AWARD_NOTES_MAX) === newAward.notes
+    ) {
+      newAward.autoNotes = newAward.notes;
+    }
 
     history.awards.push(newAward);
     saveServiceHistory(history);

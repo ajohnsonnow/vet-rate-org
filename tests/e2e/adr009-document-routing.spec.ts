@@ -107,9 +107,16 @@ test.afterEach(async ({ page }) => {
   expect(providerGuards.get(page)?.unexpectedHosts ?? []).toEqual([]);
 });
 
+// A desktop-class device (ADR-010): 2 GB max buffer and 8 GB of memory load the
+// 4B model. A 1 GB buffer would classify as a laptop and load the 2B, which is
+// small-class, so the Decision Decoder would hold the document back from it.
 async function shimFakeGpuAdapter(page: Page): Promise<void> {
   await page.addInitScript(() => {
     if (!navigator.gpu) return;
+    Object.defineProperty(navigator, "deviceMemory", {
+      value: 8,
+      configurable: true,
+    });
     navigator.gpu.requestAdapter = async () => ({
       info: {
         vendor: "e2e-fake",
@@ -120,7 +127,7 @@ async function shimFakeGpuAdapter(page: Page): Promise<void> {
       limits: {
         maxComputeInvocationsPerWorkgroup: 1024,
         maxStorageBufferBindingSize: 1 << 30,
-        maxBufferSize: 1 << 30,
+        maxBufferSize: 2 ** 31,
         maxComputeWorkgroupSizeX: 1024,
         maxComputeWorkgroupSizeY: 1024,
         maxComputeWorkgroupSizeZ: 64,
