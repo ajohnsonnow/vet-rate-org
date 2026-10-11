@@ -111,17 +111,7 @@ jobs:
           # security-extended adds 60+ additional security queries;
           # security-and-quality adds maintainability/reliability checks.
           queries: security-extended,security-and-quality
-          # CUSTOMIZE: adjust ignore paths for the project layout
-          config: |
-            paths-ignore:
-              - node_modules
-              - dist
-              - build
-              - vendor
-              - '**/*.test.ts'
-              - '**/*.spec.ts'
-              - tests
-              - __tests__
+          config-file: ./.github/codeql/codeql-config.yml
 
       # If autobuild fails for a compiled language, replace build-mode above
       # with "manual" and add explicit build steps here, e.g.:
