@@ -1,4 +1,4 @@
-const INITIALS_PATTERN = /^(?:\p{L}\.?){1,4}$/u;
+const INITIALS_PATTERN = /^(?:(?=\p{L})\p{Script=Latin}\.?){1,4}$/u;
 const CASE_REF_PATTERN = /^[A-Za-z0-9 \-_/#.]{1,24}$/;
 const DIGIT = /\p{Nd}/gu;
 const SSN_DIGITS = 9;
@@ -8,7 +8,7 @@ const CAPITALISED_WORD = /^[A-Z][a-z]+$/;
 const MESSAGES = Object.freeze({
   required: "Enter a value.",
   initialsFormat:
-    "Use 1 to 4 letters only. Periods are allowed after a letter, for example J.D.",
+    "Use 1 to 4 Latin letters only. Periods are allowed after a letter, for example J.D.",
   caseRefFormat:
     "Use up to 24 characters: letters, digits, spaces and - _ / # . only.",
   ssn: "This looks like a Social Security number. Labels are visible on screen and in the workspace list, so use your organisation's own case number instead, with 6 digits or fewer.",
