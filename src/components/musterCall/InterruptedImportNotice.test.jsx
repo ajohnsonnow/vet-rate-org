@@ -153,6 +153,7 @@ describe("InterruptedImportNotice count", () => {
         owner: "another-tab",
         heartbeat: started,
         started,
+        stampsDocuments: true,
       }),
     );
     loadVkb.mockResolvedValue({

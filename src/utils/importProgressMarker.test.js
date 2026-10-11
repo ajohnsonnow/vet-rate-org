@@ -86,6 +86,7 @@ describe("the import marker", () => {
       owner: expect.any(String),
       heartbeat: expect.any(Number),
       started: expect.any(Number),
+      stampsDocuments: true,
     });
     expect(key).toBe(`${IMPORT_MARKER_KEY_PREFIX}${JSON.parse(stored).id}`);
     expect(stored).not.toMatch(/\.pdf|\.txt|\.docx/i);
@@ -706,5 +707,71 @@ describe("the saved count when the store is empty, unreadable or complete", () =
 
     expect(page.activeImportId()).toBe(onlyMarkerId());
     page.clearAllImportMarkers();
+  });
+});
+
+// A marker as an older build wrote it: before documents were stamped with the
+// import id, so it has no stampsDocuments field.
+function asOlderBuild(id) {
+  const key = `${PREFIX}${id}`;
+  const marker = JSON.parse(localStorage.getItem(key));
+  Reflect.deleteProperty(marker, "stampsDocuments");
+  localStorage.setItem(key, JSON.stringify(marker));
+}
+
+describe("a notice for an import started by an older build", () => {
+  async function olderNotice(labels, markerWrites, stored) {
+    const { stopped, id } = await killedAfterMarkerWrites(labels, markerWrites);
+    asOlderBuild(id);
+    loadVkb.mockResolvedValue({
+      documentation: { dd214s: [], otherEvidence: stored },
+    });
+    const restarted = await loadPage();
+    const found = await restarted.findInterruptedImport();
+    stopped.clearAllImportMarkers();
+    return found;
+  }
+
+  it("records that its import stamps documents on every new marker", async () => {
+    const page = await loadPage();
+    page.startImportMarker(LABELS);
+
+    const marker = JSON.parse(
+      localStorage.getItem(`${PREFIX}${page.activeImportId()}`),
+    );
+    expect(marker.stampsDocuments).toBe(true);
+    page.clearAllImportMarkers();
+  });
+
+  it("uses the marker's own saved figure, not a count of unstamped documents", async () => {
+    const found = await olderNotice(LABELS_20, 6, stampedBy(undefined, 12));
+
+    expect(found).toMatchObject({ saved: 6, total: 20 });
+  });
+
+  it("does not read 0 of N when the marker saw documents stored", async () => {
+    const found = await olderNotice(LABELS_20, 9, []);
+
+    expect(found.saved).toBe(9);
+  });
+
+  it("never reports more than the total minus one", async () => {
+    const found = await olderNotice(LABELS_20, 19, stampedBy(undefined, 20));
+
+    expect(found).toMatchObject({ saved: 19, total: 20 });
+    expect(found.saved).toBeLessThanOrEqual(found.total - 1);
+  });
+
+  it("drops an older marker that itself counts every document", async () => {
+    const found = await olderNotice(LABELS_8, 8, []);
+
+    expect(found).toBeNull();
+    expect(markerKeys()).toHaveLength(0);
+  });
+
+  it("leaves a marker that stamps documents counting exactly what is stored", async () => {
+    const { found } = await noticeFor((id) => stampedBy(id, 3), LABELS_20, 6);
+
+    expect(found).toMatchObject({ saved: 3, total: 20 });
   });
 });

@@ -294,6 +294,7 @@ export function startImportMarker(labels) {
     owner: owner(),
     heartbeat: now,
     started: now,
+    stampsDocuments: true,
   });
   startHeartbeat();
   // Starting again means the veteran is finishing what an earlier import left
@@ -407,9 +408,13 @@ async function storedByImport(importId) {
 
 // What is stored is the truth: the marker lives in local storage and, after a
 // kill, the copy on disk can be many writes behind. Only when the store cannot
-// be read is the marker's own figure used.
+// be read is the marker's own figure used. A marker written before documents
+// were stamped (no stampsDocuments) has nothing to count in the store, so its
+// own figure is the estimate; findInterruptedImport drops one that counts every
+// document, so the estimate is never the total.
 async function interruptedFrom(marker) {
-  const stored = await storedByImport(marker.id);
+  const stored =
+    marker.stampsDocuments === true ? await storedByImport(marker.id) : null;
   return {
     saved: stored ?? marker.saved,
     total: marker.total,

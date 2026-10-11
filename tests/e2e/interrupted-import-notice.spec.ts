@@ -65,6 +65,7 @@ async function seedMarker(page: Page, ageMs: number): Promise<void> {
           id: "e2e-interrupted-import",
           owner: "another-tab",
           heartbeat: Date.now() - age,
+          stampsDocuments: true,
         }),
       );
     },
