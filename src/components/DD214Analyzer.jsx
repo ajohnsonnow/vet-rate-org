@@ -981,11 +981,13 @@ function _saveDd214Awards(awards) {
   // plain display-name string from a different extractor).
   if (!awards || !Array.isArray(awards)) return;
   awards.forEach((award) => {
+    const generatedNote = awardNotesText(award);
     addAward({
       name: award.name,
       abbreviation: award.abbreviation,
       dateReceived: null,
-      notes: awardNotesText(award),
+      notes: generatedNote,
+      autoNotes: generatedNote,
       devices: award.devices || [],
       isCombat: award.isCombat || false,
       sourceDD214: award.sourceDD214,

@@ -124,50 +124,36 @@ export function awardNotesText(award) {
     .join("; ");
 }
 
-const GENERATED_NOTE =
-  /^(?:(\d{1,3})(?:st|nd|rd|th) award)?(?:; )?(?:Devices: (.+))?$/;
-
-// The number and devices of a note that is exactly what awardNotesText builds,
-// or null for anything else (a note the veteran typed or edited).
-function parseGeneratedNote(note) {
-  const match = typeof note === "string" ? GENERATED_NOTE.exec(note) : null;
-  if (!match) return null;
-  const number = match[1] === undefined ? undefined : Number(match[1]);
-  const devices = match[2];
-  if (number === undefined && devices === undefined) return null;
-  if (
-    number !== undefined &&
-    awardNumberOf({ deviceCount: number }) === undefined
-  ) {
-    return null;
-  }
-  const rebuilt = [
-    number === undefined ? "" : awardNumberText({ deviceCount: number }),
-    devices === undefined ? "" : `Devices: ${devices}`,
-  ]
-    .filter(Boolean)
-    .join("; ");
-  return rebuilt === note ? { number, devices } : null;
+// The award number a note opens with, when it opens with exactly the words
+// awardNumberText writes. Only ever read from a note the app itself generated.
+function leadingAwardNumber(note) {
+  const match = /^(\d{1,3})(?:st|nd|rd|th) award(?=;|$)/.exec(note);
+  if (!match) return undefined;
+  const number = Number(match[1]);
+  return awardNumberText({ deviceCount: number }) === match[0]
+    ? number
+    : undefined;
 }
 
 /**
- * The note an award keeps when a later document reports the same award. The
- * saved note is replaced only when it is exactly what the app generated and
- * the later document's generated note carries a higher award number; the
- * number changes and the saved devices text stays. A note the veteran edited,
- * or an equal or lower number, leaves the saved note as it is.
+ * The note a saved award takes when a later document reports the same award,
+ * or null to leave the saved note as it is. Both arguments must be notes the
+ * app generated (the caller only passes the saved note when it is identical to
+ * the generated copy kept beside it): the number rises, the saved devices text
+ * stays. Null for a number that is not higher, for a first award where the
+ * saved note has no number, and for a result longer than maxLength.
  */
-export function upgradedAwardNote(savedNote, laterNote) {
-  const saved = parseGeneratedNote(savedNote);
-  const later = parseGeneratedNote(laterNote);
-  if (!saved || !later || later.number === undefined) return savedNote;
-  if (saved.number !== undefined && later.number <= saved.number) {
-    return savedNote;
+export function upgradedGeneratedNote(savedNote, laterNote, maxLength) {
+  const later = leadingAwardNumber(laterNote);
+  if (later === undefined) return null;
+  const saved = leadingAwardNumber(savedNote);
+  if (saved === undefined ? later < 2 : later <= saved) return null;
+  let rest;
+  if (saved !== undefined) {
+    rest = savedNote.slice(awardNumberText({ deviceCount: saved }).length);
+  } else {
+    rest = savedNote === "" ? "" : `; ${savedNote}`;
   }
-  return [
-    awardNumberText({ deviceCount: later.number }),
-    saved.devices === undefined ? "" : `Devices: ${saved.devices}`,
-  ]
-    .filter(Boolean)
-    .join("; ");
+  const upgraded = awardNumberText({ deviceCount: later }) + rest;
+  return upgraded.length > maxLength ? null : upgraded;
 }
