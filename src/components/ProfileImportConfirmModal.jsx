@@ -7,7 +7,7 @@
  * Prevents accidental overwriting of existing information
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { isSameCalendarDay } from "../utils/serviceEntryDate";
 import {
@@ -321,6 +321,7 @@ const FIELD_BOX_CLASS =
 // select; everything else is a text box that can be corrected once ticked.
 const ImportedValueField = ({
   label,
+  labelledBy,
   importedValue,
   isSelected,
   isBooleanField,
@@ -341,6 +342,7 @@ const ImportedValueField = ({
       <select
         value={importedValue ? "true" : "false"}
         onChange={(e) => onChange(e.target.value === "true")}
+        aria-labelledby={labelledBy}
         disabled={!isSelected}
         className={FIELD_BOX_CLASS}
       >
@@ -354,6 +356,7 @@ const ImportedValueField = ({
       type="text"
       value={importedValue || ""}
       onChange={(e) => onChange(e.target.value)}
+      aria-labelledby={labelledBy}
       disabled={!isSelected}
       className={FIELD_BOX_CLASS}
     />
@@ -365,35 +368,43 @@ const ImportedValueField = ({
  */
 const FieldValueComparison = ({
   label,
+  labelId,
   currentValue,
   importedValue,
   isSelected,
   isBooleanField,
   onChange,
-}) => (
-  <div className="grid grid-cols-2 gap-3 text-sm">
-    <div>
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-        Current Value:
+}) => {
+  const captionId = useId();
+  return (
+    <div className="grid grid-cols-2 gap-3 text-sm">
+      <div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+          Current Value:
+        </div>
+        <div className="px-2 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300 break-words">
+          {currentValue}
+        </div>
       </div>
-      <div className="px-2 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300 break-words">
-        {currentValue}
+      <div>
+        <div
+          id={captionId}
+          className="text-xs text-gray-500 dark:text-gray-400 mb-1"
+        >
+          Imported Value:
+        </div>
+        <ImportedValueField
+          label={label}
+          labelledBy={`${labelId} ${captionId}`}
+          importedValue={importedValue}
+          isSelected={isSelected}
+          isBooleanField={isBooleanField}
+          onChange={onChange}
+        />
       </div>
     </div>
-    <div>
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-        Imported Value:
-      </div>
-      <ImportedValueField
-        label={label}
-        importedValue={importedValue}
-        isSelected={isSelected}
-        isBooleanField={isBooleanField}
-        onChange={onChange}
-      />
-    </div>
-  </div>
-);
+  );
+};
 
 function countRowSources(editableData, fieldSources) {
   const rows = Object.keys(editableData).filter(
@@ -482,6 +493,7 @@ const FieldRow = ({
     currentValue !== formatSimpleFieldValue(importedValue) &&
     currentValue !== "(empty)";
   const isBooleanField = typeof importedValue === "boolean";
+  const labelId = useId();
 
   return (
     <div
@@ -507,7 +519,7 @@ const FieldRow = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2">
             <label className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              {label}
+              <span id={labelId}>{label}</span>
               {hasChange && (
                 <span className="px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 rounded">
                   Changed
@@ -519,6 +531,7 @@ const FieldRow = ({
           <SourceNote source={source} />
           <FieldValueComparison
             label={label}
+            labelId={labelId}
             currentValue={currentValue}
             importedValue={importedValue}
             isSelected={isSelected}
