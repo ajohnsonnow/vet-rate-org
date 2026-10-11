@@ -18,49 +18,49 @@ VITE_VA_API_ENV=sandbox
 
 ### Step 2: Wrap Your App with VaAuthProvider
 
-Update your [main.jsx](src/main.jsx):
+Update your [main.jsx](../src/main.jsx):
 
 ```jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import { VaAuthProvider } from './contexts/VaAuthContext';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.jsx";
+import { VaAuthProvider } from "./contexts/VaAuthContext";
+import "./index.css";
 
 // Add console.error filter (if not already present)
 const originalError = console.error;
 console.error = (...args) => {
-  const errorMessage = args[0]?.toString() || '';
+  const errorMessage = args[0]?.toString() || "";
   if (
-    errorMessage.includes('message channel closed') ||
-    errorMessage.includes('Extension context invalidated') ||
-    errorMessage.includes('asynchronous response')
+    errorMessage.includes("message channel closed") ||
+    errorMessage.includes("Extension context invalidated") ||
+    errorMessage.includes("asynchronous response")
   ) {
     return;
   }
   originalError.apply(console, args);
 };
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <VaAuthProvider>
       <App />
     </VaAuthProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 ```
 
 ### Step 3: Handle OAuth Callback in App.jsx
 
-At the **top** of your [App.jsx](src/App.jsx) component, add this check:
+At the **top** of your [App.jsx](../src/App.jsx) component, add this check:
 
 ```jsx
-import VaAuthCallbackNoRouter from './components/VaAuthCallbackNoRouter';
+import VaAuthCallbackNoRouter from "./components/VaAuthCallbackNoRouter";
 
 function App() {
   // Check if we're handling an OAuth callback
   const urlParams = new URLSearchParams(window.location.search);
-  const isOAuthCallback = urlParams.has('code') && urlParams.has('state');
+  const isOAuthCallback = urlParams.has("code") && urlParams.has("state");
 
   // If OAuth callback, show the callback handler
   if (isOAuthCallback) {
@@ -68,28 +68,28 @@ function App() {
   }
 
   // Rest of your existing App code...
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   // ... etc
 }
 ```
 
 ### Step 4: Add Login Button to Your Header
 
-Update your [Header.jsx](src/components/Header.jsx) to include the VA login button.
+Update your [Header.jsx](../src/components/Header.jsx) to include the VA login button.
 
 Option A - Import the pre-built component:
 
 ```jsx
-import VaLoginButton from './VaLoginButton';
+import VaLoginButton from "./VaLoginButton";
 
 // In your header JSX:
-<VaLoginButton />
+<VaLoginButton />;
 ```
 
 Option B - Use the hook directly for custom UI:
 
 ```jsx
-import { useVaAuth } from '../hooks/useVaAuth';
+import { useVaAuth } from "../hooks/useVaAuth";
 
 function Header() {
   const { isAuthenticated, login, logout, userInfo } = useVaAuth();
@@ -97,10 +97,10 @@ function Header() {
   return (
     <header>
       {/* Your existing header content */}
-      
+
       {isAuthenticated ? (
         <div className="flex items-center gap-2">
-          <span>Welcome, {userInfo?.name || 'Veteran'}!</span>
+          <span>Welcome, {userInfo?.name || "Veteran"}!</span>
           <button onClick={logout}>Sign Out</button>
         </div>
       ) : (
@@ -120,7 +120,7 @@ You're now ready to use VA authentication. The integration is fully functional w
 #### Check if user is authenticated:
 
 ```jsx
-import { useVaAuth } from './hooks/useVaAuth';
+import { useVaAuth } from "./hooks/useVaAuth";
 
 function MyComponent() {
   const { isAuthenticated, userInfo } = useVaAuth();
@@ -136,8 +136,8 @@ function MyComponent() {
 #### Fetch data from VA.gov API:
 
 ```jsx
-import { useVaAuth } from './hooks/useVaAuth';
-import { useState, useEffect } from 'react';
+import { useVaAuth } from "./hooks/useVaAuth";
+import { useState, useEffect } from "react";
 
 function VaClaimsViewer() {
   const { fetchVaApi, isAuthenticated } = useVaAuth();
@@ -145,15 +145,15 @@ function VaClaimsViewer() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchVaApi('https://sandbox-api.va.gov/services/claims/v1/claims')
-        .then(data => setClaims(data))
-        .catch(err => console.error('Error fetching claims:', err));
+      fetchVaApi("https://sandbox-api.va.gov/services/claims/v1/claims")
+        .then((data) => setClaims(data))
+        .catch((err) => console.error("Error fetching claims:", err));
     }
   }, [isAuthenticated, fetchVaApi]);
 
   return (
     <div>
-      {claims.map(claim => (
+      {claims.map((claim) => (
         <div key={claim.id}>{claim.status}</div>
       ))}
     </div>
@@ -191,7 +191,7 @@ For production, replace `sandbox-api.va.gov` with `api.va.gov`.
 
 ## 📚 Full Documentation
 
-For advanced usage, see [VA_AUTH_INTEGRATION.md](docs/VA_AUTH_INTEGRATION.md)
+For advanced usage, see [VA_AUTH_INTEGRATION.md](VA_AUTH_INTEGRATION.md)
 
 ## ⚠️ Production Checklist
 

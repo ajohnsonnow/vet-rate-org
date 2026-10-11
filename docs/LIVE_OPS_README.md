@@ -197,8 +197,6 @@ Full changelog history.
 
 ## Troubleshooting
 
-See [`LIVE_OPS_PROTOCOL.md`](./LIVE_OPS_PROTOCOL.md) for detailed troubleshooting guide.
-
 Quick fixes:
 
 - **Update not showing:** Check `version.json` accessibility

@@ -1,0 +1,30 @@
+# Link checker configuration (lychee), used by the "Link check" job in
+# .github/workflows/pr-checks.yml.
+
+# The MkDocs site under docs/ links to pages without the .md extension.
+fallback_extensions = ["md"]
+
+exclude_loopback = true
+
+exclude = [
+  # The AI rule files are mirrored from a sibling repository that is not part of this checkout.
+  'best-practices-toolkit',
+
+  # Sites that answer automated clients with 403 or a dropped connection but load in a browser.
+  '^https://(www\.)?reddit\.com/',
+  '^https://law\.justia\.com/',
+  '^https://(www\.)?figma\.com/',
+  '^https://www\.npmjs\.com/',
+  '^https://gemini\.google\.com/share/',
+  '^https://www\.calvet\.ca\.gov/',
+
+  # VA hosts that refuse connections from GitHub-hosted runners or present a certificate
+  # chain the runner's trust store lacks.
+  '^https://knowledge\.va\.gov/',
+  '^https://www\.ebenefits\.va\.gov/',
+  '^https://www\.index\.va\.gov/',
+]
+
+# Meta's Llama model cards and use-policy copies under llm-compiler/models/ carry the upstream
+# license text verbatim; their llama.com / llama.meta.com links have moved and are not ours to edit.
+exclude_path = ['llm-compiler.models.']
