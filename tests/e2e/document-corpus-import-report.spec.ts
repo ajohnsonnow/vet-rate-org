@@ -29,6 +29,7 @@
  * JSON report are written OUTSIDE the repo, to the scratchpad output dir.
  */
 import {
+  existsSync,
   readFileSync,
   readdirSync,
   statSync,
@@ -500,6 +501,11 @@ async function screenshotMyPacketTabs(page: Page): Promise<string[]> {
 }
 
 test.describe("Real document corpus ingestion report", () => {
+  test.skip(
+    !existsSync(CORPUS_DIR),
+    "needs a local document corpus; docs/test-data is git-ignored",
+  );
+
   test("processFormationDocument over docs/test-data → VKB + My Packet", async ({
     page,
   }) => {
