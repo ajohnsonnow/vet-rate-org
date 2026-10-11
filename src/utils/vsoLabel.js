@@ -2,7 +2,7 @@ const INITIALS_PATTERN = /^(?:\p{L}\.?){1,4}$/u;
 const CASE_REF_PATTERN = /^[A-Za-z0-9 \-_/#.]{1,24}$/;
 const DIGIT = /\p{Nd}/gu;
 const SSN_DIGITS = 9;
-const FILE_NUMBER_DIGITS = 8;
+const FILE_NUMBER_DIGITS = 7;
 const CAPITALISED_WORD = /^[A-Z][a-z]+$/;
 
 const MESSAGES = Object.freeze({
@@ -11,9 +11,9 @@ const MESSAGES = Object.freeze({
     "Use 1 to 4 letters only. Periods are allowed after a letter, for example J.D.",
   caseRefFormat:
     "Use up to 24 characters: letters, digits, spaces and - _ / # . only.",
-  ssn: "This looks like a Social Security number. Labels are visible on screen and in the workspace list, so use your organisation's case number instead.",
+  ssn: "This looks like a Social Security number. Labels are visible on screen and in the workspace list, so use your organisation's own case number instead, with 6 digits or fewer.",
   fileNumber:
-    "This looks like a VA file number. Labels are visible on screen and in the workspace list, so use your organisation's case number instead.",
+    "This looks like a VA file number (7 to 9 digits). Labels are visible on screen and in the workspace list, so use your organisation's own case number instead, with 6 digits or fewer.",
   nameLike: "Don't use full names. Use your organisation's case number.",
 });
 
