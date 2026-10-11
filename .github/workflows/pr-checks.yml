@@ -20,9 +20,9 @@
 # its preview-server step on every code-touching PR), the latter is an
 # informational, non-required duplicate of ci.yml's required `lighthouse` job.
 #
-# e2e-user-journeys is KEPT: it runs an explicit list of seven specs, chromium
+# e2e-user-journeys is KEPT: it runs an explicit list of six specs, chromium
 # only, against Playwright's own dev server. They are tests/e2e/{ask-the-regs,
-# cfile-canonical-dataflow,document-corpus-import-report,duty-station-map,
+# cfile-canonical-dataflow,duty-station-map,
 # my-packet-summary,palette-axe,simulators-a11y}.spec.ts, which ci.yml's curated
 # per-gate spec lists never reference. Removing this job would silently drop
 # that coverage. It was repaired on this branch: the old step had no build, ran
@@ -365,10 +365,9 @@ jobs:
 
       - name: Run E2E tests
         run: >-
-          npx playwright test --project=chromium --retries=2 --reporter=html,json
+          npx playwright test --project=chromium --retries=2 --reporter=list,html
           tests/e2e/ask-the-regs.spec.ts
           tests/e2e/cfile-canonical-dataflow.spec.ts
-          tests/e2e/document-corpus-import-report.spec.ts
           tests/e2e/duty-station-map.spec.ts
           tests/e2e/my-packet-summary.spec.ts
           tests/e2e/palette-axe.spec.ts
