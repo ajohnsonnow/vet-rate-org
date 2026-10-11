@@ -33,14 +33,12 @@ For a `pull_request` event GitHub runs the workflow file from the PR's own
 merge commit, so a fork author can edit any workflow in their PR to say
 `runs-on: self-hosted` (or delete the guard) and the job is routed to your
 machine. A registered repo-level runner is enough; `RUNNER_LABEL` need not be
-set. The fork-approval policy here is `first_time_contributors`, so anyone
-with one previously merged PR gets no approval prompt. The runner needs the
-Docker socket, which is equivalent to root on the host. The `runs-on`
-expression below is defence in depth only, not a boundary. If you must use a
-runner anyway: set fork-PR approval to all outside collaborators, use an
-ephemeral isolated runner (a throwaway VM, not your workstation), and note
-that same-repo Dependabot PRs pass the guard, so third-party npm install
-scripts would run on it.
+set. The runner needs the Docker socket, which is equivalent to root on the
+host. The `runs-on` expression below is defence in depth only, not a
+boundary. If you must use a runner anyway: require approval for all outside
+collaborators' fork PRs, use an ephemeral isolated runner (a throwaway VM,
+not your workstation), and note that same-repo Dependabot PRs pass the guard,
+so third-party npm install scripts would run on it.
 
 Two jobs run inside `container: image: semgrep/semgrep`
 (`sast-semgrep` in `pr-checks.yml`, `full-sast-semgrep` in

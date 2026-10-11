@@ -13,7 +13,7 @@ the CodeQL double-trigger visible in real run history (see Methodology).
 | Every PR push                 | `pr-checks.yml`                             | `pull_request` → `main`/`master`/`develop` (only `main` exists today) | detect, secret-scan, sast-semgrep (code-gated), sast-codeql (via `workflow_call`), sca-dependency-review, sca-osv-scanner, supply-chain, link-check (markdown-gated), markdown-lint (markdown-gated), perf-budget (gated on a `size-limit` config block that doesn't exist yet — always skipped), e2e-user-journeys (code-gated), required-checks |
 | Every PR push                 | `ci.yml`                                    | `pull_request` → `main`                                               | quality (lint), type-check, validate-dkb, test, build, e2e, mobile, axe, cwv, pwa, lighthouse, red-team, rag-eval, security, ci-gate                                                                                                                                                                                                              |
 | Every push to `main`          | `ci.yml`                                    | `push` → `main`                                                       | same 15 jobs as above                                                                                                                                                                                                                                                                                                                             |
-| Every push to `main`/tags     | `release-gates.yml`                         | `push` → `main`/`master`, tags `v*`, dispatch                         | sbom, provenance (tags only), dast-baseline (needs `STAGING_URL` var — currently unset, skipped), security-headers (same), full-sast-semgrep, full-sast-codeql (via `workflow_call`), license-scan, smoke-test, post-deploy-notify                                                                                                                |
+| Every push to `main`/tags     | `release-gates.yml`                         | `push` → `main`/`master`, tags `v*`, dispatch                         | sbom, provenance (tags only), dast-baseline (needs the `STAGING_URL` var, skipped when unset), security-headers (same), full-sast-semgrep, full-sast-codeql (via `workflow_call`), license-scan, smoke-test, post-deploy-notify                                                                                                                   |
 | Every push to `main`/`master` | `scorecard.yml`                             | `push`, weekly schedule, dispatch                                     | analysis                                                                                                                                                                                                                                                                                                                                          |
 | Weekly                        | `codeql.yml`                                | `schedule` (Mon 06:00 UTC) — **no longer** `push`/`pull_request`      | detect-languages, analyze                                                                                                                                                                                                                                                                                                                         |
 | Weekly                        | `legal-ingestion.yml`                       | `schedule` (Mon 04:00 UTC), dispatch                                  | refresh                                                                                                                                                                                                                                                                                                                                           |
@@ -47,9 +47,9 @@ the CodeQL double-trigger visible in real run history (see Methodology).
    GitHub-Actions-version-bump PRs before that, its `code`-filter gate was
    false and it was skipped.
 4. **`pr-checks.yml`'s `ux-perf-check` job was removed.** It duplicates
-   `ci.yml`'s required `lighthouse` job (both run Lighthouse-CI against a
+   `ci.yml`'s `lighthouse` job (both run Lighthouse-CI against a
    built/preview server); `ux-perf-check` is informational only (not in
-   `required-checks`'s `needs`) and not required by branch protection. On
+   `required-checks`'s `needs`). On
    the same code-touching PRs it failed within seconds, before any build,
    because its pinned `treosh/lighthouse-ci-action` commit could not be
    resolved, so it never produced a score.
@@ -73,11 +73,13 @@ palette-axe,simulators-a11y}.spec.ts` — `ci.yml`'s curated per-gate spec
    a run on `main` is never cancelled or replaced: on `main` the group is
    `<name>-<run_id>` (unique per run, so GitHub's "newer pending run replaces
    the older pending one" rule cannot drop a commit's gate run either) and
-   `cancel-in-progress` is `github.ref != 'refs/heads/main'`. Not added to `release-gates.yml`,
-   `release.yml`, `dkb-freshness.yml`, or `legal-ingestion.yml` — the first
-   two are release/tag pipelines and the last two already set
-   `cancel-in-progress: false` deliberately (a cancelled run could leave a
-   partially-applied auto-PR or a stale freshness snapshot).
+   `cancel-in-progress` is `github.ref != 'refs/heads/main'`.
+   `release-gates.yml` uses the same per-run group on `main` but never
+   cancels (`cancel-in-progress: false`). `release.yml`, `dkb-freshness.yml`
+   and `legal-ingestion.yml` keep their own groups: the first is a tag
+   pipeline, and the last two set `cancel-in-progress: false` deliberately (a
+   cancelled run could leave a partially-applied auto-PR or a stale
+   freshness snapshot).
 7. **Playwright browsers are cached** (`~/.cache/ms-playwright`, keyed on
    `package-lock.json`) in every job that installs them: `ci.yml`'s `e2e`,
    `mobile`, `axe`, `cwv`, `pwa`, and `pr-checks.yml`'s `e2e-user-journeys`.
@@ -87,15 +89,14 @@ palette-axe,simulators-a11y}.spec.ts` — `ci.yml`'s curated per-gate spec
 8. **Self-hosted runner opt-in**, off by default: every job's
    `runs-on: ubuntu-latest` became
    `runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.RUNNER_LABEL || 'ubuntu-latest' }}`.
-   With no `RUNNER_LABEL` variable (verified: the repo has zero Actions
-   variables today) every job is `ubuntu-latest`. Setting it moves every job
-   to a self-hosted runner, except a `pull_request` from a fork: repository
-   variables are visible to fork PR runs (only secrets are withheld) and
-   this repo is public, so without that guard fork-authored code would run
-   on the owner's machine. Such jobs fall back to `ubuntu-latest`. This is
-   defence in depth only: a fork PR runs the workflow file from its own merge
-   commit and can rewrite `runs-on`, so do not register a self-hosted runner
-   while the repo is public. See
+   With no `RUNNER_LABEL` variable every job is `ubuntu-latest`. Setting it
+   moves every job to a self-hosted runner, except a `pull_request` from a
+   fork: repository variables are visible to fork PR runs (only secrets are
+   withheld), so without that guard fork-authored code would run on the
+   owner's machine. Such jobs fall back to `ubuntu-latest`. This is defence
+   in depth only: a fork PR runs the workflow file from its own merge commit
+   and can rewrite `runs-on`, so do not register a self-hosted runner while
+   the repo is public. See
    [SELF_HOSTED_RUNNER.md](./SELF_HOSTED_RUNNER.md).
    `scorecard.yml` keeps a literal `runs-on: ubuntu-latest`: with
    `publish_results: true` the OpenSSF verifier statically requires one hosted
@@ -114,11 +115,7 @@ palette-axe,simulators-a11y}.spec.ts` — `ci.yml`'s curated per-gate spec
 
 ## Check names before and after
 
-Required checks: the `DefensivePosture` ruleset on the default branch has
-only `deletion` and `non_fast_forward` rules, and `main` has no classic
-branch protection (`gh api` 404), so no status check is currently required
-by GitHub. No `checksPass`/`required_status` reference exists in the repo.
-Even so, no job that remains was renamed. Removed (all in `pr-checks.yml`):
+No job that remains was renamed. Removed (all in `pr-checks.yml`):
 `Lint & typecheck`, `Test & coverage`, `Visual Regression`,
 `UX Performance Check`, and its `Build` (the `Build` job in `ci.yml` keeps
 the same check name). `PR gate summary` and `CI Gate (required check)` are
