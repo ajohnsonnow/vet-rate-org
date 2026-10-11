@@ -287,8 +287,8 @@ To avoid AI data sharing entirely:
 Questions about AI privacy?
 
 - Use the Bug Squasher tool in the app
-- Review our main [Privacy Policy](../data-privacy/)
-- See [Security Practices](../security-practices/)
+- Review our main [Privacy Policy](data-privacy.md)
+- See [Security Practices](security-practices.md)
 
 ---
 

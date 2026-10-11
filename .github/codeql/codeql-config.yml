@@ -1,0 +1,17 @@
+# CodeQL configuration, referenced by .github/workflows/codeql.yml (which
+# pr-checks.yml and release-gates.yml call). Test code is excluded because
+# fixtures that write fake keys to mock stores trip
+# js/clear-text-storage-of-sensitive-data; no product source is excluded.
+name: Vet-Rate CodeQL config
+
+paths-ignore:
+  - node_modules
+  - dist
+  - build
+  - vendor
+  - src/__tests__/**
+  - tests/**
+  - "**/*.test.js"
+  - "**/*.test.jsx"
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
