@@ -83,6 +83,12 @@ import { sanitizeParserFields } from "../utils/dd214ParserTextGuards";
 import { parseModelJsonReply } from "../utils/dd214JsonReply";
 import { loadKnownIdentifierSourcesChecked } from "../utils/dd214KnownIdentifierSources";
 import {
+  awardFullTexts,
+  awardNotesText,
+  awardNumberText,
+  awardsRowText,
+} from "../utils/dd214AwardRowText";
+import {
   applyParserValues,
   buildValueSources,
   countBySource,
@@ -975,15 +981,13 @@ function _saveDd214Awards(awards) {
   // plain display-name string from a different extractor).
   if (!awards || !Array.isArray(awards)) return;
   awards.forEach((award) => {
-    const deviceLabels = (award.devices || [])
-      .map((d) => (typeof d === "string" ? d : d?.type || ""))
-      .filter(Boolean);
+    const generatedNote = awardNotesText(award);
     addAward({
       name: award.name,
       abbreviation: award.abbreviation,
       dateReceived: null,
-      notes:
-        deviceLabels.length > 0 ? `Devices: ${deviceLabels.join(", ")}` : "",
+      notes: generatedNote,
+      autoNotes: generatedNote,
       devices: award.devices || [],
       isCombat: award.isCombat || false,
       sourceDD214: award.sourceDD214,
@@ -1015,8 +1019,7 @@ const _joinTexts = (items) =>
     .filter((item) => typeof item === "string" && item.trim() !== "")
     .join("; ");
 
-function _listImportText(result) {
-  const awardNames = (result.awards || []).map((award) => award?.name);
+export function _listImportText(result) {
   const combat = result.combatService;
   const combatText =
     _joinTexts([
@@ -1027,10 +1030,19 @@ function _listImportText(result) {
     Object.entries({
       militaryEducation: _joinTexts(result.militaryEducation),
       specialQualifications: _joinTexts(result.specialQualifications),
-      awards: _joinTexts(awardNames),
+      awards: awardsRowText(result.awards),
       combatService: combatText,
     }).filter(([, text]) => text !== ""),
   );
+}
+
+// The awards row is bounded; when it hides anything that will be saved, the
+// dialog gets the whole list to show under the tick.
+export function _fullAwardList(result) {
+  const items = awardFullTexts(result?.awards);
+  return items.length > 0 && awardsRowText(result.awards) !== items.join("; ")
+    ? { awards: items }
+    : undefined;
 }
 
 function _ticked(analysisResult, selectedFields, key) {
@@ -2364,7 +2376,7 @@ function DD214CombatServiceSection({ analysisResult, t }) {
   );
 }
 
-function DD214AwardsSection({ analysisResult, t }) {
+export function DD214AwardsSection({ analysisResult, t }) {
   if (!analysisResult.awards || analysisResult.awards.length === 0) return null;
   return (
     <div>
@@ -2386,6 +2398,11 @@ function DD214AwardsSection({ analysisResult, t }) {
               {award.isCombat && "⚔️ "}
               {award.name}
             </p>
+            {awardNumberText(award) && (
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {awardNumberText(award)}
+              </p>
+            )}
             {award.devices && award.devices.length > 0 && (
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 {t("dd214Analyzer", "with")} {award.devices.join(", ")}
@@ -3477,6 +3494,10 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
       sourcesForImportRows(analysisResult?.fieldSources, extractedProfileData),
     [analysisResult, extractedProfileData],
   );
+  const fullLists = useMemo(
+    () => _fullAwardList(analysisResult),
+    [analysisResult],
+  );
   // G10: a fresh getVeteranProfile() object every render gave the modal's
   // own reset effect (keyed on this prop's identity) a new reference on
   // every parent re-render, wiping the veteran's in-progress field
@@ -3496,6 +3517,7 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
           <ProfileImportConfirmModal
             extractedData={extractedProfileData}
             fieldSources={fieldSources}
+            fullLists={fullLists}
             currentProfile={currentProfile}
             onConfirm={handleConfirmProfileImport}
             onCancel={handleCancelProfileImport}
