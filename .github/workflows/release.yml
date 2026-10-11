@@ -118,6 +118,7 @@ jobs:
       - name: Create GitHub Release with signed artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }} # this job has no checkout, so gh cannot infer the repository from git
           GIT_REF_NAME: ${{ github.ref_name }}
           INPUT_REF: ${{ inputs.ref }}
         run: |
