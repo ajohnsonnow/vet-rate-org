@@ -209,9 +209,12 @@ const PII_PATTERNS = {
   // A 7-digit file number is only matched contiguous ("C1234567",
   // "C-1234567"): a re-grouped 7-digit run ("C 555 1234") is the shape of a
   // phone fragment or part number, so the per-digit separator tolerance
-  // stays at 8-9 digits. A labelled 7-digit number ("File Number: 1234567")
-  // is already caught by the label rules, and a bare 7-digit run is never
-  // redacted (claim amounts, regulation numbers).
+  // stays at 8-9 digits. A labelled 7-digit number is caught by the label
+  // rules (`FILE_NUMBER_LABEL_PATTERN`, below), which spell out the labels,
+  // separators and line breaks they accept; a bare 7-digit run is never
+  // redacted (claim amounts, regulation numbers). A "C" straight after an
+  // obvious non-identifier word ("Vitamin C", "Hepatitis C") is skipped
+  // (`_followsNonFileNumberWord`).
   vaFile: /\bC[-\s]?(?:(?!\d{4}[-\s]\d{2,4}\b)\d(?:[-\s]?\d){7,8}|\d{7})\b/gi,
   vaFileStandalone: /\b\d{8,9}\b/g,
 
@@ -722,7 +725,31 @@ const BOX_LABEL_DEFS = [
   },
 ];
 
-const LABELED_BOX_PATTERNS = BOX_LABEL_DEFS.flatMap((def) => {
+// A labelled VA file or claim number of 7 to 9 digits, in every spelling the
+// label takes in a decision letter, a C-file index or a typed note. The older
+// FILE NO / FILE NUMBER / CLAIM NUMBER entry above only tolerates a bare ":"
+// or "." after the label on the same line, or exactly one LF after it, so
+// "File No.:", "File #", "Claim No.", "C-File:", "In reply refer to:", a CRLF
+// or blank line before the number, "-"/"="/" :" as the separator and a
+// "C  "/"C-"/"C." style prefix all slipped through.
+//
+// Anchored to the label and to the digit count: a bare 7-digit run, an amount,
+// a phone fragment, a citation, a date, or a page/form number never has one of
+// these labels in front of it. Every quantifier is bounded, so no input can
+// make this scan quadratically. A 7-digit number must be contiguous (a
+// re-grouped "555 1234" is the shape of a phone fragment); 8 and 9 digits may
+// be re-grouped by OCR, minus the 4-digit-group shape of a date.
+// String.raw so the regex escapes below read as they run.
+const _FILE_LABEL_SUFFIX = String.raw`(?:NO\.?(?![A-Za-z])|NUMBER(?![A-Za-z])|#)`;
+const _FILE_NUMBER_LABEL = String.raw`(?:(?:VA[ \t]{1,10})?(?:FILE|CLAIM)[ \t]{0,10}${_FILE_LABEL_SUFFIX}|(?:VA[ \t]{1,10})?C[- \t]?FILE(?![A-Za-z])(?:[ \t]{0,10}${_FILE_LABEL_SUFFIX})?|IN[ \t]{1,5}REPLY[ \t]{1,5}REFER[ \t]{1,5}TO(?![A-Za-z]))`;
+const _FILE_NUMBER_SEPARATOR = String.raw`[ \t]{0,10}[:=\-\u2013\u2014]?[ \t]{0,10}(?:\r?\n[ \t]{0,10}){0,3}`;
+const _FILE_NUMBER_VALUE = String.raw`(?:C[ \t]{0,3}[-.\u2013\u2014]?[ \t]{0,3})?(?:\d{7,9}(?!\d)|(?!\d{4}[- \t]\d{2,4}\b)\d(?:[ \t-]?\d){7,8}(?!\d))`;
+const FILE_NUMBER_LABEL_PATTERN = new RegExp(
+  String.raw`(\b${_FILE_NUMBER_LABEL}${_FILE_NUMBER_SEPARATOR})(${_FILE_NUMBER_VALUE})`,
+  "gi",
+);
+
+const _BOX_LABEL_PATTERNS = BOX_LABEL_DEFS.flatMap((def) => {
   const opts = {
     maxValueChars: def.maxValueChars,
     numeric: def.numeric,
@@ -747,6 +774,11 @@ const LABELED_BOX_PATTERNS = BOX_LABEL_DEFS.flatMap((def) => {
   }
   return patterns;
 });
+
+const LABELED_BOX_PATTERNS = [
+  ..._BOX_LABEL_PATTERNS,
+  FILE_NUMBER_LABEL_PATTERN,
+];
 
 /**
  * Redact the value following any recognized DD-214/NGB-22 box label or VA
@@ -1178,7 +1210,12 @@ function _applyPhoneMrnEdipiVaFile(
 
   // 4. VA file numbers — "C" prefix form always; bare 8–9 digit form only
   //    in aggressive mode.
-  applyPattern(PII_PATTERNS.vaFile, "VA File", "[REDACTED_VAFILE]");
+  applyContextual(
+    PII_PATTERNS.vaFile,
+    "VA File",
+    _followsNonFileNumberWord,
+    () => "[REDACTED_VAFILE]",
+  );
   if (aggressive) {
     applyPattern(PII_PATTERNS.vaFileStandalone, "VA File", "[REDACTED_VAFILE]");
   }
@@ -1283,6 +1320,16 @@ function _isAudiogramOrClinicalRow(line, match) {
   return _CLINICAL_ROW_KEYWORDS.test(line) && !_SSN_LABEL.test(line);
 }
 
+// "Vitamin C 1234567", "Hepatitis C 1234567": the "C" names the thing, it is
+// not a file-number prefix. Only the few words that cannot precede a real file
+// number; checked against a short bounded slice of the text before the match.
+const _NON_FILE_NUMBER_WORD =
+  /\b(?:vitamin|vit|hepatitis|hep|genotype|type|class|grade|stage|group|part|factor|protein|complement)[ \t-]{0,3}$/i;
+
+function _followsNonFileNumberWord(_line, _match, before) {
+  return _NON_FILE_NUMBER_WORD.test(before);
+}
+
 function _applyContextualDigitShape(
   scrubbed,
   pattern,
@@ -1292,7 +1339,10 @@ function _applyContextualDigitShape(
   let count = 0;
   const next = scrubbed.replace(reset(pattern), (match, ...rest) => {
     const offset = rest.at(-2);
-    if (shouldSkip(_lineAround(scrubbed, offset, match.length), match)) {
+    const before = scrubbed.slice(Math.max(0, offset - 24), offset);
+    if (
+      shouldSkip(_lineAround(scrubbed, offset, match.length), match, before)
+    ) {
       return match;
     }
     count += 1;
