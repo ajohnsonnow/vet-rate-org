@@ -107,3 +107,51 @@ export function awardNotesText(award) {
     .filter(Boolean)
     .join("; ");
 }
+
+const GENERATED_NOTE =
+  /^(?:(\d{1,3})(?:st|nd|rd|th) award)?(?:; )?(?:Devices: (.+))?$/;
+
+// The number and devices of a note that is exactly what awardNotesText builds,
+// or null for anything else (a note the veteran typed or edited).
+function parseGeneratedNote(note) {
+  const match = typeof note === "string" ? GENERATED_NOTE.exec(note) : null;
+  if (!match) return null;
+  const number = match[1] === undefined ? undefined : Number(match[1]);
+  const devices = match[2];
+  if (number === undefined && devices === undefined) return null;
+  if (
+    number !== undefined &&
+    awardNumberOf({ deviceCount: number }) === undefined
+  ) {
+    return null;
+  }
+  const rebuilt = [
+    number === undefined ? "" : awardNumberText({ deviceCount: number }),
+    devices === undefined ? "" : `Devices: ${devices}`,
+  ]
+    .filter(Boolean)
+    .join("; ");
+  return rebuilt === note ? { number, devices } : null;
+}
+
+/**
+ * The note an award keeps when a later document reports the same award. The
+ * saved note is replaced only when it is exactly what the app generated and
+ * the later document's generated note carries a higher award number; the
+ * number changes and the saved devices text stays. A note the veteran edited,
+ * or an equal or lower number, leaves the saved note as it is.
+ */
+export function upgradedAwardNote(savedNote, laterNote) {
+  const saved = parseGeneratedNote(savedNote);
+  const later = parseGeneratedNote(laterNote);
+  if (!saved || !later || later.number === undefined) return savedNote;
+  if (saved.number !== undefined && later.number <= saved.number) {
+    return savedNote;
+  }
+  return [
+    awardNumberText({ deviceCount: later.number }),
+    saved.devices === undefined ? "" : `Devices: ${saved.devices}`,
+  ]
+    .filter(Boolean)
+    .join("; ");
+}

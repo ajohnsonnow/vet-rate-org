@@ -18,6 +18,7 @@ import {
   parseExplicitDate,
 } from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
+import { upgradedAwardNote } from "./dd214AwardRowText";
 import {
   PROFILE_CHANGED_EVENT,
   PROFILE_UNREADABLE_EVENT,
@@ -4151,7 +4152,9 @@ export const addAward = (award) => {
     if (existing) {
       existing.dateReceived =
         existing.dateReceived || award.dateReceived || null;
-      existing.notes = existing.notes || sanitizeString(award.notes || "", 500);
+      existing.notes = existing.notes
+        ? upgradedAwardNote(existing.notes, award.notes)
+        : sanitizeString(award.notes || "", 500);
       existing.isCombat = existing.isCombat || !!award.isCombat;
       // FIX-4: merge in any new structured devices, deduped by
       // type+position so multiple devices of the same type at different
