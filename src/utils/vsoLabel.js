@@ -1,7 +1,12 @@
 const MAX_INITIALS = 4;
 // A Latin base letter with up to three combining marks counts as one letter,
 // so accents that NFKC cannot compose into one character (Q + U+0308) pass.
-const INITIAL_RUN = /^(?:(?=\p{L})\p{Script=Latin}\p{M}{0,3}\.?){1,4}$/u;
+// Only the plain accents of the Combining Diacritical Marks block are marks
+// here: \p{M} also holds combining digits (U+A8E0), combining letters
+// (U+0363), enclosing marks (U+20E3) and invisible selectors (U+034F, U+FE0F),
+// which would carry an identifier past the digit counter or hide a difference.
+const INITIAL_RUN =
+  /^(?:(?=\p{L})\p{Script=Latin}[\u0300-\u0341\u0346-\u034E\u0350-\u0362]{0,3}\.?){1,4}$/u;
 const LETTER = /\p{L}/gu;
 const CASE_REF_PATTERN = /^[A-Za-z0-9 \-_/#.]{1,24}$/;
 const DIGIT = /\p{Nd}/gu;
