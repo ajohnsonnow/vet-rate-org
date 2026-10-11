@@ -156,4 +156,4 @@ Sequencing: foundation first (verify the corpus is trustworthy, design the shard
 | Freshness CI (S39)                    | Weekly workflow run opens issue/PR on drift, same as existing eCFR check                                       | —                                                                     |
 | Docs (S40)                            | Spot-audit: docs match shipped code                                                                            | —                                                                     |
 
-_(_ = manual-only, owner-run, matching the convention established in [SPRINT_PLAN_S18-S26_KB_INGESTION.md](./SPRINT_PLAN_S18-S26_KB_INGESTION.md)'s own Verification Matrix.)\*
+_(\* = manual-only, owner-run, matching the convention established in [SPRINT_PLAN_S18-S26_KB_INGESTION.md](./SPRINT_PLAN_S18-S26_KB_INGESTION.md)'s own Verification Matrix.)_
