@@ -346,7 +346,7 @@ function mapLocalAIError(errorMsg) {
     return {
       success: false,
       error:
-        "💻 GPU error. Your device may not support Local AI. Try Cloud AI instead, or use Chrome/Edge browser.",
+        "💻 GPU error. Your device may not support Local AI. Try Cloud AI instead, or use a browser with WebGPU. Chrome and Edge are tested, and Safari works on recent versions.",
       errorType: "gpu_error",
     };
   }

@@ -139,9 +139,9 @@ The **Faraday Cage** is an advanced feature that allows you to run AI models ent
 2. Check the box to enable experimental features
 3. Confirm the warning about experimental features
 
-**Step 3: Chrome Flags (Required for Full Compatibility)**
+**Step 3: Chrome Flags (Optional, if you use Chrome and Local AI will not load)**
 
-For best results, launch Chrome with experimental WebGPU features:
+Chrome flags are a troubleshooting step, not a requirement. If you use Chrome and a model fails to load, try launching Chrome with experimental WebGPU features:
 
 **Windows:**
 
