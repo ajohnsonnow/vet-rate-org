@@ -10,6 +10,7 @@
 import { useState, useEffect } from "react";
 import { Download, X, Smartphone } from "lucide-react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { isIOSDevice } from "../utils/isIOSDevice";
 
 const IOSInstallInstructions = ({ onClose }) => (
   <ResponsiveModal isOpen onClose={onClose} title="Install on iOS" size="sm">
@@ -25,7 +26,7 @@ const IOSInstallInstructions = ({ onClose }) => (
           </span>
           <span>
             Tap the <strong>Share</strong> button{" "}
-            <span className="text-2xl">⎋</span> at the bottom of Safari
+            <span className="text-2xl">⎋</span> in Safari&apos;s toolbar or menu
           </span>
         </li>
         <li className="flex gap-3">
@@ -143,12 +144,7 @@ const usePWAInstallPrompt = () => {
     }
 
     // Check if iOS
-    const ios =
-      (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (/Macintosh/.test(navigator.userAgent) &&
-          navigator.maxTouchPoints > 1)) &&
-      !window.MSStream;
-    setIsIOS(ios);
+    setIsIOS(isIOSDevice());
 
     // Listen for the beforeinstallprompt event (Android/Chrome)
     const handleBeforeInstallPrompt = (e) => {
