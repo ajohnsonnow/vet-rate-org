@@ -1213,8 +1213,11 @@ function _applyPhoneMrnEdipiVaFile(
   applyContextual(
     PII_PATTERNS.vaFile,
     "VA File",
-    _followsNonFileNumberWord,
+    aggressive
+      ? _followsNonFileNumberWordSevenDigits
+      : _followsNonFileNumberWord,
     () => "[REDACTED_VAFILE]",
+    false,
   );
   if (aggressive) {
     applyPattern(PII_PATTERNS.vaFileStandalone, "VA File", "[REDACTED_VAFILE]");
@@ -1330,19 +1333,31 @@ function _followsNonFileNumberWord(_line, _match, before) {
   return _NON_FILE_NUMBER_WORD.test(before);
 }
 
+// Aggressive mode scrubs 8 and 9 digit numbers anyway, but its bare-digit rule
+// cannot see one glued to the "C" ("C12345678") or re-grouped ("C 12 345 678"),
+// so there the exception is kept to the 7-digit form it was added for.
+function _followsNonFileNumberWordSevenDigits(line, match, before) {
+  return (
+    match.replace(/\D/g, "").length === 7 &&
+    _followsNonFileNumberWord(line, match, before)
+  );
+}
+
 function _applyContextualDigitShape(
   scrubbed,
   pattern,
   shouldSkip,
   replacement,
+  needsLine = true,
 ) {
   let count = 0;
   const next = scrubbed.replace(reset(pattern), (match, ...rest) => {
     const offset = rest.at(-2);
     const before = scrubbed.slice(Math.max(0, offset - 24), offset);
-    if (
-      shouldSkip(_lineAround(scrubbed, offset, match.length), match, before)
-    ) {
+    // Finding the line costs its whole length for every match, which is
+    // quadratic on one long line; a rule that only reads `before` skips it.
+    const line = needsLine ? _lineAround(scrubbed, offset, match.length) : "";
+    if (shouldSkip(line, match, before)) {
       return match;
     }
     count += 1;
@@ -1432,12 +1447,19 @@ export const scrubPII = (text, options = {}) => {
     scrubbed = scrubbed.replace(reset(pattern), replacer);
   };
 
-  const applyContextual = (pattern, type, shouldSkip, replacement) => {
+  const applyContextual = (
+    pattern,
+    type,
+    shouldSkip,
+    replacement,
+    needsLine = true,
+  ) => {
     const r = _applyContextualDigitShape(
       scrubbed,
       pattern,
       shouldSkip,
       replacement,
+      needsLine,
     );
     scrubbed = r.scrubbed;
     if (r.count > 0) {

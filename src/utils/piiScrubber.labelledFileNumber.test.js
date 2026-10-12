@@ -179,6 +179,16 @@ describe("a C before 7 digits is not taken for a file number after an obvious no
   });
 
   it.each([
+    "Hepatitis C23456789 on file",
+    "Hepatitis C 23 456 789",
+    "Type C-345678901",
+    "Part C 345 678 901",
+    "vit C23456789",
+  ])("aggressive mode still scrubs 8 and 9 digits in %j", (text) => {
+    expect(scrubbed(text, true).scrubbedText).not.toMatch(/\d{2}/);
+  });
+
+  it.each([
     "Your file is C1234567 as of today",
     "Veteran C-1234567 appeared",
     "Vitamin D and then C1234567",
@@ -206,6 +216,8 @@ describe("label rules stay linear on pathological input", () => {
     ["VA repeated", "VA ".repeat(long / 3) + "File No."],
     ["Vitamin C repeated", "Vitamin C ".repeat(long / 10)],
     ["Vitamin spaces C digits", `Vitamin${" ".repeat(long)}C 1234567`],
+    ["many file numbers on one line", "C1234567 ".repeat(40000)],
+    ["many Vitamin C numbers on one line", "Vitamin C 1234567 ".repeat(20000)],
   ])("%s", (_name, input) => {
     const start = performance.now();
     scrubPII(input);
