@@ -6,9 +6,12 @@
  *
  * - `hadController` is read when the page loads: a page that had no worker yet
  *   is seeing the first install claim it, which must never reload anything.
+ *   Only that first change is the claim; later ones are updates, so a tab that
+ *   began as a first visit still reloads at once on its own Reload click.
  * - `markRequested` is called only from the Reload click in this page.
  */
 export function createTakeoverGuard({ hadController, reload, announce }) {
+  let controlled = hadController;
   let requested = false;
   let reloaded = false;
   return {
@@ -16,7 +19,10 @@ export function createTakeoverGuard({ hadController, reload, announce }) {
       requested = true;
     },
     onControllerChange() {
-      if (!hadController) return;
+      if (!controlled) {
+        controlled = true;
+        return;
+      }
       if (!requested) {
         announce();
         return;
