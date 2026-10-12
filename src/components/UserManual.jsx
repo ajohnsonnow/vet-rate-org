@@ -3310,7 +3310,7 @@ Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browse
 
 ## Requirements
 
-- **Modern Browser**: Chrome, Edge, or Brave (WebGPU support)
+- **Browser with WebGPU**: Chrome and Edge are tested, and Safari works on recent versions
 - **GPU with VRAM**: 2-8 GB depending on model size
 - **Storage**: 0.3 GB to 4.8 GB per model
 

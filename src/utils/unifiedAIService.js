@@ -265,7 +265,7 @@ export const checkWebGPUSupport = async () => {
       webGPUSupported = {
         supported: false,
         reason:
-          "WebGPU not available. Local AI requires Chrome 113+, Edge 113+, or a compatible browser.",
+          "WebGPU not available. Local AI needs a browser with WebGPU. Chrome and Edge are tested, and Safari works on recent versions.",
       };
       return webGPUSupported;
     }
@@ -292,7 +292,7 @@ export const checkWebGPUSupport = async () => {
     } catch (err) {
       webGPUSupported = {
         supported: false,
-        reason: `WebGPU initialization failed: ${_describeThrown(err)}. Try using Chrome or Edge.`,
+        reason: `WebGPU initialization failed: ${_describeThrown(err)}. Use a browser with WebGPU. Chrome and Edge are tested, and Safari works on recent versions.`,
       };
       return webGPUSupported;
     }

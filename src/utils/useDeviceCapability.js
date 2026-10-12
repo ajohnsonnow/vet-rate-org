@@ -223,7 +223,7 @@ const applyUnsupportedAdvice = (advice) => {
   advice.localAI.description =
     "Local AI requires WebGPU, which is not available on your device.";
   advice.localAI.warning =
-    "Your browser does not support WebGPU. Please use Chrome 113+, Edge 113+, or a compatible browser.";
+    "Your browser does not support WebGPU. Use a browser with WebGPU. Chrome and Edge are tested, and Safari works on recent versions.";
   advice.cloudAI.recommended = true;
   advice.cloudAI.badge = "✨ Use this option";
   advice.cloudAI.description =

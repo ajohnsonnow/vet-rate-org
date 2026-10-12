@@ -37,7 +37,7 @@ function useGpuScanner(autoSelect, onGPUSelected) {
     try {
       if (!navigator.gpu) {
         throw new Error(
-          "WebGPU not supported in this browser. Please use Chrome, Edge, or another Chromium browser.",
+          "WebGPU not supported in this browser. Use a browser with WebGPU. Chrome and Edge are tested, and Safari works on recent versions.",
         );
       }
 

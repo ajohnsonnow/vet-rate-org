@@ -103,9 +103,12 @@ export async function detectDeviceCapabilities() {
     /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
     navigator.userAgentData?.mobile === true;
 
-  // Treat iPad and large-screen tablets as their own tier
+  // Treat iPad and large-screen tablets as their own tier. iPadOS Safari sends
+  // a Macintosh user agent with no iPad token; a Mac has no touch screen, so
+  // touch points tell the two apart (a touch Windows laptop has no Macintosh UA).
   const isTabletUA =
     /iPad/i.test(navigator.userAgent) ||
+    (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1) ||
     (/Android/i.test(navigator.userAgent) &&
       !/Mobile/i.test(navigator.userAgent));
 

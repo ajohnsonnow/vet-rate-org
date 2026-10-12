@@ -37,6 +37,16 @@ export const MACHINE_WRITTEN_KEYS = [
   "common.unsavedEditStay",
   "common.unsavedEditClose",
   "common.unsavedEditBody",
+  "systemRequirements.limitedTitle",
+  "systemRequirements.limitedBody",
+  "systemRequirements.limitedModelFallback",
+  "systemRequirements.sizeAbout",
+  "systemRequirements.sizeUnknown",
+  "systemRequirements.limitedCompact",
+  "systemRequirements.noWebGpuLead",
+  "systemRequirements.browserNeeded",
+  "systemRequirements.browserNote",
+  "systemRequirements.blockedNoAdapter",
 ];
 
 // The five languages the translations file carries for every string. The

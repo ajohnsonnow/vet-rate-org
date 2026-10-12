@@ -554,7 +554,7 @@ export const initializeSwarm = async (
     // Check for WebGPU support
     if (typeof navigator === "undefined" || !navigator.gpu) {
       throw new Error(
-        "WebGPU not available. Warrant Council requires Chrome 113+.",
+        "WebGPU not available. Warrant Council needs a browser with WebGPU. Chrome and Edge are tested, and Safari works on recent versions.",
       );
     }
 

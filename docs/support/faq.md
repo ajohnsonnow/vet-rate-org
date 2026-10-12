@@ -121,7 +121,7 @@ The **Faraday Cage** is an advanced feature that allows you to run AI models ent
 
 **Requirements:**
 
-- WebGPU-compatible browser (Chrome 113+, Edge 113+)
+- A browser with WebGPU (Chrome and Edge are tested, and Safari works on recent versions)
 - Modern GPU (NVIDIA RTX 20/30/40 series, AMD RDNA2+, Intel Arc, or Apple M1/M2/M3)
 - 2-8GB VRAM depending on model size
 
@@ -139,9 +139,9 @@ The **Faraday Cage** is an advanced feature that allows you to run AI models ent
 2. Check the box to enable experimental features
 3. Confirm the warning about experimental features
 
-**Step 3: Chrome Flags (Required for Full Compatibility)**
+**Step 3: Chrome Flags (Optional, if you use Chrome and Local AI will not load)**
 
-For best results, launch Chrome with experimental WebGPU features:
+Chrome flags are a troubleshooting step, not a requirement. If you use Chrome and a model fails to load, try launching Chrome with experimental WebGPU features:
 
 **Windows:**
 

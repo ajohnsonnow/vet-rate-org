@@ -37,7 +37,7 @@ Muster Call's extraction step is AI-driven - the **Start Formation** button stay
 _Two documents queued in Formation Statistics; the Start Formation button won't activate until AI is loaded via the "Load AI" button or the header AI selector._
 
 !!! tip "No local AI available?"
-Local, on-device AI requires a desktop or laptop with a WebGPU-capable browser (Chrome 113+ or Edge 113+) and a supported GPU. If your device doesn't qualify, you can still load a cloud AI model with your own API key from the AI Command Center, accessible from the "No AI" badge in the header.
+Local, on-device AI requires a desktop or laptop with a WebGPU-capable browser (Chrome and Edge are tested, and Safari works on recent versions) and a supported GPU. If your device doesn't qualify, you can still load a cloud AI model with your own API key from the AI Command Center, accessible from the "No AI" badge in the header.
 
 ---
 

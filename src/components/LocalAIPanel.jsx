@@ -1565,8 +1565,9 @@ const NoWebGPUFallback = () => (
       cloud-based AI features by adding your own Gemini API key in Settings.
     </p>
     <p className="text-xs text-gray-600 dark:text-gray-500">
-      💡 Tip: Try using Chrome/Edge on a device with a dedicated GPU for local
-      AI support.
+      💡 Tip: Use a browser with WebGPU on a device with a dedicated GPU for
+      local AI support. Chrome and Edge are tested, and Safari works on recent
+      versions.
     </p>
   </div>
 );
