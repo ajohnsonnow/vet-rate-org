@@ -1773,12 +1773,20 @@ function _computeSymptomStats(logs, symptomType) {
   };
 }
 
+const _isLogObject = (entry) =>
+  typeof entry === "object" && entry !== null && !Array.isArray(entry);
+
 function _readStoredSymptomLogs() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) return { logs: [], raw: null };
   try {
     const parsed = JSON.parse(saved);
-    if (Array.isArray(parsed)) return { logs: parsed, raw: null };
+    if (Array.isArray(parsed)) {
+      const usable = parsed.filter(_isLogObject);
+      if (usable.length === parsed.length) return { logs: parsed, raw: null };
+      console.error("Some symptom logs are not entries; not showing them.");
+      return { logs: usable, raw: saved };
+    }
     console.error("Symptom logs are not a list; leaving them untouched.");
   } catch (e) {
     console.error("Failed to parse symptom logs:", e);
