@@ -15,7 +15,8 @@ import {
 
 const importState = vi.hoisted(() => ({ id: null }));
 vi.mock("../../utils/importProgressMarker", () => ({
-  activeImportId: () => importState.id,
+  readActiveImportMarker: () =>
+    importState.id ? { id: importState.id } : null,
 }));
 vi.mock("../../utils/updateChecker", () => ({
   startUpdateChecker: vi.fn(),

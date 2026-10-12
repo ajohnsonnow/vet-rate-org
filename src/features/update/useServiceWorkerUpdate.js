@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { activeImportId } from "../../utils/importProgressMarker";
+import { readActiveImportMarker } from "../../utils/importProgressMarker";
 
 const RECHECK_MS = 1500;
 const DIALOG_SELECTOR =
@@ -13,7 +13,7 @@ const FALLBACK_RELOAD_MS = 4000;
 // dialog (every tool and form lives in one, and the safety screens are
 // dialogs too), or a field they are typing in.
 function somethingIsInProgress() {
-  if (activeImportId()) return true;
+  if (readActiveImportMarker()) return true;
   if (document.querySelector(DIALOG_SELECTOR)) return true;
   const focused = document.activeElement;
   return Boolean(
