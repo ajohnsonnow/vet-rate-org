@@ -1,0 +1,32 @@
+{
+  "name": "no-webgpu-desktop",
+  "deviceClass": "Desktop browser without WebGPU",
+  "source": "Windows desktop whose browser does not expose navigator.gpu (older Chrome or Edge, Firefox, or a blocklisted GPU). Quad-core, 8 GB; values are estimates. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "documented",
+    "cpuThrottleRate": "estimate"
+  },
+  "viewport": {
+    "width": 1920,
+    "height": 960
+  },
+  "screen": {
+    "width": 1920,
+    "height": 1080
+  },
+  "deviceScaleFactor": 1,
+  "isMobile": false,
+  "hasTouch": false,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "userAgentData": {
+    "mobile": false,
+    "platform": "Windows"
+  },
+  "deviceMemory": 8,
+  "hardwareConcurrency": 4,
+  "cpuThrottleRate": 2,
+  "gpu": null
+}

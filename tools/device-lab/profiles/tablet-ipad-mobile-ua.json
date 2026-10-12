@@ -1,0 +1,40 @@
+{
+  "name": "tablet-ipad-mobile-ua",
+  "deviceClass": "iPad Air (M1), browser that sends the iPad user agent token",
+  "source": "Same hardware as tablet-ipad but the user agent carries the iPad token, as a browser sends when mobile sites are requested. Safari has no navigator.userAgentData and no navigator.deviceMemory. hardwareConcurrency and adapter values are unmeasured; GPU limits are the WebGPU specification default limits (the floor every adapter must meet), not a measurement of this device.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "estimate"
+  },
+  "viewport": {
+    "width": 820,
+    "height": 1100
+  },
+  "screen": {
+    "width": 820,
+    "height": 1180
+  },
+  "deviceScaleFactor": 2,
+  "isMobile": true,
+  "hasTouch": true,
+  "userAgent": "Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+  "userAgentData": null,
+  "deviceMemory": null,
+  "hardwareConcurrency": 8,
+  "cpuThrottleRate": 3,
+  "gpu": {
+    "adapter": {
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 268435456,
+        "maxStorageBufferBindingSize": 134217728
+      }
+    }
+  }
+}

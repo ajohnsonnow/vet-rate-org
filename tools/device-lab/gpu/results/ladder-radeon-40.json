@@ -1,0 +1,175 @@
+[
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 40,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:20:52.360Z",
+    "phases": {
+      "load": {
+        "from": 1791764455843,
+        "to": 1791764458611
+      },
+      "warmup": {
+        "from": 1791764458611,
+        "to": 1791764461262
+      },
+      "short": {
+        "from": 1791764461262,
+        "to": 1791764466966
+      },
+      "long": {
+        "from": 1791764466966,
+        "to": 1791764470541
+      },
+      "end": 1791764470547
+    },
+    "events": [
+      {
+        "t": 1791764455823,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791764470556,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791764470583,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 248.73046875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 2.7659900000095368,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 2 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 1.8850499999523163,
+      "totalSeconds": 2.6484199999570848,
+      "tokensPerSecond": 7.859884459649345,
+      "engineDecodeTokensPerSecond": 9.221021296984595,
+      "enginePrefillTokensPerSecond": 21.790255504860855,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 1.5492749999761581,
+      "totalSeconds": 5.701920000076294,
+      "tokensPerSecond": 9.15079425259893,
+      "engineDecodeTokensPerSecond": 9.434909406366474,
+      "enginePrefillTokensPerSecond": 26.47612466928093,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791764456003
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791764470519,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 245,
+      "baselineSharedMiB": 4217,
+      "peakDedicatedMiB": 446,
+      "peakSharedMiB": 5951,
+      "peakDedicatedDeltaMiB": 201,
+      "peakSharedDeltaMiB": 1734,
+      "minFreeMiB": null,
+      "counterSamples": 19
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 245,
+      "baselineSharedMiB": 4217,
+      "peakDedicatedMiB": 444,
+      "peakSharedMiB": 4972,
+      "peakDedicatedDeltaMiB": 200,
+      "peakSharedDeltaMiB": 755,
+      "minFreeMiB": null,
+      "counterSamples": 19
+    }
+  }
+]

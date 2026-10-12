@@ -1,0 +1,17 @@
+.git
+.claude
+.husky
+node_modules
+dist
+dist-*
+coverage
+playwright-report
+test-results
+archive
+audit
+llm-compiler
+screenshots
+scratch
+docs/test-data
+**/.env
+**/.env.*

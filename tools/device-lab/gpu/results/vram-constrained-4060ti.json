@@ -1,0 +1,3417 @@
+[
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 8192,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 8192,
+      "heldMiB": 7865,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:43:09.944Z",
+    "phases": {
+      "load": {
+        "from": 1791765793868,
+        "to": 1791765809984
+      },
+      "warmup": {
+        "from": 1791765809984,
+        "to": 1791765810925
+      },
+      "short": {
+        "from": 1791765810925,
+        "to": 1791765814117
+      },
+      "long": {
+        "from": 1791765814117,
+        "to": 1791765828854
+      },
+      "end": 1791765829124
+    },
+    "events": [
+      {
+        "t": 1791765793766,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765829142,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765829166,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 7972,
+    "preLoadFreeMiB": 8138,
+    "load": {
+      "ok": true,
+      "seconds": 16.109259999990464,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 14 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.7092999999523163,
+      "totalSeconds": 0.9356950000524521,
+      "tokensPerSecond": 8.834117357341764,
+      "engineDecodeTokensPerSecond": 13.516862282506983,
+      "enginePrefillTokensPerSecond": 63.93952740848395,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.1569099999666214,
+      "totalSeconds": 3.1881000000238418,
+      "tokensPerSecond": 22.43343373352259,
+      "engineDecodeTokensPerSecond": 23.315221799207045,
+      "enginePrefillTokensPerSecond": 289.63120292604066,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 8.041174999952316,
+      "totalSeconds": 14.732049999952316,
+      "tokensPerSecond": 18.233788555308536,
+      "engineDecodeTokensPerSecond": 18.714695980606404,
+      "enginePrefillTokensPerSecond": 404.7271232464004,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765794274
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765828938,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 12625,
+      "peakSharedMiB": 130,
+      "peakDedicatedDeltaMiB": 4707,
+      "peakSharedDeltaMiB": 83,
+      "minFreeMiB": 3485,
+      "counterSamples": 39
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 10349,
+      "peakSharedMiB": 130,
+      "peakDedicatedDeltaMiB": 2431,
+      "peakSharedDeltaMiB": 83,
+      "minFreeMiB": 5761,
+      "counterSamples": 39
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 8192,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 8192,
+      "heldMiB": 7865,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:44:06.524Z",
+    "phases": {
+      "load": {
+        "from": 1791765850504,
+        "to": 1791765865524
+      },
+      "warmup": {
+        "from": 1791765865524,
+        "to": 1791765866297
+      },
+      "short": {
+        "from": 1791765866297,
+        "to": 1791765869781
+      },
+      "long": {
+        "from": 1791765869781,
+        "to": 1791765884648
+      },
+      "end": 1791765884954
+    },
+    "events": [
+      {
+        "t": 1791765850398,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765884967,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765884996,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 7971,
+    "preLoadFreeMiB": 8138,
+    "load": {
+      "ok": true,
+      "seconds": 15.016180000066758,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 13 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.5404850000143051,
+      "totalSeconds": 0.7558700000047683,
+      "tokensPerSecond": 9.285697704522391,
+      "engineDecodeTokensPerSecond": 14.18205025396921,
+      "enginePrefillTokensPerSecond": 84.11214953271028,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.15959500002861024,
+      "totalSeconds": 3.480985000014305,
+      "tokensPerSecond": 20.473356034760407,
+      "engineDecodeTokensPerSecond": 21.247669301852813,
+      "enginePrefillTokensPerSecond": 284.20753480303483,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 8.078769999980926,
+      "totalSeconds": 14.863285000085831,
+      "tokensPerSecond": 17.982125472213355,
+      "engineDecodeTokensPerSecond": 18.45255106616156,
+      "enginePrefillTokensPerSecond": 402.856392959406,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765850986
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765884776,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 12625,
+      "peakSharedMiB": 400,
+      "peakDedicatedDeltaMiB": 4707,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 3485,
+      "counterSamples": 37
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 10337,
+      "peakSharedMiB": 400,
+      "peakDedicatedDeltaMiB": 2419,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 5773,
+      "counterSamples": 37
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 8192,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 8192,
+      "heldMiB": 7865,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:45:01.230Z",
+    "phases": {
+      "load": {
+        "from": 1791765905136,
+        "to": 1791765909079
+      },
+      "warmup": {
+        "from": 1791765909079,
+        "to": 1791765909577
+      },
+      "short": {
+        "from": 1791765909577,
+        "to": 1791765910738
+      },
+      "long": {
+        "from": 1791765910738,
+        "to": 1791765918634
+      },
+      "end": 1791765918766
+    },
+    "events": [
+      {
+        "t": 1791765905050,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765918773,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765918793,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 7971,
+    "preLoadFreeMiB": 8139,
+    "load": {
+      "ok": true,
+      "seconds": 3.9399399999380114,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.3803049999475479,
+      "totalSeconds": 0.4965499999523163,
+      "tokensPerSecond": 17.20504107632982,
+      "engineDecodeTokensPerSecond": 26.25475865090593,
+      "enginePrefillTokensPerSecond": 119.44577161666103,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.07691500008106232,
+      "totalSeconds": 1.158735000014305,
+      "tokensPerSecond": 45.29404152541431,
+      "engineDecodeTokensPerSecond": 47.165806685914276,
+      "enginePrefillTokensPerSecond": 591.4437806130486,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 3.9977900000810624,
+      "totalSeconds": 7.89344000005722,
+      "tokensPerSecond": 31.316981761900237,
+      "engineDecodeTokensPerSecond": 32.175200512010996,
+      "enginePrefillTokensPerSecond": 814.1951190994313,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765905430
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765918691,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 10761,
+      "peakSharedMiB": 149,
+      "peakDedicatedDeltaMiB": 2843,
+      "peakSharedDeltaMiB": 101,
+      "minFreeMiB": 5349,
+      "counterSamples": 17
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 9027,
+      "peakSharedMiB": 117,
+      "peakDedicatedDeltaMiB": 1109,
+      "peakSharedDeltaMiB": 70,
+      "minFreeMiB": 7083,
+      "counterSamples": 17
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 8192,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 8192,
+      "heldMiB": 7865,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:45:33.250Z",
+    "phases": {
+      "load": {
+        "from": 1791765937171,
+        "to": 1791765943428
+      },
+      "warmup": {
+        "from": 1791765943428,
+        "to": 1791765944035
+      },
+      "short": {
+        "from": 1791765944035,
+        "to": 1791765945637
+      },
+      "long": {
+        "from": 1791765945637,
+        "to": 1791765954310
+      },
+      "end": 1791765954498
+    },
+    "events": [
+      {
+        "t": 1791765937086,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765954513,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765954543,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 7976,
+    "preLoadFreeMiB": 8134,
+    "load": {
+      "ok": true,
+      "seconds": 6.253930000066757,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.45596000003814696,
+      "totalSeconds": 0.6039249999523163,
+      "tokensPerSecond": 13.516710040618717,
+      "engineDecodeTokensPerSecond": 20.77922077922078,
+      "enginePrefillTokensPerSecond": 99.8435783843427,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.09489499998092651,
+      "totalSeconds": 1.5990749999284743,
+      "tokensPerSecond": 32.57588852511579,
+      "engineDecodeTokensPerSecond": 34.226883148364465,
+      "enginePrefillTokensPerSecond": 480.64085447263017,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 3.98740499997139,
+      "totalSeconds": 8.669324999928474,
+      "tokensPerSecond": 26.05768573600537,
+      "engineDecodeTokensPerSecond": 26.88697959523741,
+      "enginePrefillTokensPerSecond": 816.3531542780946,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765937511
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765954447,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 10761,
+      "peakSharedMiB": 148,
+      "peakDedicatedDeltaMiB": 2843,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 5349,
+      "counterSamples": 21
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 9003,
+      "peakSharedMiB": 117,
+      "peakDedicatedDeltaMiB": 1085,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 7107,
+      "counterSamples": 21
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 8192,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 8192,
+      "heldMiB": 7865,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:46:10.447Z",
+    "phases": {
+      "load": {
+        "from": 1791765974367,
+        "to": 1791765978429
+      },
+      "warmup": {
+        "from": 1791765978430,
+        "to": 1791765982540
+      },
+      "short": {
+        "from": 1791765982540,
+        "to": 1791765983327
+      },
+      "long": {
+        "from": 1791765983327,
+        "to": 1791765992197
+      },
+      "end": 1791765992338
+    },
+    "events": [
+      {
+        "t": 1791765974284,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765992350,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765992378,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 7973,
+    "preLoadFreeMiB": 8137,
+    "load": {
+      "ok": true,
+      "seconds": 4.059800000071526,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 3.3213300000429156,
+      "totalSeconds": 4.108590000033379,
+      "tokensPerSecond": 7.621370322476289,
+      "engineDecodeTokensPerSecond": 8.967346049719733,
+      "enginePrefillTokensPerSecond": 12.357549106400638,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.059664999961853024,
+      "totalSeconds": 0.7797199999094009,
+      "tokensPerSecond": 52.77374645376824,
+      "engineDecodeTokensPerSecond": 56.03528789135675,
+      "enginePrefillTokensPerSecond": 696.804894234222,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.1866549999713896,
+      "totalSeconds": 8.861800000071526,
+      "tokensPerSecond": 22.20207589370435,
+      "engineDecodeTokensPerSecond": 22.802601288279387,
+      "enginePrefillTokensPerSecond": 998.3329722815407,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765974638
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765992248,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 9684,
+      "peakSharedMiB": 208,
+      "peakDedicatedDeltaMiB": 1766,
+      "peakSharedDeltaMiB": 161,
+      "minFreeMiB": 6426,
+      "counterSamples": 22
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 8855,
+      "peakSharedMiB": 208,
+      "peakDedicatedDeltaMiB": 937,
+      "peakSharedDeltaMiB": 161,
+      "minFreeMiB": 7255,
+      "counterSamples": 22
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 8192,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 8192,
+      "heldMiB": 7865,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:46:46.384Z",
+    "phases": {
+      "load": {
+        "from": 1791766010135,
+        "to": 1791766015093
+      },
+      "warmup": {
+        "from": 1791766015093,
+        "to": 1791766018864
+      },
+      "short": {
+        "from": 1791766018864,
+        "to": 1791766019557
+      },
+      "long": {
+        "from": 1791766019557,
+        "to": 1791766028030
+      },
+      "end": 1791766028163
+    },
+    "events": [
+      {
+        "t": 1791766010054,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766028175,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766028204,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 7964,
+    "preLoadFreeMiB": 8146,
+    "load": {
+      "ok": true,
+      "seconds": 4.953924999952316,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 3.075524999976158,
+      "totalSeconds": 3.76847000002861,
+      "tokensPerSecond": 8.65869585543706,
+      "engineDecodeTokensPerSecond": 10.183966072561859,
+      "enginePrefillTokensPerSecond": 13.353135055831656,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.056549999952316285,
+      "totalSeconds": 0.6916899999380112,
+      "tokensPerSecond": 59.82932896818947,
+      "engineDecodeTokensPerSecond": 63.53498908969376,
+      "enginePrefillTokensPerSecond": 739.0716535805167,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.1404500000476836,
+      "totalSeconds": 8.470320000052451,
+      "tokensPerSecond": 23.640351453203788,
+      "engineDecodeTokensPerSecond": 24.171806349006793,
+      "enginePrefillTokensPerSecond": 1012.8743334957326,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766010445
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766028082,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 9684,
+      "peakSharedMiB": 127,
+      "peakDedicatedDeltaMiB": 1766,
+      "peakSharedDeltaMiB": 80,
+      "minFreeMiB": 6426,
+      "counterSamples": 22
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 7918,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 8800,
+      "peakSharedMiB": 118,
+      "peakDedicatedDeltaMiB": 882,
+      "peakSharedDeltaMiB": 71,
+      "minFreeMiB": 7310,
+      "counterSamples": 22
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 4096,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 4096,
+      "heldMiB": 11961,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:47:25.534Z",
+    "phases": {
+      "load": {
+        "from": 1791766049539,
+        "to": 1791766060252
+      },
+      "warmup": {
+        "from": 1791766060252,
+        "to": 1791766063928
+      },
+      "short": {
+        "from": 1791766063928,
+        "to": 1791766076921
+      },
+      "long": {
+        "from": 1791766076921,
+        "to": 1791766100128
+      },
+      "end": 1791766100599
+    },
+    "events": [
+      {
+        "t": 1791766049460,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766100610,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766100635,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 12066,
+    "preLoadFreeMiB": 4044,
+    "load": {
+      "ok": true,
+      "seconds": 10.710925000071526,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 9 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.5638949999809265,
+      "totalSeconds": 3.672379999995232,
+      "tokensPerSecond": 0.6434002415938298,
+      "engineDecodeTokensPerSecond": 0.9660513456067698,
+      "enginePrefillTokensPerSecond": 80.4908151132655,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.3595500000715256,
+      "totalSeconds": 12.985384999990464,
+      "tokensPerSecond": 5.385782405713094,
+      "engineDecodeTokensPerSecond": 5.4894719485536365,
+      "enginePrefillTokensPerSecond": 125.59833653151067,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 9.00627999997139,
+      "totalSeconds": 23.20340999996662,
+      "tokensPerSecond": 8.593286107828904,
+      "engineDecodeTokensPerSecond": 8.71402586285511,
+      "enginePrefillTokensPerSecond": 361.4531438285982,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766049877
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766100201,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 15906,
+      "peakSharedMiB": 1154,
+      "peakDedicatedDeltaMiB": 3892,
+      "peakSharedDeltaMiB": 1107,
+      "minFreeMiB": 204,
+      "counterSamples": 55
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 14448,
+      "peakSharedMiB": 400,
+      "peakDedicatedDeltaMiB": 2434,
+      "peakSharedDeltaMiB": 353,
+      "minFreeMiB": 1662,
+      "counterSamples": 55
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 4096,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 4096,
+      "heldMiB": 11959,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:48:36.945Z",
+    "phases": {
+      "load": {
+        "from": 1791766120831,
+        "to": 1791766131425
+      },
+      "warmup": {
+        "from": 1791766131425,
+        "to": 1791766134325
+      },
+      "short": {
+        "from": 1791766134325,
+        "to": 1791766147604
+      },
+      "long": {
+        "from": 1791766147604,
+        "to": 1791766171020
+      },
+      "end": 1791766171501
+    },
+    "events": [
+      {
+        "t": 1791766120750,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766171513,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766171540,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 12069,
+    "preLoadFreeMiB": 4041,
+    "load": {
+      "ok": true,
+      "seconds": 10.591215000033378,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 9 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.5674250000715255,
+      "totalSeconds": 2.896960000038147,
+      "tokensPerSecond": 0.8585404383401224,
+      "engineDecodeTokensPerSecond": 1.2896818999752375,
+      "enginePrefillTokensPerSecond": 80.09540251777705,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.3575750000476837,
+      "totalSeconds": 13.276509999990463,
+      "tokensPerSecond": 5.2635917744226735,
+      "engineDecodeTokensPerSecond": 5.361596978628197,
+      "enginePrefillTokensPerSecond": 126.26262627107278,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 8.790495000004768,
+      "totalSeconds": 23.412764999985693,
+      "tokensPerSecond": 8.343437783610831,
+      "engineDecodeTokensPerSecond": 8.466648632066754,
+      "enginePrefillTokensPerSecond": 370.23025614040074,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766121166
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766171121,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 15926,
+      "peakSharedMiB": 1154,
+      "peakDedicatedDeltaMiB": 3912,
+      "peakSharedDeltaMiB": 1107,
+      "minFreeMiB": 184,
+      "counterSamples": 54
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 14424,
+      "peakSharedMiB": 130,
+      "peakDedicatedDeltaMiB": 2410,
+      "peakSharedDeltaMiB": 83,
+      "minFreeMiB": 1686,
+      "counterSamples": 54
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 4096,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 4096,
+      "heldMiB": 11961,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:49:47.588Z",
+    "phases": {
+      "load": {
+        "from": 1791766191874,
+        "to": 1791766197369
+      },
+      "warmup": {
+        "from": 1791766197369,
+        "to": 1791766197995
+      },
+      "short": {
+        "from": 1791766197995,
+        "to": 1791766199626
+      },
+      "long": {
+        "from": 1791766199626,
+        "to": 1791766207340
+      },
+      "end": 1791766207493
+    },
+    "events": [
+      {
+        "t": 1791766191806,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766207503,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766207542,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 12072,
+    "preLoadFreeMiB": 4038,
+    "load": {
+      "ok": true,
+      "seconds": 5.4929449999332425,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.49403000009059905,
+      "totalSeconds": 0.6227800000905991,
+      "tokensPerSecond": 15.533980582524272,
+      "engineDecodeTokensPerSecond": 23.85022064347303,
+      "enginePrefillTokensPerSecond": 92.23295996425297,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.10034499990940093,
+      "totalSeconds": 1.6281899999380112,
+      "tokensPerSecond": 32.07131613421678,
+      "engineDecodeTokensPerSecond": 33.63334275595541,
+      "enginePrefillTokensPerSecond": 453.9035707735843,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 3.994160000085831,
+      "totalSeconds": 7.712210000038147,
+      "tokensPerSecond": 32.812899235234774,
+      "engineDecodeTokensPerSecond": 33.683587884935875,
+      "enginePrefillTokensPerSecond": 814.9363252635623,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766192219
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766207376,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 14852,
+      "peakSharedMiB": 147,
+      "peakDedicatedDeltaMiB": 2838,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 1258,
+      "counterSamples": 19
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 13114,
+      "peakSharedMiB": 111,
+      "peakDedicatedDeltaMiB": 1100,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 2996,
+      "counterSamples": 19
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 4096,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 4096,
+      "heldMiB": 11961,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:50:22.768Z",
+    "phases": {
+      "load": {
+        "from": 1791766226338,
+        "to": 1791766231822
+      },
+      "warmup": {
+        "from": 1791766231822,
+        "to": 1791766232352
+      },
+      "short": {
+        "from": 1791766232352,
+        "to": 1791766233816
+      },
+      "long": {
+        "from": 1791766233816,
+        "to": 1791766242264
+      },
+      "end": 1791766242459
+    },
+    "events": [
+      {
+        "t": 1791766226273,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766242467,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766242498,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 12068,
+    "preLoadFreeMiB": 4042,
+    "load": {
+      "ok": true,
+      "seconds": 5.481830000042915,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.41547000002861023,
+      "totalSeconds": 0.5272150000333786,
+      "tokensPerSecond": 17.89789252239166,
+      "engineDecodeTokensPerSecond": 27.663792723009426,
+      "enginePrefillTokensPerSecond": 109.6544665932133,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.0862700001001358,
+      "totalSeconds": 1.4612300000190734,
+      "tokensPerSecond": 35.63740036283881,
+      "engineDecodeTokensPerSecond": 37.25601964971294,
+      "enginePrefillTokensPerSecond": 528.0760427433381,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 4.0505,
+      "totalSeconds": 8.44475,
+      "tokensPerSecond": 27.76355464527507,
+      "engineDecodeTokensPerSecond": 28.51932532238491,
+      "enginePrefillTokensPerSecond": 803.6323986827581,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766226709
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766242389,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 14857,
+      "peakSharedMiB": 149,
+      "peakDedicatedDeltaMiB": 2843,
+      "peakSharedDeltaMiB": 101,
+      "minFreeMiB": 1253,
+      "counterSamples": 20
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 13123,
+      "peakSharedMiB": 131,
+      "peakDedicatedDeltaMiB": 1109,
+      "peakSharedDeltaMiB": 84,
+      "minFreeMiB": 2987,
+      "counterSamples": 20
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 4096,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 4096,
+      "heldMiB": 11961,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:50:58.838Z",
+    "phases": {
+      "load": {
+        "from": 1791766262645,
+        "to": 1791766267477
+      },
+      "warmup": {
+        "from": 1791766267477,
+        "to": 1791766271833
+      },
+      "short": {
+        "from": 1791766271833,
+        "to": 1791766272644
+      },
+      "long": {
+        "from": 1791766272644,
+        "to": 1791766281605
+      },
+      "end": 1791766281811
+    },
+    "events": [
+      {
+        "t": 1791766262565,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766281827,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766281865,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 12068,
+    "preLoadFreeMiB": 4042,
+    "load": {
+      "ok": true,
+      "seconds": 4.828189999938012,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 3.615079999923706,
+      "totalSeconds": 4.351584999918938,
+      "tokensPerSecond": 8.146584205183734,
+      "engineDecodeTokensPerSecond": 9.5891067746413,
+      "enginePrefillTokensPerSecond": 11.355421936968423,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.06340499997138976,
+      "totalSeconds": 0.8088550000190735,
+      "tokensPerSecond": 50.975920581620876,
+      "engineDecodeTokensPerSecond": 54.38003274395402,
+      "enginePrefillTokensPerSecond": 656.1049766961577,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.1477149999141694,
+      "totalSeconds": 8.957539999961853,
+      "tokensPerSecond": 21.68740022272028,
+      "engineDecodeTokensPerSecond": 22.336719895547862,
+      "enginePrefillTokensPerSecond": 1010.6001789268493,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766263036
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766281637,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 13781,
+      "peakSharedMiB": 123,
+      "peakDedicatedDeltaMiB": 1767,
+      "peakSharedDeltaMiB": 76,
+      "minFreeMiB": 2329,
+      "counterSamples": 23
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 12937,
+      "peakSharedMiB": 114,
+      "peakDedicatedDeltaMiB": 923,
+      "peakSharedDeltaMiB": 67,
+      "minFreeMiB": 3173,
+      "counterSamples": 23
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 4096,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 4096,
+      "heldMiB": 11961,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:51:40.934Z",
+    "phases": {
+      "load": {
+        "from": 1791766304870,
+        "to": 1791766310580
+      },
+      "warmup": {
+        "from": 1791766310580,
+        "to": 1791766315028
+      },
+      "short": {
+        "from": 1791766315028,
+        "to": 1791766315882
+      },
+      "long": {
+        "from": 1791766315882,
+        "to": 1791766324779
+      },
+      "end": 1791766324940
+    },
+    "events": [
+      {
+        "t": 1791766304769,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766324952,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766324984,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 12069,
+    "preLoadFreeMiB": 4041,
+    "load": {
+      "ok": true,
+      "seconds": 5.70669000005722,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 5 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 3.674539999961853,
+      "totalSeconds": 4.445710000038147,
+      "tokensPerSecond": 7.780385647012206,
+      "engineDecodeTokensPerSecond": 9.160684956186177,
+      "enginePrefillTokensPerSecond": 11.177662123897512,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.06562000000476838,
+      "totalSeconds": 0.8513899999856949,
+      "tokensPerSecond": 48.360207186482555,
+      "engineDecodeTokensPerSecond": 51.75330923912173,
+      "enginePrefillTokensPerSecond": 633.3024404380654,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.1851000000238416,
+      "totalSeconds": 8.894679999947549,
+      "tokensPerSecond": 22.06817314087615,
+      "engineDecodeTokensPerSecond": 22.629110654729857,
+      "enginePrefillTokensPerSecond": 998.6872601213909,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766305260
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766324832,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 13781,
+      "peakSharedMiB": 127,
+      "peakDedicatedDeltaMiB": 1767,
+      "peakSharedDeltaMiB": 80,
+      "minFreeMiB": 2329,
+      "counterSamples": 24
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 12014,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 12924,
+      "peakSharedMiB": 127,
+      "peakDedicatedDeltaMiB": 910,
+      "peakSharedDeltaMiB": 80,
+      "minFreeMiB": 3186,
+      "counterSamples": 24
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 2048,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 2048,
+      "heldMiB": 14009,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:52:24.401Z",
+    "phases": {
+      "load": {
+        "from": 1791766348014,
+        "to": 1791766356223
+      },
+      "warmup": {
+        "from": 1791766356223,
+        "to": 1791766361687
+      },
+      "short": {
+        "from": 1791766361687,
+        "to": 1791766409135
+      },
+      "long": {
+        "from": 1791766409135,
+        "to": 1791766417970
+      },
+      "end": 1791766417975
+    },
+    "events": [
+      {
+        "t": 1791766347949,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766417990,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766418021,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 14120,
+    "preLoadFreeMiB": 1990,
+    "load": {
+      "ok": true,
+      "seconds": 8.207,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 7 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 2.3067050000429155,
+      "totalSeconds": 5.461345000028611,
+      "tokensPerSecond": 0.633986762359277,
+      "engineDecodeTokensPerSecond": 0.9517872184753613,
+      "enginePrefillTokensPerSecond": 19.54957772985001,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 4.703100000023841,
+      "totalSeconds": 47.445170000076295,
+      "tokensPerSecond": 1.5909383892711924,
+      "engineDecodeTokensPerSecond": 1.6162350577559457,
+      "enginePrefillTokensPerSecond": 9.570385399429739,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "Error: Object has already been disposed"
+    },
+    "error": "Error: Object has already been disposed",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766348263
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766417865,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 16008,
+      "peakSharedMiB": 2655,
+      "peakDedicatedDeltaMiB": 1946,
+      "peakSharedDeltaMiB": 2608,
+      "minFreeMiB": 102,
+      "counterSamples": 74
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 16008,
+      "peakSharedMiB": 680,
+      "peakDedicatedDeltaMiB": 1946,
+      "peakSharedDeltaMiB": 633,
+      "minFreeMiB": 102,
+      "counterSamples": 74
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 2048,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 2048,
+      "heldMiB": 14009,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:53:57.561Z",
+    "phases": {
+      "load": {
+        "from": 1791766441520,
+        "to": 1791766454214
+      },
+      "warmup": {
+        "from": 1791766454214,
+        "to": 1791766460246
+      },
+      "short": {
+        "from": 1791766460246,
+        "to": 1791766492832
+      },
+      "long": {
+        "from": 1791766492832,
+        "to": 1791766518704
+      },
+      "end": 1791766519069
+    },
+    "events": [
+      {
+        "t": 1791766441420,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766519077,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766519097,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 14115,
+    "preLoadFreeMiB": 1995,
+    "load": {
+      "ok": true,
+      "seconds": 12.692064999938012,
+      "error": null,
+      "lastProgress": [
+        "Loading GPU shader modules[1/9]: 11% completed, 2 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 2 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 2.333695000052452,
+      "totalSeconds": 6.029995000004768,
+      "tokensPerSecond": 0.5410816221696834,
+      "engineDecodeTokensPerSecond": 0.8125038932562162,
+      "enginePrefillTokensPerSecond": 19.3247502822322,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 1.624774999976158,
+      "totalSeconds": 32.58245999991894,
+      "tokensPerSecond": 2.196546673309897,
+      "engineDecodeTokensPerSecond": 2.232963098335857,
+      "enginePrefillTokensPerSecond": 27.718234902475743,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 12.281990000009536,
+      "totalSeconds": 25.869950000047684,
+      "tokensPerSecond": 8.978536881154898,
+      "engineDecodeTokensPerSecond": 9.108253818948473,
+      "enginePrefillTokensPerSecond": 264.9983875343008,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766441849
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766518755,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 16006,
+      "peakSharedMiB": 3130,
+      "peakDedicatedDeltaMiB": 1944,
+      "peakSharedDeltaMiB": 3083,
+      "minFreeMiB": 104,
+      "counterSamples": 81
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": 47,
+      "peakDedicatedMiB": 16006,
+      "peakSharedMiB": 825,
+      "peakDedicatedDeltaMiB": 1944,
+      "peakSharedDeltaMiB": 779,
+      "minFreeMiB": 104,
+      "counterSamples": 81
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 2048,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 2048,
+      "heldMiB": 14009,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:55:41.984Z",
+    "phases": {
+      "load": {
+        "from": 1791766546242,
+        "to": 1791766552409
+      },
+      "warmup": {
+        "from": 1791766552409,
+        "to": 1791766553813
+      },
+      "short": {
+        "from": 1791766553813,
+        "to": 1791766559017
+      },
+      "long": {
+        "from": 1791766559017,
+        "to": 1791766577462
+      },
+      "end": 1791766577656
+    },
+    "events": [
+      {
+        "t": 1791766546142,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766577667,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766577707,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 14115,
+    "preLoadFreeMiB": 1995,
+    "load": {
+      "ok": true,
+      "seconds": 6.1622599999904635,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 5 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.8844499999284744,
+      "totalSeconds": 1.4019749999046325,
+      "tokensPerSecond": 3.8645476065738618,
+      "engineDecodeTokensPerSecond": 5.839131917347661,
+      "enginePrefillTokensPerSecond": 51.1369447374542,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.4047900000810623,
+      "totalSeconds": 5.171225000023842,
+      "tokensPerSecond": 10.280219912909384,
+      "engineDecodeTokensPerSecond": 10.569372072859347,
+      "enginePrefillTokensPerSecond": 111.54627932374956,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 8.159329999923706,
+      "totalSeconds": 18.426079999923704,
+      "tokensPerSecond": 11.883020430028976,
+      "engineDecodeTokensPerSecond": 12.089491726040904,
+      "enginePrefillTokensPerSecond": 398.9106576186462,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766546617
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766577517,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 16067,
+      "peakSharedMiB": 1184,
+      "peakDedicatedDeltaMiB": 2005,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 43,
+      "counterSamples": 36
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 15126,
+      "peakSharedMiB": 117,
+      "peakDedicatedDeltaMiB": 1064,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 984,
+      "counterSamples": 36
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 2048,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 2048,
+      "heldMiB": 14009,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:56:39.875Z",
+    "phases": {
+      "load": {
+        "from": 1791766604103,
+        "to": 1791766610172
+      },
+      "warmup": {
+        "from": 1791766610172,
+        "to": 1791766611667
+      },
+      "short": {
+        "from": 1791766611667,
+        "to": 1791766617126
+      },
+      "long": {
+        "from": 1791766617126,
+        "to": 1791766638177
+      },
+      "end": 1791766638419
+    },
+    "events": [
+      {
+        "t": 1791766603997,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766638476,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766638510,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 14116,
+    "preLoadFreeMiB": 1994,
+    "load": {
+      "ok": true,
+      "seconds": 6.062735000014305,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.9995749999284744,
+      "totalSeconds": 1.4822999999523163,
+      "tokensPerSecond": 4.143145683155461,
+      "engineDecodeTokensPerSecond": 6.250325537477953,
+      "enginePrefillTokensPerSecond": 45.225448857811855,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.4041399999856949,
+      "totalSeconds": 5.449185000061989,
+      "tokensPerSecond": 9.712500086571874,
+      "engineDecodeTokensPerSecond": 9.99099811094977,
+      "enginePrefillTokensPerSecond": 111.95283052877936,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 7.960975000023842,
+      "totalSeconds": 21.014414999961854,
+      "tokensPerSecond": 9.346195332462505,
+      "engineDecodeTokensPerSecond": 9.489203138275636,
+      "enginePrefillTokensPerSecond": 408.8086068391085,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766604449
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766638295,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 16064,
+      "peakSharedMiB": 1189,
+      "peakDedicatedDeltaMiB": 2002,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 46,
+      "counterSamples": 41
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 15131,
+      "peakSharedMiB": 105,
+      "peakDedicatedDeltaMiB": 1069,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 979,
+      "counterSamples": 41
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 2048,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 2048,
+      "heldMiB": 14009,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:57:44.168Z",
+    "phases": {
+      "load": {
+        "from": 1791766669113,
+        "to": 1791766673972
+      },
+      "warmup": {
+        "from": 1791766673972,
+        "to": 1791766678079
+      },
+      "short": {
+        "from": 1791766678079,
+        "to": 1791766678931
+      },
+      "long": {
+        "from": 1791766678931,
+        "to": 1791766687833
+      },
+      "end": 1791766687991
+    },
+    "events": [
+      {
+        "t": 1791766669006,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766688002,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766688040,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 14117,
+    "preLoadFreeMiB": 1993,
+    "load": {
+      "ok": true,
+      "seconds": 4.856054999947548,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 3.2866800000667573,
+      "totalSeconds": 4.10456500005722,
+      "tokensPerSecond": 7.335994669262747,
+      "engineDecodeTokensPerSecond": 8.630255208721783,
+      "enginePrefillTokensPerSecond": 12.494038667308155,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.06258000004291535,
+      "totalSeconds": 0.8494800000190735,
+      "tokensPerSecond": 48.290761216357026,
+      "engineDecodeTokensPerSecond": 51.75914749879596,
+      "enginePrefillTokensPerSecond": 665.6384443697692,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.2009150000810624,
+      "totalSeconds": 8.899225000023842,
+      "tokensPerSecond": 22.11181911852203,
+      "engineDecodeTokensPerSecond": 22.685336522722356,
+      "enginePrefillTokensPerSecond": 993.9674303531729,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766669655
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766687899,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 15825,
+      "peakSharedMiB": 122,
+      "peakDedicatedDeltaMiB": 1763,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 285,
+      "counterSamples": 24
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 15013,
+      "peakSharedMiB": 113,
+      "peakDedicatedDeltaMiB": 951,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 1097,
+      "counterSamples": 24
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "platform": "windows",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": {
+      "targetFreeMiB": 2048,
+      "freeBeforeMiB": 16109,
+      "freeAfterMiB": 2048,
+      "heldMiB": 14009,
+      "verified": true
+    },
+    "startedAt": "2026-10-12T00:58:31.384Z",
+    "phases": {
+      "load": {
+        "from": 1791766715829,
+        "to": 1791766721016
+      },
+      "warmup": {
+        "from": 1791766721016,
+        "to": 1791766725667
+      },
+      "short": {
+        "from": 1791766725667,
+        "to": 1791766726579
+      },
+      "long": {
+        "from": 1791766726579,
+        "to": 1791766735503
+      },
+      "end": 1791766735715
+    },
+    "events": [
+      {
+        "t": 1791766715714,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791766735729,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791766735758,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 14115,
+    "preLoadFreeMiB": 1995,
+    "load": {
+      "ok": true,
+      "seconds": 5.184394999980927,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 3.868009999990463,
+      "totalSeconds": 4.6411750000715255,
+      "tokensPerSecond": 7.76030989422818,
+      "engineDecodeTokensPerSecond": 9.126050312427108,
+      "enginePrefillTokensPerSecond": 10.613883736526848,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.06778999996185303,
+      "totalSeconds": 0.9089250000715255,
+      "tokensPerSecond": 45.1770524292121,
+      "engineDecodeTokensPerSecond": 48.30588776480503,
+      "enginePrefillTokensPerSecond": 629.606879560777,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.166764999985695,
+      "totalSeconds": 8.920544999957084,
+      "tokensPerSecond": 21.898647497927715,
+      "engineDecodeTokensPerSecond": 22.50316727706699,
+      "enginePrefillTokensPerSecond": 1004.5282744820819,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791766716194
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791766735557,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 15829,
+      "peakSharedMiB": 110,
+      "peakDedicatedDeltaMiB": 1767,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 281,
+      "counterSamples": 32
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 14062,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 14985,
+      "peakSharedMiB": 110,
+      "peakDedicatedDeltaMiB": 923,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 1125,
+      "counterSamples": 32
+    }
+  }
+]

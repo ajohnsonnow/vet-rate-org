@@ -1,0 +1,5884 @@
+[
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:00:40.689Z",
+    "phases": {
+      "load": {
+        "from": 1791781244205,
+        "to": 1791781249875
+      },
+      "warmup": {
+        "from": 1791781249875,
+        "to": 1791781250266
+      },
+      "short": {
+        "from": 1791781250266,
+        "to": 1791781252211
+      },
+      "long": {
+        "from": 1791781252211,
+        "to": 1791781264229
+      },
+      "end": 1791781264396
+    },
+    "events": [
+      {
+        "t": 1791781244137,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781264404,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781264422,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 54,
+    "preLoadFreeMiB": 16056,
+    "load": {
+      "ok": true,
+      "seconds": 5.668764999985695,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 5 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.27667499995231626,
+      "totalSeconds": 0.3885649999380112,
+      "tokensPerSecond": 17.874698366750376,
+      "engineDecodeTokensPerSecond": 27.19115380071678,
+      "enginePrefillTokensPerSecond": 164.7205241428113,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is",
+      "paint": {
+        "enabled": true,
+        "frames": 22,
+        "framesPerSecond": 56.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.145,
+      "totalSeconds": 1.9440099999904632,
+      "tokensPerSecond": 37.79856698982245,
+      "engineDecodeTokensPerSecond": 38.8840831591229,
+      "enginePrefillTokensPerSecond": 311.63434908192477,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl",
+      "paint": {
+        "enabled": true,
+        "frames": 117,
+        "framesPerSecond": 60.2,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 110,
+      "ttftSeconds": 8.11152999997139,
+      "totalSeconds": 12.015490000009537,
+      "tokensPerSecond": 27.92036803628493,
+      "engineDecodeTokensPerSecond": 28.467614207173312,
+      "enginePrefillTokensPerSecond": 401.1843197828946,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w",
+      "paint": {
+        "enabled": true,
+        "frames": 721,
+        "framesPerSecond": 60,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 1208,
+      "framesPerSecond": 57.9,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781244419
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781264254,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 4822,
+      "peakSharedMiB": 80,
+      "peakDedicatedDeltaMiB": 4822,
+      "peakSharedDeltaMiB": 80,
+      "minFreeMiB": 11288,
+      "counterSamples": 24
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2401,
+      "peakSharedMiB": 71,
+      "peakDedicatedDeltaMiB": 2401,
+      "peakSharedDeltaMiB": 71,
+      "minFreeMiB": 13709,
+      "counterSamples": 24
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 14.641004999995232,
+          "outputChars": 234,
+          "textHead": "I cannot explain what a smoke detector does or why it should be tested, as that ",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 27.177490000009538,
+          "outputChars": 700,
+          "textHead": "I cannot write a summary of the facility log as requested, because that task fal",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781269012,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781272457,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781272464,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781272464,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781272467,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781272936,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781272936,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781280479,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781293504,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781320673,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781320688,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 5.827149999976158,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-4B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781273213
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:02:02.634Z",
+    "phases": {
+      "load": {
+        "from": 1791781326077,
+        "to": 1791781332232
+      },
+      "warmup": {
+        "from": 1791781332232,
+        "to": 1791781332664
+      },
+      "short": {
+        "from": 1791781332664,
+        "to": 1791781334712
+      },
+      "long": {
+        "from": 1791781334712,
+        "to": 1791781347286
+      },
+      "end": 1791781347442
+    },
+    "events": [
+      {
+        "t": 1791781326040,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781347449,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781347491,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 44,
+    "preLoadFreeMiB": 16066,
+    "load": {
+      "ok": true,
+      "seconds": 6.153599999904633,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 6 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.28371999990940094,
+      "totalSeconds": 0.4304800000190735,
+      "tokensPerSecond": 13.627691458881278,
+      "engineDecodeTokensPerSecond": 20.770588854422424,
+      "enginePrefillTokensPerSecond": 160.1338006949477,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is",
+      "paint": {
+        "enabled": true,
+        "frames": 25,
+        "framesPerSecond": 58.1,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.14642499995231628,
+      "totalSeconds": 2.045945000052452,
+      "tokensPerSecond": 35.79851751832847,
+      "engineDecodeTokensPerSecond": 36.82622026255213,
+      "enginePrefillTokensPerSecond": 309.3102381384698,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl",
+      "paint": {
+        "enabled": true,
+        "frames": 122,
+        "framesPerSecond": 59.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 8.102325000047683,
+      "totalSeconds": 12.571050000071526,
+      "tokensPerSecond": 27.30085203259299,
+      "engineDecodeTokensPerSecond": 27.79419192007137,
+      "enginePrefillTokensPerSecond": 401.6440993841846,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w",
+      "paint": {
+        "enabled": true,
+        "frames": 754,
+        "framesPerSecond": 60,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 1276,
+      "framesPerSecond": 58,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781326287
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781347312,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 4822,
+      "peakSharedMiB": 94,
+      "peakDedicatedDeltaMiB": 4822,
+      "peakSharedDeltaMiB": 94,
+      "minFreeMiB": 11288,
+      "counterSamples": 25
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2363,
+      "peakSharedMiB": 94,
+      "peakDedicatedDeltaMiB": 2363,
+      "peakSharedDeltaMiB": 94,
+      "minFreeMiB": 13747,
+      "counterSamples": 25
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 22.083615000009537,
+          "outputChars": 648,
+          "textHead": "I cannot explain what a smoke detector does or why it should be tested, as that ",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 27.190935000061987,
+          "outputChars": 757,
+          "textHead": "I cannot write a summary of the facility log as requested, because that task fal",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781352513,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781352672,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781352678,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781352678,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781352679,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781353175,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781353175,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781365801,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781383942,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781411111,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781411126,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 8.557175000071526,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-4B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781353507
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 3,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:03:33.078Z",
+    "phases": {
+      "load": {
+        "from": 1791781416570,
+        "to": 1791781422422
+      },
+      "warmup": {
+        "from": 1791781422422,
+        "to": 1791781422811
+      },
+      "short": {
+        "from": 1791781422811,
+        "to": 1791781424773
+      },
+      "long": {
+        "from": 1791781424773,
+        "to": 1791781437383
+      },
+      "end": 1791781437541
+    },
+    "events": [
+      {
+        "t": 1791781416528,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781437547,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781437560,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 54,
+    "preLoadFreeMiB": 16056,
+    "load": {
+      "ok": true,
+      "seconds": 5.849985000014305,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 5 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.27106499993801114,
+      "totalSeconds": 0.38747500002384183,
+      "tokensPerSecond": 17.18065457027208,
+      "engineDecodeTokensPerSecond": 26.175726373139806,
+      "enginePrefillTokensPerSecond": 167.75083409740694,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is",
+      "paint": {
+        "enabled": true,
+        "frames": 22,
+        "framesPerSecond": 56.8,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.14658500003814698,
+      "totalSeconds": 1.9599800000190735,
+      "tokensPerSecond": 37.4987247680264,
+      "engineDecodeTokensPerSecond": 38.712066401212766,
+      "enginePrefillTokensPerSecond": 308.2825237458379,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl",
+      "paint": {
+        "enabled": true,
+        "frames": 118,
+        "framesPerSecond": 60.2,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 8.110809999942779,
+      "totalSeconds": 12.60827999997139,
+      "tokensPerSecond": 27.126362154549984,
+      "engineDecodeTokensPerSecond": 27.706821288500688,
+      "enginePrefillTokensPerSecond": 401.22117224597224,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w",
+      "paint": {
+        "enabled": true,
+        "frames": 756,
+        "framesPerSecond": 60,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 1252,
+      "framesPerSecond": 57.8,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781416786
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781437408,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 4822,
+      "peakSharedMiB": 82,
+      "peakDedicatedDeltaMiB": 4822,
+      "peakSharedDeltaMiB": 82,
+      "minFreeMiB": 11288,
+      "counterSamples": 25
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2348,
+      "peakSharedMiB": 82,
+      "peakDedicatedDeltaMiB": 2348,
+      "peakSharedDeltaMiB": 82,
+      "minFreeMiB": 13762,
+      "counterSamples": 25
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 17.212140000104903,
+          "outputChars": 471,
+          "textHead": "I cannot explain what a smoke detector does or why it should be tested, as that ",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 27.15340999996662,
+          "outputChars": 757,
+          "textHead": "I cannot write a summary of the facility log as requested, because that task fal",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781442315,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781442505,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781442511,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781442511,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781442512,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781442959,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781442959,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781450942,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781466190,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781493333,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781493352,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 5.884884999990463,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-4B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781443297
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "coldDownload": {
+      "loadSeconds": 14.582649999976159,
+      "memory": {
+        "dedicatedSource": "nvidia-smi",
+        "baselineDedicatedMiB": 0,
+        "baselineSharedMiB": 0,
+        "peakDedicatedMiB": 1008,
+        "peakSharedMiB": 84,
+        "peakDedicatedDeltaMiB": 1008,
+        "peakSharedDeltaMiB": 84,
+        "minFreeMiB": 15102,
+        "counterSamples": 19
+      }
+    },
+    "startedAt": "2026-10-12T05:05:18.122Z",
+    "phases": {
+      "load": {
+        "from": 1791781521603,
+        "to": 1791781524901
+      },
+      "warmup": {
+        "from": 1791781524901,
+        "to": 1791781527156
+      },
+      "short": {
+        "from": 1791781527156,
+        "to": 1791781528183
+      },
+      "long": {
+        "from": 1791781528183,
+        "to": 1791781535278
+      },
+      "end": 1791781535381
+    },
+    "events": [
+      {
+        "t": 1791781521551,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781535389,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781535403,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 58,
+    "preLoadFreeMiB": 16052,
+    "load": {
+      "ok": true,
+      "seconds": 3.2967900000810624,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 1.4178100000619889,
+      "totalSeconds": 2.253040000081062,
+      "tokensPerSecond": 2.3945500041357803,
+      "engineDecodeTokensPerSecond": 3.598675687408809,
+      "enginePrefillTokensPerSecond": 31.793918882900726,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies",
+      "paint": {
+        "enabled": true,
+        "frames": 16,
+        "framesPerSecond": 7.1,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.07624000000953675,
+      "totalSeconds": 1.0252249999046326,
+      "tokensPerSecond": 51.634114348927156,
+      "engineDecodeTokensPerSecond": 54.07246792485444,
+      "enginePrefillTokensPerSecond": 594.2947699814723,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn ",
+      "paint": {
+        "enabled": true,
+        "frames": 61,
+        "framesPerSecond": 59.5,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 4.031555000066757,
+      "totalSeconds": 7.092855000019074,
+      "tokensPerSecond": 39.85235030931314,
+      "engineDecodeTokensPerSecond": 40.75337415635547,
+      "enginePrefillTokensPerSecond": 807.2488665845741,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint",
+      "paint": {
+        "enabled": true,
+        "frames": 416,
+        "framesPerSecond": 58.7,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 696,
+      "framesPerSecond": 48.1,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781521798
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781535308,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2878,
+      "peakSharedMiB": 292,
+      "peakDedicatedDeltaMiB": 2878,
+      "peakSharedDeltaMiB": 292,
+      "minFreeMiB": 13232,
+      "counterSamples": 18
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 991,
+      "peakSharedMiB": 292,
+      "peakDedicatedDeltaMiB": 991,
+      "peakSharedDeltaMiB": 292,
+      "minFreeMiB": 15119,
+      "counterSamples": 18
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 10.656835000038146,
+          "outputChars": 199,
+          "textHead": "A smoke detector is a safety device designed to detect smoke and emit a loud ala",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 14.856200000047684,
+          "outputChars": 676,
+          "textHead": "The three most common kinds of activity in this facility log are: 1) maintenance",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781540151,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781540818,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781540825,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781540825,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781540830,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781541296,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781541296,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781546284,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781555378,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781570216,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781570232,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 3.2307599999904633,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-2B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781541681
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:06:12.125Z",
+    "phases": {
+      "load": {
+        "from": 1791781575726,
+        "to": 1791781579041
+      },
+      "warmup": {
+        "from": 1791781579041,
+        "to": 1791781581465
+      },
+      "short": {
+        "from": 1791781581465,
+        "to": 1791781582437
+      },
+      "long": {
+        "from": 1791781582437,
+        "to": 1791781589577
+      },
+      "end": 1791781589682
+    },
+    "events": [
+      {
+        "t": 1791781575668,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781589688,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781589729,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 53,
+    "preLoadFreeMiB": 16057,
+    "load": {
+      "ok": true,
+      "seconds": 3.313225000023842,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 1.534610000014305,
+      "totalSeconds": 2.4220900000333785,
+      "tokensPerSecond": 2.253571911431262,
+      "engineDecodeTokensPerSecond": 3.3885861127183468,
+      "enginePrefillTokensPerSecond": 29.382574175042066,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies",
+      "paint": {
+        "enabled": true,
+        "frames": 19,
+        "framesPerSecond": 7.8,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.07739999997615814,
+      "totalSeconds": 0.9705650000572205,
+      "tokensPerSecond": 54.861083893292765,
+      "engineDecodeTokensPerSecond": 57.28886190854643,
+      "enginePrefillTokensPerSecond": 587.1607516753576,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn ",
+      "paint": {
+        "enabled": true,
+        "frames": 58,
+        "framesPerSecond": 59.8,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 4.0309100000858304,
+      "totalSeconds": 7.138600000023842,
+      "tokensPerSecond": 39.257454894932735,
+      "engineDecodeTokensPerSecond": 40.10355193647816,
+      "enginePrefillTokensPerSecond": 807.373047779811,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint",
+      "paint": {
+        "enabled": true,
+        "frames": 418,
+        "framesPerSecond": 58.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 699,
+      "framesPerSecond": 47.8,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781575919
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781589609,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2878,
+      "peakSharedMiB": 100,
+      "peakDedicatedDeltaMiB": 2878,
+      "peakSharedDeltaMiB": 100,
+      "minFreeMiB": 13232,
+      "counterSamples": 18
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1076,
+      "peakSharedMiB": 84,
+      "peakDedicatedDeltaMiB": 1076,
+      "peakSharedDeltaMiB": 84,
+      "minFreeMiB": 15034,
+      "counterSamples": 18
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 10.826175000071526,
+          "outputChars": 199,
+          "textHead": "A smoke detector is a safety device designed to detect smoke and emit a loud ala",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 14.696554999947548,
+          "outputChars": 588,
+          "textHead": "**Note:** I cannot provide a summary of the three most common kinds of activity ",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781593973,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781594379,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781594385,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781594385,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781594387,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781594824,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781594824,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781599705,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781608933,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781623614,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781623630,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 3.1802050000429154,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-2B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781595120
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 3,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:07:05.466Z",
+    "phases": {
+      "load": {
+        "from": 1791781628982,
+        "to": 1791781632132
+      },
+      "warmup": {
+        "from": 1791781632132,
+        "to": 1791781634311
+      },
+      "short": {
+        "from": 1791781634311,
+        "to": 1791781635258
+      },
+      "long": {
+        "from": 1791781635258,
+        "to": 1791781642654
+      },
+      "end": 1791781642772
+    },
+    "events": [
+      {
+        "t": 1791781628934,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781642781,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781642808,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 54,
+    "preLoadFreeMiB": 16056,
+    "load": {
+      "ok": true,
+      "seconds": 3.149365000009537,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 1.386460000038147,
+      "totalSeconds": 2.1766050000190735,
+      "tokensPerSecond": 2.5311809858295358,
+      "engineDecodeTokensPerSecond": 3.807589795198477,
+      "enginePrefillTokensPerSecond": 32.51550808993399,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies",
+      "paint": {
+        "enabled": true,
+        "frames": 20,
+        "framesPerSecond": 9.2,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.0779300000667572,
+      "totalSeconds": 0.9430800000429154,
+      "tokensPerSecond": 56.63757730029514,
+      "engineDecodeTokensPerSecond": 58.94523398277494,
+      "enginePrefillTokensPerSecond": 581.7711698271428,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn ",
+      "paint": {
+        "enabled": true,
+        "frames": 56,
+        "framesPerSecond": 59.4,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 4.035990000009536,
+      "totalSeconds": 7.394184999942779,
+      "tokensPerSecond": 36.32903985695447,
+      "engineDecodeTokensPerSecond": 37.15473285087049,
+      "enginePrefillTokensPerSecond": 806.346696862574,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint",
+      "paint": {
+        "enabled": true,
+        "frames": 435,
+        "framesPerSecond": 58.8,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 708,
+      "framesPerSecond": 49,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781629188
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781642685,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2878,
+      "peakSharedMiB": 292,
+      "peakDedicatedDeltaMiB": 2878,
+      "peakSharedDeltaMiB": 292,
+      "minFreeMiB": 13232,
+      "counterSamples": 18
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1027,
+      "peakSharedMiB": 292,
+      "peakDedicatedDeltaMiB": 1027,
+      "peakSharedDeltaMiB": 292,
+      "minFreeMiB": 15083,
+      "counterSamples": 18
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 10.797024999976157,
+          "outputChars": 332,
+          "textHead": "A smoke detector is a safety device designed to detect smoke and emit a loud ala",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 15.221950000047684,
+          "outputChars": 655,
+          "textHead": "Based on the facility log provided, the three most common kinds of activity are:",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781647452,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781647946,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781647951,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781647951,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781647953,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781648385,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781648385,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781653077,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781662432,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781677643,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781677659,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 3.1481900000572205,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-2B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781648677
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:07:59.524Z",
+    "phases": {
+      "load": {
+        "from": 1791781683037,
+        "to": 1791781685506
+      },
+      "warmup": {
+        "from": 1791781685506,
+        "to": 1791781687709
+      },
+      "short": {
+        "from": 1791781687709,
+        "to": 1791781688389
+      },
+      "long": {
+        "from": 1791781688389,
+        "to": 1791781696616
+      },
+      "end": 1791781696715
+    },
+    "events": [
+      {
+        "t": 1791781682993,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781696723,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781696746,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 54,
+    "preLoadFreeMiB": 16056,
+    "load": {
+      "ok": true,
+      "seconds": 2.468205000042915,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 2 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 1.7422849999666215,
+      "totalSeconds": 2.2006999999284744,
+      "tokensPerSecond": 13.088576945560877,
+      "engineDecodeTokensPerSecond": 15.398490946756462,
+      "enginePrefillTokensPerSecond": 23.594066955034585,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 28,
+        "framesPerSecond": 12.7,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.10035000002384185,
+      "totalSeconds": 0.6765400000810623,
+      "tokensPerSecond": 65.95046772110985,
+      "engineDecodeTokensPerSecond": 69.44815430474391,
+      "enginePrefillTokensPerSecond": 411.6465862468432,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 41,
+        "framesPerSecond": 60.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.184225000023842,
+      "totalSeconds": 8.225715000033379,
+      "tokensPerSecond": 24.992611311291235,
+      "engineDecodeTokensPerSecond": 25.441698949090508,
+      "enginePrefillTokensPerSecond": 998.8519484770106,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched",
+      "paint": {
+        "enabled": true,
+        "frames": 470,
+        "framesPerSecond": 57.1,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 698,
+      "framesPerSecond": 48.7,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781683216
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781696638,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1869,
+      "peakSharedMiB": 76,
+      "peakDedicatedDeltaMiB": 1869,
+      "peakSharedDeltaMiB": 75,
+      "minFreeMiB": 14241,
+      "counterSamples": 18
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 967,
+      "peakSharedMiB": 67,
+      "peakDedicatedDeltaMiB": 967,
+      "peakSharedDeltaMiB": 67,
+      "minFreeMiB": 15143,
+      "counterSamples": 18
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 12.847039999961853,
+          "outputChars": 300,
+          "textHead": "A smoke detector is designed to detect the presence of smoke and alert you if th",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 19.872205000042914,
+          "outputChars": 432,
+          "textHead": "### Key Points:\n\n- **Veteran's Data:**\n  - The veteran is preparing a claim for ",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781701515,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781701884,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781701890,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781701890,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781701891,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781702349,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781702349,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781707057,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781717785,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781737644,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781737664,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 2.5289000000953674,
+        "ready": true,
+        "modelLoaded": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781702665
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:08:59.490Z",
+    "phases": {
+      "load": {
+        "from": 1791781743001,
+        "to": 1791781745720
+      },
+      "warmup": {
+        "from": 1791781745720,
+        "to": 1791781748565
+      },
+      "short": {
+        "from": 1791781748565,
+        "to": 1791781749099
+      },
+      "long": {
+        "from": 1791781749099,
+        "to": 1791781757150
+      },
+      "end": 1791781757242
+    },
+    "events": [
+      {
+        "t": 1791781742947,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781757250,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781757265,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 54,
+    "preLoadFreeMiB": 16056,
+    "load": {
+      "ok": true,
+      "seconds": 2.7172050000429153,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 2 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 2.1891349999904635,
+      "totalSeconds": 2.842844999909401,
+      "tokensPerSecond": 9.178381852417772,
+      "engineDecodeTokensPerSecond": 10.750458814381847,
+      "enginePrefillTokensPerSecond": 18.757820524299127,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 36,
+        "framesPerSecond": 12.7,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.054570000052452085,
+      "totalSeconds": 0.5328100000619889,
+      "tokensPerSecond": 79.45801271169753,
+      "engineDecodeTokensPerSecond": 83.1458996593451,
+      "enginePrefillTokensPerSecond": 756.8765005073217,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 32,
+        "framesPerSecond": 60.1,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.181335000038147,
+      "totalSeconds": 8.049700000047684,
+      "tokensPerSecond": 25.88137906663801,
+      "engineDecodeTokensPerSecond": 26.278870546066475,
+      "enginePrefillTokensPerSecond": 999.7092040612386,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched",
+      "paint": {
+        "enabled": true,
+        "frames": 465,
+        "framesPerSecond": 57.8,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 706,
+      "framesPerSecond": 47.3,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781743210
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781757177,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1869,
+      "peakSharedMiB": 76,
+      "peakDedicatedDeltaMiB": 1869,
+      "peakSharedDeltaMiB": 76,
+      "minFreeMiB": 14241,
+      "counterSamples": 18
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 855,
+      "peakSharedMiB": 67,
+      "peakDedicatedDeltaMiB": 855,
+      "peakSharedDeltaMiB": 67,
+      "minFreeMiB": 15255,
+      "counterSamples": 18
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 12.510675000071526,
+          "outputChars": 300,
+          "textHead": "A smoke detector is designed to detect the presence of smoke and alert you if th",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 19.960100000023843,
+          "outputChars": 432,
+          "textHead": "### Key Points:\n\n- **Veteran's Data:**\n  - The veteran is preparing a claim for ",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781762632,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781762811,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781762816,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781762816,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781762818,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781763262,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781763262,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781767933,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781778312,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781798251,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781798271,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 2.4299450000524523,
+        "ready": true,
+        "modelLoaded": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781763558
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "platform": "windows",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 3,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:10:00.054Z",
+    "phases": {
+      "load": {
+        "from": 1791781803605,
+        "to": 1791781806065
+      },
+      "warmup": {
+        "from": 1791781806065,
+        "to": 1791781808370
+      },
+      "short": {
+        "from": 1791781808370,
+        "to": 1791781808937
+      },
+      "long": {
+        "from": 1791781808937,
+        "to": 1791781817374
+      },
+      "end": 1791781817483
+    },
+    "events": [
+      {
+        "t": 1791781803556,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781817506,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781817557,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 55,
+    "preLoadFreeMiB": 16055,
+    "load": {
+      "ok": true,
+      "seconds": 2.45909500002861,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 2 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 1.820625,
+      "totalSeconds": 2.3023550000190736,
+      "tokensPerSecond": 12.455109708264873,
+      "engineDecodeTokensPerSecond": 14.616677630048104,
+      "enginePrefillTokensPerSecond": 22.549960538278736,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 31,
+        "framesPerSecond": 13.5,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.05258500003814697,
+      "totalSeconds": 0.565375,
+      "tokensPerSecond": 74.10440921786083,
+      "engineDecodeTokensPerSecond": 77.6737701247346,
+      "enginePrefillTokensPerSecond": 786.118301648759,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 34,
+        "framesPerSecond": 60.1,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.167329999923706,
+      "totalSeconds": 8.433439999938011,
+      "tokensPerSecond": 23.926579581447733,
+      "engineDecodeTokensPerSecond": 24.398537621216228,
+      "enginePrefillTokensPerSecond": 1004.1270252051569,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched",
+      "paint": {
+        "enabled": true,
+        "frames": 491,
+        "framesPerSecond": 58.2,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 715,
+      "framesPerSecond": 49.2,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781803812
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781817399,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1869,
+      "peakSharedMiB": 80,
+      "peakDedicatedDeltaMiB": 1869,
+      "peakSharedDeltaMiB": 79,
+      "minFreeMiB": 14241,
+      "counterSamples": 18
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 955,
+      "peakSharedMiB": 80,
+      "peakDedicatedDeltaMiB": 955,
+      "peakSharedDeltaMiB": 79,
+      "minFreeMiB": 15155,
+      "counterSamples": 18
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 10.992269999980927,
+          "outputChars": 300,
+          "textHead": "A smoke detector is designed to detect the presence of smoke and alert you if th",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": true,
+          "error": null,
+          "seconds": 19.795284999966622,
+          "outputChars": 516,
+          "textHead": "### Key Points:\n\n- **VA Regulations Summary:**\n  - DC 5054 and 5055 will commenc",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791781824310,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781824535,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781824543,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781824543,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781824545,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781825063,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781825063,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781829968,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781839316,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781859095,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781859110,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 3.1427699999809264,
+        "ready": true,
+        "modelLoaded": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781825409
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "ok",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:11:00.971Z",
+    "phases": {
+      "load": {
+        "from": 1791781864658,
+        "to": 1791781869971
+      },
+      "warmup": {
+        "from": 1791781869971,
+        "to": 1791781878110
+      },
+      "short": {
+        "from": 1791781878110,
+        "to": 1791781914389
+      },
+      "long": {
+        "from": 1791781914389,
+        "to": 1791781917522
+      },
+      "end": 1791781917530
+    },
+    "events": [
+      {
+        "t": 1791781864580,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781917545,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781917576,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 339.71875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 5.310360000014305,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 5 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 6.809324999928474,
+      "totalSeconds": 8.137475000023842,
+      "tokensPerSecond": 1.50585400734585,
+      "engineDecodeTokensPerSecond": 2.262110775271874,
+      "enginePrefillTokensPerSecond": 6.611138004632401,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is",
+      "paint": {
+        "enabled": true,
+        "frames": 136,
+        "framesPerSecond": 16.7,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 72,
+      "ttftSeconds": 6.487414999961853,
+      "totalSeconds": 36.276139999985695,
+      "tokensPerSecond": 2.3834521282781713,
+      "engineDecodeTokensPerSecond": 2.4202185053653555,
+      "enginePrefillTokensPerSecond": 6.937234217198754,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl",
+      "paint": {
+        "enabled": true,
+        "frames": 1482,
+        "framesPerSecond": 40.9,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+      "paint": {
+        "enabled": true,
+        "frames": 11,
+        "framesPerSecond": 3.5,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "paint": {
+      "enabled": true,
+      "frames": 1948,
+      "framesPerSecond": 36.4,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781864791
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781917470,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 340,
+      "baselineSharedMiB": 4208,
+      "peakDedicatedMiB": 458,
+      "peakSharedMiB": 8659,
+      "peakDedicatedDeltaMiB": 118,
+      "peakSharedDeltaMiB": 4451,
+      "minFreeMiB": null,
+      "counterSamples": 57
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 340,
+      "baselineSharedMiB": 4208,
+      "peakDedicatedMiB": 449,
+      "peakSharedMiB": 6588,
+      "peakDedicatedDeltaMiB": 110,
+      "peakSharedDeltaMiB": 2380,
+      "minFreeMiB": null,
+      "counterSamples": 57
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": false,
+          "error": "Error: All AI modes failed. Primary: Warrant Council error (writer): Error: Object has already been disposed. Fallback: Warrant Council error (writer): Error: The current Object has already been disposed",
+          "seconds": 5.2725199999809265,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        }
+      },
+      "events": [
+        {
+          "t": 1791781923887,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791781924342,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781924353,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781924353,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781924356,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781924913,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781924914,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791781934609,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791781937715,
+          "kind": "console-error",
+          "text": "💎 WebLLM inference failed: Error: Object has already been disposed"
+        },
+        {
+          "t": 1791781937716,
+          "kind": "console-warning",
+          "text": "💎 Primary AI (swarm) failed, falling back to local: Warrant Council error (writer): Error: Object has already been disposed"
+        },
+        {
+          "t": 1791781937720,
+          "kind": "console-error",
+          "text": "💎 WebLLM inference failed: Error: The current Object has already been disposed"
+        },
+        {
+          "t": 1791781937731,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791781937750,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 7.285089999914169,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-4B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: All AI modes failed. Primary: Warrant Council error (writer): Error: Object has already been disposed. Fallback: Warrant Council error (writer): Error: The current Object has already been disposed",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791781926050
+        },
+        {
+          "kind": "device-lost",
+          "t": 1791781937670,
+          "reason": "unknown",
+          "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+        }
+      ],
+      "crashed": false,
+      "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+      "agreed": {
+        "probe": "lost",
+        "app": "lost",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:12:19.806Z",
+    "phases": {
+      "load": {
+        "from": 1791781943310,
+        "to": 1791781948941
+      },
+      "warmup": {
+        "from": 1791781948941,
+        "to": 1791781957041
+      },
+      "short": {
+        "from": 1791781957041,
+        "to": 1791781993549
+      },
+      "long": {
+        "from": 1791781993549,
+        "to": 1791781996617
+      },
+      "end": 1791781996622
+    },
+    "events": [
+      {
+        "t": 1791781943236,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791781996631,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791781996655,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 209.4140625,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 5.628564999938011,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 5 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 6.836,
+      "totalSeconds": 8.097990000009537,
+      "tokensPerSecond": 1.58479861170444,
+      "engineDecodeTokensPerSecond": 2.3806784140280746,
+      "enginePrefillTokensPerSecond": 6.586270261032277,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is",
+      "paint": {
+        "enabled": true,
+        "frames": 130,
+        "framesPerSecond": 16.1,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 72,
+      "ttftSeconds": 6.408534999966621,
+      "totalSeconds": 36.50689499998093,
+      "tokensPerSecond": 2.3589325132653824,
+      "engineDecodeTokensPerSecond": 2.3955422950231653,
+      "enginePrefillTokensPerSecond": 7.022586980612814,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl",
+      "paint": {
+        "enabled": true,
+        "frames": 1557,
+        "framesPerSecond": 42.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+      "paint": {
+        "enabled": true,
+        "frames": 10,
+        "framesPerSecond": 3.3,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "paint": {
+      "enabled": true,
+      "frames": 2037,
+      "framesPerSecond": 37.8,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791781943478
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791781996576,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 209,
+      "baselineSharedMiB": 4208,
+      "peakDedicatedMiB": 462,
+      "peakSharedMiB": 8707,
+      "peakDedicatedDeltaMiB": 252,
+      "peakSharedDeltaMiB": 4499,
+      "minFreeMiB": null,
+      "counterSamples": 57
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 209,
+      "baselineSharedMiB": 4208,
+      "peakDedicatedMiB": 446,
+      "peakSharedMiB": 6432,
+      "peakDedicatedDeltaMiB": 237,
+      "peakSharedDeltaMiB": 2224,
+      "minFreeMiB": null,
+      "counterSamples": 57
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": false,
+          "error": "Error: All AI modes failed. Primary: Warrant Council error (writer): Error: Object has already been disposed. Fallback: Warrant Council error (writer): Error: The current Object has already been disposed",
+          "seconds": 5.332375,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        }
+      },
+      "events": [
+        {
+          "t": 1791782001725,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791782001894,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782001902,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782001902,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782001903,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782002432,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782002432,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782011043,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791782014122,
+          "kind": "console-error",
+          "text": "💎 WebLLM inference failed: Error: Object has already been disposed"
+        },
+        {
+          "t": 1791782014123,
+          "kind": "console-warning",
+          "text": "💎 Primary AI (swarm) failed, falling back to local: Warrant Council error (writer): Error: Object has already been disposed"
+        },
+        {
+          "t": 1791782014127,
+          "kind": "console-error",
+          "text": "💎 WebLLM inference failed: Error: The current Object has already been disposed"
+        },
+        {
+          "t": 1791782014139,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791782014157,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 6.255529999971389,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-4B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: All AI modes failed. Primary: Warrant Council error (writer): Error: Object has already been disposed. Fallback: Warrant Council error (writer): Error: The current Object has already been disposed",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791782002713
+        },
+        {
+          "kind": "device-lost",
+          "t": 1791782014062,
+          "reason": "unknown",
+          "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+        }
+      ],
+      "crashed": false,
+      "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+      "agreed": {
+        "probe": "lost",
+        "app": "lost",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 3,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:13:36.218Z",
+    "phases": {
+      "load": {
+        "from": 1791782020014,
+        "to": 1791782026321
+      },
+      "warmup": {
+        "from": 1791782026321,
+        "to": 1791782034253
+      },
+      "short": {
+        "from": 1791782034253,
+        "to": 1791782071141
+      },
+      "long": {
+        "from": 1791782071141,
+        "to": 1791782074112
+      },
+      "end": 1791782074118
+    },
+    "events": [
+      {
+        "t": 1791782019935,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791782074127,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791782074145,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 276.3828125,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 6.304830000042915,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 6 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 6.6825,
+      "totalSeconds": 7.9299950000047685,
+      "tokensPerSecond": 1.6032128385222828,
+      "engineDecodeTokensPerSecond": 2.4099095482647117,
+      "enginePrefillTokensPerSecond": 6.737011042608658,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is",
+      "paint": {
+        "enabled": true,
+        "frames": 121,
+        "framesPerSecond": 15.3,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 72,
+      "ttftSeconds": 6.2816399999856944,
+      "totalSeconds": 36.88808000004291,
+      "tokensPerSecond": 2.3197732241929234,
+      "engineDecodeTokensPerSecond": 2.355189381817559,
+      "enginePrefillTokensPerSecond": 7.164532697405821,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl",
+      "paint": {
+        "enabled": true,
+        "frames": 1552,
+        "framesPerSecond": 42.1,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+      "paint": {
+        "enabled": true,
+        "frames": 10,
+        "framesPerSecond": 3.4,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "paint": {
+      "enabled": true,
+      "frames": 2064,
+      "framesPerSecond": 37.7,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791782020207
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791782074086,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 216,
+      "baselineSharedMiB": 4268,
+      "peakDedicatedMiB": 456,
+      "peakSharedMiB": 8697,
+      "peakDedicatedDeltaMiB": 240,
+      "peakSharedDeltaMiB": 4429,
+      "minFreeMiB": null,
+      "counterSamples": 58
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 216,
+      "baselineSharedMiB": 4268,
+      "peakDedicatedMiB": 447,
+      "peakSharedMiB": 6604,
+      "peakDedicatedDeltaMiB": 232,
+      "peakSharedDeltaMiB": 2336,
+      "minFreeMiB": null,
+      "counterSamples": 58
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": false,
+          "error": "Error: All AI modes failed. Primary: Warrant Council error (writer): Error: Object has already been disposed. Fallback: Warrant Council error (writer): Error: The current Object has already been disposed",
+          "seconds": 4.604709999918938,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        }
+      },
+      "events": [
+        {
+          "t": 1791782078815,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791782079025,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782079032,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782079032,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782079034,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782079491,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782079491,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782086539,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791782089525,
+          "kind": "console-error",
+          "text": "💎 WebLLM inference failed: Error: Object has already been disposed"
+        },
+        {
+          "t": 1791782089525,
+          "kind": "console-warning",
+          "text": "💎 Primary AI (swarm) failed, falling back to local: Warrant Council error (writer): Error: Object has already been disposed"
+        },
+        {
+          "t": 1791782089528,
+          "kind": "console-error",
+          "text": "💎 WebLLM inference failed: Error: The current Object has already been disposed"
+        },
+        {
+          "t": 1791782089539,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791782089557,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 5.277085000038147,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-4B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: All AI modes failed. Primary: Warrant Council error (writer): Error: Object has already been disposed. Fallback: Warrant Council error (writer): Error: The current Object has already been disposed",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791782079818
+        },
+        {
+          "kind": "device-lost",
+          "t": 1791782089498,
+          "reason": "unknown",
+          "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+        }
+      ],
+      "crashed": false,
+      "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+      "agreed": {
+        "probe": "lost",
+        "app": "lost",
+        "agreed": true
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:14:51.550Z",
+    "phases": {
+      "load": {
+        "from": 1791782095157,
+        "to": 1791782098222
+      },
+      "warmup": {
+        "from": 1791782098222,
+        "to": 1791782103298
+      },
+      "short": {
+        "from": 1791782103298,
+        "to": 1791782115041
+      },
+      "long": {
+        "from": 1791782115041,
+        "to": 1791782326457
+      },
+      "end": 1791782326863
+    },
+    "events": [
+      {
+        "t": 1791782095098,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791782326872,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791782326892,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 215.5546875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 3.0629349999427795,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 3.7105249999761583,
+      "totalSeconds": 5.074649999976158,
+      "tokensPerSecond": 1.4661412993677265,
+      "engineDecodeTokensPerSecond": 2.2035249052707835,
+      "enginePrefillTokensPerSecond": 12.136249629248187,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies",
+      "paint": {
+        "enabled": true,
+        "frames": 80,
+        "framesPerSecond": 15.8,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 2.4533899999856947,
+      "totalSeconds": 11.74140499997139,
+      "tokensPerSecond": 5.275615941627513,
+      "engineDecodeTokensPerSecond": 5.394342629276903,
+      "enginePrefillTokensPerSecond": 18.346379648106176,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn ",
+      "paint": {
+        "enabled": true,
+        "frames": 588,
+        "framesPerSecond": 50.1,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 185.87626999998093,
+      "totalSeconds": 211.41556999993324,
+      "tokensPerSecond": 4.7769516000919285,
+      "engineDecodeTokensPerSecond": 4.826448940228378,
+      "enginePrefillTokensPerSecond": 17.50633077932161,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint",
+      "paint": {
+        "enabled": true,
+        "frames": 6270,
+        "framesPerSecond": 29.7,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 7129,
+      "framesPerSecond": 30.7,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791782095288
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791782326515,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 216,
+      "baselineSharedMiB": 4238,
+      "peakDedicatedMiB": 452,
+      "peakSharedMiB": 6939,
+      "peakDedicatedDeltaMiB": 236,
+      "peakSharedDeltaMiB": 2701,
+      "minFreeMiB": null,
+      "counterSamples": 234
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 216,
+      "baselineSharedMiB": 4238,
+      "peakDedicatedMiB": 447,
+      "peakSharedMiB": 4769,
+      "peakDedicatedDeltaMiB": 231,
+      "peakSharedDeltaMiB": 531,
+      "minFreeMiB": null,
+      "counterSamples": 234
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 272.1885150001049,
+          "outputChars": 199,
+          "textHead": "A smoke detector is a safety device designed to detect smoke and emit a loud ala",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": false,
+          "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+          "seconds": 300.00372500002385,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791782331393,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791782331556,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782331563,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782331563,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782331564,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782332080,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782332081,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791782337067,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791782607499,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791782907476,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791782907492,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 3.1180950000286103,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-2B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791782332335
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "timeout",
+        "agreed": false
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:28:31.241Z",
+    "phases": {
+      "load": {
+        "from": 1791782915212,
+        "to": 1791782920414
+      },
+      "warmup": {
+        "from": 1791782920414,
+        "to": 1791782929894
+      },
+      "short": {
+        "from": 1791782929894,
+        "to": 1791782943548
+      },
+      "long": {
+        "from": 1791782943548,
+        "to": 1791783171393
+      },
+      "end": 1791783172625
+    },
+    "events": [
+      {
+        "t": 1791782915120,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791783172664,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791783172690,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 261.7421875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 5.199285000085831,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 6.970620000004768,
+      "totalSeconds": 9.46752999997139,
+      "tokensPerSecond": 0.8009900236799627,
+      "engineDecodeTokensPerSecond": 1.2028218199942948,
+      "enginePrefillTokensPerSecond": 6.45948931277051,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies",
+      "paint": {
+        "enabled": true,
+        "frames": 87,
+        "framesPerSecond": 9.2,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 3.0794800000190734,
+      "totalSeconds": 13.649340000033378,
+      "tokensPerSecond": 4.6358229910267195,
+      "engineDecodeTokensPerSecond": 4.7459673514919904,
+      "enginePrefillTokensPerSecond": 14.618125826307525,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn ",
+      "paint": {
+        "enabled": true,
+        "frames": 658,
+        "framesPerSecond": 48.2,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 199.93474500000477,
+      "totalSeconds": 227.84241000008583,
+      "tokensPerSecond": 4.371558853083754,
+      "engineDecodeTokensPerSecond": 4.419431341445674,
+      "enginePrefillTokensPerSecond": 16.275399770760497,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint",
+      "paint": {
+        "enabled": true,
+        "frames": 6424,
+        "framesPerSecond": 28.2,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 7478,
+      "framesPerSecond": 29,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791782915437
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791783171435,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 201,
+      "baselineSharedMiB": 4182,
+      "peakDedicatedMiB": 452,
+      "peakSharedMiB": 6921,
+      "peakDedicatedDeltaMiB": 250,
+      "peakSharedDeltaMiB": 2738,
+      "minFreeMiB": null,
+      "counterSamples": 260
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 201,
+      "baselineSharedMiB": 4182,
+      "peakDedicatedMiB": 444,
+      "peakSharedMiB": 5101,
+      "peakDedicatedDeltaMiB": 243,
+      "peakSharedDeltaMiB": 919,
+      "minFreeMiB": null,
+      "counterSamples": 260
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": false,
+          "error": "Error: All AI modes failed. Primary: Warrant Council error (writer): AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.. Fallback: Warrant Council error (writer): Error: The current Object has already been disposed",
+          "seconds": 223.06819499993324,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        }
+      },
+      "events": [
+        {
+          "t": 1791783183067,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783183077,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783183077,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783183079,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783183097,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791783183662,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783183662,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783191117,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791783411555,
+          "kind": "console-error",
+          "text": "💎 WebLLM inference failed: AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+        },
+        {
+          "t": 1791783411555,
+          "kind": "console-warning",
+          "text": "💎 Primary AI (swarm) failed, falling back to local: Warrant Council error (writer): AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+        },
+        {
+          "t": 1791783411564,
+          "kind": "console-error",
+          "text": "💎 WebLLM inference failed: Error: The current Object has already been disposed"
+        },
+        {
+          "t": 1791783411577,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791783411623,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 4.532340000033378,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-2B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: All AI modes failed. Primary: Warrant Council error (writer): AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.. Fallback: Warrant Council error (writer): Error: The current Object has already been disposed",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791783184163
+        },
+        {
+          "kind": "device-lost",
+          "t": 1791783411493,
+          "reason": "unknown",
+          "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+        }
+      ],
+      "crashed": false,
+      "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+      "agreed": {
+        "probe": "ok",
+        "app": "lost",
+        "agreed": false
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 3,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:37:10.243Z",
+    "phases": {
+      "load": {
+        "from": 1791783435489,
+        "to": 1791783440427
+      },
+      "warmup": {
+        "from": 1791783440427,
+        "to": 1791783447870
+      },
+      "short": {
+        "from": 1791783447870,
+        "to": 1791783461077
+      },
+      "long": {
+        "from": 1791783461077,
+        "to": 1791783682095
+      },
+      "end": 1791783682610
+    },
+    "events": [
+      {
+        "t": 1791783435396,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791783682620,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791783682655,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 330.1796875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 4.931800000071526,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 5.2214299999475475,
+      "totalSeconds": 7.44018499994278,
+      "tokensPerSecond": 0.9014064193677528,
+      "engineDecodeTokensPerSecond": 1.3540044681564656,
+      "enginePrefillTokensPerSecond": 8.625622123019273,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies",
+      "paint": {
+        "enabled": true,
+        "frames": 86,
+        "framesPerSecond": 11.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 2.908410000085831,
+      "totalSeconds": 13.202520000100137,
+      "tokensPerSecond": 4.760003535996012,
+      "engineDecodeTokensPerSecond": 4.87134296076589,
+      "enginePrefillTokensPerSecond": 15.478571637383913,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn ",
+      "paint": {
+        "enabled": true,
+        "frames": 638,
+        "framesPerSecond": 48.3,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 192.66497500002384,
+      "totalSeconds": 221.00958000004292,
+      "tokensPerSecond": 4.304170052816679,
+      "engineDecodeTokensPerSecond": 4.354055510598057,
+      "enginePrefillTokensPerSecond": 16.889515010873343,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint",
+      "paint": {
+        "enabled": true,
+        "frames": 6424,
+        "framesPerSecond": 29.1,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 7455,
+      "framesPerSecond": 30.1,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791783435736
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791783682200,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 270,
+      "baselineSharedMiB": 4212,
+      "peakDedicatedMiB": 448,
+      "peakSharedMiB": 6991,
+      "peakDedicatedDeltaMiB": 178,
+      "peakSharedDeltaMiB": 2778,
+      "minFreeMiB": null,
+      "counterSamples": 253
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 270,
+      "baselineSharedMiB": 4212,
+      "peakDedicatedMiB": 441,
+      "peakSharedMiB": 5191,
+      "peakDedicatedDeltaMiB": 172,
+      "peakSharedDeltaMiB": 979,
+      "minFreeMiB": null,
+      "counterSamples": 253
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 273.76049000000955,
+          "outputChars": 199,
+          "textHead": "A smoke detector is a safety device designed to detect smoke and emit a loud ala",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": false,
+          "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+          "seconds": 300.00669500005245,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791783691515,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791783691871,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783691879,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783691879,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783691882,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783692424,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783692424,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791783700998,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791783971277,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791784271265,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791784271292,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 4.947839999914169,
+        "ready": true,
+        "modelLoaded": "Qwen3.5-2B-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791783692962
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "timeout",
+        "agreed": false
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T05:51:16.250Z",
+    "phases": {
+      "load": {
+        "from": 1791784281206,
+        "to": 1791784284696
+      },
+      "warmup": {
+        "from": 1791784284696,
+        "to": 1791784287968
+      },
+      "short": {
+        "from": 1791784287968,
+        "to": 1791784296622
+      },
+      "long": {
+        "from": 1791784296622,
+        "to": 1791784504122
+      },
+      "end": 1791784504317
+    },
+    "events": [
+      {
+        "t": 1791784281095,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791784504327,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791784504359,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 265.90625,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 3.4872799999713897,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 2.002319999933243,
+      "totalSeconds": 3.265524999976158,
+      "tokensPerSecond": 4.749822871027394,
+      "engineDecodeTokensPerSecond": 5.566489731392329,
+      "enginePrefillTokensPerSecond": 20.522883014757177,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 112,
+        "framesPerSecond": 34.3,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 1.7609099999666213,
+      "totalSeconds": 8.65025,
+      "tokensPerSecond": 5.5157678384019215,
+      "engineDecodeTokensPerSecond": 5.682832381964364,
+      "enginePrefillTokensPerSecond": 23.295322185795627,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 417,
+        "framesPerSecond": 48.2,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 182.1045299999714,
+      "totalSeconds": 207.49745499992372,
+      "tokensPerSecond": 4.9620120565171835,
+      "engineDecodeTokensPerSecond": 5.010854220484653,
+      "enginePrefillTokensPerSecond": 17.462696550059423,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched",
+      "paint": {
+        "enabled": true,
+        "frames": 6618,
+        "framesPerSecond": 31.9,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 7366,
+      "framesPerSecond": 32.8,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791784281410
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791784504142,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 205,
+      "baselineSharedMiB": 4208,
+      "peakDedicatedMiB": 445,
+      "peakSharedMiB": 6019,
+      "peakDedicatedDeltaMiB": 239,
+      "peakSharedDeltaMiB": 1810,
+      "minFreeMiB": null,
+      "counterSamples": 224
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 205,
+      "baselineSharedMiB": 4208,
+      "peakDedicatedMiB": 442,
+      "peakSharedMiB": 4773,
+      "peakDedicatedDeltaMiB": 236,
+      "peakSharedDeltaMiB": 565,
+      "minFreeMiB": null,
+      "counterSamples": 224
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 267.49467999994755,
+          "outputChars": 300,
+          "textHead": "A smoke detector is designed to detect the presence of smoke and alert you if th",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": false,
+          "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+          "seconds": 300.001189999938,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791784508433,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791784508584,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791784508589,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791784508589,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791784508591,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791784509046,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791784509046,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791784513227,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791784778951,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791785078914,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791785078946,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 2.2845899999141692,
+        "ready": true,
+        "modelLoaded": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791784509278
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "timeout",
+        "agreed": false
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T06:05:17.202Z",
+    "phases": {
+      "load": {
+        "from": 1791785126250,
+        "to": 1791785133982
+      },
+      "warmup": {
+        "from": 1791785133982,
+        "to": 1791785138787
+      },
+      "short": {
+        "from": 1791785138787,
+        "to": 1791785148863
+      },
+      "long": {
+        "from": 1791785148863,
+        "to": 1791785390780
+      },
+      "end": 1791785391881
+    },
+    "events": [
+      {
+        "t": 1791785124623,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791785391895,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791785391936,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 261.2421875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 7.727634999990463,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 6 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 3.4135900000333788,
+      "totalSeconds": 4.79881500005722,
+      "tokensPerSecond": 4.331426302511671,
+      "engineDecodeTokensPerSecond": 5.083090372800835,
+      "enginePrefillTokensPerSecond": 12.031469629696245,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 118,
+        "framesPerSecond": 24.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 2.34175,
+      "totalSeconds": 10.07156000006199,
+      "tokensPerSecond": 4.916032864933971,
+      "engineDecodeTokensPerSecond": 5.066846648048264,
+      "enginePrefillTokensPerSecond": 17.51582832772241,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 439,
+        "framesPerSecond": 43.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 208.95312999999524,
+      "totalSeconds": 241.9152799999714,
+      "tokensPerSecond": 3.822566185764313,
+      "engineDecodeTokensPerSecond": 3.864657856131132,
+      "enginePrefillTokensPerSecond": 15.218805140501841,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched",
+      "paint": {
+        "enabled": true,
+        "frames": 7146,
+        "framesPerSecond": 29.5,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 8193,
+      "framesPerSecond": 30.5,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791785126714
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791785390824,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 203,
+      "baselineSharedMiB": 4178,
+      "peakDedicatedMiB": 452,
+      "peakSharedMiB": 5976,
+      "peakDedicatedDeltaMiB": 249,
+      "peakSharedDeltaMiB": 1797,
+      "minFreeMiB": null,
+      "counterSamples": 270
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 203,
+      "baselineSharedMiB": 4178,
+      "peakDedicatedMiB": 444,
+      "peakSharedMiB": 4926,
+      "peakDedicatedDeltaMiB": 241,
+      "peakSharedDeltaMiB": 747,
+      "minFreeMiB": null,
+      "counterSamples": 270
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 296.81150499999524,
+          "outputChars": 300,
+          "textHead": "A smoke detector is designed to detect the presence of smoke and alert you if th",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": false,
+          "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+          "seconds": 300.01392000007627,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791785399066,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791785403133,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791785403153,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791785403153,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791785403156,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791785403728,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791785403728,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791785414783,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791785707118,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791786007105,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791786007142,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 6.16459500002861,
+        "ready": true,
+        "modelLoaded": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791785404469
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "timeout",
+        "agreed": false
+      }
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 3,
+    "headed": false,
+    "pageCondition": "painting, foreground",
+    "backgroundTab": false,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T06:20:10.849Z",
+    "phases": {
+      "load": {
+        "from": 1791786014830,
+        "to": 1791786019141
+      },
+      "warmup": {
+        "from": 1791786019141,
+        "to": 1791786022956
+      },
+      "short": {
+        "from": 1791786022956,
+        "to": 1791786030789
+      },
+      "long": {
+        "from": 1791786030789,
+        "to": 1791786258597
+      },
+      "end": 1791786259003
+    },
+    "events": [
+      {
+        "t": 1791786014715,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791786259012,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791786259038,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 291.390625,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 4.308039999961853,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 2.4903250000476835,
+      "totalSeconds": 3.811295000076294,
+      "tokensPerSecond": 4.542116777723982,
+      "engineDecodeTokensPerSecond": 5.3237809491529156,
+      "enginePrefillTokensPerSecond": 16.493816830319616,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 120,
+        "framesPerSecond": 31.5,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 1.806789999961853,
+      "totalSeconds": 7.831485000014305,
+      "tokensPerSecond": 6.307373236266594,
+      "engineDecodeTokensPerSecond": 6.490453624537948,
+      "enginePrefillTokensPerSecond": 22.702418360973287,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 383,
+        "framesPerSecond": 48.9,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 196.48073000001907,
+      "totalSeconds": 227.80657500004767,
+      "tokensPerSecond": 4.022237867801648,
+      "engineDecodeTokensPerSecond": 4.066051241497428,
+      "enginePrefillTokensPerSecond": 16.184883898651872,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched",
+      "paint": {
+        "enabled": true,
+        "frames": 6751,
+        "framesPerSecond": 29.6,
+        "painting": true,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "paint": {
+      "enabled": true,
+      "frames": 7515,
+      "framesPerSecond": 30.7,
+      "painting": true,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791786015070
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791786258630,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 231,
+      "baselineSharedMiB": 4178,
+      "peakDedicatedMiB": 448,
+      "peakSharedMiB": 6009,
+      "peakDedicatedDeltaMiB": 217,
+      "peakSharedDeltaMiB": 1830,
+      "minFreeMiB": null,
+      "counterSamples": 246
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 231,
+      "baselineSharedMiB": 4178,
+      "peakDedicatedMiB": 442,
+      "peakSharedMiB": 4809,
+      "peakDedicatedDeltaMiB": 211,
+      "peakSharedDeltaMiB": 631,
+      "minFreeMiB": null,
+      "counterSamples": 246
+    },
+    "appCheck": {
+      "path": "app generateAI (initializeSwarm + generateAI)",
+      "prompts": {
+        "short": {
+          "ok": true,
+          "error": null,
+          "seconds": 273.61489999997616,
+          "outputChars": 210,
+          "textHead": "A smoke detector is designed to detect the presence of smoke and alert you if th",
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 108
+        },
+        "long": {
+          "ok": false,
+          "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+          "seconds": 300.0031449999809,
+          "visibleAtStart": "visible",
+          "visibleAtEnd": "visible",
+          "promptChars": 13755
+        }
+      },
+      "events": [
+        {
+          "t": 1791786264660,
+          "kind": "console-warning",
+          "text": "goatcounter: not counting because of: localhost"
+        },
+        {
+          "t": 1791786264974,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791786264986,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791786264986,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791786264988,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791786265475,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791786265475,
+          "kind": "console-warning",
+          "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+        },
+        {
+          "t": 1791786273737,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791786543610,
+          "kind": "console-warning",
+          "text": "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing"
+        },
+        {
+          "t": 1791786843584,
+          "kind": "page-close",
+          "text": "page closed"
+        },
+        {
+          "t": 1791786843682,
+          "kind": "context-close",
+          "text": "browser context closed"
+        }
+      ],
+      "load": {
+        "loaded": true,
+        "loadSeconds": 4.162844999909401,
+        "ready": true,
+        "modelLoaded": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+        "tier": "desktop-high",
+        "contextWindowSize": 12288
+      },
+      "contextWindow": 12288,
+      "error": "Error: AI request timed out after 300 seconds. This usually means the AI model is still loading, your document is too large, or there are network issues. Please wait for the AI to fully load, try with a shorter input, or check your connection.",
+      "deviceEvents": [
+        {
+          "kind": "device-created",
+          "t": 1791786266010
+        }
+      ],
+      "crashed": false,
+      "deviceLost": null,
+      "agreed": {
+        "probe": "ok",
+        "app": "timeout",
+        "agreed": false
+      }
+    }
+  }
+]

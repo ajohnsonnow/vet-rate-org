@@ -18,6 +18,8 @@ export default tseslint.config(
       "playwright.config.ts",
       "playwright.stress.config.ts",
       "tests/e2e/**",
+      "tests/device-lab/**",
+      "tools/device-lab/**",
       "tests/stress/**",
       "tests/fixtures/**",
       // Local-only / gitignored scratch storage — never part of the tracked source tree.

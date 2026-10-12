@@ -1,0 +1,43 @@
+{
+  "name": "desktop-mid",
+  "deviceClass": "Desktop, discrete 8 GB GPU, 1920x1080 monitor",
+  "source": "RTX 3060 Ti / Ryzen 5 5600 class machine (8 GB card, 6 cores, 12 threads). Everything here is an estimate. GPU limits copy the values measured on the 16 GB card in desktop-high; whether the browser lowers them for an 8 GB card was not measured. Chrome caps navigator.deviceMemory at 8. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "estimate"
+  },
+  "viewport": {
+    "width": 1920,
+    "height": 960
+  },
+  "screen": {
+    "width": 1920,
+    "height": 1080
+  },
+  "deviceScaleFactor": 1,
+  "isMobile": false,
+  "hasTouch": false,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "userAgentData": {
+    "mobile": false,
+    "platform": "Windows"
+  },
+  "deviceMemory": 8,
+  "hardwareConcurrency": 12,
+  "cpuThrottleRate": 2,
+  "gpu": {
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "ampere",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    }
+  }
+}

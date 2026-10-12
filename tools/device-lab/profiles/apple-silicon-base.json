@@ -1,0 +1,43 @@
+{
+  "name": "apple-silicon-base",
+  "deviceClass": "MacBook Air, Apple M1, 8 GB unified memory",
+  "source": "MacBook Air (M1, 2020): 8 CPU cores, default scaled display 1440x900 at 2x (Apple specifications). Chrome on macOS sends a frozen Intel Mac OS X user agent. The adapter description 'Apple M1' is the string the app's own comment assumes, not a reading from a Mac; the buffer limits mirror the Dawn values measured on the NVIDIA card. No Mac was available. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "documented",
+    "gpu": "estimate",
+    "cpuThrottleRate": "estimate"
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 790
+  },
+  "screen": {
+    "width": 1440,
+    "height": 900
+  },
+  "deviceScaleFactor": 2,
+  "isMobile": false,
+  "hasTouch": false,
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "userAgentData": {
+    "mobile": false,
+    "platform": "macOS"
+  },
+  "deviceMemory": 8,
+  "hardwareConcurrency": 8,
+  "cpuThrottleRate": 2,
+  "gpu": {
+    "adapter": {
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "",
+      "description": "Apple M1",
+      "limits": {
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    }
+  }
+}

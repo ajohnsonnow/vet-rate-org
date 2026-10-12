@@ -1,0 +1,40 @@
+{
+  "name": "tablet-ipad",
+  "deviceClass": "iPad Air (M1), Safari with its default desktop-class user agent",
+  "source": "iPadOS 13 and later Safari asks for desktop sites by default and sends a Macintosh user agent with no iPad token (Apple release behaviour; not re-verified here). Safari has no navigator.userAgentData and no navigator.deviceMemory. iPad Air (5th generation): 820x1180 CSS px at 2x (Apple specifications). hardwareConcurrency and adapter values are unmeasured; GPU limits are the WebGPU specification default limits (the floor every adapter must meet), not a measurement of this device.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "estimate"
+  },
+  "viewport": {
+    "width": 820,
+    "height": 1100
+  },
+  "screen": {
+    "width": 820,
+    "height": 1180
+  },
+  "deviceScaleFactor": 2,
+  "isMobile": true,
+  "hasTouch": true,
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
+  "userAgentData": null,
+  "deviceMemory": null,
+  "hardwareConcurrency": 8,
+  "cpuThrottleRate": 3,
+  "gpu": {
+    "adapter": {
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 268435456,
+        "maxStorageBufferBindingSize": 134217728
+      }
+    }
+  }
+}

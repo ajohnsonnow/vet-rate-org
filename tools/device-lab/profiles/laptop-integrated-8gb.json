@@ -1,0 +1,43 @@
+{
+  "name": "laptop-integrated-8gb",
+  "deviceClass": "Windows laptop, Intel Iris Xe integrated GPU, 8 GB RAM",
+  "source": "Core i5-1135G7 class (4 cores, 8 threads, Iris Xe 80 EU), 14 inch 1920x1080 at 125 percent Windows scaling (1536x864 CSS px). Chrome reports deviceMemory in powers of two capped at 8, so an 8 GB laptop is assumed to report 8 (some 8 GB machines may report 4; not measured). GPU limits are the WebGPU specification default limits (the floor every adapter must meet), not a measurement of this device. What an Iris Xe laptop really reports for maxBufferSize was not measured: the measured NVIDIA card reports 2 GiB, so a real Iris Xe may report more than this. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "estimate"
+  },
+  "viewport": {
+    "width": 1536,
+    "height": 730
+  },
+  "screen": {
+    "width": 1536,
+    "height": 864
+  },
+  "deviceScaleFactor": 1.25,
+  "isMobile": false,
+  "hasTouch": false,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "userAgentData": {
+    "mobile": false,
+    "platform": "Windows"
+  },
+  "deviceMemory": 8,
+  "hardwareConcurrency": 8,
+  "cpuThrottleRate": 4,
+  "gpu": {
+    "adapter": {
+      "vendor": "intel",
+      "architecture": "gen-12lp",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 268435456,
+        "maxStorageBufferBindingSize": 134217728
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "phone-android-low",
+  "deviceClass": "Android phone, entry-level, 2 to 3 GB RAM, no WebGPU",
+  "source": "Galaxy A03 class: 720x1600 panel at 2x (360x800 CSS px), 8 slow cores. Entry-level Android phones on Android 11 or older have no WebGPU, so navigator.gpu is removed; this is an assumption about the device class. 6x CPU slowdown is the DevTools low-tier mobile preset; network is the Lighthouse slow-4G preset. deviceMemory 2 is an estimate. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "estimate",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "documented",
+    "network": "documented"
+  },
+  "viewport": {
+    "width": 360,
+    "height": 690
+  },
+  "screen": {
+    "width": 360,
+    "height": 800
+  },
+  "deviceScaleFactor": 2,
+  "isMobile": true,
+  "hasTouch": true,
+  "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+  "userAgentData": {
+    "mobile": true,
+    "platform": "Android"
+  },
+  "deviceMemory": 2,
+  "hardwareConcurrency": 8,
+  "cpuThrottleRate": 6,
+  "network": {
+    "downloadKbps": 1600,
+    "uploadKbps": 750,
+    "latencyMs": 150
+  },
+  "gpu": null
+}
