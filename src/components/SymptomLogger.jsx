@@ -37,6 +37,10 @@ import {
  */
 
 const STORAGE_KEY = "vetrate_symptom_logs";
+// Holds the raw text of stored logs that could not be read, copied here before
+// the first save replaces them. Atomic Wipe clears all of localStorage, so it
+// goes with everything else.
+export const UNREADABLE_BACKUP_KEY = "vetrate_symptom_logs_unreadable_backup";
 
 // Symptom type configurations
 const SYMPTOM_TYPES = {
@@ -1769,8 +1773,71 @@ function _computeSymptomStats(logs, symptomType) {
   };
 }
 
+const _isLogObject = (entry) =>
+  typeof entry === "object" && entry !== null && !Array.isArray(entry);
+
+function _readStoredSymptomLogs() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return { logs: [], raw: null };
+  try {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) {
+      const usable = parsed.filter(_isLogObject);
+      if (usable.length === parsed.length) return { logs: parsed, raw: null };
+      console.error("Some symptom logs are not entries; not showing them.");
+      return { logs: usable, raw: saved };
+    }
+    console.error("Symptom logs are not a list; leaving them untouched.");
+  } catch (e) {
+    console.error("Failed to parse symptom logs:", e);
+  }
+  return { logs: [], raw: saved };
+}
+
+// Copies the unreadable original aside before a save replaces it. Never
+// overwrites a backup that is already there.
+function _keepUnreadableAside(raw) {
+  try {
+    const existing = localStorage.getItem(UNREADABLE_BACKUP_KEY);
+    if (existing === null) {
+      localStorage.setItem(UNREADABLE_BACKUP_KEY, raw);
+      return "kept";
+    }
+    return existing === raw ? "kept" : "earlier";
+  } catch (e) {
+    console.error("Could not keep unreadable symptom logs aside:", e);
+    return "failed";
+  }
+}
+
+const ASIDE_MESSAGES = {
+  pending:
+    "Some older entries could not be read, so they are not shown. They have not been changed. If you save a new entry, a copy of them is kept aside on this device first.",
+  kept: "Some older entries could not be read. A copy of them was kept aside on this device before your new entry was saved.",
+  earlier:
+    "Some older entries could not be read and are not shown. A different copy kept aside earlier was not replaced, so these entries were not copied.",
+  failed:
+    "Your new entry was not saved. Older entries that could not be read could not be kept aside first, probably because this device is out of space.",
+};
+
+const UnreadableLogsNotice = ({ status }) => {
+  if (status === "none") return null;
+  const failed = status === "failed";
+  return (
+    <div
+      role={failed ? "alert" : "status"}
+      className={`mx-6 mt-4 rounded-lg border p-3 text-sm ${
+        failed
+          ? "border-red-300 bg-red-50 text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100"
+          : "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+      }`}
+    >
+      {ASIDE_MESSAGES[status]}
+    </div>
+  );
+};
+
 function useSymptomLoggerInitEffects({
-  setLogs,
   setSymptomType,
   setNewLog,
   setActiveTab,
@@ -1781,16 +1848,6 @@ function useSymptomLoggerInitEffects({
   }, [setAIStatus]);
 
   useEffect(() => {
-    const savedLogs = localStorage.getItem(STORAGE_KEY);
-    if (savedLogs) {
-      try {
-        setLogs(JSON.parse(savedLogs));
-      } catch (e) {
-        console.error("Failed to parse symptom logs:", e);
-        setLogs([]);
-      }
-    }
-
     const prefillData = localStorage.getItem("vetrate_symptom_prefill");
     if (prefillData) {
       try {
@@ -1979,9 +2036,28 @@ function useSymptomLoggerHandlers({
   };
 }
 
+function usePersistSymptomLogs({ logs, stored, setAsideStatus }) {
+  const keptAside = useRef(false);
+  useEffect(() => {
+    if (logs === stored.logs) return;
+    if (stored.raw !== null && !keptAside.current) {
+      const status = _keepUnreadableAside(stored.raw);
+      setAsideStatus(status);
+      if (status === "failed") return;
+      keptAside.current = true;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  }, [logs, stored, setAsideStatus]);
+}
+
 function useSymptomLoggerState() {
   const symptomLoggerContentRef = useRef(null);
-  const [logs, setLogs] = useState([]);
+  const [stored] = useState(_readStoredSymptomLogs);
+  const loadedLogs = stored.logs;
+  const [logs, setLogs] = useState(loadedLogs);
+  const [asideStatus, setAsideStatus] = useState(
+    stored.raw === null ? "none" : "pending",
+  );
   const [activeTab, setActiveTab] = useState("log"); // 'log', 'history', 'export'
   const [symptomType, setSymptomType] = useState("migraine");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
@@ -1996,16 +2072,13 @@ function useSymptomLoggerState() {
   const [newLog, setNewLog] = useState(_newSymptomLogFormState());
 
   useSymptomLoggerInitEffects({
-    setLogs,
     setSymptomType,
     setNewLog,
     setActiveTab,
     setAIStatus,
   });
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-  }, [logs]);
+  usePersistSymptomLogs({ logs, stored, setAsideStatus });
 
   const stats = useMemo(
     () => _computeSymptomStats(logs, symptomType),
@@ -2037,6 +2110,7 @@ function useSymptomLoggerState() {
   return {
     symptomLoggerContentRef,
     logs,
+    asideStatus,
     activeTab,
     setActiveTab,
     symptomType,
@@ -2085,6 +2159,7 @@ const SymptomLogger = ({ onClose, onReportBug }) => {
       footer={<SymptomLoggerFooter logs={s.logs} onClose={onClose} />}
     >
       <div ref={s.symptomLoggerContentRef}>
+        <UnreadableLogsNotice status={s.asideStatus} />
         <SymptomTypeSelector
           symptomType={s.symptomType}
           setSymptomType={s.setSymptomType}

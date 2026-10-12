@@ -26,11 +26,32 @@ import {
 import { getBigThreeStatus, readStored } from "../utils/claimIntegration";
 import { logger } from "../utils/logger";
 
+// Saved-claim records come from storage and from imports, so any field can be
+// missing or the wrong type. Only text and finite numbers name a condition.
+const asText = (value) => {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return "";
+};
+
+const readSavedClaims = () => {
+  try {
+    const parsed = JSON.parse(readStored("vet_rate_saved_claims") || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    // Corrupt or restricted localStorage just means we skip this signal.
+    logger.debug("ClaimProgress: saved-claims lookup failed", {
+      error: String(err),
+    });
+    return [];
+  }
+};
+
 // Reads the "Big 3" evidence signals for a condition from localStorage /
 // the ClaimNavigator integration bridge.
 const computeBigThreeStatus = (conditionCode, conditionName) => {
   const storageKey =
-    conditionCode || conditionName?.toLowerCase().replace(/\s+/g, "-");
+    conditionCode || conditionName.toLowerCase().replace(/\s+/g, "-");
 
   // First check if ClaimNavigator has Big 3 data via integration bridge
   const navigatorBig3 = getBigThreeStatus(conditionName || conditionCode);
@@ -40,20 +61,14 @@ const computeBigThreeStatus = (conditionCode, conditionName) => {
   const medicalDescription = readStored(diagnosisKey) || "";
 
   // A condition saved to My Packet implies a confirmed diagnosis
-  let hasSavedClaim = false;
-  try {
-    const savedClaims = JSON.parse(readStored("vet_rate_saved_claims") || "[]");
-    if (conditionName) {
-      hasSavedClaim = savedClaims.some(
-        (c) => c.conditionName?.toLowerCase() === conditionName.toLowerCase(),
-      );
-    }
-  } catch (err) {
-    // Corrupt or restricted localStorage just means we skip this signal.
-    logger.debug("ClaimProgress: saved-claims lookup failed", {
-      error: String(err),
-    });
-  }
+  const wanted = conditionName.toLowerCase();
+  const hasSavedClaim =
+    wanted !== "" &&
+    readSavedClaims().some(
+      (c) =>
+        typeof c?.conditionName === "string" &&
+        c.conditionName.trim().toLowerCase() === wanted,
+    );
 
   const hasDiagnosis =
     navigatorBig3.diagnosis ||
@@ -225,21 +240,30 @@ const ClaimStatusMessage = ({ completeness }) => {
 };
 
 const MissingItemsChecklist = ({ missingItems }) => {
-  if (missingItems.length === 0) return null;
+  const items = missingItems.filter(
+    (item) => item && typeof item.label === "string",
+  );
+  if (items.length === 0) return null;
   return (
     <div className="space-y-3">
       <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
         ⚠️ Still Needed:
       </h4>
-      {missingItems.map((item) => (
+      {items.map((item) => (
         <div
           key={item.label}
           className="flex items-start gap-3 p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-300 transition-colors"
         >
-          <item.icon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          {item.icon ? (
+            <item.icon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          ) : (
+            <Circle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          )}
           <div className="flex-1">
             <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
-            <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+            {typeof item.description === "string" && (
+              <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+            )}
           </div>
         </div>
       ))}
@@ -310,7 +334,13 @@ const ClaimProgressHelpText = () => (
   </div>
 );
 
-const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
+const ClaimProgress = ({
+  conditionCode: rawConditionCode,
+  conditionName: rawConditionName,
+  className = "",
+}) => {
+  const conditionCode = asText(rawConditionCode);
+  const conditionName = asText(rawConditionName);
   const [completeness, setCompleteness] = useState(0);
   const [missingItems, setMissingItems] = useState([]);
   const [checklist, setChecklist] = useState({
@@ -347,7 +377,12 @@ const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
   const calculateCompleteness = () => {
     if (!conditionCode && !conditionName) {
       setCompleteness(0);
-      setMissingItems(["Select a condition to begin"]);
+      setChecklist({
+        hasDiagnosis: false,
+        hasInServiceEvent: false,
+        hasNexus: false,
+      });
+      setMissingItems([{ icon: Circle, label: "Select a condition to begin" }]);
       return;
     }
 

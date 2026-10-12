@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import UpdateBanner from "../../components/UpdateBanner";
+import ServiceWorkerUpdateNotice from "../../components/ServiceWorkerUpdateNotice";
+import { useServiceWorkerUpdate } from "./useServiceWorkerUpdate";
 import WhatsNewModal from "../../components/WhatsNewModal";
 import { APP_VERSION, LAST_SEEN_VERSION_KEY } from "../../utils/version";
 import {
@@ -23,6 +25,8 @@ import changelogData from "../../data/changelog.json";
  *   2. Subscribe to `tosAccepted` event for first-time acceptance.
  *   3. Run the SW update checker; surface a dismissible banner when an update
  *      is available; "Apply" forces a hard reload.
+ *   4. Show a small dismissible notice when a new service worker is waiting
+ *      (`sw-update-available`); see useServiceWorkerUpdate.
  */
 function pickChangelog() {
   const dynamic = generateWhatsNewChangelog();
@@ -93,14 +97,26 @@ export function useUpdateOrchestrator() {
     return () => window.removeEventListener("tosAccepted", handleTosAccepted);
   }, []);
 
-  const updateBanner =
-    showUpdateBanner && updateAvailable ? (
-      <UpdateBanner
-        onApplyUpdate={() => applyUpdate()}
-        onDismiss={() => setShowUpdateBanner(false)}
-        updateInfo={updateAvailable}
-      />
-    ) : null;
+  const swUpdate = useServiceWorkerUpdate();
+  const versionBannerShown = Boolean(showUpdateBanner && updateAvailable);
+
+  const updateBanner = (
+    <>
+      {versionBannerShown && (
+        <UpdateBanner
+          onApplyUpdate={() => applyUpdate()}
+          onDismiss={() => setShowUpdateBanner(false)}
+          updateInfo={updateAvailable}
+        />
+      )}
+      {swUpdate.visible && !versionBannerShown && (
+        <ServiceWorkerUpdateNotice
+          onReload={swUpdate.apply}
+          onDismiss={swUpdate.dismiss}
+        />
+      )}
+    </>
+  );
 
   const whatsNewModal =
     showWhatsNew && currentChangelog.length > 0 ? (
