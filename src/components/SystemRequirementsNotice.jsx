@@ -29,9 +29,11 @@ function useNoticeText() {
 }
 
 function modelPhrase(text, deviceModel) {
-  return deviceModel
-    ? `${deviceModel.displayName} (${formatDownloadSize(deviceModel)})`
-    : text("limitedModelFallback");
+  if (!deviceModel) return text("limitedModelFallback");
+  const size = deviceModel.downloadGB
+    ? text("sizeAbout", { gb: deviceModel.downloadGB })
+    : text("sizeUnknown");
+  return `${deviceModel.displayName} (${size})`;
 }
 
 /**
@@ -274,9 +276,6 @@ function LimitedNotice({
   showReqs,
   setShowReqs,
 }) {
-  const tierRate =
-    AI_CHUNK_RATE[profile.isAppleSilicon ? "apple-silicon" : profile.tier] ??
-    AI_CHUNK_RATE[profile.tier];
   const warmup = profile.isAppleSilicon
     ? AI_WARMUP.firstRunAppleSilicon
     : AI_WARMUP.firstRun;
@@ -296,15 +295,7 @@ function LimitedNotice({
             )}
           </p>
           <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-1">
-            {text("limitedBody", {
-              model: modelPhrase(text, deviceModel),
-              range: tierRate
-                ? text("limitedRangeMinutes", {
-                    low: Math.round(tierRate.p50 / 60),
-                    high: Math.round(tierRate.p90 / 60),
-                  })
-                : text("limitedRangeUnknown"),
-            })}
+            {text("limitedBody", { model: modelPhrase(text, deviceModel) })}
           </p>
           {timeEstimate && (
             <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-1 font-medium">

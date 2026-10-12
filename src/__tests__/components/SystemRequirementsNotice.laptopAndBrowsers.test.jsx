@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { LanguageProvider } from "../../contexts/LanguageContext";
 import { AI_REQUIREMENTS } from "../../data/aiPerformanceProfile";
 
 const detect = vi.hoisted(() => ({ fn: vi.fn() }));
@@ -24,31 +25,59 @@ const laptop = {
 
 beforeEach(() => vi.clearAllMocks());
 
-describe("laptop notice says the smaller model runs on the GPU", () => {
-  it("names the 2B and its size and does not say the CPU or WASM does the work", async () => {
+describe("laptop notice says which model loads, on the GPU, and that it is smaller", () => {
+  it("names the 2B and its size and gives no reason, CPU or time figure", async () => {
     detect.fn.mockResolvedValue(laptop);
     const { container } = render(<SystemRequirementsNotice />);
-    await screen.findByText(/Limited GPU - smaller AI model/);
+    await screen.findByText(/Smaller AI model on this device/);
     const text = container.textContent;
-    expect(text).toMatch(/loads Qwen 3\.5 2B \(about 1\.1 GB\) on your GPU/);
+    expect(text).toContain(
+      "loads Qwen 3.5 2B (about 1.1 GB) on your GPU. It is a smaller model than the one desktops load. Large files will be slow.",
+    );
     expect(text).not.toMatch(/WASM|your CPU|CPU fallback/);
-    expect(text).not.toMatch(/6 GB VRAM minimum for on-device inference/);
+    expect(text).not.toMatch(/below the desktop requirements|Limited GPU/);
+    expect(text).not.toMatch(/\d{1,3}-\d{1,3} min/);
   });
 
   it("falls back to a plain phrase when no model is known", async () => {
     detect.fn.mockResolvedValue({ ...laptop, recommendedModels: [] });
     const { container } = render(<SystemRequirementsNotice />);
-    await screen.findByText(/Limited GPU - smaller AI model/);
-    expect(container.textContent).toMatch(
-      /loads a smaller AI model on your GPU/,
-    );
+    await screen.findByText(/Smaller AI model on this device/);
+    expect(container.textContent).toMatch(/loads an AI model on your GPU/);
   });
 
-  it("compact laptop line also says GPU, not CPU", async () => {
+  it("compact laptop line also says GPU, not CPU, with no reason", async () => {
     detect.fn.mockResolvedValue(laptop);
     const { container } = render(<SystemRequirementsNotice compact />);
     await screen.findByText(/smaller AI model on the GPU/);
-    expect(container.textContent).not.toMatch(/WASM|CPU/);
+    expect(container.textContent).not.toMatch(/WASM|CPU|Limited/);
+  });
+
+  it("Spanish and Korean put the size phrase in the language's own words, with no particle placeholders", async () => {
+    detect.fn.mockResolvedValue(laptop);
+    localStorage.setItem("vetrate_language", "es");
+    const es = render(
+      <LanguageProvider>
+        <SystemRequirementsNotice />
+      </LanguageProvider>,
+    );
+    await screen.findByText(/Modelo de IA más pequeño/);
+    expect(es.container.textContent).toMatch(/Qwen 3\.5 2B \(unos 1\.1 GB\)/);
+    expect(es.container.textContent).not.toMatch(/about/);
+    es.unmount();
+
+    localStorage.setItem("vetrate_language", "ko");
+    const ko = render(
+      <LanguageProvider>
+        <SystemRequirementsNotice />
+      </LanguageProvider>,
+    );
+    await screen.findByText(/더 작은 AI 모델/);
+    expect(ko.container.textContent).toMatch(/Qwen 3\.5 2B \(약 1\.1GB\)/);
+    expect(ko.container.textContent).not.toMatch(
+      /about|\(를\)|\(을\)|\(이\)|\(가\)/,
+    );
+    localStorage.removeItem("vetrate_language");
   });
 });
 
