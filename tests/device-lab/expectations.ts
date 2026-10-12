@@ -86,7 +86,6 @@ export interface ProfileExpectation {
     actualTier: Tier;
     tier?: string;
     config?: string;
-    ui?: string;
   };
 }
 
@@ -95,8 +94,6 @@ const NO_WEBGPU_REASON = /needs a browser with WebGPU/;
 
 const DESKTOP_MID_ISSUE =
   "desktop-mid is reachable only with screen.width under 1400 and a 1.5 GB or larger maxBufferSize; a 1920-wide discrete 8 GB-class GPU lands in desktop-high (deviceCapabilityDetector.js _deviceTierFor).";
-const IPAD_ISSUE =
-  "Safari on iPadOS sends a Macintosh user agent with no iPad token and no userAgentData, so isTabletUA is false and the iPad is classed by GPU and cores (laptop here), not tablet.";
 
 export const PROFILES: Record<string, ProfileExpectation> = {
   "desktop-high": { tier: "desktop-high", noOnDeviceModel: false },
@@ -116,16 +113,7 @@ export const PROFILES: Record<string, ProfileExpectation> = {
   "laptop-integrated-16gb": { tier: "laptop", noOnDeviceModel: false },
   "apple-silicon-base": { tier: "desktop-high", noOnDeviceModel: false },
   "tablet-android": { tier: "tablet", noOnDeviceModel: false },
-  "tablet-ipad": {
-    tier: "tablet",
-    noOnDeviceModel: false,
-    knownIssues: {
-      actualTier: "laptop",
-      tier: IPAD_ISSUE,
-      config: IPAD_ISSUE,
-      ui: IPAD_ISSUE,
-    },
-  },
+  "tablet-ipad": { tier: "tablet", noOnDeviceModel: false },
   "tablet-ipad-mobile-ua": { tier: "tablet", noOnDeviceModel: false },
   "phone-android-mid": {
     tier: "mobile",

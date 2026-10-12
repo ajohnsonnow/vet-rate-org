@@ -16,7 +16,14 @@ export function contextOptionsFor(p: DeviceProfile): BrowserContextOptions {
   };
 }
 
+/**
+ * Playwright's hasTouch reports 1 touch point. Phones and iPads report 5, and
+ * the app tells an iPad (Macintosh user agent) from a Mac by maxTouchPoints > 1.
+ */
+const TOUCH_POINTS = 5;
+
 interface InitPayload {
+  maxTouchPoints: number;
   deviceMemory: DeviceProfile["deviceMemory"];
   hardwareConcurrency: number;
   userAgentData: DeviceProfile["userAgentData"];
@@ -34,6 +41,7 @@ function installOverrides(p: InitPayload): void {
   if (p.deviceMemory === null) delete proto.deviceMemory;
   else define(navigator, "deviceMemory", () => p.deviceMemory);
   define(navigator, "hardwareConcurrency", () => p.hardwareConcurrency);
+  define(navigator, "maxTouchPoints", () => p.maxTouchPoints);
 
   if (p.userAgentData === null) {
     delete proto.userAgentData;
@@ -119,6 +127,7 @@ export async function applyProfile(
   options: { network?: boolean } = {},
 ): Promise<AppliedState> {
   const payload: InitPayload = {
+    maxTouchPoints: p.hasTouch ? TOUCH_POINTS : 0,
     deviceMemory: p.deviceMemory,
     hardwareConcurrency: p.hardwareConcurrency,
     userAgentData: p.userAgentData,

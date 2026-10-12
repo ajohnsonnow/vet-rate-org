@@ -13,6 +13,7 @@ export interface PageFacts {
   innerHeight: number;
   devicePixelRatio: number;
   touch: boolean;
+  maxTouchPoints: number;
   hasViewportMeta: boolean;
   gpu:
     | { exposed: false }
@@ -61,6 +62,7 @@ export async function readPageFacts(page: Page): Promise<PageFacts> {
       innerHeight: window.innerHeight,
       devicePixelRatio: window.devicePixelRatio,
       touch: nav.maxTouchPoints > 0,
+      maxTouchPoints: nav.maxTouchPoints,
       hasViewportMeta: !!document.querySelector('meta[name="viewport"]'),
       gpu,
     };
@@ -98,6 +100,7 @@ export async function assertProfileApplied(
     2,
   );
   expect(f.touch, "touch points present").toBe(p.hasTouch);
+  expect(f.maxTouchPoints, "maxTouchPoints").toBe(p.hasTouch ? 5 : 0);
   if (!p.isMobile || f.hasViewportMeta) {
     expect([f.innerWidth, f.innerHeight], "viewport width and height").toEqual([
       p.viewport.width,

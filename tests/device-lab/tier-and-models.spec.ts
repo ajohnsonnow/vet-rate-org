@@ -75,8 +75,7 @@ test("the model card the visitor sees names the right download", async ({
 }) => {
   const want = PROFILES[profile.name];
   test.skip(want.noOnDeviceModel, "covered by the no-model test");
-  const pinned = pinsKnownIssue(want.knownIssues?.ui);
-  const tier = TIERS[pinned ? want.knownIssues!.actualTier : want.tier];
+  const tier = TIERS[want.tier];
   const { dialog } = await openAnalyzerAndReadProfile(page);
 
   if (!tier.cardNamesModel) {
@@ -115,11 +114,7 @@ test("the laptop card does not say the model runs on the CPU", async ({
 }) => {
   const want = PROFILES[profile.name];
   test.skip(want.tier !== "laptop", "laptop tier only");
-  const pinned = pinsKnownIssue(
-    "LimitedNotice says 'WASM fallback mode ... will run on your CPU' while the laptop tier loads Qwen3.5-2B through WebGPU (ADR-010 section 3).",
-  );
   const { dialog } = await openAnalyzerAndReadProfile(page);
   const text = (await dialog.innerText()).replace(/\s+/g, " ");
-  if (pinned) expect(text).toMatch(/WASM fallback.*run on your CPU/i);
-  else expect(text).not.toMatch(/WASM fallback|run on your CPU/i);
+  expect(text).not.toMatch(/WASM fallback|run on your CPU/i);
 });

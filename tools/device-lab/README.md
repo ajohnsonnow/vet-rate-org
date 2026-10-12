@@ -57,18 +57,18 @@ says how much of it was.
 
 ## Profile fields
 
-| Field                                     | Meaning                                                                             |
-| ----------------------------------------- | ----------------------------------------------------------------------------------- |
-| `name`, `deviceClass`                     | Identifier (equals file name) and a short description.                              |
-| `source`                                  | Plain-text citation of where each number came from. No comments in JSON.            |
-| `basis`                                   | Per section, `measured`, `documented` or `estimate`. Required for every section.    |
-| `viewport`, `screen`, `deviceScaleFactor` | CSS pixels. `screen` is `window.screen`.                                            |
-| `isMobile`, `hasTouch`, `userAgent`       | Passed to the context.                                                              |
-| `userAgentData`                           | `{ mobile, platform }`, or `null` for browsers without it (Safari, Firefox).        |
-| `deviceMemory`                            | GB as the browser reports it (Chrome caps at 8), or `null` for browsers without it. |
-| `hardwareConcurrency`, `cpuThrottleRate`  | Logical cores reported; CDP CPU slowdown multiplier (1 = none).                     |
-| `network`                                 | Optional `{ downloadKbps, uploadKbps, latencyMs }`.                                 |
-| `gpu`                                     | `null` (no `navigator.gpu`), `{ "adapter": null }`, or an adapter with limits.      |
+| Field                                     | Meaning                                                                                 |
+| ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| `name`, `deviceClass`                     | Identifier (equals file name) and a short description.                                  |
+| `source`                                  | Plain-text citation of where each number came from. No comments in JSON.                |
+| `basis`                                   | Per section, `measured`, `documented` or `estimate`. Required for every section.        |
+| `viewport`, `screen`, `deviceScaleFactor` | CSS pixels. `screen` is `window.screen`.                                                |
+| `isMobile`, `hasTouch`, `userAgent`       | Passed to the context. `hasTouch` also sets `navigator.maxTouchPoints` to 5 (0 if not). |
+| `userAgentData`                           | `{ mobile, platform }`, or `null` for browsers without it (Safari, Firefox).            |
+| `deviceMemory`                            | GB as the browser reports it (Chrome caps at 8), or `null` for browsers without it.     |
+| `hardwareConcurrency`, `cpuThrottleRate`  | Logical cores reported; CDP CPU slowdown multiplier (1 = none).                         |
+| `network`                                 | Optional `{ downloadKbps, uploadKbps, latencyMs }`.                                     |
+| `gpu`                                     | `null` (no `navigator.gpu`), `{ "adapter": null }`, or an adapter with limits.          |
 
 `basis` means: `measured` was read from real hardware by this lab (the
 `source` says when and how), `documented` comes from a vendor or tool
@@ -121,6 +121,11 @@ The core needs `@playwright/test`. It was only run here under ESM
 - With a user-agent override active, Chromium returns a new `NavigatorUAData`
   object on every `navigator.userAgentData` read, so patching one instance does
   not stick. The override replaces the property with one wrapper object.
+- Playwright's `hasTouch` makes `navigator.maxTouchPoints` 1, a value no phone
+  or iPad reports (they report 5). The app tells an iPad, which sends a
+  Macintosh user agent, from a Mac by `maxTouchPoints > 1`, so with the
+  Playwright value the iPad profile was classed as a laptop. The override sets 5
+  for touch profiles.
 - An app that goes on to call `requestDevice()` on a profile adapter gets the
   deliberate rejection. This app's GPU manager logs it as a console error on
   every GPU profile; nothing else breaks.
