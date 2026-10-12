@@ -364,7 +364,7 @@ export const checkWebGPUSupport = async (_forcePowerPreference = null) => {
     return {
       supported: false,
       reason:
-        "WebGPU not available in this browser. Try Chrome 113+, Edge 113+, or Firefox Nightly.",
+        "WebGPU not available in this browser. Use a browser with WebGPU. Chrome and Edge are tested, and Safari works on recent versions.",
     };
   }
 
