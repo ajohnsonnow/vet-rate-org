@@ -21,4 +21,7 @@ COPY . .
 # AI-gated flows; see vite.docker.config.js for the two changes it makes.
 RUN npx vite build --mode e2e --config tools/device-lab/docker/vite.docker.config.js
 
+# Runs as root: the job reads the container's cgroup files and writes to a
+# bind mount owned by the host user.
+# nosemgrep: dockerfile.security.missing-user.missing-user
 CMD ["node", "tools/device-lab/docker/container-run.mjs"]

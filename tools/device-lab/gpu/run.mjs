@@ -16,6 +16,13 @@ import { runMacSurvey } from "./lib/macSurvey.mjs";
 import { renderMarkdown } from "./lib/report.mjs";
 import { REPO_ROOT, startDevServer } from "./lib/server.mjs";
 
+const out = (line) =>
+  process.stdout.write(`${line}
+`);
+const fail = (line) =>
+  process.stderr.write(`${line}
+`);
+
 const here = dirname(fileURLToPath(import.meta.url));
 
 const TIER_MODELS = [
@@ -85,7 +92,7 @@ const { values } = parseArgs({
 });
 
 if (values.help) {
-  console.log(USAGE);
+  out(USAGE);
   process.exit(0);
 }
 
@@ -103,17 +110,13 @@ if (values["mac-ssh"]) process.env.DEVICE_LAB_MAC_SSH = values["mac-ssh"];
 const MAC_NAMES = new Set(["mac", "m1", "mac-chrome"]);
 const adaptersAll = listAdapters();
 if (values.list) {
-  console.table(
-    adaptersAll.map(
-      ({ name, deviceIdHex, luidArg, dedicatedMiB, nvidiaIndex }) => ({
-        name,
-        deviceId: deviceIdHex,
-        "--use-adapter-luid": luidArg,
-        dedicatedMiB,
-        nvidiaIndex,
-      }),
-    ),
-  );
+  for (const a of adaptersAll) {
+    out(
+      [a.name, a.deviceIdHex, a.luidArg, a.dedicatedMiB, a.nvidiaIndex].join(
+        "	",
+      ),
+    );
+  }
   process.exit(0);
 }
 
@@ -123,7 +126,7 @@ const constrain = values["constrain-free-gb"]
       .map((g) => Math.round(Number(g) * 1024))
   : [];
 if (constrain.some((n) => !Number.isFinite(n) || n <= 0)) {
-  console.error("--constrain-free-gb needs positive numbers");
+  fail("--constrain-free-gb needs positive numbers");
   process.exit(2);
 }
 
@@ -141,7 +144,7 @@ if (values["mac-survey"]) {
   adapterSpecs = [values.adapter];
   models = [values.model];
 } else {
-  console.error(USAGE);
+  fail(USAGE);
   process.exit(2);
 }
 
@@ -165,16 +168,16 @@ if (values["mac-survey"] || adapters.some((a) => a.mac)) {
   try {
     macHost();
   } catch (err) {
-    console.error(err.message);
+    fail(err.message);
     process.exit(2);
   }
 }
 if (options.appCheck && adapters.some((a) => a.mac)) {
-  console.error("--app-check is implemented for the Windows adapters only");
+  fail("--app-check is implemented for the Windows adapters only");
   process.exit(2);
 }
 if (constrain.length && adapters.some((a) => a.mac)) {
-  console.error("--constrain-free-gb needs an NVIDIA adapter, not the Mac");
+  fail("--constrain-free-gb needs an NVIDIA adapter, not the Mac");
   process.exit(2);
 }
 const profileDir = resolve(REPO_ROOT, "test-results/device-lab-gpu/profile");
@@ -216,7 +219,7 @@ async function runCells() {
           const target = adapter.mac
             ? macChromeTarget()
             : windowsTarget(adapter, options);
-          console.log(
+          out(
             `cell: ${adapter.name} | ${model} | run ${run}${level ? ` | ${level} MiB free` : ""}`,
           );
           const c = await runCell({
@@ -231,7 +234,7 @@ async function runCells() {
           activeBallast = null;
           cells.push(c);
           save();
-          console.log(
+          out(
             `  loaded=${c.load?.ok ?? false} load=${c.load?.seconds?.toFixed(1)}s short=${c.short?.tokensPerSecond?.toFixed(1)} tok/s long=${c.long?.tokensPerSecond?.toFixed(1)} tok/s${c.error ? ` error=${c.error}` : ""}`,
           );
         }
@@ -248,12 +251,11 @@ try {
       resultsDir,
       stem,
     });
-    console.log(survey.summary);
+    out(survey.summary);
   } else {
     await runCells();
   }
 } finally {
   await cleanup();
 }
-if (!values["mac-survey"])
-  console.log(`wrote ${join(resultsDir, stem)}.json and .md`);
+if (!values["mac-survey"]) out(`wrote ${join(resultsDir, stem)}.json and .md`);

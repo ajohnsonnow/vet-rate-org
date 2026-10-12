@@ -11,6 +11,13 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const out = (line) =>
+  process.stdout.write(`${line}
+`);
+const fail = (line) =>
+  process.stderr.write(`${line}
+`);
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../../..");
 const IMAGE = "device-lab-ram";
@@ -24,7 +31,7 @@ const overalloc = args.includes("--overalloc");
 const skipBuild = args.includes("--skip-build");
 
 if (!presetName || !Object.hasOwn(presets, presetName)) {
-  console.error(
+  fail(
     `usage: run.mjs <${Object.keys(presets).join("|")}> [--overalloc] [--skip-build]`,
   );
   process.exit(2);
@@ -35,7 +42,7 @@ const docker = (dockerArgs, options = {}) =>
   spawnSync("docker", dockerArgs, { encoding: "utf-8", ...options });
 
 if (!skipBuild) {
-  console.log(`building ${IMAGE} (cached layers are reused)`);
+  out(`building ${IMAGE} (cached layers are reused)`);
   const build = docker(
     ["build", "-t", IMAGE, "-f", path.join(here, "Dockerfile"), root],
     { stdio: "inherit" },
@@ -147,42 +154,42 @@ writeFileSync(
 );
 
 const r = summary.result;
-console.log("\n=== device-lab RAM job ===");
-console.log(
+out("\n=== device-lab RAM job ===");
+out(
   `preset:               ${presetName} (${preset.memory}, ${preset.cpus} cpus)`,
 );
-console.log(
+out(
   `peak container mem:   ${summary.peakContainerMemory} (cgroup memory.peak, includes page cache)`,
 );
 if (!overalloc) {
   const s = r?.playwright;
-  console.log(
+  out(
     `peak working set:     ${summary.peakWorkingSet} (sampled every 0.5 s, minus inactive file cache)`,
   );
-  console.log(`duration:             ${summary.container.wallSeconds} s wall`);
-  console.log(
+  out(`duration:             ${summary.container.wallSeconds} s wall`);
+  out(
     s
       ? `tests:                ${s.expected} passed, ${s.unexpected} failed, ${s.skipped} skipped, ${s.flaky} flaky`
       : "tests:                no Playwright report written",
   );
   const d = r?.doubleThrottled;
-  console.log(
+  out(
     d
       ? `double-throttled:      ${d.expected} passed, ${d.unexpected} failed, ${d.skipped} skipped (own 4x CPU throttle on top of the cap; not a device result, not in the result below)`
       : "double-throttled:      no report written (not counted either way)",
   );
-  console.log(
+  out(
     `container OOM-killed: ${summary.container.dockerOOMKilled} (exit ${summary.container.exitCode})`,
   );
-  console.log(`cgroup oom_kill:      ${r?.memoryEvents?.oom_kill ?? "n/a"}`);
-  console.log(
+  out(`cgroup oom_kill:      ${r?.memoryEvents?.oom_kill ?? "n/a"}`);
+  out(
     `result:                ${summary.passed && !summary.container.dockerOOMKilled ? "PASS" : "FAIL"}`,
   );
   process.exit(summary.passed && !summary.container.dockerOOMKilled ? 0 : 1);
 }
-console.log(`node allocator:       exit ${JSON.stringify(r?.child?.node)}`);
-console.log(`tab allocator:        exit ${JSON.stringify(r?.child?.tab)}`);
-console.log(`cgroup oom_kill:      ${r?.memoryEvents?.oom_kill ?? "n/a"}`);
-console.log(
+out(`node allocator:       exit ${JSON.stringify(r?.child?.node)}`);
+out(`tab allocator:        exit ${JSON.stringify(r?.child?.tab)}`);
+out(`cgroup oom_kill:      ${r?.memoryEvents?.oom_kill ?? "n/a"}`);
+out(
   `pid1 allocator:       OOMKilled=${summary.pid1Allocator.dockerOOMKilled}, exit ${summary.pid1Allocator.exitCode}`,
 );

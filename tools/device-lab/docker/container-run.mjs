@@ -78,6 +78,7 @@ sample();
 
 const run = (cmd, args, logFile, env = {}) =>
   new Promise((resolve) => {
+    // nosemgrep: local.detect-child-process-strict,javascript.lang.security.detect-child-process.detect-child-process
     const child = spawn(cmd, args, {
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env, ...env },

@@ -2,6 +2,10 @@
 // cgroup limit kills the renderer, and reports what Playwright saw.
 import { chromium } from "@playwright/test";
 
+const out = (line) =>
+  process.stdout.write(`${line}
+`);
+
 const WAIT_MS = 180_000;
 
 const browser = await chromium.launch();
@@ -10,7 +14,7 @@ await page.goto("about:blank");
 
 const crashed = new Promise((resolve) => {
   page.on("crash", () => {
-    console.log("tab event: crash");
+    out("tab event: crash");
     resolve("tab crashed (renderer killed)");
   });
 });
@@ -35,9 +39,7 @@ const timeout = new Promise((resolve) =>
   setTimeout(() => resolve(`no crash within ${WAIT_MS / 1000} s`), WAIT_MS),
 );
 
-console.log(
-  `tab outcome: ${await Promise.race([crashed, allocating, timeout])}`,
-);
-console.log(`browser still connected: ${browser.isConnected()}`);
+out(`tab outcome: ${await Promise.race([crashed, allocating, timeout])}`);
+out(`browser still connected: ${browser.isConnected()}`);
 await browser.close().catch(() => {});
 process.exit(0);

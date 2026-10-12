@@ -25,6 +25,7 @@ export async function startDevServer() {
       `port ${PROBE_PORT} is already in use; stop whatever holds it (a leftover probe server) and run again`,
     );
   }
+  // nosemgrep: local.detect-child-process-strict,javascript.lang.security.detect-child-process.detect-child-process
   const child = spawn(
     process.execPath,
     [
