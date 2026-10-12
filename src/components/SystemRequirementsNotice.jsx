@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { APP_TRANSLATIONS } from "../i18n/translations";
+import { useOptionalLanguage } from "../contexts/LanguageContext";
 import {
   detectDeviceCapabilities,
   describeDeviceModel,
@@ -14,6 +16,23 @@ import {
   AI_CHUNK_RATE,
   estimateTotalTime,
 } from "../data/aiPerformanceProfile";
+
+function useNoticeText() {
+  const language = useOptionalLanguage();
+  return (key, params) => {
+    if (language) return language.t("systemRequirements", key, params);
+    return Object.entries(params ?? {}).reduce(
+      (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+      APP_TRANSLATIONS.systemRequirements[key].en,
+    );
+  };
+}
+
+function modelPhrase(text, deviceModel) {
+  return deviceModel
+    ? `${deviceModel.displayName} (${formatDownloadSize(deviceModel)})`
+    : text("limitedModelFallback");
+}
 
 /**
  * Strips ANGLE/driver wrapper from WebGPU adapter description strings.
@@ -54,6 +73,7 @@ export default function SystemRequirementsNotice({
   const [profile, setProfile] = useState(null);
   const [showWhy, setShowWhy] = useState(false);
   const [showReqs, setShowReqs] = useState(false);
+  const text = useNoticeText();
 
   useEffect(() => {
     detectDeviceCapabilities().then(setProfile);
@@ -67,12 +87,6 @@ export default function SystemRequirementsNotice({
   const noWebGpu = !profile.hasWebGPU && !profile.isMobile;
 
   const gpuName = friendlyGpuName(profile.gpuDescription);
-  const tierRate =
-    AI_CHUNK_RATE[profile.isAppleSilicon ? "apple-silicon" : profile.tier] ??
-    AI_CHUNK_RATE[profile.tier];
-  const warmup = profile.isAppleSilicon
-    ? AI_WARMUP.firstRunAppleSilicon
-    : AI_WARMUP.firstRun;
   const timeEstimate = fileSizeMB
     ? estimateTotalTime(fileSizeMB, profile.tier)
     : null;
@@ -83,6 +97,7 @@ export default function SystemRequirementsNotice({
       <CompactNotice
         profile={profile}
         noWebGpu={noWebGpu}
+        text={text}
         tablet={tablet}
         limited={limited}
         gpuName={gpuName}
@@ -99,22 +114,25 @@ export default function SystemRequirementsNotice({
         profile={profile}
         toolName={toolName}
         supportsExtractionOnly={supportsExtractionOnly}
+        text={text}
       />
     );
   }
 
   if (tablet)
-    return <TabletNotice deviceModel={describeDeviceModel(profile)} />;
+    return (
+      <TabletNotice deviceModel={describeDeviceModel(profile)} text={text} />
+    );
 
   // Warning: laptop / integrated GPU
   if (limited) {
     return (
       <LimitedNotice
+        text={text}
         deviceModel={describeDeviceModel(profile)}
         gpuName={gpuName}
-        tierRate={tierRate}
+        profile={profile}
         timeEstimate={timeEstimate}
-        warmup={warmup}
         showWhy={showWhy}
         setShowWhy={setShowWhy}
         showReqs={showReqs}
@@ -126,6 +144,7 @@ export default function SystemRequirementsNotice({
   // Compatible: desktop-mid or desktop-high
   return (
     <CompatibleNotice
+      text={text}
       profile={profile}
       gpuName={gpuName}
       timeEstimate={timeEstimate}
@@ -137,7 +156,7 @@ export default function SystemRequirementsNotice({
   );
 }
 
-function CompactNotice({ profile, noWebGpu, limited, gpuName, tablet }) {
+function CompactNotice({ profile, noWebGpu, limited, gpuName, tablet, text }) {
   const deviceModel = describeDeviceModel(profile);
   if (profile.isMobile) {
     return (
@@ -160,7 +179,7 @@ function CompactNotice({ profile, noWebGpu, limited, gpuName, tablet }) {
       <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
         <span aria-hidden="true">🚫</span>
         <span>
-          WebGPU not available. Use Chrome 113+ or Edge 113+ for on-device AI.
+          {text("noWebGpuLead")} {text("browserNeeded")}
         </span>
       </div>
     );
@@ -169,10 +188,7 @@ function CompactNotice({ profile, noWebGpu, limited, gpuName, tablet }) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-300">
         <span aria-hidden="true">⚠</span>
-        <span>
-          Limited GPU capacity - processing uses CPU fallback (WASM). Large
-          files will be slow.
-        </span>
+        <span>{text("limitedCompact")}</span>
       </div>
     );
   }
@@ -194,21 +210,21 @@ function tabletSummary(deviceModel) {
   return `Tablet detected. On-device AI loads ${model} when your browser has WebGPU. ${TABLET_UNTESTED_SENTENCE}`;
 }
 
-function TabletNotice({ deviceModel }) {
+function TabletNotice({ deviceModel, text }) {
   return (
     <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 p-4 space-y-2">
       <p className="text-yellow-800 dark:text-yellow-200 text-sm font-semibold">
         {tabletSummary(deviceModel)}
       </p>
-      <RequirementsList deviceModel={deviceModel} />
+      <RequirementsList deviceModel={deviceModel} text={text} />
     </div>
   );
 }
 
-function BlockedNotice({ profile, toolName, supportsExtractionOnly }) {
+function BlockedNotice({ profile, toolName, supportsExtractionOnly, text }) {
   const reason = profile.isMobile
     ? "Phone detected - on-device AI is not available on phones."
-    : "Your browser does not expose a WebGPU adapter. On-device AI requires Chrome 113+ or Edge 113+.";
+    : `${text("blockedNoAdapter")} ${text("browserNeeded")}`;
 
   return (
     <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 space-y-2">
@@ -242,22 +258,28 @@ function BlockedNotice({ profile, toolName, supportsExtractionOnly }) {
           </p>
         </div>
       </div>
-      <RequirementsList />
+      <RequirementsList text={text} />
     </div>
   );
 }
 
 function LimitedNotice({
+  text,
+  profile,
   deviceModel,
   gpuName,
-  tierRate,
   timeEstimate,
-  warmup,
   showWhy,
   setShowWhy,
   showReqs,
   setShowReqs,
 }) {
+  const tierRate =
+    AI_CHUNK_RATE[profile.isAppleSilicon ? "apple-silicon" : profile.tier] ??
+    AI_CHUNK_RATE[profile.tier];
+  const warmup = profile.isAppleSilicon
+    ? AI_WARMUP.firstRunAppleSilicon
+    : AI_WARMUP.firstRun;
   return (
     <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 p-4 space-y-2">
       <div className="flex items-start gap-3">
@@ -266,7 +288,7 @@ function LimitedNotice({
         </span>
         <div className="flex-1">
           <p className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm">
-            Limited GPU - WASM fallback mode
+            {text("limitedTitle")}
             {gpuName && (
               <span className="font-normal ml-2 text-yellow-700 dark:text-yellow-400">
                 ({gpuName})
@@ -274,13 +296,15 @@ function LimitedNotice({
             )}
           </p>
           <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-1">
-            Your integrated or low-end GPU doesn't meet the 6 GB VRAM minimum
-            for on-device inference. Processing will run on your CPU -
-            significantly slower. Large C-Files (300 MB+) may take
-            {tierRate
-              ? ` ${Math.round(tierRate.p50 / 60)}-${Math.round(tierRate.p90 / 60)} min per section`
-              : " many hours"}
-            .
+            {text("limitedBody", {
+              model: modelPhrase(text, deviceModel),
+              range: tierRate
+                ? text("limitedRangeMinutes", {
+                    low: Math.round(tierRate.p50 / 60),
+                    high: Math.round(tierRate.p90 / 60),
+                  })
+                : text("limitedRangeUnknown"),
+            })}
           </p>
           {timeEstimate && (
             <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-1 font-medium">
@@ -302,13 +326,14 @@ function LimitedNotice({
         open={showReqs}
         onToggle={() => setShowReqs((v) => !v)}
       >
-        <RequirementsList deviceModel={deviceModel} />
+        <RequirementsList deviceModel={deviceModel} text={text} />
       </ExpandSection>
     </div>
   );
 }
 
 function CompatibleNotice({
+  text,
   profile,
   gpuName,
   timeEstimate,
@@ -365,7 +390,7 @@ function CompatibleNotice({
         open={showReqs}
         onToggle={() => setShowReqs((v) => !v)}
       >
-        <RequirementsList deviceModel={deviceModel} />
+        <RequirementsList deviceModel={deviceModel} text={text} />
       </ExpandSection>
     </div>
   );
@@ -434,7 +459,7 @@ function WhyExplanation({ warmup }) {
   );
 }
 
-function RequirementsList({ deviceModel = null }) {
+function RequirementsList({ deviceModel = null, text }) {
   return (
     <ul className="space-y-1">
       <li>
@@ -451,10 +476,10 @@ function RequirementsList({ deviceModel = null }) {
         {AI_REQUIREMENTS.ram.minGB} GB minimum)
       </li>
       <li>
-        <strong>Browser:</strong> {AI_REQUIREMENTS.browser.join(" or ")}
+        <strong>Browser:</strong> {text("browserNeeded")}
       </li>
       <li>
-        <strong>Note:</strong> {AI_REQUIREMENTS.browserNote}
+        <strong>Note:</strong> {text("browserNote")}
       </li>
       <li>
         <strong>First-time download:</strong>{" "}

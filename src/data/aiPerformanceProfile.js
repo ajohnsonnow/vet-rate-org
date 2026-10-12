@@ -65,7 +65,7 @@ export const AI_CHUNK_RATE = {
   laptop: {
     p50: 480,
     p90: 720,
-    label: "Laptop / integrated GPU (WASM fallback)",
+    label: "Laptop / integrated GPU",
   },
   tablet: null,
   mobile: null,
@@ -76,9 +76,6 @@ export const AI_CHUNK_RATE = {
 // ---------------------------------------------------------------------------
 
 export const AI_REQUIREMENTS = {
-  browser: ["Chrome 113+", "Edge 113+"],
-  browserNote:
-    "Firefox and Safari do not support WebGPU. On-device AI will not run in those browsers.",
   gpu: {
     minVRAM: 6,
     minDesc: "NVIDIA GTX 1060 6 GB · AMD RX 580 8 GB · Apple M1",
