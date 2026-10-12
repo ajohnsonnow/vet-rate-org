@@ -144,7 +144,10 @@ const usePWAInstallPrompt = () => {
 
     // Check if iOS
     const ios =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (/Macintosh/.test(navigator.userAgent) &&
+          navigator.maxTouchPoints > 1)) &&
+      !window.MSStream;
     setIsIOS(ios);
 
     // Listen for the beforeinstallprompt event (Android/Chrome)
