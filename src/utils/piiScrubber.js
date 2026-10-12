@@ -212,9 +212,9 @@ const PII_PATTERNS = {
   // stays at 8-9 digits. A labelled 7-digit number is caught by the label
   // rules (`FILE_NUMBER_LABEL_PATTERN`, below), which spell out the labels,
   // separators and line breaks they accept; a bare 7-digit run is never
-  // redacted (claim amounts, regulation numbers). A "C" straight after an
-  // obvious non-identifier word ("Vitamin C", "Hepatitis C") is skipped
-  // (`_followsNonFileNumberWord`).
+  // redacted (claim amounts, regulation numbers). A 7-digit number whose "C"
+  // straight follows a substance word ("Vitamin C", "Hepatitis C") is skipped
+  // (`_followsNonFileNumberWord`); 8 and 9 digits never are.
   vaFile: /\bC[-\s]?(?:(?!\d{4}[-\s]\d{2,4}\b)\d(?:[-\s]?\d){7,8}|\d{7})\b/gi,
   vaFileStandalone: /\b\d{8,9}\b/g,
 
@@ -1213,9 +1213,7 @@ function _applyPhoneMrnEdipiVaFile(
   applyContextual(
     PII_PATTERNS.vaFile,
     "VA File",
-    aggressive
-      ? _followsNonFileNumberWordSevenDigits
-      : _followsNonFileNumberWord,
+    _followsNonFileNumberWord,
     () => "[REDACTED_VAFILE]",
     false,
   );
@@ -1324,22 +1322,17 @@ function _isAudiogramOrClinicalRow(line, match) {
 }
 
 // "Vitamin C 1234567", "Hepatitis C 1234567": the "C" names the thing, it is
-// not a file-number prefix. Only the few words that cannot precede a real file
-// number; checked against a short bounded slice of the text before the match.
+// not a file-number prefix. Only words that name a substance or a disease
+// subtype, never a generic word like "type" or "group" that also precedes a
+// real file number; checked against a short bounded slice of the text before
+// the match. It spares 7-digit numbers only: an 8 or 9 digit number is always
+// scrubbed, in both modes.
 const _NON_FILE_NUMBER_WORD =
-  /\b(?:vitamin|vit|hepatitis|hep|genotype|type|class|grade|stage|group|part|factor|protein|complement)[ \t-]{0,3}$/i;
+  /\b(?:vitamin|vit|hepatitis|hep|genotype|factor|protein|complement)[ \t-]{0,3}$/i;
 
-function _followsNonFileNumberWord(_line, _match, before) {
-  return _NON_FILE_NUMBER_WORD.test(before);
-}
-
-// Aggressive mode scrubs 8 and 9 digit numbers anyway, but its bare-digit rule
-// cannot see one glued to the "C" ("C12345678") or re-grouped ("C 12 345 678"),
-// so there the exception is kept to the 7-digit form it was added for.
-function _followsNonFileNumberWordSevenDigits(line, match, before) {
+function _followsNonFileNumberWord(_line, match, before) {
   return (
-    match.replace(/\D/g, "").length === 7 &&
-    _followsNonFileNumberWord(line, match, before)
+    match.replace(/\D/g, "").length === 7 && _NON_FILE_NUMBER_WORD.test(before)
   );
 }
 

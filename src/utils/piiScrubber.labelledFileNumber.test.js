@@ -165,27 +165,40 @@ describe("a C before 7 digits is not taken for a file number after an obvious no
     "Hepatitis C 1234567 copies",
     "Hepatitis-C 1234567 copies",
     "Genotype C 1234567",
-    "Group C 1234567",
-    "Class C 1234567",
+    "Factor C 1234567",
   ])("leaves %j intact", (text) => {
     for (const aggressive of MODES) {
       expect(scrubbed(text, aggressive).scrubbedText).toBe(text);
     }
   });
 
-  it("leaves a C and 8 digits after Vitamin alone outside aggressive mode", () => {
-    const text = "Vitamin C 23456789 units";
-    expect(scrubbed(text, false).scrubbedText).toBe(text);
+  it.each([
+    "Vitamin C 23456789 units",
+    "Hepatitis C23456789 on file",
+    "Hepatitis C 23 456 789",
+    "Genotype C-345678901",
+    "vit C23456789",
+    "Type C-345678901",
+    "Part C 345 678 901",
+    "Group C 23456789",
+  ])("scrubs 8 and 9 digits in %j in both modes", (text) => {
+    for (const aggressive of MODES) {
+      expect(scrubbed(text, aggressive).scrubbedText).not.toMatch(/\d{2}/);
+    }
   });
 
   it.each([
-    "Hepatitis C23456789 on file",
-    "Hepatitis C 23 456 789",
-    "Type C-345678901",
-    "Part C 345 678 901",
-    "vit C23456789",
-  ])("aggressive mode still scrubs 8 and 9 digits in %j", (text) => {
-    expect(scrubbed(text, true).scrubbedText).not.toMatch(/\d{2}/);
+    "Type C1234567",
+    "Part C 1234567",
+    "Group C 1234567",
+    "Class C 1234567",
+    "Grade C1234567",
+    "Stage C 1234567",
+    "type c 1234567",
+  ])("a generic word before the C does not spare %j", (text) => {
+    for (const aggressive of MODES) {
+      expect(scrubbed(text, aggressive).scrubbedText).not.toContain("1234567");
+    }
   });
 
   it.each([
@@ -218,10 +231,27 @@ describe("label rules stay linear on pathological input", () => {
     ["Vitamin spaces C digits", `Vitamin${" ".repeat(long)}C 1234567`],
     ["many file numbers on one line", "C1234567 ".repeat(40000)],
     ["many Vitamin C numbers on one line", "Vitamin C 1234567 ".repeat(20000)],
+    ["many Part C numbers on one line", "Part C 12345678 ".repeat(26000)],
   ])("%s", (_name, input) => {
     const start = performance.now();
     scrubPII(input);
     scrubPII(input, { aggressive: true });
     expect(performance.now() - start).toBeLessThan(2000);
+  });
+});
+
+describe("a 400000-character line stays fast", () => {
+  it.each([
+    ["file numbers", "C1234567 ".repeat(44444)],
+    ["Vitamin C numbers", "Vitamin C 1234567 ".repeat(22222)],
+    ["Part C 8-digit numbers", "Part C 12345678 ".repeat(25000)],
+    ["labelled numbers", "File No. 123456789 ".repeat(22222)],
+  ])("%s", (_name, input) => {
+    expect(input.length).toBeGreaterThanOrEqual(399_000);
+    for (const aggressive of MODES) {
+      const start = performance.now();
+      scrubPII(input, { aggressive });
+      expect(performance.now() - start).toBeLessThan(500);
+    }
   });
 });
