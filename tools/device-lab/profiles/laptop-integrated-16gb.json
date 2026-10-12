@@ -1,0 +1,43 @@
+{
+  "name": "laptop-integrated-16gb",
+  "deviceClass": "Windows laptop, Intel Iris Xe integrated GPU, 16 GB RAM",
+  "source": "Core i7-1255U class (10 cores, 12 threads, Iris Xe 96 EU), 15.6 inch 1920x1080 at 100 percent scaling. Chrome caps deviceMemory at 8, so 16 GB reports the same value as 8 GB. GPU limits are the WebGPU specification default limits (the floor every adapter must meet), not a measurement of this device. What an Iris Xe laptop really reports for maxBufferSize was not measured. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "estimate"
+  },
+  "viewport": {
+    "width": 1920,
+    "height": 940
+  },
+  "screen": {
+    "width": 1920,
+    "height": 1080
+  },
+  "deviceScaleFactor": 1,
+  "isMobile": false,
+  "hasTouch": false,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "userAgentData": {
+    "mobile": false,
+    "platform": "Windows"
+  },
+  "deviceMemory": 8,
+  "hardwareConcurrency": 12,
+  "cpuThrottleRate": 3,
+  "gpu": {
+    "adapter": {
+      "vendor": "intel",
+      "architecture": "gen-12lp",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 268435456,
+        "maxStorageBufferBindingSize": 134217728
+      }
+    }
+  }
+}

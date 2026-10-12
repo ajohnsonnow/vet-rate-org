@@ -1,0 +1,1236 @@
+[
+  {
+    "adapter": "Apple M1 (Google Chrome, Metal)",
+    "platform": "macos",
+    "browser": "Google Chrome",
+    "host": "Mac mini, Apple M1, 16 GB",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "coldDownload": {
+      "loadSeconds": 37.99575,
+      "memory": {
+        "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+        "baselineDedicatedMiB": 585,
+        "baselineSharedMiB": null,
+        "peakDedicatedMiB": 2987,
+        "peakSharedMiB": null,
+        "peakDedicatedDeltaMiB": 2402,
+        "peakSharedDeltaMiB": null,
+        "minFreeMiB": null,
+        "mac": {
+          "peakBrowserRssMiB": 2444,
+          "baselineBrowserRssMiB": 0,
+          "minSystemFreePercent": 39,
+          "maxPressureLevel": 2,
+          "baselineSwapUsedMiB": 2071,
+          "peakSwapUsedMiB": 2071,
+          "samples": 35
+        },
+        "counterSamples": 35
+      }
+    },
+    "startedAt": "2026-10-12T01:07:00.438Z",
+    "phases": {
+      "load": {
+        "from": 1791767224436,
+        "to": 1791767227848
+      },
+      "warmup": {
+        "from": 1791767227848,
+        "to": 1791767231079
+      },
+      "short": {
+        "from": 1791767231079,
+        "to": 1791767236851
+      },
+      "long": {
+        "from": 1791767236851,
+        "to": 1791767283878
+      },
+      "end": 1791767283921
+    },
+    "events": [
+      {
+        "t": 1791767283934,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791767283934,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 4294967292,
+      "gpuDescription": "Apple M1",
+      "systemRAM": 16,
+      "cpuCores": 8,
+      "screenWidth": 800,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 700.3125,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 3.4053149999380112,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - Apple M1"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 2.4664550000429153,
+      "totalSeconds": 3.221180000066757,
+      "tokensPerSecond": 2.649971843965444,
+      "engineDecodeTokensPerSecond": 3.9832438198833997,
+      "enginePrefillTokensPerSecond": 18.271292145815924,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 72,
+      "ttftSeconds": 0.5468150000572205,
+      "totalSeconds": 5.743310000061989,
+      "tokensPerSecond": 13.663055578795872,
+      "engineDecodeTokensPerSecond": 13.993883506698715,
+      "enginePrefillTokensPerSecond": 82.42060148435465,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 34.115375,
+      "totalSeconds": 47.018984999895096,
+      "tokensPerSecond": 9.454718485833952,
+      "engineDecodeTokensPerSecond": 9.59639362779514,
+      "enginePrefillTokensPerSecond": 95.38644996487162,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791767224501
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791767283901,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 585,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 5352,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 4767,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 2195,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 24,
+        "maxPressureLevel": 2,
+        "baselineSwapUsedMiB": 2071,
+        "peakSwapUsedMiB": 2870,
+        "samples": 54
+      },
+      "counterSamples": 54
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 585,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 2666,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 2081,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 2195,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 40,
+        "maxPressureLevel": 2,
+        "baselineSwapUsedMiB": 2071,
+        "peakSwapUsedMiB": 2071,
+        "samples": 3
+      },
+      "counterSamples": 3
+    }
+  },
+  {
+    "adapter": "Apple M1 (Google Chrome, Metal)",
+    "platform": "macos",
+    "browser": "Google Chrome",
+    "host": "Mac mini, Apple M1, 16 GB",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T01:08:08.263Z",
+    "phases": {
+      "load": {
+        "from": 1791767292282,
+        "to": 1791767295405
+      },
+      "warmup": {
+        "from": 1791767295405,
+        "to": 1791767296400
+      },
+      "short": {
+        "from": 1791767296400,
+        "to": 1791767301990
+      },
+      "long": {
+        "from": 1791767301990,
+        "to": 1791767348690
+      },
+      "end": 1791767348736
+    },
+    "events": [
+      {
+        "t": 1791767348749,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791767348749,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 4294967292,
+      "gpuDescription": "Apple M1",
+      "systemRAM": 16,
+      "cpuCores": 8,
+      "screenWidth": 800,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 675.84375,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 3.11602999997139,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - Apple M1"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.687119999885559,
+      "totalSeconds": 0.9889399999380112,
+      "tokensPerSecond": 6.626466104474283,
+      "engineDecodeTokensPerSecond": 10.004001604776153,
+      "enginePrefillTokensPerSecond": 65.74958176326957,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 72,
+      "ttftSeconds": 0.5457799999713898,
+      "totalSeconds": 5.5833849999904634,
+      "tokensPerSecond": 14.093999033217408,
+      "engineDecodeTokensPerSecond": 14.440954546943638,
+      "enginePrefillTokensPerSecond": 82.57789847556586,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 33.9604200000763,
+      "totalSeconds": 46.68417000007629,
+      "tokensPerSecond": 9.588368209057863,
+      "engineDecodeTokensPerSecond": 9.732852968783043,
+      "enginePrefillTokensPerSecond": 95.82092382659425,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791767292378
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791767348718,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 585,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 5360,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 4776,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 2919,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 26,
+        "maxPressureLevel": 2,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 51
+      },
+      "counterSamples": 51
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 585,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 2843,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 2258,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 2919,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 50,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 3
+      },
+      "counterSamples": 3
+    }
+  },
+  {
+    "adapter": "Apple M1 (Google Chrome, Metal)",
+    "platform": "macos",
+    "browser": "Google Chrome",
+    "host": "Mac mini, Apple M1, 16 GB",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "coldDownload": {
+      "loadSeconds": 14.203384999990464,
+      "memory": {
+        "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+        "baselineDedicatedMiB": 561,
+        "baselineSharedMiB": null,
+        "peakDedicatedMiB": 1100,
+        "peakSharedMiB": null,
+        "peakDedicatedDeltaMiB": 539,
+        "peakSharedDeltaMiB": null,
+        "minFreeMiB": null,
+        "mac": {
+          "peakBrowserRssMiB": 2544,
+          "baselineBrowserRssMiB": 0,
+          "minSystemFreePercent": 59,
+          "maxPressureLevel": 1,
+          "baselineSwapUsedMiB": 2870,
+          "peakSwapUsedMiB": 2870,
+          "samples": 13
+        },
+        "counterSamples": 13
+      }
+    },
+    "startedAt": "2026-10-12T01:09:35.433Z",
+    "phases": {
+      "load": {
+        "from": 1791767379378,
+        "to": 1791767381207
+      },
+      "warmup": {
+        "from": 1791767381207,
+        "to": 1791767383339
+      },
+      "short": {
+        "from": 1791767383339,
+        "to": 1791767385505
+      },
+      "long": {
+        "from": 1791767385505,
+        "to": 1791767408626
+      },
+      "end": 1791767408659
+    },
+    "events": [
+      {
+        "t": 1791767408666,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791767408666,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 4294967292,
+      "gpuDescription": "Apple M1",
+      "systemRAM": 16,
+      "cpuCores": 8,
+      "screenWidth": 800,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 668.921875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 1.8100349999666214,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 1 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - Apple M1"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 1.4877450000047683,
+      "totalSeconds": 2.1241299999952314,
+      "tokensPerSecond": 3.142751636242167,
+      "engineDecodeTokensPerSecond": 4.7237399430087725,
+      "enginePrefillTokensPerSecond": 30.29782764585507,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.2644099999666214,
+      "totalSeconds": 2.1487749999761583,
+      "tokensPerSecond": 26.003454744570195,
+      "engineDecodeTokensPerSecond": 26.879119229224244,
+      "enginePrefillTokensPerSecond": 170.62581757278775,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 116,
+      "ttftSeconds": 15.346440000057221,
+      "totalSeconds": 23.115080000042916,
+      "tokensPerSecond": 14.803105820351023,
+      "engineDecodeTokensPerSecond": 15.08762528730727,
+      "enginePrefillTokensPerSecond": 212.0411896862987,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791767379444
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791767408643,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 561,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 3603,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 3042,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 2442,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 46,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 27
+      },
+      "counterSamples": 27
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 561,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 1709,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 1148,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 2442,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 56,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 2
+      },
+      "counterSamples": 2
+    }
+  },
+  {
+    "adapter": "Apple M1 (Google Chrome, Metal)",
+    "platform": "macos",
+    "browser": "Google Chrome",
+    "host": "Mac mini, Apple M1, 16 GB",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T01:10:12.644Z",
+    "phases": {
+      "load": {
+        "from": 1791767416646,
+        "to": 1791767418572
+      },
+      "warmup": {
+        "from": 1791767418572,
+        "to": 1791767419094
+      },
+      "short": {
+        "from": 1791767419094,
+        "to": 1791767421249
+      },
+      "long": {
+        "from": 1791767421249,
+        "to": 1791767444490
+      },
+      "end": 1791767444521
+    },
+    "events": [
+      {
+        "t": 1791767444527,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791767444527,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 4294967292,
+      "gpuDescription": "Apple M1",
+      "systemRAM": 16,
+      "cpuCores": 8,
+      "screenWidth": 800,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 674.796875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 1.9201349999904633,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 1 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - Apple M1"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.37955499994754793,
+      "totalSeconds": 0.5146399999856949,
+      "tokensPerSecond": 14.805492833661882,
+      "engineDecodeTokensPerSecond": 22.420686789211942,
+      "enginePrefillTokensPerSecond": 119.34756665081801,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.2640550000667572,
+      "totalSeconds": 2.150985000014305,
+      "tokensPerSecond": 25.968106925727017,
+      "engineDecodeTokensPerSecond": 26.840593718742255,
+      "enginePrefillTokensPerSecond": 170.8882390637841,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 119,
+      "ttftSeconds": 15.342485000014305,
+      "totalSeconds": 23.23593500006199,
+      "tokensPerSecond": 14.949103370425753,
+      "engineDecodeTokensPerSecond": 15.245367137254586,
+      "enginePrefillTokensPerSecond": 212.1019340767009,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791767416719
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791767444504,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 561,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 3589,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 3028,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 2354,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 48,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 25
+      },
+      "counterSamples": 25
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 561,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 1616,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 1055,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 2284,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 60,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 2
+      },
+      "counterSamples": 2
+    }
+  },
+  {
+    "adapter": "Apple M1 (Google Chrome, Metal)",
+    "platform": "macos",
+    "browser": "Google Chrome",
+    "host": "Mac mini, Apple M1, 16 GB",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T01:10:48.723Z",
+    "phases": {
+      "load": {
+        "from": 1791767452656,
+        "to": 1791767454067
+      },
+      "warmup": {
+        "from": 1791767454067,
+        "to": 1791767454475
+      },
+      "short": {
+        "from": 1791767454475,
+        "to": 1791767455677
+      },
+      "long": {
+        "from": 1791767455677,
+        "to": 1791767482740
+      },
+      "end": 1791767482766
+    },
+    "events": [
+      {
+        "t": 1791767482781,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791767482781,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 4294967292,
+      "gpuDescription": "Apple M1",
+      "systemRAM": 16,
+      "cpuCores": 8,
+      "screenWidth": 800,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 677.03125,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 1.4073600000143052,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 1 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - Apple M1"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 0.22562000000476837,
+      "totalSeconds": 0.40538499999046324,
+      "tokensPerSecond": 33.37690874462471,
+      "engineDecodeTokensPerSecond": 39.46774923398924,
+      "enginePrefillTokensPerSecond": 183.51909048890207,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.15567999994754791,
+      "totalSeconds": 1.1974649999141693,
+      "tokensPerSecond": 36.47585634388815,
+      "engineDecodeTokensPerSecond": 38.11981348713279,
+      "enginePrefillTokensPerSecond": 264.439356185784,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 11.998939999938012,
+      "totalSeconds": 27.058634999990463,
+      "tokensPerSecond": 8.366703309699243,
+      "engineDecodeTokensPerSecond": 8.478853606089883,
+      "enginePrefillTokensPerSecond": 265.03832012410055,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791767452717
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791767482750,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 581,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 2653,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 2072,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 1870,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 53,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 27
+      },
+      "counterSamples": 27
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 581,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 841,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 260,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 1475,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 65,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 1
+      },
+      "counterSamples": 1
+    }
+  },
+  {
+    "adapter": "Apple M1 (Google Chrome, Metal)",
+    "platform": "macos",
+    "browser": "Google Chrome",
+    "host": "Mac mini, Apple M1, 16 GB",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T01:11:26.746Z",
+    "phases": {
+      "load": {
+        "from": 1791767490748,
+        "to": 1791767492120
+      },
+      "warmup": {
+        "from": 1791767492120,
+        "to": 1791767492543
+      },
+      "short": {
+        "from": 1791767492543,
+        "to": 1791767493738
+      },
+      "long": {
+        "from": 1791767493738,
+        "to": 1791767521030
+      },
+      "end": 1791767521056
+    },
+    "events": [
+      {
+        "t": 1791767521069,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791767521070,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "device": "0x0000",
+        "description": "Apple M1",
+        "maxBufferSize": 4294967292,
+        "maxStorageBufferBindingSize": 4294967292
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 4294967292,
+      "gpuDescription": "Apple M1",
+      "systemRAM": 16,
+      "cpuCores": 8,
+      "screenWidth": 800,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 666.84375,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 1.3664099999666215,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 1 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - Apple M1"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 0.2337649999856949,
+      "totalSeconds": 0.41537000000476837,
+      "tokensPerSecond": 33.03873791674148,
+      "engineDecodeTokensPerSecond": 39.050514657004776,
+      "enginePrefillTokensPerSecond": 177.20151269584008,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.153125,
+      "totalSeconds": 1.1878999999761581,
+      "tokensPerSecond": 36.72295909823444,
+      "engineDecodeTokensPerSecond": 38.31135342133804,
+      "enginePrefillTokensPerSecond": 268.6586724078161,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 12.012769999980927,
+      "totalSeconds": 27.28350499999523,
+      "tokensPerSecond": 8.251076323430533,
+      "engineDecodeTokensPerSecond": 8.361077407212466,
+      "enginePrefillTokensPerSecond": 264.73184869625936,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791767490821
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791767521038,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 581,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 2598,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 2017,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 1878,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 54,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 28
+      },
+      "counterSamples": 28
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "macos-agx-alloc-system-memory (unified)",
+      "baselineDedicatedMiB": 581,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 718,
+      "peakSharedMiB": null,
+      "peakDedicatedDeltaMiB": 137,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": null,
+      "mac": {
+        "peakBrowserRssMiB": 1302,
+        "baselineBrowserRssMiB": 0,
+        "minSystemFreePercent": 65,
+        "maxPressureLevel": 1,
+        "baselineSwapUsedMiB": 2870,
+        "peakSwapUsedMiB": 2870,
+        "samples": 1
+      },
+      "counterSamples": 1
+    }
+  }
+]

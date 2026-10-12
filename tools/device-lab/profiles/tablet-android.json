@@ -1,0 +1,43 @@
+{
+  "name": "tablet-android",
+  "deviceClass": "Android tablet, mid-range, 4 GB RAM",
+  "source": "Galaxy Tab A8 class (10.5 inch 1920x1200, 8 cores, 4 GB). CSS size assumes 1.5x scaling. Chrome on Android tablets sends a user agent without the Mobile token and userAgentData.mobile false. The 6x CPU slowdown is the DevTools low-tier mobile preset. Adapter vendor and limits are unmeasured; GPU limits are the WebGPU specification default limits (the floor every adapter must meet), not a measurement of this device. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "estimate",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "documented"
+  },
+  "viewport": {
+    "width": 800,
+    "height": 1232
+  },
+  "screen": {
+    "width": 800,
+    "height": 1280
+  },
+  "deviceScaleFactor": 1.5,
+  "isMobile": true,
+  "hasTouch": true,
+  "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "userAgentData": {
+    "mobile": false,
+    "platform": "Android"
+  },
+  "deviceMemory": 4,
+  "hardwareConcurrency": 8,
+  "cpuThrottleRate": 6,
+  "gpu": {
+    "adapter": {
+      "vendor": "arm",
+      "architecture": "bifrost",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 268435456,
+        "maxStorageBufferBindingSize": 134217728
+      }
+    }
+  }
+}

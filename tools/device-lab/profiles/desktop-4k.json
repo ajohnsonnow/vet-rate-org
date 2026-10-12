@@ -1,0 +1,43 @@
+{
+  "name": "desktop-4k",
+  "deviceClass": "Desktop, discrete 16 GB GPU, 3840x2160 monitor at 100 percent scaling",
+  "source": "Same machine as desktop-high on a 4K monitor at 100 percent scaling (3840 CSS px wide), which is how large monitors reach the app. GPU limits and CPU values are those measured for desktop-high. Window height is an assumption. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "measured",
+    "gpu": "measured",
+    "cpuThrottleRate": "measured"
+  },
+  "viewport": {
+    "width": 3840,
+    "height": 1990
+  },
+  "screen": {
+    "width": 3840,
+    "height": 2160
+  },
+  "deviceScaleFactor": 1,
+  "isMobile": false,
+  "hasTouch": false,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "userAgentData": {
+    "mobile": false,
+    "platform": "Windows"
+  },
+  "deviceMemory": 8,
+  "hardwareConcurrency": 32,
+  "cpuThrottleRate": 1,
+  "gpu": {
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    }
+  }
+}

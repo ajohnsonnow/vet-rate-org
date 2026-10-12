@@ -1,0 +1,40 @@
+{
+  "name": "phone-iphone",
+  "deviceClass": "iPhone 14, Safari",
+  "source": "iPhone 14: 390x844 CSS px at 3x (Apple specifications), 6 CPU cores. Safari has no navigator.userAgentData and no navigator.deviceMemory. Safari on iOS 26 ships WebGPU, so an adapter is present; its limits are unmeasured and use the specification floor. GPU limits are the WebGPU specification default limits (the floor every adapter must meet), not a measurement of this device.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "estimate"
+  },
+  "viewport": {
+    "width": 390,
+    "height": 664
+  },
+  "screen": {
+    "width": 390,
+    "height": 844
+  },
+  "deviceScaleFactor": 3,
+  "isMobile": true,
+  "hasTouch": true,
+  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+  "userAgentData": null,
+  "deviceMemory": null,
+  "hardwareConcurrency": 6,
+  "cpuThrottleRate": 3,
+  "gpu": {
+    "adapter": {
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 268435456,
+        "maxStorageBufferBindingSize": 134217728
+      }
+    }
+  }
+}

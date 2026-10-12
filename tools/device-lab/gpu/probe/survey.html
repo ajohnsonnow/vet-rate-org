@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>device-lab gpu survey</title>
+  </head>
+  <body>
+    <p id="status">starting</p>
+    <script>
+      (function () {
+        var q = new URLSearchParams(location.search);
+        window.__survey = { runId: q.get("run"), model: q.get("model") };
+        window.__post = function (payload) {
+          payload.runId = window.__survey.runId;
+          return fetch("/__device-lab/result", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        };
+        window.__post({
+          stage: "page-opened",
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          maxTouchPoints: navigator.maxTouchPoints,
+          isSecureContext: window.isSecureContext,
+          hasNavigatorGpu: Boolean(navigator.gpu),
+          screen: { w: screen.width, h: screen.height, dpr: devicePixelRatio },
+          inner: { w: innerWidth, h: innerHeight },
+          deviceMemory:
+            navigator.deviceMemory === undefined
+              ? null
+              : navigator.deviceMemory,
+          hardwareConcurrency: navigator.hardwareConcurrency,
+        });
+        window.addEventListener("error", function (e) {
+          window.__post({
+            stage: "script-error",
+            message: String(e.message),
+            source: String(e.filename),
+          });
+        });
+        window.addEventListener("unhandledrejection", function (e) {
+          window.__post({
+            stage: "unhandled-rejection",
+            message: String(e.reason),
+          });
+        });
+      })();
+    </script>
+    <script type="module" src="./survey.js"></script>
+  </body>
+</html>

@@ -1,0 +1,653 @@
+[
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "painting, background tab",
+    "backgroundTab": true,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T06:40:59.277Z",
+    "phases": {
+      "load": {
+        "from": 1791787263618,
+        "to": 1791787268742
+      },
+      "warmup": {
+        "from": 1791787268742,
+        "to": 1791787272520
+      },
+      "short": {
+        "from": 1791787272520,
+        "to": 1791787280765
+      },
+      "long": {
+        "from": 1791787280765,
+        "to": 1791787287991
+      },
+      "end": 1791787288001
+    },
+    "events": [
+      {
+        "t": 1791787263477,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791787288021,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791787288060,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 307.8359375,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 5.086795000076294,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 2.169490000009537,
+      "totalSeconds": 3.7719099999666215,
+      "tokensPerSecond": 3.744336690855512,
+      "engineDecodeTokensPerSecond": 8.470166861602985,
+      "enginePrefillTokensPerSecond": 18.980251280135324,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 4,
+        "framesPerSecond": 1.1,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 1.9976000000238419,
+      "totalSeconds": 8.239085000038147,
+      "tokensPerSecond": 6.088294692675366,
+      "engineDecodeTokensPerSecond": 6.269859579005532,
+      "enginePrefillTokensPerSecond": 20.533880904226322,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 8,
+        "framesPerSecond": 1,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+      "paint": {
+        "enabled": true,
+        "frames": 8,
+        "framesPerSecond": 1.1,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "paint": {
+      "enabled": true,
+      "frames": 37,
+      "framesPerSecond": 1.4,
+      "painting": false,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791787263984
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791787287966,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 235,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 447,
+      "peakSharedMiB": 6017,
+      "peakDedicatedDeltaMiB": 212,
+      "peakSharedDeltaMiB": 1868,
+      "minFreeMiB": null,
+      "counterSamples": 29
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 235,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 443,
+      "peakSharedMiB": 4921,
+      "peakDedicatedDeltaMiB": 207,
+      "peakSharedDeltaMiB": 773,
+      "minFreeMiB": null,
+      "counterSamples": 29
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "painting, background tab",
+    "backgroundTab": true,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T06:41:32.613Z",
+    "phases": {
+      "load": {
+        "from": 1791787296292,
+        "to": 1791787299154
+      },
+      "warmup": {
+        "from": 1791787299154,
+        "to": 1791787302541
+      },
+      "short": {
+        "from": 1791787302541,
+        "to": 1791787309665
+      },
+      "long": {
+        "from": 1791787309665,
+        "to": 1791787316438
+      },
+      "end": 1791787316446
+    },
+    "events": [
+      {
+        "t": 1791787296222,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791787316461,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791787316489,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 239.0703125,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 2.8608949999809266,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 2.0226449999809266,
+      "totalSeconds": 3.383494999885559,
+      "tokensPerSecond": 4.409009075519327,
+      "engineDecodeTokensPerSecond": 5.345266003617091,
+      "enginePrefillTokensPerSecond": 20.31543427880211,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 4,
+        "framesPerSecond": 1.2,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 1.7933849999904632,
+      "totalSeconds": 7.121009999990464,
+      "tokensPerSecond": 7.132634147485981,
+      "engineDecodeTokensPerSecond": 7.39716517908647,
+      "enginePrefillTokensPerSecond": 22.879464285714285,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 7,
+        "framesPerSecond": 1,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+      "paint": {
+        "enabled": true,
+        "frames": 7,
+        "framesPerSecond": 1,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "paint": {
+      "enabled": true,
+      "frames": 30,
+      "framesPerSecond": 1.4,
+      "painting": false,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791787296457
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791787316410,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 235,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 447,
+      "peakSharedMiB": 6047,
+      "peakDedicatedDeltaMiB": 211,
+      "peakSharedDeltaMiB": 1898,
+      "minFreeMiB": null,
+      "counterSamples": 24
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 235,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 442,
+      "peakSharedMiB": 4797,
+      "peakDedicatedDeltaMiB": 207,
+      "peakSharedDeltaMiB": 649,
+      "minFreeMiB": null,
+      "counterSamples": 24
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "platform": "windows",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 3,
+    "headed": false,
+    "pageCondition": "painting, background tab",
+    "backgroundTab": true,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T06:42:00.351Z",
+    "phases": {
+      "load": {
+        "from": 1791787324079,
+        "to": 1791787327837
+      },
+      "warmup": {
+        "from": 1791787327837,
+        "to": 1791787331290
+      },
+      "short": {
+        "from": 1791787331290,
+        "to": 1791787339832
+      },
+      "long": {
+        "from": 1791787339832,
+        "to": 1791787343688
+      },
+      "end": 1791787343713
+    },
+    "events": [
+      {
+        "t": 1791787324000,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791787343733,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791787343765,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "page": {
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "origin": "http://localhost:5232"
+    },
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "contextWindow": 12288,
+    "contextWindowSource": "detector, tier desktop-high",
+    "cachedBefore": true,
+    "preLoadMiB": 237.0390625,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 3.7559750000238417,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 2.11097000002861,
+      "totalSeconds": 3.45027999997139,
+      "tokensPerSecond": 4.479918764331143,
+      "engineDecodeTokensPerSecond": 5.284015852047556,
+      "enginePrefillTokensPerSecond": 19.822180536689675,
+      "textHead": "A smoke detector detects the presence of smoke",
+      "paint": {
+        "enabled": true,
+        "frames": 4,
+        "framesPerSecond": 1.2,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 1.874475000023842,
+      "totalSeconds": 8.539430000066757,
+      "tokensPerSecond": 5.701463850806993,
+      "engineDecodeTokensPerSecond": 5.897737763857136,
+      "enginePrefillTokensPerSecond": 21.88499169893672,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir",
+      "paint": {
+        "enabled": true,
+        "frames": 8,
+        "framesPerSecond": 0.9,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+      "paint": {
+        "enabled": true,
+        "frames": 4,
+        "framesPerSecond": 1,
+        "painting": false,
+        "foreground": true,
+        "visibilityState": "visible",
+        "hasFocus": true
+      }
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "paint": {
+      "enabled": true,
+      "frames": 29,
+      "framesPerSecond": 1.4,
+      "painting": false,
+      "foreground": true,
+      "visibilityState": "visible",
+      "hasFocus": true
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791787324262
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791787343662,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 235,
+      "baselineSharedMiB": 4178,
+      "peakDedicatedMiB": 447,
+      "peakSharedMiB": 6059,
+      "peakDedicatedDeltaMiB": 212,
+      "peakSharedDeltaMiB": 1880,
+      "minFreeMiB": null,
+      "counterSamples": 24
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 235,
+      "baselineSharedMiB": 4178,
+      "peakDedicatedMiB": 442,
+      "peakSharedMiB": 4884,
+      "peakDedicatedDeltaMiB": 207,
+      "peakSharedDeltaMiB": 705,
+      "minFreeMiB": null,
+      "counterSamples": 24
+    }
+  }
+]

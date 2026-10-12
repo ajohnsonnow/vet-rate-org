@@ -1,0 +1,180 @@
+[
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 10,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:17:44.277Z",
+    "phases": {
+      "load": {
+        "from": 1791764267927,
+        "to": 1791764272634
+      },
+      "warmup": {
+        "from": 1791764272634,
+        "to": 1791764276773
+      },
+      "short": {
+        "from": 1791764276773,
+        "to": 1791764286066
+      },
+      "long": {
+        "from": 1791764286066,
+        "to": 1791764325361
+      },
+      "end": 1791764325963
+    },
+    "events": [
+      {
+        "t": 1791764267901,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791764325974,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791764325997,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 253.33984375,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 4.702475000023842,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 2.6877699999809264,
+      "totalSeconds": 4.135774999976158,
+      "tokensPerSecond": 4.14363210073153,
+      "engineDecodeTokensPerSecond": 4.85383036527389,
+      "enginePrefillTokensPerSecond": 15.282569111256741,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 2.0263150000572203,
+      "totalSeconds": 9.287764999985695,
+      "tokensPerSecond": 5.233114598375573,
+      "engineDecodeTokensPerSecond": 5.3926991154887025,
+      "enginePrefillTokensPerSecond": 20.245163997457976,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 2122,
+      "promptTokens": 497,
+      "completionTokens": 127,
+      "ttftSeconds": 15.381299999952317,
+      "totalSeconds": 39.2865799999237,
+      "tokensPerSecond": 5.270802098956833,
+      "engineDecodeTokensPerSecond": 5.333085855669103,
+      "enginePrefillTokensPerSecond": 32.314379248376525,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791764268138
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791764325392,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 243,
+      "baselineSharedMiB": 4213,
+      "peakDedicatedMiB": 447,
+      "peakSharedMiB": 6024,
+      "peakDedicatedDeltaMiB": 204,
+      "peakSharedDeltaMiB": 1811,
+      "minFreeMiB": null,
+      "counterSamples": 61
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 243,
+      "baselineSharedMiB": 4213,
+      "peakDedicatedMiB": 443,
+      "peakSharedMiB": 5087,
+      "peakDedicatedDeltaMiB": 200,
+      "peakSharedDeltaMiB": 874,
+      "minFreeMiB": null,
+      "counterSamples": 61
+    }
+  }
+]

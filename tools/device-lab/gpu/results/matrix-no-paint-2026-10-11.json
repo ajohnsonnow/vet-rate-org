@@ -1,0 +1,3089 @@
+[
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "coldDownload": {
+      "loadSeconds": 45.84478499996662,
+      "memory": {
+        "dedicatedSource": "windows-counter",
+        "baselineDedicatedMiB": null,
+        "baselineSharedMiB": null,
+        "peakDedicatedMiB": 448,
+        "peakSharedMiB": 6728,
+        "peakDedicatedDeltaMiB": null,
+        "peakSharedDeltaMiB": null,
+        "minFreeMiB": null,
+        "counterSamples": 52
+      }
+    },
+    "startedAt": "2026-10-12T00:30:41.016Z",
+    "phases": {
+      "load": {
+        "from": 1791765044861,
+        "to": 1791765056673
+      },
+      "warmup": {
+        "from": 1791765056673,
+        "to": 1791765067680
+      }
+    },
+    "events": [
+      {
+        "t": 1791765044794,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765067691,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765067713,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 248.12109375,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 11.809264999985695,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 10 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765045127
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765067649,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 244,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 452,
+      "peakSharedMiB": 7199,
+      "peakDedicatedDeltaMiB": 207,
+      "peakSharedDeltaMiB": 3050,
+      "minFreeMiB": null,
+      "counterSamples": 28
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 244,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 452,
+      "peakSharedMiB": 6620,
+      "peakDedicatedDeltaMiB": 207,
+      "peakSharedDeltaMiB": 2472,
+      "minFreeMiB": null,
+      "counterSamples": 28
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:31:11.907Z",
+    "phases": {
+      "load": {
+        "from": 1791765075393,
+        "to": 1791765081730
+      },
+      "warmup": {
+        "from": 1791765081730,
+        "to": 1791765085063
+      }
+    },
+    "events": [
+      {
+        "t": 1791765075336,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765085073,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765085096,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 244.33203125,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 6.334774999976158,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 6 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765075530
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765085000,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 244,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 458,
+      "peakSharedMiB": 7165,
+      "peakDedicatedDeltaMiB": 214,
+      "peakSharedDeltaMiB": 3017,
+      "minFreeMiB": null,
+      "counterSamples": 14
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 244,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 458,
+      "peakSharedMiB": 6047,
+      "peakDedicatedDeltaMiB": 214,
+      "peakSharedDeltaMiB": 1899,
+      "minFreeMiB": null,
+      "counterSamples": 14
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "coldDownload": {
+      "loadSeconds": 17.20445999991894,
+      "memory": {
+        "dedicatedSource": "windows-counter",
+        "baselineDedicatedMiB": 202,
+        "baselineSharedMiB": 4148,
+        "peakDedicatedMiB": 450,
+        "peakSharedMiB": 4943,
+        "peakDedicatedDeltaMiB": 247,
+        "peakSharedDeltaMiB": 795,
+        "minFreeMiB": null,
+        "counterSamples": 22
+      }
+    },
+    "startedAt": "2026-10-12T00:31:53.945Z",
+    "phases": {
+      "load": {
+        "from": 1791765117752,
+        "to": 1791765123683
+      },
+      "warmup": {
+        "from": 1791765123683,
+        "to": 1791765131346
+      }
+    },
+    "events": [
+      {
+        "t": 1791765117661,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765131353,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765131371,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 252.94921875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 5.9289300000667575,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 5 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765117962
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765131299,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 202,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 452,
+      "peakSharedMiB": 5439,
+      "peakDedicatedDeltaMiB": 249,
+      "peakSharedDeltaMiB": 1290,
+      "minFreeMiB": null,
+      "counterSamples": 18
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 202,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 450,
+      "peakSharedMiB": 5007,
+      "peakDedicatedDeltaMiB": 248,
+      "peakSharedDeltaMiB": 859,
+      "minFreeMiB": null,
+      "counterSamples": 18
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:32:16.024Z",
+    "phases": {
+      "load": {
+        "from": 1791765139873,
+        "to": 1791765146783
+      },
+      "warmup": {
+        "from": 1791765146783,
+        "to": 1791765156954
+      },
+      "short": {
+        "from": 1791765156954,
+        "to": 1791765169356
+      },
+      "long": {
+        "from": 1791765169356,
+        "to": 1791765174709
+      },
+      "end": 1791765174715
+    },
+    "events": [
+      {
+        "t": 1791765139786,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765174725,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765174746,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 208.54296875,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 6.906319999933243,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 6 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 7.337820000052452,
+      "totalSeconds": 10.168470000028611,
+      "tokensPerSecond": 0.7065514987783179,
+      "engineDecodeTokensPerSecond": 1.0606759688431944,
+      "enginePrefillTokensPerSecond": 6.136487760823044,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 3.2810750000476836,
+      "totalSeconds": 12.400754999995232,
+      "tokensPerSecond": 5.3729955437341905,
+      "engineDecodeTokensPerSecond": 5.498384574441872,
+      "enginePrefillTokensPerSecond": 13.71898936778324,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765140089
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765174653,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 202,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 453,
+      "peakSharedMiB": 6511,
+      "peakDedicatedDeltaMiB": 250,
+      "peakSharedDeltaMiB": 2362,
+      "minFreeMiB": null,
+      "counterSamples": 39
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 202,
+      "baselineSharedMiB": 4148,
+      "peakDedicatedMiB": 450,
+      "peakSharedMiB": 5023,
+      "peakDedicatedDeltaMiB": 247,
+      "peakSharedDeltaMiB": 875,
+      "minFreeMiB": null,
+      "counterSamples": 39
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:33:00.391Z",
+    "phases": {
+      "load": {
+        "from": 1791765184396,
+        "to": 1791765189051
+      },
+      "warmup": {
+        "from": 1791765189052,
+        "to": 1791765191761
+      },
+      "short": {
+        "from": 1791765191761,
+        "to": 1791765198121
+      },
+      "long": {
+        "from": 1791765198121,
+        "to": 1791765202050
+      },
+      "end": 1791765202055
+    },
+    "events": [
+      {
+        "t": 1791765184324,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765202063,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765202091,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 204.62109375,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 4.653550000071526,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 1.9072699999809266,
+      "totalSeconds": 2.707839999914169,
+      "tokensPerSecond": 7.4946600553359755,
+      "engineDecodeTokensPerSecond": 8.802429471695048,
+      "enginePrefillTokensPerSecond": 21.53723314767305,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 1.6722450000047684,
+      "totalSeconds": 6.35677999997139,
+      "tokensPerSecond": 8.111797649130759,
+      "engineDecodeTokensPerSecond": 8.363687443661409,
+      "enginePrefillTokensPerSecond": 24.532535527299927,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765184595
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765202025,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 205,
+      "baselineSharedMiB": 4182,
+      "peakDedicatedMiB": 452,
+      "peakSharedMiB": 5875,
+      "peakDedicatedDeltaMiB": 247,
+      "peakSharedDeltaMiB": 1693,
+      "minFreeMiB": null,
+      "counterSamples": 22
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 205,
+      "baselineSharedMiB": 4182,
+      "peakDedicatedMiB": 447,
+      "peakSharedMiB": 4878,
+      "peakDedicatedDeltaMiB": 243,
+      "peakSharedDeltaMiB": 695,
+      "minFreeMiB": null,
+      "counterSamples": 22
+    }
+  },
+  {
+    "adapter": "AMD Radeon(TM) Graphics",
+    "adapterDeviceId": "0x164e",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:33:26.090Z",
+    "phases": {
+      "load": {
+        "from": 1791765209657,
+        "to": 1791765212533
+      },
+      "warmup": {
+        "from": 1791765212533,
+        "to": 1791765215043
+      },
+      "short": {
+        "from": 1791765215043,
+        "to": 1791765220842
+      },
+      "long": {
+        "from": 1791765220842,
+        "to": 1791765224396
+      },
+      "end": 1791765224402
+    },
+    "events": [
+      {
+        "t": 1791765209574,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765224411,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765224433,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "amd",
+        "architecture": "rdna-2",
+        "device": "0x164e",
+        "description": "AMD Radeon(TM) Graphics",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "AMD Radeon(TM) Graphics",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 208.41015625,
+    "preLoadFreeMiB": null,
+    "load": {
+      "ok": true,
+      "seconds": 2.874740000009537,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 2 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - AMD Radeon(TM) Graphics"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 1.7574249999523164,
+      "totalSeconds": 2.50815499997139,
+      "tokensPerSecond": 7.992220904782759,
+      "engineDecodeTokensPerSecond": 9.381868868218602,
+      "enginePrefillTokensPerSecond": 23.375475706454914,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 1.4935049999952317,
+      "totalSeconds": 5.7973700000047685,
+      "tokensPerSecond": 8.829273223002069,
+      "engineDecodeTokensPerSecond": 9.100741709669661,
+      "enginePrefillTokensPerSecond": 27.46433822614822,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765209806
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765224371,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 205,
+      "baselineSharedMiB": 4182,
+      "peakDedicatedMiB": 446,
+      "peakSharedMiB": 5883,
+      "peakDedicatedDeltaMiB": 241,
+      "peakSharedDeltaMiB": 1700,
+      "minFreeMiB": null,
+      "counterSamples": 19
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "windows-counter",
+      "baselineDedicatedMiB": 205,
+      "baselineSharedMiB": 4182,
+      "peakDedicatedMiB": 444,
+      "peakSharedMiB": 4824,
+      "peakDedicatedDeltaMiB": 239,
+      "peakSharedDeltaMiB": 641,
+      "minFreeMiB": null,
+      "counterSamples": 19
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:33:47.953Z",
+    "phases": {
+      "load": {
+        "from": 1791765231553,
+        "to": 1791765239618
+      },
+      "warmup": {
+        "from": 1791765239618,
+        "to": 1791765250360
+      },
+      "short": {
+        "from": 1791765250360,
+        "to": 1791765252991
+      },
+      "long": {
+        "from": 1791765252991,
+        "to": 1791765260882
+      },
+      "end": 1791765260888
+    },
+    "events": [
+      {
+        "t": 1791765231489,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765260899,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765260919,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 53,
+    "preLoadFreeMiB": 16057,
+    "load": {
+      "ok": true,
+      "seconds": 8.062170000076295,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 7 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 8.660400000095368,
+      "totalSeconds": 10.738570000052452,
+      "tokensPerSecond": 0.9623851754386317,
+      "engineDecodeTokensPerSecond": 1.4453721591352113,
+      "enginePrefillTokensPerSecond": 5.198631027162848,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.15163999998569488,
+      "totalSeconds": 2.629360000014305,
+      "tokensPerSecond": 27.444586151467803,
+      "engineDecodeTokensPerSecond": 28.33844315697334,
+      "enginePrefillTokensPerSecond": 298.39859431485445,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765231762
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765260805,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 4343,
+      "peakSharedMiB": 78,
+      "peakDedicatedDeltaMiB": 4343,
+      "peakSharedDeltaMiB": 78,
+      "minFreeMiB": 11767,
+      "counterSamples": 36
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2422,
+      "peakSharedMiB": 71,
+      "peakDedicatedDeltaMiB": 2422,
+      "peakSharedDeltaMiB": 70,
+      "minFreeMiB": 13688,
+      "counterSamples": 36
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:34:30.333Z",
+    "phases": {
+      "load": {
+        "from": 1791765274172,
+        "to": 1791765283715
+      },
+      "warmup": {
+        "from": 1791765283715,
+        "to": 1791765284433
+      },
+      "short": {
+        "from": 1791765284433,
+        "to": 1791765287101
+      },
+      "long": {
+        "from": 1791765287101,
+        "to": 1791765294747
+      },
+      "end": 1791765294753
+    },
+    "events": [
+      {
+        "t": 1791765274079,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765294763,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765294787,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 54,
+    "preLoadFreeMiB": 16056,
+    "load": {
+      "ok": true,
+      "seconds": 9.540655000090599,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 8 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.5493200000524521,
+      "totalSeconds": 0.7155549999475479,
+      "tokensPerSecond": 12.031160713821512,
+      "engineDecodeTokensPerSecond": 18.49967626001731,
+      "enginePrefillTokensPerSecond": 82.8508041159916,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.15157499992847442,
+      "totalSeconds": 2.665625,
+      "tokensPerSecond": 27.047990293775136,
+      "engineDecodeTokensPerSecond": 28.007736624219675,
+      "enginePrefillTokensPerSecond": 298.77502262568413,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": false,
+      "timedOut": false,
+      "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved."
+    },
+    "error": "AbortError: Failed to execute 'mapAsync' on 'GPUBuffer': Buffer was unmapped before mapping was resolved.",
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765274462
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765294704,
+        "reason": "unknown",
+        "message": "ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+      }
+    ],
+    "crashed": false,
+    "deviceLost": "DXGI_ERROR_DEVICE_HUNG",
+    "deviceLostSignals": [
+      "device-lost: unknown ID3D12Device::GetDeviceRemovedReason failed with DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n - While handling unexpected error type Internal when allowed errors are (Validation|DeviceLost).\n    at CheckHRESULTImpl (..\\..\\third_party\\dawn\\src\\dawn\\native\\d3d\\D3DError.cpp:121)\n\nBackend messages:\n * Device removed reason: DXGI_ERROR_DEVICE_HUNG (0x887A0006)\n"
+    ],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 4344,
+      "peakSharedMiB": 83,
+      "peakDedicatedDeltaMiB": 4344,
+      "peakSharedDeltaMiB": 83,
+      "minFreeMiB": 11766,
+      "counterSamples": 28
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2531,
+      "peakSharedMiB": 83,
+      "peakDedicatedDeltaMiB": 2531,
+      "peakSharedDeltaMiB": 83,
+      "minFreeMiB": 13579,
+      "counterSamples": 28
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:35:03.225Z",
+    "phases": {
+      "load": {
+        "from": 1791765306993,
+        "to": 1791765311376
+      },
+      "warmup": {
+        "from": 1791765311376,
+        "to": 1791765316459
+      },
+      "short": {
+        "from": 1791765316459,
+        "to": 1791765317802
+      },
+      "long": {
+        "from": 1791765317802,
+        "to": 1791765325898
+      },
+      "end": 1791765326027
+    },
+    "events": [
+      {
+        "t": 1791765306931,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765326034,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765326053,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 44,
+    "preLoadFreeMiB": 16066,
+    "load": {
+      "ok": true,
+      "seconds": 4.380884999990463,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 3.389899999976158,
+      "totalSeconds": 5.076625,
+      "tokensPerSecond": 1.1857297425316693,
+      "engineDecodeTokensPerSecond": 1.783606869123008,
+      "enginePrefillTokensPerSecond": 13.286741161313454,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.08790000009536743,
+      "totalSeconds": 1.3404800000190735,
+      "tokensPerSecond": 39.11925785417663,
+      "engineDecodeTokensPerSecond": 41.29927520341342,
+      "enginePrefillTokensPerSecond": 520.8333334770559,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 4.001495000004768,
+      "totalSeconds": 8.094389999985696,
+      "tokensPerSecond": 29.80775221464722,
+      "engineDecodeTokensPerSecond": 30.86373285010738,
+      "enginePrefillTokensPerSecond": 813.4074748910042,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765307202
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765325955,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2851,
+      "peakSharedMiB": 101,
+      "peakDedicatedDeltaMiB": 2851,
+      "peakSharedDeltaMiB": 101,
+      "minFreeMiB": 13259,
+      "counterSamples": 24
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1225,
+      "peakSharedMiB": 84,
+      "peakDedicatedDeltaMiB": 1225,
+      "peakSharedDeltaMiB": 84,
+      "minFreeMiB": 14885,
+      "counterSamples": 24
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:35:31.948Z",
+    "phases": {
+      "load": {
+        "from": 1791765335511,
+        "to": 1791765339765
+      },
+      "warmup": {
+        "from": 1791765339765,
+        "to": 1791765340246
+      },
+      "short": {
+        "from": 1791765340246,
+        "to": 1791765341526
+      },
+      "long": {
+        "from": 1791765341526,
+        "to": 1791765348937
+      },
+      "end": 1791765349063
+    },
+    "events": [
+      {
+        "t": 1791765335451,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765349070,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765349087,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 58,
+    "preLoadFreeMiB": 16052,
+    "load": {
+      "ok": true,
+      "seconds": 4.252170000076294,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 0.36168500006198884,
+      "totalSeconds": 0.47854499995708466,
+      "tokensPerSecond": 17.114495993456977,
+      "engineDecodeTokensPerSecond": 26.149487927599125,
+      "enginePrefillTokensPerSecond": 125.9375350061772,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.09333499991893768,
+      "totalSeconds": 1.2784049999713898,
+      "tokensPerSecond": 41.347768484419674,
+      "engineDecodeTokensPerSecond": 43.04018662507581,
+      "enginePrefillTokensPerSecond": 486.80224980684716,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 3.9873600000143052,
+      "totalSeconds": 7.409659999966621,
+      "tokensPerSecond": 35.648540455746094,
+      "engineDecodeTokensPerSecond": 36.507832859579075,
+      "enginePrefillTokensPerSecond": 816.2272191980917,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765335710
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765348991,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2843,
+      "peakSharedMiB": 102,
+      "peakDedicatedDeltaMiB": 2843,
+      "peakSharedDeltaMiB": 101,
+      "minFreeMiB": 13267,
+      "counterSamples": 17
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1045,
+      "peakSharedMiB": 70,
+      "peakDedicatedDeltaMiB": 1045,
+      "peakSharedDeltaMiB": 70,
+      "minFreeMiB": 15065,
+      "counterSamples": 17
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:35:53.552Z",
+    "phases": {
+      "load": {
+        "from": 1791765357266,
+        "to": 1791765360928
+      },
+      "warmup": {
+        "from": 1791765360928,
+        "to": 1791765366651
+      },
+      "short": {
+        "from": 1791765366651,
+        "to": 1791765367253
+      },
+      "long": {
+        "from": 1791765367253,
+        "to": 1791765375455
+      },
+      "end": 1791765375565
+    },
+    "events": [
+      {
+        "t": 1791765357186,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765375572,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765375592,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 52,
+    "preLoadFreeMiB": 16058,
+    "load": {
+      "ok": true,
+      "seconds": 3.6594399999380114,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 4.858809999942779,
+      "totalSeconds": 5.72140499997139,
+      "tokensPerSecond": 6.955755597703435,
+      "engineDecodeTokensPerSecond": 8.155418986462614,
+      "enginePrefillTokensPerSecond": 8.445537099920747,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.055504999995231626,
+      "totalSeconds": 0.6005149999856949,
+      "tokensPerSecond": 69.72349131330606,
+      "engineDecodeTokensPerSecond": 73.60157016749255,
+      "enginePrefillTokensPerSecond": 747.6294670868923,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.1778500000238417,
+      "totalSeconds": 8.199659999966622,
+      "tokensPerSecond": 25.090554999379844,
+      "engineDecodeTokensPerSecond": 25.58338168066778,
+      "enginePrefillTokensPerSecond": 1000.9537389309193,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765357561
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765375476,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1763,
+      "peakSharedMiB": 80,
+      "peakDedicatedDeltaMiB": 1763,
+      "peakSharedDeltaMiB": 80,
+      "minFreeMiB": 14347,
+      "counterSamples": 22
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 910,
+      "peakSharedMiB": 80,
+      "peakDedicatedDeltaMiB": 910,
+      "peakSharedDeltaMiB": 80,
+      "minFreeMiB": 15200,
+      "counterSamples": 22
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4060 Ti",
+    "adapterDeviceId": "0x2803",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:36:20.065Z",
+    "phases": {
+      "load": {
+        "from": 1791765383832,
+        "to": 1791765387612
+      },
+      "warmup": {
+        "from": 1791765387612,
+        "to": 1791765391096
+      },
+      "short": {
+        "from": 1791765391096,
+        "to": 1791765391662
+      },
+      "long": {
+        "from": 1791765391662,
+        "to": 1791765399855
+      },
+      "end": 1791765399977
+    },
+    "events": [
+      {
+        "t": 1791765383749,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765399984,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765400012,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2803",
+        "description": "NVIDIA GeForce RTX 4060 Ti",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4060 Ti",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 53,
+    "preLoadFreeMiB": 16056,
+    "load": {
+      "ok": true,
+      "seconds": 3.7781750000715255,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 3 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4060 Ti"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 2.7985899999141695,
+      "totalSeconds": 3.482304999947548,
+      "tokensPerSecond": 8.77558631843251,
+      "engineDecodeTokensPerSecond": 10.299570362802571,
+      "enginePrefillTokensPerSecond": 14.668868189661177,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.05537000000476837,
+      "totalSeconds": 0.5638250000476838,
+      "tokensPerSecond": 74.73621067113642,
+      "engineDecodeTokensPerSecond": 78.8444237627083,
+      "enginePrefillTokensPerSecond": 758.4867255455656,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 3.1387450000047683,
+      "totalSeconds": 8.191784999966622,
+      "tokensPerSecond": 24.935484381867393,
+      "engineDecodeTokensPerSecond": 25.413596273157854,
+      "enginePrefillTokensPerSecond": 1013.3423408223471,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765384111
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765399877,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1767,
+      "peakSharedMiB": 76,
+      "peakDedicatedDeltaMiB": 1767,
+      "peakSharedDeltaMiB": 75,
+      "minFreeMiB": 14343,
+      "counterSamples": 20
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 951,
+      "peakSharedMiB": 67,
+      "peakDedicatedDeltaMiB": 951,
+      "peakSharedDeltaMiB": 66,
+      "minFreeMiB": 15159,
+      "counterSamples": 20
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4080 SUPER",
+    "adapterDeviceId": "0x2702",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:36:44.688Z",
+    "phases": {
+      "load": {
+        "from": 1791765408334,
+        "to": 1791765416439
+      },
+      "warmup": {
+        "from": 1791765416439,
+        "to": 1791765429040
+      },
+      "short": {
+        "from": 1791765429040,
+        "to": 1791765431876
+      },
+      "long": {
+        "from": 1791765431876,
+        "to": 1791765442245
+      },
+      "end": 1791765442461
+    },
+    "events": [
+      {
+        "t": 1791765408263,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765442471,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765442504,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4080 SUPER",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 62,
+    "preLoadFreeMiB": 15986,
+    "load": {
+      "ok": true,
+      "seconds": 8.101975000023842,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 7 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4080 SUPER"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 10.36069000005722,
+      "totalSeconds": 12.596804999947548,
+      "tokensPerSecond": 0.8944083824392269,
+      "engineDecodeTokensPerSecond": 1.3439445219615207,
+      "enginePrefillTokensPerSecond": 4.345693128428901,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.112,
+      "totalSeconds": 2.829975000023842,
+      "tokensPerSecond": 25.018625998915926,
+      "engineDecodeTokensPerSecond": 26.0375884689635,
+      "enginePrefillTokensPerSecond": 405.935682113109,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 4.780450000047684,
+      "totalSeconds": 10.365164999961854,
+      "tokensPerSecond": 21.845340362377488,
+      "engineDecodeTokensPerSecond": 22.503794086739006,
+      "enginePrefillTokensPerSecond": 680.8592552441922,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765408569
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765442349,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 4712,
+      "peakSharedMiB": 78,
+      "peakDedicatedDeltaMiB": 4712,
+      "peakSharedDeltaMiB": 78,
+      "minFreeMiB": 11336,
+      "counterSamples": 38
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2439,
+      "peakSharedMiB": 76,
+      "peakDedicatedDeltaMiB": 2439,
+      "peakSharedDeltaMiB": 75,
+      "minFreeMiB": 13609,
+      "counterSamples": 38
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4080 SUPER",
+    "adapterDeviceId": "0x2702",
+    "model": "Qwen3.5-4B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:37:30.753Z",
+    "phases": {
+      "load": {
+        "from": 1791765454620,
+        "to": 1791765464991
+      },
+      "warmup": {
+        "from": 1791765464991,
+        "to": 1791765476823
+      },
+      "short": {
+        "from": 1791765476823,
+        "to": 1791765479630
+      },
+      "long": {
+        "from": 1791765479630,
+        "to": 1791765490350
+      },
+      "end": 1791765490632
+    },
+    "events": [
+      {
+        "t": 1791765454540,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765490647,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765490693,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4080 SUPER",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 57,
+    "preLoadFreeMiB": 15991,
+    "load": {
+      "ok": true,
+      "seconds": 10.368804999947548,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[78/78]: 2258MB loaded. 100% completed, 9 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4080 SUPER"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 9.809524999976158,
+      "totalSeconds": 11.829659999966621,
+      "tokensPerSecond": 0.9900328443442846,
+      "engineDecodeTokensPerSecond": 1.4900723927366812,
+      "enginePrefillTokensPerSecond": 4.589481113278726,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 69,
+      "ttftSeconds": 0.11831499993801117,
+      "totalSeconds": 2.804210000038147,
+      "tokensPerSecond": 25.317445394352653,
+      "engineDecodeTokensPerSecond": 26.337536531053818,
+      "enginePrefillTokensPerSecond": 386.01758508765386,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector is a safety device that senses smoke particl"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 4.76780999994278,
+      "totalSeconds": 10.715789999961853,
+      "tokensPerSecond": 20.511165134988477,
+      "engineDecodeTokensPerSecond": 21.056776254959303,
+      "enginePrefillTokensPerSecond": 682.6862255313346,
+      "textHead": "<think>\n\n</think>\n\nBased on the facility log, the three most common activities w"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765454923
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765490519,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 4712,
+      "peakSharedMiB": 353,
+      "peakDedicatedDeltaMiB": 4712,
+      "peakSharedDeltaMiB": 353,
+      "minFreeMiB": 11336,
+      "counterSamples": 39
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2415,
+      "peakSharedMiB": 353,
+      "peakDedicatedDeltaMiB": 2415,
+      "peakSharedDeltaMiB": 353,
+      "minFreeMiB": 13633,
+      "counterSamples": 39
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4080 SUPER",
+    "adapterDeviceId": "0x2702",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:38:17.793Z",
+    "phases": {
+      "load": {
+        "from": 1791765501411,
+        "to": 1791765505997
+      },
+      "warmup": {
+        "from": 1791765505997,
+        "to": 1791765515562
+      },
+      "short": {
+        "from": 1791765515562,
+        "to": 1791765516683
+      },
+      "long": {
+        "from": 1791765516683,
+        "to": 1791765523241
+      },
+      "end": 1791765523377
+    },
+    "events": [
+      {
+        "t": 1791765501309,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765523386,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765523422,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4080 SUPER",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 57,
+    "preLoadFreeMiB": 15991,
+    "load": {
+      "ok": true,
+      "seconds": 4.582835000038147,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4080 SUPER"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 7.917069999933243,
+      "totalSeconds": 9.562804999947549,
+      "tokensPerSecond": 1.2152624814946607,
+      "engineDecodeTokensPerSecond": 1.8256614980055192,
+      "enginePrefillTokensPerSecond": 5.686779753609286,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.06428000009059906,
+      "totalSeconds": 1.119985000014305,
+      "tokensPerSecond": 46.414481321525564,
+      "engineDecodeTokensPerSecond": 48.47403732713155,
+      "enginePrefillTokensPerSecond": 708.3825268302111,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 2.7324900000095367,
+      "totalSeconds": 6.556045000076294,
+      "tokensPerSecond": 31.907478772469588,
+      "engineDecodeTokensPerSecond": 32.93653290736842,
+      "enginePrefillTokensPerSecond": 1191.2214229598962,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765501689
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765523326,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2849,
+      "peakSharedMiB": 100,
+      "peakDedicatedDeltaMiB": 2849,
+      "peakSharedDeltaMiB": 100,
+      "minFreeMiB": 13199,
+      "counterSamples": 26
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1113,
+      "peakSharedMiB": 84,
+      "peakDedicatedDeltaMiB": 1113,
+      "peakSharedDeltaMiB": 84,
+      "minFreeMiB": 14935,
+      "counterSamples": 26
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4080 SUPER",
+    "adapterDeviceId": "0x2702",
+    "model": "Qwen3.5-2B-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:38:50.867Z",
+    "phases": {
+      "load": {
+        "from": 1791765534726,
+        "to": 1791765541574
+      },
+      "warmup": {
+        "from": 1791765541574,
+        "to": 1791765552754
+      },
+      "short": {
+        "from": 1791765552754,
+        "to": 1791765554327
+      },
+      "long": {
+        "from": 1791765554327,
+        "to": 1791765561313
+      },
+      "end": 1791765561472
+    },
+    "events": [
+      {
+        "t": 1791765534649,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765561485,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765561519,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4080 SUPER",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 58,
+    "preLoadFreeMiB": 15990,
+    "load": {
+      "ok": true,
+      "seconds": 6.845419999957085,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 6 secs elapsed.",
+        "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4080 SUPER"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 3,
+      "ttftSeconds": 9.344480000019074,
+      "totalSeconds": 11.177120000004768,
+      "tokensPerSecond": 1.0913218089835492,
+      "engineDecodeTokensPerSecond": 1.6394204100582106,
+      "enginePrefillTokensPerSecond": 4.818724922525316,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 45,
+      "completionTokens": 50,
+      "ttftSeconds": 0.06553999996185303,
+      "totalSeconds": 1.5707399998903275,
+      "tokensPerSecond": 32.55381344826497,
+      "engineDecodeTokensPerSecond": 34.28426455434976,
+      "enginePrefillTokensPerSecond": 700.1711531562892,
+      "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3254,
+      "completionTokens": 123,
+      "ttftSeconds": 2.762610000014305,
+      "totalSeconds": 6.983735000014305,
+      "tokensPerSecond": 28.902247623560072,
+      "engineDecodeTokensPerSecond": 29.843177737244254,
+      "enginePrefillTokensPerSecond": 1178.4048439838132,
+      "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765535015
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765561415,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 2849,
+      "peakSharedMiB": 100,
+      "peakDedicatedDeltaMiB": 2849,
+      "peakSharedDeltaMiB": 100,
+      "minFreeMiB": 13199,
+      "counterSamples": 31
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1113,
+      "peakSharedMiB": 76,
+      "peakDedicatedDeltaMiB": 1113,
+      "peakSharedDeltaMiB": 76,
+      "minFreeMiB": 14935,
+      "counterSamples": 31
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4080 SUPER",
+    "adapterDeviceId": "0x2702",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 1,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:39:29.480Z",
+    "phases": {
+      "load": {
+        "from": 1791765573447,
+        "to": 1791765577930
+      },
+      "warmup": {
+        "from": 1791765577930,
+        "to": 1791765586166
+      },
+      "short": {
+        "from": 1791765586166,
+        "to": 1791765586823
+      },
+      "long": {
+        "from": 1791765586823,
+        "to": 1791765594282
+      },
+      "end": 1791765594421
+    },
+    "events": [
+      {
+        "t": 1791765573331,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765594433,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765594459,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4080 SUPER",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 62,
+    "preLoadFreeMiB": 15986,
+    "load": {
+      "ok": true,
+      "seconds": 4.48052999997139,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4080 SUPER"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 7.407870000004769,
+      "totalSeconds": 8.233230000019073,
+      "tokensPerSecond": 7.269555103101687,
+      "engineDecodeTokensPerSecond": 8.540386878382883,
+      "enginePrefillTokensPerSecond": 5.538351394923505,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.046725000023841855,
+      "totalSeconds": 0.6546349999904633,
+      "tokensPerSecond": 62.509253017858676,
+      "engineDecodeTokensPerSecond": 66.53132938535217,
+      "enginePrefillTokensPerSecond": 897.8429877203546,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 2.2873650000095367,
+      "totalSeconds": 7.454384999990463,
+      "tokensPerSecond": 24.385429125582082,
+      "engineDecodeTokensPerSecond": 25.006079233899914,
+      "enginePrefillTokensPerSecond": 1390.8874999076154,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765573823
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765594322,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1767,
+      "peakSharedMiB": 80,
+      "peakDedicatedDeltaMiB": 1767,
+      "peakSharedDeltaMiB": 79,
+      "minFreeMiB": 14281,
+      "counterSamples": 25
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": 0,
+      "peakDedicatedMiB": 1056,
+      "peakSharedMiB": 80,
+      "peakDedicatedDeltaMiB": 1056,
+      "peakSharedDeltaMiB": 79,
+      "minFreeMiB": 14992,
+      "counterSamples": 25
+    }
+  },
+  {
+    "adapter": "NVIDIA GeForce RTX 4080 SUPER",
+    "adapterDeviceId": "0x2702",
+    "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+    "run": 2,
+    "headed": false,
+    "pageCondition": "no-paint (stress condition)",
+    "contextWindow": 8192,
+    "maxTokens": 128,
+    "longParagraphs": 70,
+    "ballast": null,
+    "startedAt": "2026-10-12T00:40:02.805Z",
+    "phases": {
+      "load": {
+        "from": 1791765606893,
+        "to": 1791765612442
+      },
+      "warmup": {
+        "from": 1791765612442,
+        "to": 1791765621386
+      },
+      "short": {
+        "from": 1791765621386,
+        "to": 1791765622162
+      },
+      "long": {
+        "from": 1791765622162,
+        "to": 1791765629956
+      },
+      "end": 1791765630095
+    },
+    "events": [
+      {
+        "t": 1791765606786,
+        "kind": "console-warning",
+        "text": "The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127"
+      },
+      {
+        "t": 1791765630110,
+        "kind": "page-close",
+        "text": "page closed"
+      },
+      {
+        "t": 1791765630141,
+        "kind": "context-close",
+        "text": "browser context closed"
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.0.0 Safari/537.36",
+    "adapterInReport": {
+      "main": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "worker": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "0x2702",
+        "description": "NVIDIA GeForce RTX 4080 SUPER",
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    },
+    "adapterVerified": true,
+    "detector": {
+      "tier": "desktop-high",
+      "gpuTier": "high",
+      "gpuMaxBufferSize": 2147483648,
+      "gpuDescription": "NVIDIA GeForce RTX 4080 SUPER",
+      "systemRAM": 8,
+      "cpuCores": 32,
+      "screenWidth": 1920,
+      "contextWindowSize": 12288,
+      "recommendedModels": [
+        "Qwen3.5-4B-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+        "Qwen2.5-3B-Instruct-q4f32_1-MLC",
+        "Llama-3.2-3B-Instruct-q4f32_1-MLC"
+      ],
+      "canUseWebLLM": true
+    },
+    "cachedBefore": true,
+    "preLoadMiB": 54,
+    "preLoadFreeMiB": 15994,
+    "load": {
+      "ok": true,
+      "seconds": 5.545454999923706,
+      "error": null,
+      "lastProgress": [
+        "Loading model from cache[30/30]: 829MB loaded. 100% completed, 4 secs elapsed.",
+        "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+        "Finish loading on WebGPU - NVIDIA GeForce RTX 4080 SUPER"
+      ]
+    },
+    "warmup": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 7,
+      "ttftSeconds": 8.211975000023841,
+      "totalSeconds": 8.941240000009536,
+      "tokensPerSecond": 8.22746189672848,
+      "engineDecodeTokensPerSecond": 9.678601303782049,
+      "enginePrefillTokensPerSecond": 4.9960245049054395,
+      "textHead": "A smoke detector detects the presence of smoke"
+    },
+    "short": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 108,
+      "promptTokens": 41,
+      "completionTokens": 39,
+      "ttftSeconds": 0.042,
+      "totalSeconds": 0.7735399999618531,
+      "tokensPerSecond": 51.9452114743986,
+      "engineDecodeTokensPerSecond": 55.59317203888656,
+      "enginePrefillTokensPerSecond": 996.4758784543995,
+      "textHead": "A smoke detector detects the presence of smoke and alerts you to a potential fir"
+    },
+    "long": {
+      "ok": true,
+      "timedOut": false,
+      "promptChars": 13755,
+      "promptTokens": 3180,
+      "completionTokens": 127,
+      "ttftSeconds": 2.323725000023842,
+      "totalSeconds": 7.790920000076294,
+      "tokensPerSecond": 23.046553122541113,
+      "engineDecodeTokensPerSecond": 23.744509085365358,
+      "enginePrefillTokensPerSecond": 1369.0579976965316,
+      "textHead": "The most common kinds of activity in the synthetic facility log are:\n\n1. **Sched"
+    },
+    "deviceEvents": [
+      {
+        "kind": "device-created",
+        "t": 1791765607231
+      },
+      {
+        "kind": "device-lost",
+        "t": 1791765629987,
+        "reason": "destroyed",
+        "message": "Device was destroyed."
+      }
+    ],
+    "crashed": false,
+    "deviceLost": null,
+    "deviceLostSignals": [],
+    "memory": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 1762,
+      "peakSharedMiB": 69,
+      "peakDedicatedDeltaMiB": 1762,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 14286,
+      "counterSamples": 27
+    },
+    "memoryAfterLoad": {
+      "dedicatedSource": "nvidia-smi",
+      "baselineDedicatedMiB": 0,
+      "baselineSharedMiB": null,
+      "peakDedicatedMiB": 1192,
+      "peakSharedMiB": 66,
+      "peakDedicatedDeltaMiB": 1192,
+      "peakSharedDeltaMiB": null,
+      "minFreeMiB": 14856,
+      "counterSamples": 27
+    }
+  }
+]

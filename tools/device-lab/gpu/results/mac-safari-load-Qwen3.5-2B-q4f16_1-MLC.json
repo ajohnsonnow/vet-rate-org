@@ -1,0 +1,245 @@
+{
+  "automation": "not used: pages post their own results; safaridriver and Allow Remote Automation were never enabled",
+  "entries": [
+    {
+      "target": "Safari on macOS",
+      "survey": {
+        "errors": [],
+        "stages": [
+          "page-opened",
+          "adapter",
+          "detector",
+          "cached",
+          "load",
+          "warmup",
+          "short",
+          "long",
+          "device-events",
+          "done"
+        ],
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0.1 Safari/605.1.15",
+        "platform": "MacIntel",
+        "maxTouchPoints": 0,
+        "isSecureContext": true,
+        "hasNavigatorGpu": true,
+        "screen": {
+          "w": 1344,
+          "h": 756,
+          "dpr": 1
+        },
+        "inner": {
+          "w": 1084,
+          "h": 625
+        },
+        "deviceMemory": null,
+        "hardwareConcurrency": 8,
+        "adapterReport": {
+          "main": {
+            "vendor": "apple",
+            "architecture": "apple",
+            "device": "apple",
+            "description": "apple",
+            "isFallbackAdapter": false,
+            "maxBufferSize": 2147483644,
+            "maxStorageBufferBindingSize": 2147483644,
+            "maxComputeWorkgroupStorageSize": 32768,
+            "shaderF16": true
+          },
+          "worker": {
+            "vendor": "apple",
+            "architecture": "apple",
+            "device": "apple",
+            "description": "apple",
+            "maxBufferSize": 2147483644,
+            "maxStorageBufferBindingSize": 2147483644
+          }
+        },
+        "detector": {
+          "tier": "laptop",
+          "gpuTier": "high",
+          "gpuMaxBufferSize": 2147483644,
+          "gpuDescription": "apple",
+          "systemRAM": 4,
+          "cpuCores": 8,
+          "screenWidth": 1344,
+          "contextWindowSize": 8192,
+          "recommendedModels": [
+            "Qwen3.5-2B-q4f16_1-MLC",
+            "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+            "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
+            "Qwen2.5-3B-Instruct-q4f16_1-MLC"
+          ],
+          "canUseWebLLM": true
+        },
+        "cachedBefore": false,
+        "load": {
+          "ok": true,
+          "loadMs": 20618,
+          "lastProgress": [
+            "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 15 secs elapsed.",
+            "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+            "Finish loading on WebGPU - apple"
+          ]
+        },
+        "warmup": {
+          "ok": true,
+          "timedOut": false,
+          "promptChars": 108,
+          "promptTokens": 45,
+          "completionTokens": 3,
+          "ttftSeconds": 3.046,
+          "totalSeconds": 3.815,
+          "tokensPerSecond": 2.600780234070221,
+          "engineDecodeTokensPerSecond": 3.9113428943937425,
+          "enginePrefillTokensPerSecond": 14.7977638934561,
+          "textHead": "<think>\n\n</think>\n\nA smoke detector identifies"
+        },
+        "short": {
+          "ok": true,
+          "timedOut": false,
+          "promptChars": 108,
+          "promptTokens": 45,
+          "completionTokens": 50,
+          "ttftSeconds": 0.615,
+          "totalSeconds": 3.768,
+          "tokensPerSecond": 15.540754836663496,
+          "engineDecodeTokensPerSecond": 16.051364365971107,
+          "enginePrefillTokensPerSecond": 73.28990228013029,
+          "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+        },
+        "long": {
+          "ok": true,
+          "timedOut": false,
+          "promptChars": 13755,
+          "promptTokens": 3254,
+          "completionTokens": 119,
+          "ttftSeconds": 37.849,
+          "totalSeconds": 49.926,
+          "tokensPerSecond": 9.770638403577047,
+          "engineDecodeTokensPerSecond": 9.934051256365303,
+          "enginePrefillTokensPerSecond": 85.99593012500331,
+          "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+        },
+        "deviceEvents": [
+          {
+            "kind": "device-created",
+            "t": 1791768561260
+          }
+        ],
+        "done": true,
+        "timedOut": false
+      },
+      "layout": {
+        "errors": [],
+        "stages": ["layout", "done"],
+        "outerInner": {
+          "w": 1084,
+          "h": 587
+        },
+        "frame": {
+          "innerWidth": 1084,
+          "clientWidth": 1084,
+          "scrollWidth": 1084,
+          "bodyScrollWidth": 1068,
+          "horizontalScroll": false,
+          "title": "Vet-Rate.org | Complete VA Claims Arsenal - 39 Pro Tools · Rating Calculator · AI Analysis · FREE",
+          "headingText": null,
+          "dialogOpen": false
+        },
+        "done": true,
+        "timedOut": false
+      },
+      "safariWasRunning": false
+    }
+  ],
+  "rows": [
+    {
+      "target": "Safari on macOS",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0.1 Safari/605.1.15",
+      "isSecureContext": true,
+      "hasNavigatorGpu": true,
+      "maxTouchPoints": 0,
+      "screen": {
+        "w": 1344,
+        "h": 756,
+        "dpr": 1
+      },
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "apple",
+        "device": "apple",
+        "description": "apple",
+        "isFallbackAdapter": false,
+        "maxBufferSize": 2147483644,
+        "maxStorageBufferBindingSize": 2147483644,
+        "maxComputeWorkgroupStorageSize": 32768,
+        "shaderF16": true
+      },
+      "detector": {
+        "tier": "laptop",
+        "gpuTier": "high",
+        "gpuMaxBufferSize": 2147483644,
+        "gpuDescription": "apple",
+        "systemRAM": 4,
+        "cpuCores": 8,
+        "screenWidth": 1344,
+        "contextWindowSize": 8192,
+        "recommendedModels": [
+          "Qwen3.5-2B-q4f16_1-MLC",
+          "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+          "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
+          "Qwen2.5-3B-Instruct-q4f16_1-MLC"
+        ],
+        "canUseWebLLM": true
+      },
+      "horizontalScroll": false,
+      "layout": {
+        "innerWidth": 1084,
+        "clientWidth": 1084,
+        "scrollWidth": 1084,
+        "bodyScrollWidth": 1068,
+        "horizontalScroll": false,
+        "title": "Vet-Rate.org | Complete VA Claims Arsenal - 39 Pro Tools · Rating Calculator · AI Analysis · FREE",
+        "headingText": null,
+        "dialogOpen": false
+      },
+      "load": {
+        "ok": true,
+        "loadMs": 20618,
+        "lastProgress": [
+          "Loading model from cache[31/31]: 1011MB loaded. 100% completed, 15 secs elapsed.",
+          "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+          "Finish loading on WebGPU - apple"
+        ]
+      },
+      "short": {
+        "ok": true,
+        "timedOut": false,
+        "promptChars": 108,
+        "promptTokens": 45,
+        "completionTokens": 50,
+        "ttftSeconds": 0.615,
+        "totalSeconds": 3.768,
+        "tokensPerSecond": 15.540754836663496,
+        "engineDecodeTokensPerSecond": 16.051364365971107,
+        "enginePrefillTokensPerSecond": 73.28990228013029,
+        "textHead": "<think>\n\n</think>\n\nA smoke detector identifies smoke or smoke particles to warn "
+      },
+      "long": {
+        "ok": true,
+        "timedOut": false,
+        "promptChars": 13755,
+        "promptTokens": 3254,
+        "completionTokens": 119,
+        "ttftSeconds": 37.849,
+        "totalSeconds": 49.926,
+        "tokensPerSecond": 9.770638403577047,
+        "engineDecodeTokensPerSecond": 9.934051256365303,
+        "enginePrefillTokensPerSecond": 85.99593012500331,
+        "textHead": "<think>\n\n</think>\n\nThe facility log reveals a recurring pattern of routine maint"
+      },
+      "timedOut": false,
+      "errors": []
+    }
+  ]
+}

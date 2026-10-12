@@ -1,0 +1,43 @@
+{
+  "name": "desktop-high",
+  "deviceClass": "Desktop, discrete 16 GB GPU, 2560x1440 monitor",
+  "source": "GPU limits, deviceMemory and hardwareConcurrency read on 2026-10-11 from Playwright 1.58.2 bundled Chromium on a Ryzen 9 7950X3D machine with an RTX 4080 SUPER (16 GB) via navigator.gpu.requestAdapter({powerPreference:'high-performance'}); the build reported an empty adapter description. Monitor size is an assumption. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "estimate",
+    "userAgent": "documented",
+    "memoryAndCores": "measured",
+    "gpu": "measured",
+    "cpuThrottleRate": "measured"
+  },
+  "viewport": {
+    "width": 2560,
+    "height": 1300
+  },
+  "screen": {
+    "width": 2560,
+    "height": 1440
+  },
+  "deviceScaleFactor": 1,
+  "isMobile": false,
+  "hasTouch": false,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "userAgentData": {
+    "mobile": false,
+    "platform": "Windows"
+  },
+  "deviceMemory": 8,
+  "hardwareConcurrency": 32,
+  "cpuThrottleRate": 1,
+  "gpu": {
+    "adapter": {
+      "vendor": "nvidia",
+      "architecture": "lovelace",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 2147483648,
+        "maxStorageBufferBindingSize": 2147483644
+      }
+    }
+  }
+}

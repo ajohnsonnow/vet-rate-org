@@ -1,0 +1,49 @@
+{
+  "name": "phone-android-mid",
+  "deviceClass": "Android phone, mid-range, 8 GB RAM",
+  "source": "Pixel 7 class: 412x915 CSS px at 2.625x (Chrome DevTools device list), 8 cores, 8 GB. 4x CPU slowdown is the Lighthouse mobile default; network is the Lighthouse slow-4G preset (150 ms RTT, 1.6 Mbps down, 750 kbps up). Adapter vendor and limits are unmeasured; GPU limits are the WebGPU specification default limits (the floor every adapter must meet), not a measurement of this device. User agent follows the shape current Chrome sends (reduced UA); the version number is illustrative.",
+  "basis": {
+    "screen": "documented",
+    "userAgent": "documented",
+    "memoryAndCores": "estimate",
+    "gpu": "estimate",
+    "cpuThrottleRate": "documented",
+    "network": "documented"
+  },
+  "viewport": {
+    "width": 412,
+    "height": 780
+  },
+  "screen": {
+    "width": 412,
+    "height": 915
+  },
+  "deviceScaleFactor": 2.625,
+  "isMobile": true,
+  "hasTouch": true,
+  "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+  "userAgentData": {
+    "mobile": true,
+    "platform": "Android"
+  },
+  "deviceMemory": 8,
+  "hardwareConcurrency": 8,
+  "cpuThrottleRate": 4,
+  "network": {
+    "downloadKbps": 1600,
+    "uploadKbps": 750,
+    "latencyMs": 150
+  },
+  "gpu": {
+    "adapter": {
+      "vendor": "arm",
+      "architecture": "valhall",
+      "device": "",
+      "description": "",
+      "limits": {
+        "maxBufferSize": 268435456,
+        "maxStorageBufferBindingSize": 134217728
+      }
+    }
+  }
+}

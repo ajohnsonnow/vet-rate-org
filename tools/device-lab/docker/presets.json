@@ -1,0 +1,5 @@
+{
+  "4gb": { "memory": "4g", "cpus": 2 },
+  "8gb": { "memory": "8g", "cpus": 4 },
+  "16gb": { "memory": "16g", "cpus": 8 }
+}
