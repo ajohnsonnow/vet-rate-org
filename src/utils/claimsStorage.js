@@ -222,15 +222,35 @@ export const getStatement = (claimId) => {
   }
 };
 
+const claimText = (value) => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return "";
+};
+
+// Saved claims as a screen can render them. Storage and imports can hold
+// records that are not objects, or whose name or status is not text; those
+// would throw as React children. Returns copies and never writes, so the
+// stored records stay exactly as they are.
+export const getDisplayableClaims = () =>
+  getSavedClaims()
+    .filter((c) => c !== null && typeof c === "object" && !Array.isArray(c))
+    .map((c) => ({
+      ...c,
+      conditionName: claimText(c.conditionName),
+      status: claimText(c.status),
+    }));
+
 // Get claim statistics
 export const getClaimStats = () => {
   const claims = getSavedClaims();
+  const withStatus = (status) =>
+    claims.filter((c) => c?.status === status).length;
   return {
     total: claims.length,
-    drafting: claims.filter((c) => c.status === "Drafting").length,
-    statementGenerated: claims.filter((c) => c.status === "Statement Generated")
-      .length,
-    filed: claims.filter((c) => c.status === "Filed").length,
+    drafting: withStatus("Drafting"),
+    statementGenerated: withStatus("Statement Generated"),
+    filed: withStatus("Filed"),
   };
 };
 

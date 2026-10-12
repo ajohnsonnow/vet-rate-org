@@ -23,7 +23,7 @@ import DutyStationsSection from "./DutyStationsSection";
 import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
-  getSavedClaims,
+  getDisplayableClaims,
   removeClaim,
   clearAllClaims,
   updateClaimStatus,
@@ -5323,8 +5323,7 @@ function _loadVARecordsData(ctx) {
 
 function _loadClaimsData(ctx) {
   const { setClaims, setStats } = ctx;
-  const savedClaims = getSavedClaims();
-  setClaims(savedClaims);
+  setClaims(getDisplayableClaims());
   setStats(getClaimStats());
 }
 
