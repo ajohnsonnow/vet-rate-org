@@ -1,6 +1,18 @@
 {
-  "generatedAt": "2026-08-04T05:33:52.861Z",
+  "generatedAt": "2026-11-24T04:37:04.780Z",
   "alerts": [
+    {
+      "id": "2026-23571",
+      "title": "Veteran Readiness and Employment Program: Update to Reduced Work Tolerance and Basic Eligibility Period",
+      "type": "proposed_rule",
+      "status": "comment_period",
+      "publicationDate": "2026-11-19",
+      "commentDeadline": "2027-01-19",
+      "summary": "The Department of Veterans Affairs (VA) proposes to amend the Veteran Readiness and Employment (VR&E) regulations to align with current practice and statute. The rule would expand the list of approved providers for reduced work tolerance (RWT) documentation, allowing for more accurate and timely processing by a Vocational Rehabilitation Counselor (VRC). VA also proposes to clarify that a veteran who is subject to a basic period of eligibility would receive a new 12-year period of eligibility if such veteran obtains a compensable service-connected disability rating based on a subsequent period of active-duty service. Finally, the rule would remove the eligibility termination date for veterans discharged on or after January 1, 2013, consistent with the Johnny Isakson and David P. Roe, M.D. Veterans Health Care and Benefits Improvement Act of 2020.",
+      "link": "https://www.federalregister.gov/documents/2026/11/19/2026-23571/veteran-readiness-and-employment-program-update-to-reduced-work-tolerance-and-basic-eligibility",
+      "source": "Federal Register",
+      "urgency": "low"
+    },
     {
       "id": "2026-03068",
       "title": "Evaluative Rating: Impact of Medication",
